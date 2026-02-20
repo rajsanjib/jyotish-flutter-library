@@ -6,14 +6,17 @@ import 'package:ffi/ffi.dart';
 ///
 /// This class provides low-level bindings to the Swiss Ephemeris shared library.
 class SwissEphBindings {
+  SwissEphBindings() {
+    _lib = _loadLibrary();
+  }
   late final ffi.DynamicLibrary _lib;
 
   // Function signatures
-  late final _swe_set_ephe_path = _lib.lookupFunction<
+  late final _sweSetEphePath = _lib.lookupFunction<
       ffi.Void Function(ffi.Pointer<ffi.Char>),
       void Function(ffi.Pointer<ffi.Char>)>('swe_set_ephe_path');
 
-  late final _swe_calc_ut = _lib.lookupFunction<
+  late final _sweCalcUt = _lib.lookupFunction<
       ffi.Int32 Function(
         ffi.Double,
         ffi.Int32,
@@ -29,18 +32,18 @@ class SwissEphBindings {
         ffi.Pointer<ffi.Char>,
       )>('swe_calc_ut');
 
-  late final _swe_set_sid_mode = _lib.lookupFunction<
+  late final _sweSetSidMode = _lib.lookupFunction<
       ffi.Void Function(ffi.Int32, ffi.Double, ffi.Double),
       void Function(int, double, double)>('swe_set_sid_mode');
 
-  late final _swe_set_topo = _lib.lookupFunction<
+  late final _sweSetTopo = _lib.lookupFunction<
       ffi.Void Function(ffi.Double, ffi.Double, ffi.Double),
       void Function(double, double, double)>('swe_set_topo');
 
-  late final _swe_close =
+  late final _sweClose =
       _lib.lookupFunction<ffi.Void Function(), void Function()>('swe_close');
 
-  late final _swe_julday = _lib.lookupFunction<
+  late final _sweJulday = _lib.lookupFunction<
       ffi.Double Function(
         ffi.Int32,
         ffi.Int32,
@@ -56,15 +59,14 @@ class SwissEphBindings {
         int,
       )>('swe_julday');
 
-  late final _swe_version = _lib.lookupFunction<
-      ffi.Pointer<ffi.Char> Function(),
+  late final _sweVersion = _lib.lookupFunction<ffi.Pointer<ffi.Char> Function(),
       ffi.Pointer<ffi.Char> Function()>('swe_version');
 
-  late final _swe_get_ayanamsa_ut = _lib.lookupFunction<
+  late final _sweGetAyanamsaUt = _lib.lookupFunction<
       ffi.Double Function(ffi.Double),
       double Function(double)>('swe_get_ayanamsa_ut');
 
-  late final _swe_houses = _lib.lookupFunction<
+  late final _sweHouses = _lib.lookupFunction<
       ffi.Int32 Function(
         ffi.Double,
         ffi.Double,
@@ -82,9 +84,31 @@ class SwissEphBindings {
         ffi.Pointer<ffi.Double>,
       )>('swe_houses');
 
-  SwissEphBindings() {
-    _lib = _loadLibrary();
-  }
+  late final _sweRiseTrans = _lib.lookupFunction<
+      ffi.Int32 Function(
+        ffi.Double,
+        ffi.Int32,
+        ffi.Pointer<ffi.Char>,
+        ffi.Int32,
+        ffi.Int32,
+        ffi.Pointer<ffi.Double>,
+        ffi.Double,
+        ffi.Double,
+        ffi.Pointer<ffi.Double>,
+        ffi.Pointer<ffi.Char>,
+      ),
+      int Function(
+        double,
+        int,
+        ffi.Pointer<ffi.Char>,
+        int,
+        int,
+        ffi.Pointer<ffi.Double>,
+        double,
+        double,
+        ffi.Pointer<ffi.Double>,
+        ffi.Pointer<ffi.Char>,
+      )>('swe_rise_trans');
 
   /// Loads the appropriate Swiss Ephemeris library for the platform.
   ffi.DynamicLibrary _loadLibrary() {
@@ -94,7 +118,7 @@ class SwissEphBindings {
       try {
         return ffi.DynamicLibrary.open(customPath);
       } catch (e) {
-        print('Failed to load from custom path: $customPath');
+        // Silently fail if custom path is invalid
       }
     }
 
@@ -134,7 +158,7 @@ class SwissEphBindings {
   void setEphemerisPath(String path) {
     final pathPtr = path.toNativeUtf8();
     try {
-      _swe_set_ephe_path(pathPtr.cast());
+      _sweSetEphePath(pathPtr.cast());
     } finally {
       malloc.free(pathPtr);
     }
@@ -154,7 +178,7 @@ class SwissEphBindings {
   }) {
     final resultPtr = malloc<ffi.Double>(6);
     try {
-      final returnCode = _swe_calc_ut(
+      final returnCode = _sweCalcUt(
         julianDay,
         planetId,
         flags,
@@ -174,17 +198,17 @@ class SwissEphBindings {
 
   /// Sets sidereal mode.
   void setSiderealMode(int mode, double t0, double ayanT0) {
-    _swe_set_sid_mode(mode, t0, ayanT0);
+    _sweSetSidMode(mode, t0, ayanT0);
   }
 
   /// Sets topocentric position.
   void setTopocentric(double longitude, double latitude, double altitude) {
-    _swe_set_topo(longitude, latitude, altitude);
+    _sweSetTopo(longitude, latitude, altitude);
   }
 
   /// Closes Swiss Ephemeris and frees resources.
   void close() {
-    _swe_close();
+    _sweClose();
   }
 
   /// Converts Gregorian date to Julian day number.
@@ -196,18 +220,18 @@ class SwissEphBindings {
     bool isGregorian = true,
   }) {
     final calendarType = isGregorian ? 1 : 0; // SE_GREG_CAL = 1, SE_JUL_CAL = 0
-    return _swe_julday(year, month, day, hour, calendarType);
+    return _sweJulday(year, month, day, hour, calendarType);
   }
 
   /// Gets Swiss Ephemeris version string.
   String getVersion() {
-    final versionPtr = _swe_version();
+    final versionPtr = _sweVersion();
     return versionPtr.cast<Utf8>().toDartString();
   }
 
   /// Gets ayanamsa (sidereal offset) for a given Julian day.
   double getAyanamsaUT(double julianDay) {
-    return _swe_get_ayanamsa_ut(julianDay);
+    return _sweGetAyanamsaUt(julianDay);
   }
 
   /// Calculates house cusps and ascendant/midheaven.
@@ -238,7 +262,7 @@ class SwissEphBindings {
     try {
       final systemCode = houseSystem.codeUnitAt(0);
 
-      final returnCode = _swe_houses(
+      final returnCode = _sweHouses(
         julianDay,
         latitude,
         longitude,
@@ -266,6 +290,59 @@ class SwissEphBindings {
     } finally {
       malloc.free(cuspsPtr);
       malloc.free(ascmcPtr);
+    }
+  }
+
+  /// Calculates rise, set, or transit times for a planet.
+  ///
+  /// [julianDay] - Julian day number for start of search
+  /// [planetId] - Planet number (SE_SUN for sunrise/sunset)
+  /// [rsmi] - Calculation flag (SE_CALC_RISE, SE_CALC_SET, etc.)
+  /// [latitude] - Geographic latitude
+  /// [longitude] - Geographic longitude
+  /// [errorBuffer] - Buffer for error messages
+  ///
+  /// Returns the Julian day of the event, or null if calculation fails.
+  double? calculateRiseSet({
+    required double julianDay,
+    required int planetId,
+    required int rsmi,
+    required double latitude,
+    required double longitude,
+    required ffi.Pointer<ffi.Char> errorBuffer,
+    double atpress = 0.0,
+    double attemp = 0.0,
+  }) {
+    // geopos array: longitude, latitude, altitude
+    final geoposPtr = malloc<ffi.Double>(3);
+    final resultPtr = malloc<ffi.Double>(1);
+
+    try {
+      geoposPtr[0] = longitude;
+      geoposPtr[1] = latitude;
+      geoposPtr[2] = 0.0; // altitude
+
+      final returnCode = _sweRiseTrans(
+        julianDay,
+        planetId,
+        ffi.nullptr, // starname
+        0, // epheflag (SEFLG_SWIEPH)
+        rsmi,
+        geoposPtr,
+        atpress,
+        attemp,
+        resultPtr,
+        errorBuffer,
+      );
+
+      if (returnCode < 0) {
+        return null;
+      }
+
+      return resultPtr[0];
+    } finally {
+      malloc.free(geoposPtr);
+      malloc.free(resultPtr);
     }
   }
 }

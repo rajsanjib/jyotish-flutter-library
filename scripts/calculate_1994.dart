@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'dart:io';
 import 'package:jyotish/jyotish.dart';
 
@@ -11,7 +12,7 @@ Future<void> main() async {
   print('=' * 70);
 
   // Set library path for macOS
-  final dylibPath =
+  const dylibPath =
       '/Users/sanjibacharya/Developer/jyotish/native/swisseph/swisseph-master/libswisseph.dylib';
   if (!File(dylibPath).existsSync()) {
     print('❌ Error: Swiss Ephemeris library not found at: $dylibPath');
@@ -27,7 +28,7 @@ Future<void> main() async {
     print('\n📚 Initializing Swiss Ephemeris...');
 
     // Set ephemeris path
-    final ephePath =
+    const ephePath =
         '/Users/sanjibacharya/Developer/jyotish/native/swisseph/swisseph-master/ephe';
     await jyotish.initialize(ephemerisPath: ephePath);
 
@@ -91,7 +92,7 @@ Future<void> main() async {
           '$retro');
     }
 
-    print('\n' + '=' * 70);
+    print('\n${'=' * 70}');
     print('DETAILED INFORMATION');
     print('=' * 70);
     print('');

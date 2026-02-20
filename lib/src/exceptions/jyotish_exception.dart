@@ -3,15 +3,6 @@
 /// This exception is thrown when an error occurs during library initialization,
 /// calculation, or any other operation.
 class JyotishException implements Exception {
-  /// The error message.
-  final String message;
-
-  /// The original error that caused this exception, if any.
-  final Object? originalError;
-
-  /// The stack trace of the original error, if any.
-  final StackTrace? stackTrace;
-
   /// Creates a new [JyotishException].
   ///
   /// [message] - A description of the error.
@@ -22,6 +13,15 @@ class JyotishException implements Exception {
     this.originalError,
     this.stackTrace,
   });
+
+  /// The error message.
+  final String message;
+
+  /// The original error that caused this exception, if any.
+  final Object? originalError;
+
+  /// The stack trace of the original error, if any.
+  final StackTrace? stackTrace;
 
   @override
   String toString() {

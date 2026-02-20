@@ -2,7 +2,26 @@ import '../models/planet.dart';
 import '../models/planet_position.dart';
 
 /// Represents Vedic astrology house system information.
+///
+/// ## House System Precision Notes
+///
+/// Different house systems have varying precision at extreme latitudes:
+/// - **Whole Sign (W)**: Most reliable across all latitudes, recommended for Vedic astrology
+/// - **Placidus (P)**: May produce unreliable results above 65° latitude
+/// - **Koch (K)**: Limited accuracy above 60° latitude
+/// - **Porphyrius (O)**: Moderate reliability at high latitudes
+/// - **Regiomontanus (R)**: Similar limitations to Placidus
+/// - **Campanus (C)**: Good accuracy across most latitudes
+///
+/// For locations above 65°N or below 65°S, Whole Sign houses are recommended.
 class HouseSystem {
+  const HouseSystem({
+    required this.system,
+    required this.cusps,
+    required this.ascendant,
+    required this.midheaven,
+  });
+
   /// The house system used (default: Whole Sign)
   final String system;
 
@@ -14,13 +33,6 @@ class HouseSystem {
 
   /// The Midheaven (MC) degree
   final double midheaven;
-
-  const HouseSystem({
-    required this.system,
-    required this.cusps,
-    required this.ascendant,
-    required this.midheaven,
-  });
 
   /// Gets the house number (1-12) for a given longitude
   int getHouseForLongitude(double longitude) {
@@ -67,10 +79,10 @@ class HouseSystem {
 /// Represents Ketu (South Node) position.
 /// Ketu is always 180° opposite to Rahu.
 class KetuPosition {
+  const KetuPosition({required this.rahuPosition});
+
   /// The planet position of Rahu used to calculate Ketu
   final PlanetPosition rahuPosition;
-
-  const KetuPosition({required this.rahuPosition});
 
   /// Ketu's longitude (180° opposite to Rahu)
   double get longitude => (rahuPosition.longitude + 180) % 360;
@@ -182,16 +194,18 @@ class KetuPosition {
 enum PlanetaryDignity {
   exalted('Exalted', 'Uccha'),
   ownSign('Own Sign', 'Swakshetra'),
+  greatFriend('Great Friend', 'Adhi-Mitra'),
   friendSign('Friend\'s Sign', 'Mitra'),
   neutralSign('Neutral Sign', 'Sama'),
   enemySign('Enemy\'s Sign', 'Shatru'),
+  greatEnemy('Great Enemy', 'Adhi-Shatru'),
   debilitated('Debilitated', 'Neecha'),
   moolaTrikona('Moola Trikona', 'Moola Trikona');
 
+  const PlanetaryDignity(this.english, this.sanskrit);
+
   final String english;
   final String sanskrit;
-
-  const PlanetaryDignity(this.english, this.sanskrit);
 
   @override
   String toString() => english;
@@ -199,6 +213,17 @@ enum PlanetaryDignity {
 
 /// Vedic-specific planetary information.
 class VedicPlanetInfo {
+  const VedicPlanetInfo({
+    required this.position,
+    required this.house,
+    required this.dignity,
+    this.isCombust = false,
+    this.exaltationDegree,
+    this.debilitationDegree,
+    this.positionInSign,
+    this.subSpan,
+  });
+
   /// The base planet position
   final PlanetPosition position;
 
@@ -217,14 +242,11 @@ class VedicPlanetInfo {
   /// Debilitation degree
   final double? debilitationDegree;
 
-  const VedicPlanetInfo({
-    required this.position,
-    required this.house,
-    required this.dignity,
-    this.isCombust = false,
-    this.exaltationDegree,
-    this.debilitationDegree,
-  });
+  /// Position within sign (0-30), useful for KP and D249
+  final double? positionInSign;
+
+  /// Span of the subdivision, useful for D249
+  final double? subSpan;
 
   /// Gets the planet
   Planet get planet => position.planet;
@@ -250,6 +272,17 @@ class VedicPlanetInfo {
 
 /// Complete Vedic astrology chart data.
 class VedicChart {
+  const VedicChart({
+    required this.dateTime,
+    required this.location,
+    required this.latitude,
+    required this.longitudeCoord,
+    required this.houses,
+    required this.planets,
+    required this.rahu,
+    required this.ketu,
+  });
+
   /// Date and time of the chart
   final DateTime dateTime;
 
@@ -273,17 +306,6 @@ class VedicChart {
 
   /// Ketu (South Node) position
   final KetuPosition ketu;
-
-  const VedicChart({
-    required this.dateTime,
-    required this.location,
-    required this.latitude,
-    required this.longitudeCoord,
-    required this.houses,
-    required this.planets,
-    required this.rahu,
-    required this.ketu,
-  });
 
   /// Gets the Ascendant sign
   String get ascendantSign => houses.ascendantSign;

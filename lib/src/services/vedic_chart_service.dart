@@ -1,16 +1,15 @@
+import '../exceptions/jyotish_exception.dart';
+import '../models/calculation_flags.dart';
+import '../models/geographic_location.dart';
 import '../models/planet.dart';
 import '../models/planet_position.dart';
-import '../models/geographic_location.dart';
-import '../models/calculation_flags.dart';
 import '../models/vedic_chart.dart';
-import '../exceptions/jyotish_exception.dart';
 import 'ephemeris_service.dart';
 
 /// Service for calculating Vedic astrology charts.
 class VedicChartService {
-  final EphemerisService _ephemerisService;
-
   VedicChartService(this._ephemerisService);
+  final EphemerisService _ephemerisService;
 
   /// Calculates a complete Vedic astrology chart.
   ///
@@ -18,21 +17,24 @@ class VedicChartService {
   /// [location] - Birth location
   /// [houseSystem] - House system to use (default: Whole Sign 'W')
   /// [includeOuterPlanets] - Include Uranus, Neptune, Pluto (default: false)
+  /// [flags] - Optional calculation flags (uses default if not provided)
   Future<VedicChart> calculateChart({
     required DateTime dateTime,
     required GeographicLocation location,
     String houseSystem = 'W', // Whole Sign by default
     bool includeOuterPlanets = false,
+    CalculationFlags? flags,
   }) async {
     try {
-      // Use default Lahiri ayanamsa (sidereal is now default)
-      final flags = CalculationFlags.defaultFlags();
+      // Use provided flags or default Lahiri ayanamsa (sidereal is now default)
+      flags ??= CalculationFlags.defaultFlags();
 
       // Calculate Ascendant and house cusps
       final houses = await _calculateHouses(
         dateTime: dateTime,
         location: location,
         houseSystem: houseSystem,
+        siderealMode: flags.siderealMode,
       );
 
       // Get list of planets to calculate
@@ -51,9 +53,9 @@ class VedicChartService {
         planetPositions[planet] = position;
       }
 
-      // Calculate Rahu (Mean Node)
+      // Calculate Rahu based on node type (Mean Node or True Node)
       final rahuPosition = await _ephemerisService.calculatePlanetPosition(
-        planet: Planet.meanNode,
+        planet: flags.nodeType.planet,
         dateTime: dateTime,
         location: location,
         flags: flags,
@@ -89,7 +91,7 @@ class VedicChartService {
       // Create Vedic info for Rahu
       final rahuHouse = houses.getHouseForLongitude(rahuPosition.longitude);
       final rahuDignity =
-          _calculateDignity(Planet.meanNode, rahuPosition.longitude);
+          _calculateDignity(flags.nodeType.planet, rahuPosition.longitude);
       final rahuInfo = VedicPlanetInfo(
         position: rahuPosition,
         house: rahuHouse,
@@ -122,18 +124,20 @@ class VedicChartService {
     required DateTime dateTime,
     required GeographicLocation location,
     required String houseSystem,
+    required SiderealMode siderealMode,
   }) async {
     // Calculate houses (returns tropical positions)
     final houseData = await _ephemerisService.calculateHouses(
       dateTime: dateTime,
       location: location,
-      houseSystem: 'P', // Placidus system
+      houseSystem: houseSystem,
     );
 
     // Get ayanamsa for sidereal correction
     final ayanamsa = await _ephemerisService.getAyanamsa(
       dateTime: dateTime,
-      mode: SiderealMode.lahiri, // Use Lahiri ayanamsa
+      mode: siderealMode, // Use provided ayanamsa
+      timezoneId: location.timezone,
     );
 
     // Convert tropical positions to sidereal
@@ -149,11 +153,33 @@ class VedicChartService {
         tropicalCusps.map((cusp) => (cusp - ayanamsa + 360) % 360).toList();
 
     return HouseSystem(
-      system: 'Placidus',
+      system: _getHouseSystemName(houseSystem),
       cusps: cusps,
       ascendant: ascendant,
       midheaven: midheaven,
     );
+  }
+
+  /// Gets the display name for a house system code.
+  String _getHouseSystemName(String code) {
+    return switch (code) {
+      'W' => 'Whole Sign',
+      'P' => 'Placidus',
+      'K' => 'Koch',
+      'O' => 'Porphyry',
+      'R' => 'Regiomontanus',
+      'C' => 'Campanus',
+      'E' => 'Equal',
+      'V' => 'Vehlow',
+      'X' => 'Axial Rotation',
+      'H' => 'Horizontal',
+      'T' => 'Polich/Page',
+      'B' => 'Alcabitus',
+      'M' => 'Morinus',
+      'U' => 'Krusinski-Pisa-Goelzer',
+      'G' => 'Gauquelin sectors',
+      _ => code,
+    };
   }
 
   /// Calculates planetary dignity based on sign placement.
@@ -184,8 +210,126 @@ class VedicChartService {
       return PlanetaryDignity.moolaTrikona;
     }
 
-    // Friend, enemy, neutral would require more complex calculations
+    // Calculate planetary friendship
+    final signLord = _getSignLord(signIndex);
+    if (signLord != null) {
+      return _calculateFriendshipDignity(planet, signLord);
+    }
+
     return PlanetaryDignity.neutralSign;
+  }
+
+  /// Calculates friendship-based dignity.
+  PlanetaryDignity _calculateFriendshipDignity(Planet planet, Planet signLord) {
+    // Define planetary relationships
+    // Friend (Mitra): +1 relationship value
+    // Enemy (Shatru): -1 relationship value
+    // Neutral (Sama): 0 relationship value
+
+    final relationships = _getPlanetaryRelationships();
+    final relationship = relationships[planet]?[signLord] ?? 0;
+
+    // Check for Great Friend (Adhi-Mitra): Friend's friend
+    // Check for Great Enemy (Adhi-Shatru): Enemy's friend or Friend's enemy
+    if (relationship == 1) {
+      // Check if signLord considers planet as friend (mutual friendship = Great Friend)
+      final reverseRelationship = relationships[signLord]?[planet] ?? 0;
+      if (reverseRelationship == 1) {
+        return PlanetaryDignity.greatFriend;
+      }
+      return PlanetaryDignity.friendSign;
+    } else if (relationship == -1) {
+      // Check if signLord considers planet as enemy (mutual enmity = Great Enemy)
+      final reverseRelationship = relationships[signLord]?[planet] ?? 0;
+      if (reverseRelationship == -1) {
+        return PlanetaryDignity.greatEnemy;
+      }
+      return PlanetaryDignity.enemySign;
+    }
+
+    return PlanetaryDignity.neutralSign;
+  }
+
+  /// Gets planetary relationships map.
+  /// 1 = Friend, -1 = Enemy, 0 = Neutral
+  Map<Planet, Map<Planet, int>> _getPlanetaryRelationships() {
+    return {
+      Planet.sun: {
+        Planet.moon: 1,
+        Planet.mars: 1,
+        Planet.jupiter: 1,
+        Planet.mercury: 0,
+        Planet.venus: -1,
+        Planet.saturn: -1,
+      },
+      Planet.moon: {
+        Planet.sun: 1,
+        Planet.mercury: 1,
+        Planet.venus: 1, // Added as per user request
+        Planet.mars: 0,
+        Planet.jupiter: 0,
+        Planet.saturn: 0,
+      },
+      Planet.mars: {
+        Planet.sun: 1,
+        Planet.moon: 1,
+        Planet.jupiter: 1,
+        Planet.mercury: -1,
+        Planet.venus: 0,
+        Planet.saturn: 0,
+      },
+      Planet.mercury: {
+        Planet.sun: 1,
+        Planet.venus: 1,
+        Planet.moon: -1, // Added as per user request
+        Planet.mars: 0,
+        Planet.jupiter: 0,
+        Planet.saturn: 0,
+      },
+      Planet.jupiter: {
+        Planet.sun: 1,
+        Planet.moon: 1,
+        Planet.mars: 1,
+        Planet.mercury: -1,
+        Planet.venus: -1,
+        Planet.saturn: 0,
+      },
+      Planet.venus: {
+        Planet.mercury: 1,
+        Planet.saturn: 1,
+        Planet.mars: 0,
+        Planet.jupiter: 0,
+        Planet.sun: -1,
+        Planet.moon: -1,
+      },
+      Planet.saturn: {
+        Planet.mercury: 1,
+        Planet.venus: 1,
+        Planet.jupiter: 0,
+        Planet.mars: -1,
+        Planet.sun: -1,
+        Planet.moon: -1,
+      },
+    };
+  }
+
+  /// Gets the lord of a zodiac sign.
+  Planet? _getSignLord(int signIndex) {
+    const signLords = {
+      0: Planet.mars, // Aries
+      1: Planet.venus, // Taurus
+      2: Planet.mercury, // Gemini
+      3: Planet.moon, // Cancer
+      4: Planet.sun, // Leo
+      5: Planet.mercury, // Virgo
+      6: Planet.venus, // Libra
+      7: Planet.mars, // Scorpio
+      8: Planet.jupiter, // Sagittarius
+      9: Planet.saturn, // Capricorn
+      10: Planet.saturn, // Aquarius
+      11: Planet.jupiter, // Pisces
+    };
+    return signLords[signIndex];
   }
 
   /// Gets exaltation sign index for a planet.

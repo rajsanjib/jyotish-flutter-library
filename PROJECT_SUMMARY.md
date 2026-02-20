@@ -60,6 +60,7 @@ jyotish/
 - ✅ 40+ ayanamsa systems (Lahiri, Fagan-Bradley, Krishnamurti, etc.)
 - ✅ Geocentric calculations (from Earth's center)
 - ✅ Topocentric calculations (from surface location)
+- ✅ **Sunrise Boundary**: Corrected Vara (weekday) logic for Vedic standards
 
 ### 3. **Rich Position Data**
 
@@ -289,8 +290,9 @@ position.isRetrograde           // false
 Potential future enhancements:
 
 - [ ] House calculations (Placidus, Koch, Whole Sign, etc.)
-- [ ] Aspect calculations and orbs
-- [ ] Dasha system calculations (Vimshottari, Yogini, etc.)
+- ✅ Aspect calculations and orbs
+- ✅ Dasha system calculations (Vimshottari, Yogini, etc.)
+- ✅ High-precision Tithi end-time search
 - [ ] Chart drawing utilities
 - [ ] More astronomical calculations (eclipses, risings, settings)
 - [ ] Local time zone handling

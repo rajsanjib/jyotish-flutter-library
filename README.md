@@ -1,276 +1,106 @@
-# Jyotish
+# Jyotish (SV-stark Fork)
 
-A production-ready Flutter library for Vedic astrology calculations using Swiss Ephemeris. Provides high-precision sidereal planetary positions with Lahiri ayanamsa for authentic Jyotish (Vedic astrology) applications.
+> [!NOTE]  
+> This project is a **fork** of the original [jyotish-flutter-library](https://github.com/rajsanjib/jyotish-flutter-library). It builds upon the core high-precision Swiss Ephemeris integration and adds significant advanced Vedic astrology features.
 
-[![GitHub](https://img.shields.io/badge/GitHub-rajsanjib%2Fjyotish--flutter--library-blue?logo=github)](https://github.com/rajsanjib/jyotish-flutter-library)
+A production-ready Flutter library for advanced Vedic astrology calculations using Swiss Ephemeris. Provides high-precision sidereal planetary positions with Lahiri ayanamsa for authentic Jyotish applications.
+
+[![GitHub](https://img.shields.io/badge/GitHub-SV--stark%2Fjyotish--flutter--library--fork-blue?logo=github)](https://github.com/SV-stark/jyotish-flutter-library-fork)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Flutter](https://img.shields.io/badge/Flutter-%3E%3D3.0.0-blue?logo=flutter)](https://flutter.dev)
 
-## Features
+## Core Features
 
-✨ **High-Precision Sidereal Calculations**: Uses Swiss Ephemeris with Lahiri ayanamsa for accurate Vedic astrology
+✨ **High-Precision Sidereal Calculations**: Uses Swiss Ephemeris with Lahiri ayanamsa for accurate Vedic astrology.
 
 🌍 **Authentic Vedic System**:
-
-- Sidereal zodiac
-- Lahiri ayanamsa (default) with support for 40+ other ayanamsas
-- Geocentric and topocentric calculations
+- Sidereal zodiac with support for 40+ ayanamsas.
+- Geocentric and topocentric calculations.
 
 🪐 **Comprehensive Planet Support**:
+- Traditional Vedic planets + Rahu and Ketu.
+- Optional outer planets (Uranus, Neptune, Pluto).
+- Lunar apogees and asteroids.
 
-- Traditional Vedic planets (Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn)
-- Rahu and Ketu (Lunar Nodes)
-- Optional outer planets (Uranus, Neptune, Pluto)
-- Lunar apogees and asteroids
+## Advanced Vedic Features (Fork Additions)
 
-📍 **Rich Vedic Data**:
+This fork significantly extends the original library with high-level astrological services:
 
-- Sidereal longitude, latitude, and distance
-- Zodiac sign and position within sign
-- 27 Nakshatras with pada (quarter) divisions
-- Retrograde detection
-- Velocity/speed calculations
+### Chart Calculations
+- **🔮 Varga Charts**: Support for all 16 major divisional charts (D1 to D60) plus D249 (249 subdivisions) for ultra-precise micro-level analysis.
+- **⏳ Dasha Systems**: Vimshottari (120y), Yogini (36y), Ashtottari (108y), Kalachakra, Chara, and Narayana Dasha support.
 
-🎯 **Complete Vedic Chart**:
+### Panchanga & Time
+- **✨ Panchanga**: Tithi, Yoga, Karana, vara, and precise Sunrise/Sunset modules.
+- **📅 Masa & Samvatsara**: Lunar months (Amanta/Purnimanta) and 60-year Jupiter cycle.
 
-- Birth chart calculation with house cusps
-- Rahu and Ketu positions
-- Planetary dignities (exaltation, debilitation, own sign, moola trikona)
-- Combustion detection
-- Whole Sign house system
+### Strength Analysis
+- **📊 Ashtakavarga**: Full BAV/SAV point system, Trikona Shodhana (reduction), and transit strength analysis.
+- **⚖️ Shadbala**: Complete 6-fold planetary strength calculation.
+- **🏠 Bhava Bala**: House strength analysis.
+- **🎡 Sudarshan Chakra**: Triple-perspective strength analysis from Lagna, Moon, and Sun.
 
-🎯 **Easy to Use**: Simple, intuitive API designed for Vedic astrology
+### Special Systems
+- **🤝 Planetary Friendship**: Logic for temporary (Tatkalika) and permanent (Naisargika) friendship status.
+- **🎯 KP System**: Significators, Sub-Lord, and Sub-Sub-Lord logic with precise KP-specific ayanamsa calculation.
+- **🪐 Special Transits**: Automated analysis for Sade Sati, Dhaiya, and Panchak.
+- **🧘 Jaimini Astrology**: Atmakaraka, Karakamsa, Arudha Lagna (AL), Upapada (UL), and Chara/Narayana Dashas.
+- **❓ Prashna (Horary)**: Arudha calculation (1-249), Sphutas, and Gulika.
 
-🔒 **Production Ready**: Proper error handling, input validation, and resource management
+### New Features (Latest)
+- **📐 House Strength (Vimsopaka Bala)**: Enhanced house strength with divisional chart integration.
+- **🔢 Nadi Astrology**: Nadi identification from planetary positions (150 Nadis per sign).
+- **👶 Progeny Analysis**: Child prediction based on 5th house, Jupiter, and D7 chart.
+- **💑 Marriage Compatibility**: Ashtakoota (36 Guna) matching with Manglik/Nadi/Bhakoot Dosha checks.
 
-## Platform Support
-
-| Platform | Support |
-| -------- | ------- |
-| Android  | ✅      |
-| iOS      | ✅      |
-| macOS    | ✅      |
-| Linux    | ✅      |
-| Windows  | ✅      |
-
-## Installation
-
-Add this to your package's `pubspec.yaml` file:
-
-```yaml
-dependencies:
-  jyotish:
-    git:
-      url: https://github.com/rajsanjib/jyotish-flutter-library.git
-      ref: main # or specify a tag/branch
-```
-
-Then run:
-
-```bash
-flutter pub get
-```
-
-### Alternative Installation Methods
-
-You can also specify a specific version or branch:
-
-**Using a specific tag/version:**
-
-```yaml
-dependencies:
-  jyotish:
-    git:
-      url: https://github.com/rajsanjib/jyotish-flutter-library.git
-      ref: v1.0.0 # Replace with desired version tag
-```
-
-**Using a specific branch:**
-
-```yaml
-dependencies:
-  jyotish:
-    git:
-      url: https://github.com/rajsanjib/jyotish-flutter-library.git
-      ref: develop # or any other branch
-```
-
-**For local development:**
-
-```yaml
-dependencies:
-  jyotish:
-    path: ../path/to/jyotish # Relative path to local library
-```
-
-### Swiss Ephemeris Data Files
-
-The library requires Swiss Ephemeris data files for calculations. You have two options:
-
-1. **Include data files in your app** (recommended for production):
-
-   - Download ephemeris files from [Swiss Ephemeris](https://www.astro.com/ftp/swisseph/ephe/)
-   - Place them in your app's assets folder
-   - Initialize with the path to the data files
-
-2. **Use built-in ephemeris** (limited accuracy):
-   - The library includes a basic ephemeris for quick testing
-   - Not recommended for production use
+### Muhurta
+- **⏰ Hora**: Planetary hours calculations.
+- **🌅 Choghadiya**: 8 auspicious/inauspicious periods.
+- **⚠️ Inauspicious Periods**: Rahukalam, Gulikalam, Yamagandam.
 
 ## Usage
 
-### Basic Example
+For detailed usage examples and code samples for all features including the new fork additions (Vimsopaka Bala, Nadi Astrology, Progeny Analysis, Marriage Compatibility), see [USAGE.md](USAGE.md).
+
+### Quick Start
 
 ```dart
 import 'package:jyotish/jyotish.dart';
 
 void main() async {
-  // Create an instance
   final jyotish = Jyotish();
-
-  // Initialize the library
   await jyotish.initialize();
 
-  // Define a location
   final location = GeographicLocation(
-    latitude: 27.7172,  // Kathmandu, Nepal
+    latitude: 27.7172,
     longitude: 85.3240,
     altitude: 1400,
   );
 
-  // Calculate Sun's position (always sidereal with Lahiri ayanamsa)
-  final sunPosition = await jyotish.getPlanetPosition(
-    planet: Planet.sun,
-    dateTime: DateTime.now(),
+  final chart = await jyotish.calculateVedicChart(
+    dateTime: DateTime(1990, 5, 15, 14, 30),
     location: location,
   );
 
-  print('Sun is at ${sunPosition.formattedPosition}'); // Sidereal position
-  print('Longitude: ${sunPosition.longitude}°');
-  print('Nakshatra: ${sunPosition.nakshatra}');
-  print('Is Retrograde: ${sunPosition.isRetrograde}');
+  print('Ascendant: ${chart.ascendantSign}');
+  print('Sun: ${chart.getPlanet(Planet.sun)?.zodiacSign}');
 
-  // Clean up
   jyotish.dispose();
 }
 ```
 
-### Calculate Multiple Planets
+**Key Features:**
 
-```dart
-// Calculate all traditional Vedic planets at once
-final positions = await jyotish.getAllPlanetPositions(
-  dateTime: DateTime(2024, 1, 1, 12, 0),
-  location: location,
-);
+- Sidereal zodiac with Lahiri ayanamsa
+- Whole Sign house system
+- 27 Nakshatras with pada divisions
+- Multiple Dasha systems (Vimshottari, Yogini, Ashtottari, etc.)
+- Divisional charts (D1-D60, D249)
+- Ashtakavarga, KP System, Jaimini astrology
+- Panchanga, Muhurta, Transit calculations
+- **NEW:** House Strength (Vimsopaka Bala), Nadi Astrology, Progeny Analysis, Marriage Compatibility
 
-for (final entry in positions.entries) {
-  print('${entry.key.displayName}: ${entry.value.formattedPosition}');
-}
-```
-
-### Custom Ayanamsa
-
-```dart
-// Use a different ayanamsa (default is Lahiri)
-final flags = CalculationFlags.sidereal(SiderealMode.krishnamurti);
-
-final position = await jyotish.getPlanetPosition(
-  planet: Planet.moon,
-  dateTime: DateTime.now(),
-  location: location,
-  flags: flags,
-);
-```
-
-### Advanced: Custom Calculation Flags
-
-```dart
-// Create custom calculation flags
-final flags = CalculationFlags(
-  siderealMode: SiderealMode.krishnamurti,
-  useTopocentric: true,
-  calculateSpeed: true,
-);
-
-final position = await jyotish.getPlanetPosition(
-  planet: Planet.mars,
-  dateTime: DateTime.now(),
-  location: location,
-  flags: flags,
-);
-```
-
-### Vedic Astrology Chart
-
-```dart
-// Calculate a complete Vedic astrology birth chart
-final chart = await jyotish.calculateVedicChart(
-  dateTime: DateTime(1990, 5, 15, 14, 30), // Birth time
-  location: location, // Birth place
-);
-
-// Access Ascendant (Lagna)
-print('Ascendant: ${chart.ascendantSign}');
-print('Ascendant Degree: ${chart.ascendant}°');
-
-// Access planetary positions with Vedic-specific data
-final sunInfo = chart.getPlanet(Planet.sun);
-if (sunInfo != null) {
-  print('Sun in ${sunInfo.zodiacSign}');
-  print('House: ${sunInfo.house}');
-  print('Nakshatra: ${sunInfo.nakshatra} (Pada ${sunInfo.pada})');
-  print('Dignity: ${sunInfo.dignity.english}'); // e.g., "Exalted", "Debilitated"
-  print('Combust: ${sunInfo.isCombust}');
-}
-
-// Access Rahu (North Node) and Ketu (South Node)
-print('Rahu in ${chart.rahu.zodiacSign} - House ${chart.rahu.house}');
-print('Ketu in ${chart.ketu.zodiacSign} - always 180° from Rahu');
-
-// Get planets by house
-final firstHousePlanets = chart.getPlanetsInHouse(1);
-
-// Get planets by dignity
-final exaltedPlanets = chart.exaltedPlanets;
-final debilitatedPlanets = chart.debilitatedPlanets;
-final combustPlanets = chart.combustPlanets;
-final retrogradePlanets = chart.retrogradePlanets;
-
-// Access house cusps
-for (int i = 0; i < 12; i++) {
-  print('House ${i + 1}: ${chart.houses.cusps[i]}°');
-}
-```
-
-**Vedic Features:**
-
-- ✨ Sidereal zodiac with Lahiri ayanamsa (authentic Vedic calculations)
-- 🏠 Whole Sign house system
-- 🌟 Rahu (North Node) and Ketu (South Node) as separate entities
-- 🎯 Planetary dignities: Exalted, Debilitated, Own Sign, Moola Trikona, etc.
-- 🔥 Combustion detection (planets too close to Sun)
-- 📍 27 Nakshatras with pada (quarter) divisions
-- ♃ Retrograde motion detection
-- 🌍 Support for 40+ different ayanamsas (Lahiri, Krishnamurti, Raman, etc.)
-
-**Note**: This library is designed specifically for Vedic astrology and uses sidereal calculations. All planetary positions are calculated in the sidereal zodiac, not tropical (Western astrology).
-
-### Location from Degrees, Minutes, Seconds
-
-```dart
-final location = GeographicLocation.fromDMS(
-  latDegrees: 27,
-  latMinutes: 43,
-  latSeconds: 1.92,
-  isNorth: true,
-  lonDegrees: 85,
-  lonMinutes: 19,
-  lonSeconds: 26.4,
-  isEast: true,
-  altitude: 1400,
-);
-```
+See [USAGE.md](USAGE.md) for comprehensive examples of all features.
 
 ## API Reference
 
@@ -284,7 +114,21 @@ The main entry point for the library.
 - `getPlanetPosition(...)`: Calculate a single planet's position
 - `getMultiplePlanetPositions(...)`: Calculate multiple planets
 - `getAllPlanetPositions(...)`: Calculate all major planets
+- `getVara(...)`: Get Vedic Vara (Day Lord) - **Async**
+- `getTithiEndTime(...)`: Find precise Tithi end time - **New**
 - `dispose()`: Clean up resources
+
+**Abhijit Nakshatra Methods:**
+- `getNakshatraWithAbhijit(...)`: Get nakshatra with 28th Abhijit support
+- `isInAbhijitNakshatra(...)`: Check if longitude is in Abhijit (6°40' to 10°53'20" Capricorn)
+- `getAbhijitBoundaries()`: Get start/end longitudes of Abhijit
+
+**Lunar Month (Masa) Methods:**
+- `getMasa(...)`: Calculate lunar month with Amanta/Purnimanta support
+- `getAmantaMasa(...)`: Get lunar month using Amanta system (starts from New Moon)
+- `getPurnimantaMasa(...)`: Get lunar month using Purnimanta system (starts from Full Moon)
+- `getSamvatsara(...)`: Get 60-year Jupiter cycle (Samvatsara) name
+- `getMasaListForYear(...)`: Get list of all lunar months for a year
 
 #### `Planet` (enum)
 
@@ -354,6 +198,162 @@ Popular modes:
 - `SiderealMode.krishnamurti`: KP astrology
 - `SiderealMode.raman`: Raman ayanamsa
 - 40+ other modes available
+
+#### `NakshatraInfo`
+
+Represents nakshatra information including Abhijit (28th nakshatra).
+
+Properties:
+- `number`: Nakshatra number (1-27 for standard, 28 for Abhijit)
+- `name`: Nakshatra name (Sanskrit)
+- `rulingPlanet`: Planet ruling the nakshatra
+- `longitude`: Normalized longitude (0-360°)
+- `pada`: Pada or quarter (1-4)
+- `isAbhijit`: Whether currently in Abhijit nakshatra
+- `abhijitPortion`: Portion through Abhijit (0.0-1.0, 0.0 if not in Abhijit)
+
+Static Properties:
+- `nakshatraNames`: List of all 28 nakshatra names
+- `nakshatraLords`: List of ruling planets for each nakshatra
+- `abhijitStart`: Start longitude of Abhijit (276.6666667°)
+- `abhijitEnd`: End longitude of Abhijit (286.6666667°)
+- `nakshatraDashaLords`: Map of nakshatra to Vimshottari dasha lords
+
+#### `MasaInfo`
+
+Represents lunar month (Masa) information.
+
+Properties:
+- `month`: Lunar month enum (Chaitra through Phalguna)
+- `monthNumber`: Month number (1-12)
+- `type`: MasaType (amanta or purnimanta)
+- `adhikaType`: AdhikaMasaType (none, adhika, nija)
+- `sunLongitude`: Sun's longitude in degrees
+- `tithiInfo`: Current Tithi information
+- `year`: Optional Samvatsara year number
+- `isLunarLeapYear`: Whether it's a lunar leap year
+
+Methods:
+- `displayName`: Full display name including Adhika prefix if applicable
+
+#### `MasaType` (enum)
+
+Lunar month system types.
+- `MasaType.amanta`: Month starts from Amavasya (New Moon) - Southern India, Gujarat
+- `MasaType.purnimanta`: Month starts from Purnima (Full Moon) - Northern India
+
+#### `LunarMonth` (enum)
+
+The 12 lunar months in the Indian calendar.
+- `LunarMonth.chaitra` through `LunarMonth.phalguna`
+- Each month has `sanskrit` and `transliteration` properties
+
+#### `AdhikaMasaType` (enum)
+
+Adhika (extra) Masa status.
+- `AdhikaMasaType.none`: Regular lunar month
+- `AdhikaMasaType.adhika`: Extra leap month
+- `AdhikaMasaType.nija`: Regular month in a year with Adhika
+
+#### `Samvatsara`
+
+Represents the 60-year Jupiter cycle.
+
+Static Methods:
+- `getSamvatsaraName(int yearIndex)`: Get Samvatsara name from year index
+- `samvatsaraNames`: List of all 60 Samvatsara names (Prabhava to Akshaya)
+
+#### `NodeType` (enum)
+
+Lunar node type for Rahu/Ketu calculations.
+
+- `NodeType.meanNode` - Uses Mean Node (default). This is the average position of Moon's orbit crossing. Preferred by traditional Vedic astrologers.
+- `NodeType.trueNode` - Uses True Node. This is the actual position at the exact moment. Preferred by modern Vedic astrologers for greater precision.
+
+Usage:
+```dart
+// Use True Node instead of Mean Node (default)
+final flags = CalculationFlags.withNodeType(NodeType.trueNode);
+
+final chart = await jyotish.calculateVedicChart(
+  dateTime: DateTime.now(),
+  location: location,
+  flags: flags,
+);
+
+// Calculate specific planet with True Node
+final rahuPosition = await jyotish.getPlanetPosition(
+  planet: Planet.trueNode,
+  dateTime: DateTime.now(),
+  location: location,
+);
+```
+
+Properties:
+- `description`: Human-readable description
+- `technicalDescription`: Technical explanation
+  - `planet`: Returns the appropriate Planet enum (`Planet.meanNode` or `Planet.trueNode`)
+ 
+#### `DivisionalChartType.d249`
+
+D249 (249 Subdivisions) is a KP micro-level divisional chart that uses **Vimshottari Dasha proportional divisions**, NOT linear equal divisions.
+
+**Important**: D249 is NOT a simple 1/249th division. Each subdivision's span is proportional to the dasha period of its ruling planet.
+
+#### Key Characteristics:
+
+1. **Proportional to Vimshottari Dasha**: Each subdivision's span is proportional to the dasha period of its ruling planet
+2. **Total Subdivisions**: 249 = (27 complete cycles × 9 planets) + 6 extra subdivisions
+3. **Pattern**: The 9-planet Vimshottari sequence repeats 27 times, with a partial 28th cycle
+
+#### Vimshottari Dasha Proportions:
+
+| Planet (Ruler) | Dash Period | Degree Span | Subdivisions per Sign |
+|-----------------|------------|-------------|---------------------|
+| Ketu | 7 years | 1.75° | 27 |
+| Venus | 20 years | 5.0° | 54 |
+| Sun | 6 years | 1.5° | 18 |
+| Moon | 10 years | 2.5° | 27 |
+| Mars | 7 years | 1.75° | 18 |
+| Rahu | 18 years | 4.5° | 54 |
+| Jupiter | 16 years | 4.0° | 48 |
+| Saturn | 19 years | 4.75° | 48 |
+| Mercury | 17 years | 4.25° | 51 |
+
+**Complete Cycles**: 27 × 9 = 243 subdivisions  
+**Partial 28th Cycle**: 6 subdivisions (Ketu through Rahu)  
+**Total**: 243 + 6 = 249 subdivisions
+
+#### Usage Example:
+
+```dart
+// Calculate D249 chart
+final d249 = jyotish.getDivisionalChart(
+  rashiChart: rashiChart,
+  type: DivisionalChartType.d249,
+);
+
+// Check which subdivision a planet is in
+final sunDivision = kpData.getPlanetSubLord(Planet.sun);
+print('Sun in D249 subdivision: ${sunDivision?.subSpan.toStringAsFixed(4)}°');
+
+// Works with both KP ayanamsas (already supported)
+final kpOld = await jyotish.calculateKPData(
+  natalChart: chart,
+  useNewAyanamsa: false, // Old KP ayanamsa
+);
+
+final kpNew = await jyotish.calculateKPData(
+  natalChart: chart,
+  useNewAyanamsa: true, // KP New VP291 ayanamsa
+);
+```
+
+#### Important Notes:
+
+1. **KP Ayanamsa Support**: Both old and new KP ayanamsas are already supported via `useNewAyanamsa` parameter in `calculateKPData()`
+2. **Node Type Compatibility**: Works with both Mean Node and True Node via `CalculationFlags.nodeType`
+3. **Precision**: Provides 10-20x more precision than D9 (9 subdivisions) for micro-level analysis
 
 ## Error Handling
 
@@ -454,22 +454,87 @@ This library uses:
 
 ## Support
 
-- Issues: [GitHub Issues](https://github.com/rajsanjib/jyotish-flutter-library/issues)
-- 📖 Documentation: [GitHub Wiki](https://github.com/rajsanjib/jyotish-flutter-library/wiki)
-- 💬 Discussions: [GitHub Discussions](https://github.com/rajsanjib/jyotish-flutter-library/discussions)
+- Issues: [GitHub Issues](https://github.com/SV-stark/jyotish-flutter-library-fork/issues)
+- Original Repo: [rajsanjib/jyotish-flutter-library](https://github.com/rajsanjib/jyotish-flutter-library)
 
-## Changelog
+## Detailed Fork Additions Summary
 
-See [CHANGELOG.md](CHANGELOG.md) for version history.
+For comprehensive usage examples and code samples for all features, see [USAGE.md](USAGE.md).
 
-## Roadmap
+This fork was created to bridge the gap between low-level astronomical calculations and high-level Vedic astrological analysis. The following modules were added entirely in this version:
 
-- [ ] House calculations
-- [ ] Aspect calculations
-- [ ] Transit calculations
-- [ ] Dasha system support
-- [ ] Chart drawing utilities
-- [ ] More example apps
+### 1. Advanced Predictive Service
+- **Vimshottari Dasha**: Full 120-year cycle with 5 levels of depth (Mahadasha to Sukshma Dasha) and refined Rahu/Ketu lordship logic.
+- **Yogini Dasha**: 36-year cycle with accurate lord calculation and Nakshatra alignment.
+- **Ashtottari Dasha**: 108-year cycle.
+- **Kalachakra Dasha**: Zodiacal dasha system.
+- **Chara Dasha**: Jaimini's moving dasha.
+- **Narayana Dasha**: Based on planetary periods.
+
+### 2. Comprehensive Panchanga
+- A complete Indian lunar calendar module providing **Tithi, Yoga, Karana, Vara**, and precise solar times (Sunrise/Sunset/Noon).
+- **Corrected Vara**: Day lord now respects the **Sunrise boundary** as per traditional Vedic standards (births between midnight and sunrise use the previous day's lord).
+- **Tithi Analysis**: New high-precision API for finding exact Tithi end times.
+- **Abhijit Nakshatra**: Support for the 28th intercalary nakshatra.
+
+### 3. Strength & Relationship Systems
+- **Shadbala**: Implementation of the complete 6-fold planetary strength system (Shadbala) including positional, directional, temporal, and motional strengths.
+- **Vimsopaka Bala**: Enhanced planetary strength from divisional charts (D1, D2, D3, D9, D12, D30).
+- **Bhava Bala**: House strength analysis with Kendra/Panaphara/Apoklima categorization.
+- **Planetary Relationships**: Automated determination of permanent and temporary friendships used for accurate dignity and strength analysis.
+
+### 4. Mathematical Systems
+- **Ashtakavarga**: Automated calculation of Bindus for all 7 planets (BAV) and the total system (SAV), including **Trikona Shodhana** (Trine Reduction) and transit strength analysis.
+- **KP System**: Implementation of the Krishnamurti Paddhati, including high-precision significators, cuspal sub-lords, and precise KP ayanamsa formulas.
+- **Divisional Charts (Varga)**: Calculations for all 16 major charts (D1-D60) plus D249 (249 subdivisions) with high-precision mapping rules for Saptamsa, Dasamsa, Shashtiamsa (D60), and 249-subdivision micro analysis.
+
+### 5. Transit & Muhurta Analysis
+- **Special Transits**: Real-time detection of Sade Sati, Dhaiya, and Panchak.
+- **Muhurta Engine**: Daily Hora, Choghadiya, Gowri Panchangam, and inauspicious period (Rahu Kalam/Yamagandam) tracking.
+- **Gochara Vedha**: Transit obstruction analysis.
+
+### 6. Lunar Month (Masa) & Time
+- **Abhijit Nakshatra**: Full support for the 28th intercalary nakshatra (6°40' to 10°53'20" in Capricorn).
+- **Lunar Month (Masa) Calculations**: Complete implementation of both Amanta and Purnimanta lunar month systems.
+- **Adhika Masa Detection**: Automatic detection of extra lunar months (leap months).
+- **Samvatsara**: Support for the 60-year Jupiter cycle.
+
+### 7. Jaimini Astrology
+- **Atmakaraka**: Planet with highest degree.
+- **Karakamsa**: Soul planet in Navamsa.
+- **Arudha Lagna (AL)**: D2/D12 calculation.
+- **Upapada (UL)**: D12 calculation for spouse.
+- **Rashi Drishti**: Sign-based aspects.
+- **Chara Dasha**: Jaimini's moving dasha system.
+- **Narayana Dasha**: Based on house occupancy.
+
+### 8. Horary (Prashna) Astrology
+- **Prashna Arudha**: Arudha based on seed number (1-249).
+- **Sphutas**: Trisphuta, Chatursphuta, Panchadhyayi, Shadvarga, Hora, Gulika.
+
+### 9. New Advanced Features
+- **House Strength (Vimsopaka)**: Enhanced Bhava Bala with divisional chart integration.
+- **Nadi Astrology**: Nadi identification from planetary positions (150 Nadis per sign).
+- **Progeny Analysis**: Child prediction based on 5th house, Jupiter, D7 chart, and child yogas.
+- **Marriage Compatibility**: Ashtakoota (36 Guna) matching with Manglik/Nadi/Bhakoot Dosha checks.
+
+### 10. Mean Node vs True Node (Rahu) Configuration
+- **Configurable Node Type**: Full support for switching between Mean Node (traditional Vedic standard) and True Node (modern preference) for Rahu/Ketu calculations.
+- **Global Setting via CalculationFlags**: Use `NodeType.meanNode` (default) for traditional calculations or `NodeType.trueNode` for greater precision with actual node positions.
+
+### 11. Lunar Month (Masa) & Abhijit Nakshatra
+- **Abhijit Nakshatra**: Full support for the 28th intercalary nakshatra (6°40' to 10°53'20" in Capricorn), including position checking and nakshatra calculation with Abhijit detection.
+- **Lunar Month (Masa) Calculations**: Complete implementation of both Amanta and Purnimanta lunar month systems:
+  - **Amanta (Amavasyanta)**: Month starts from Amavasya (New Moon). Used in Southern India, Gujarat, and other regions.
+  - **Purnimanta (Suklanta)**: Month starts from Purnima (Full Moon). Used in Northern India.
+- **Adhika Masa Detection**: Automatic detection of extra lunar months (leap months) in the lunar calendar.
+- **Samvatsara**: Support for the 60-year Jupiter cycle (Samvatsara names from Prabhava to Akshaya).
+
+### 12. Mean Node vs True Node (Rahu) Configuration
+- **Configurable Node Type**: Full support for switching between Mean Node (traditional Vedic standard) and True Node (modern preference) for Rahu/Ketu calculations.
+- **Global Setting via CalculationFlags**: Use `NodeType.meanNode` (default) for traditional calculations or `NodeType.trueNode` for greater precision with actual node positions.
+- **Per-Call Flexibility**: Calculate specific charts with different node types without affecting global defaults.
+- **Backward Compatible**: Mean Node remains the default to maintain compatibility with existing code and traditional astrologers.
 
 ---
 

@@ -33,10 +33,13 @@ enum Planet {
   pluto(SwissEphConstants.pluto, 'Pluto'),
 
   /// Mean Lunar Node (Rahu in Vedic astrology)
-  meanNode(SwissEphConstants.meanNode, 'Mean Node'),
+  meanNode(SwissEphConstants.meanNode, 'Rahu'),
 
   /// True Lunar Node (True Rahu)
-  trueNode(SwissEphConstants.trueNode, 'True Node'),
+  trueNode(SwissEphConstants.trueNode, 'Rahu (True)'),
+
+  /// Ketu (South Lunar Node) - the descending node, opposite to Rahu
+  ketu(SwissEphConstants.ketu, 'Ketu'),
 
   /// Mean Lunar Apogee (Black Moon Lilith)
   meanApogee(SwissEphConstants.meanApog, 'Mean Apogee'),
@@ -65,13 +68,13 @@ enum Planet {
   /// Vesta
   vesta(SwissEphConstants.vesta, 'Vesta');
 
+  const Planet(this.swissEphId, this.displayName);
+
   /// The Swiss Ephemeris constant for this planet
   final int swissEphId;
 
   /// The display name of this planet
   final String displayName;
-
-  const Planet(this.swissEphId, this.displayName);
 
   /// Returns a list of major planets (Sun through Pluto).
   static List<Planet> get majorPlanets => [
@@ -109,6 +112,7 @@ enum Planet {
   static List<Planet> get lunarNodes => [
         meanNode,
         trueNode,
+        ketu,
       ];
 
   /// Returns a list of lunar apogees.

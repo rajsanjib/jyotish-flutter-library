@@ -16,6 +16,10 @@ A comprehensive API reference for the Jyotish Flutter library - production-ready
   - [Pancha-Vargeeya Maitri (5-fold Friendship)](#pancha-vargeeya-maitri)
   - [Ayanamsa Utility](#ayanamsa-utility)
   - [Reference Chart Test Suite](#reference-chart-test-suite)
+- [New in v2.5.0](#new-in-v250)
+  - [Ashtakavarga Shodhana (Reductions)](#ashtakavarga-shodhana-reductions)
+  - [BPHS Dasha Applicability](#bphs-dasha-applicability)
+  - [Shadbala Minimum Requirements](#shadbala-minimum-requirements)
 - [Services](#services)
   - [EphemerisService](#ephemerisservice)
   - [VedicChartService](#vedicchartservice)
@@ -195,7 +199,7 @@ await jyotish.initialize({String? ephemerisPath});
 | `getYoginiDasha({natalChart, levels?})` | `Future<DashaResult>` | Yogini Dasha (36-year) |
 | `getCharaDasha({natalChart, levels?})` | `Future<CharaDashaResult>` | Chara Dasha (Jaimini) |
 | `getNarayanaDasha({chart, levels?})` | `Future<NarayanaDashaResult>` | Narayana Dasha (Jaimini) |
-| `getAshtottariDasha({natalChart, scheme?})` | `Future<AshtottariDashaResult>` | Ashtottari Dasha (108-year) |
+| `getAshtottariDasha({natalChart, scheme?, forceCalculation?})` | `Future<DashaResult>` | Ashtottari Dasha (108-year) |
 | `getKalachakraDasha({natalChart})` | `Future<KalachakraDashaResult>` | Kalachakra Dasha |
 | `getCurrentDasha({natalChart, targetDate, type?})` | `DashaPeriod` | Current active period |
 
@@ -240,6 +244,7 @@ await jyotish.initialize({String? ephemerisPath});
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `calculateAshtakavarga(natalChart)` | `Ashtakavarga` | Complete Ashtakavarga |
+| `calculateAshtakavargaWithShodhana(natalChart)` | `AshtakavargaWithShodhana` | Raw + Shodhana Reductions |
 | `analyzeAshtakavargaTransit({ashtakavarga, transitPlanet, transitSign})` | `TransitAnalysis` | Transit strength analysis |
 | `getAshtakavargaReductions(ashtakavarga, {trikonaReduction?, ekadhipatiReduction?})` | `Ashtakavarga` | Reduced Ashtakavarga |
 | `calculatePinda(ashtakavarga)` | `Map<Planet, PindaResult>` | Rashi + Graha Pinda strength |
@@ -787,7 +792,7 @@ final service = DashaService();
 | `calculateYoginiDasha({moonLongitude, birthDateTime, levels?, birthTimeUncertainty?})` | `DashaResult` | Yogini (36-year) dasha — durations computed in **milliseconds** for precision |
 | `calculateCharaDasha(rashiChart, {levels?})` | `CharaDashaResult` | Chara (Jaimini) dasha |
 | `getNarayanaDasha(rashiChart, {levels?})` | `NarayanaDashaResult` | Jaimini sign-based dasha — consecutive zodiacal/reverse sequence per Jaimini odd/even sign rule |
-| `getAshtottariDasha(chart, {scheme?})` | `AshtottariDashaResult` | 108-year cycle dasha |
+| `getAshtottariDasha(chart, {scheme?, forceCalculation?})` | `DashaResult` | 108-year cycle dasha |
 | `getKalachakraDasha(chart)` | `KalachakraDashaResult` | Nakshatra-based dasha — `balanceOfFirstDasha` computed from Moon's actual pada position |
 
 > **Accuracy Fixes (v2.3.0)**:

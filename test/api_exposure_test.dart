@@ -150,7 +150,8 @@ void main() {
         }
 
         // Ashtottari
-        final ashtottari = await jyotish.getAshtottariDasha(natalChart: chart);
+        final ashtottari = await jyotish.getAshtottariDasha(
+            natalChart: chart, forceCalculation: true);
         expect(ashtottari, isNotNull);
         expect(ashtottari.type, DashaType.ashtottari);
 

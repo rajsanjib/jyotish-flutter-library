@@ -704,9 +704,14 @@ class Jyotish {
   Future<DashaResult> getAshtottariDasha({
     required VedicChart natalChart,
     AshtottariScheme scheme = AshtottariScheme.ardraAdi,
+    bool forceCalculation = false,
   }) async {
     _ensureInitialized();
-    return _dashaService!.getAshtottariDasha(natalChart, scheme: scheme);
+    return _dashaService!.getAshtottariDasha(
+      natalChart,
+      scheme: scheme,
+      forceCalculation: forceCalculation,
+    );
   }
 
   /// Calculates Kalachakra Dasha.

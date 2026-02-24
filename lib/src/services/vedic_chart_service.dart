@@ -153,8 +153,23 @@ class VedicChartService {
 
     // Convert house cusps to sidereal
     final tropicalCusps = houseData['cusps']!;
-    final cusps =
-        tropicalCusps.map((cusp) => (cusp - ayanamsa + 360) % 360).toList();
+    List<double> cusps;
+
+    if (houseSystem == 'W') {
+      // For Whole Sign, Swiss Ephemeris returns cusps aligned with TROPICAL signs.
+      // Subtracting ayanamsa breaks the alignment with SIDEREAL signs.
+      // We must manually align the cusps to the sidereal sign of the Ascendant.
+      final ascSignIndex = (ascendant / 30).floor();
+      cusps = List.generate(12, (i) {
+        final signIndex = (ascSignIndex + i) % 12;
+        return signIndex * 30.0;
+      });
+    } else {
+      // For other systems (Placidus, Equal, etc.), subtracting ayanamsa from
+      // the tropical cusps correctly yields the exact sidereal cusps.
+      cusps =
+          tropicalCusps.map((cusp) => (cusp - ayanamsa + 360) % 360).toList();
+    }
 
     return HouseSystem(
       system: _getHouseSystemName(houseSystem),

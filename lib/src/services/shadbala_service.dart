@@ -428,22 +428,36 @@ class ShadbalaService {
     final moonInfo = chart.getPlanet(Planet.moon);
     if (sunInfo == null || moonInfo == null) return 0.0;
 
+    // Elongation: 0° = New Moon, 180° = Full Moon
     final elongation = (moonInfo.longitude - sunInfo.longitude + 360) % 360;
 
+    // Moon's Paksha Bala: peaks at Full Moon regardless of benefic/malefic status
     if (planet == Planet.moon) {
-      final pakshaStrength = elongation > 180 ? (360 - elongation) : elongation;
-      return (pakshaStrength / 180.0) * 60.0;
+      final shuklaStrength =
+          elongation <= 180 ? elongation : (360 - elongation);
+      return (shuklaStrength / 180.0) * 60.0;
     }
 
+    // Benefics (Jupiter, Venus, waxing-period Moon) gain in Shukla Paksha (Full Moon)
+    // Malefics (Sun, Mars, Saturn) gain in Krishna Paksha (New Moon)
+    // Per BPHS: Shukla Paksha (Moon waxing, elongation 0→180°) benefits benefics.
+    //           Krishna Paksha (Moon waning, elongation 180→360°) benefits malefics.
     final isBenefic = [Planet.jupiter, Planet.venus].contains(planet);
     final isMalefic = [Planet.sun, Planet.mars, Planet.saturn].contains(planet);
 
     if (isBenefic) {
-      return (elongation / 360.0) * 60.0;
+      // Peaks at elongation 180° (Full Moon)
+      final shuklaStrength =
+          elongation <= 180 ? elongation : (360 - elongation);
+      return (shuklaStrength / 180.0) * 60.0;
     } else if (isMalefic) {
-      return ((360 - elongation) / 360.0) * 60.0;
+      // Peaks at elongation 0°/360° (New Moon)
+      final krishnaStrength =
+          elongation <= 180 ? (180 - elongation) : (elongation - 180);
+      return (krishnaStrength / 180.0) * 60.0;
     }
 
+    // Mercury is always strong in both phases
     return 30.0;
   }
 

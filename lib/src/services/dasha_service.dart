@@ -372,7 +372,9 @@ class DashaService {
         final yogini = Yogini.values[idx];
         double durationDays =
             (cycle == 0 && i == 0) ? balanceDays : yogini.years * 365.25;
-        final endDate = currentDate.add(Duration(days: durationDays.round()));
+        // Use millisecond precision to avoid day-rounding drift (Issue 8)
+        final durationMs = (durationDays * 86400000).round();
+        final endDate = currentDate.add(Duration(milliseconds: durationMs));
 
         List<DashaPeriod> subPeriods = [];
         if (levels >= 2) {
@@ -389,7 +391,7 @@ class DashaService {
             lordName: yogini.name,
             startDate: currentDate,
             endDate: endDate,
-            duration: Duration(days: durationDays.round()),
+            duration: Duration(milliseconds: durationMs),
             level: 0,
             subPeriods: subPeriods));
         currentDate = endDate;
@@ -431,7 +433,9 @@ class DashaService {
       // Since we work in days:
       // Sub-period Days = Total Period Days * (Sub-period Lord Years / 36)
       final durationDays = mahadashaDays * (yogini.years / 36.0);
-      final endDate = currentDate.add(Duration(days: durationDays.round()));
+      // Millisecond precision (Issue 8)
+      final durationMs = (durationDays * 86400000).round();
+      final endDate = currentDate.add(Duration(milliseconds: durationMs));
 
       List<DashaPeriod> subPeriods = [];
       if (levels >= 3) {
@@ -447,7 +451,7 @@ class DashaService {
         lordName: yogini.name,
         startDate: currentDate,
         endDate: endDate,
-        duration: Duration(days: durationDays.round()),
+        duration: Duration(milliseconds: durationMs),
         level: 1,
         subPeriods: subPeriods,
       ));
@@ -468,14 +472,16 @@ class DashaService {
       final idx = (startingYoginiIndex + i) % 8;
       final yogini = Yogini.values[idx];
       final durationDays = antardashaDays * (yogini.years / 36.0);
-      final endDate = currentDate.add(Duration(days: durationDays.round()));
+      // Millisecond precision (Issue 8)
+      final durationMs = (durationDays * 86400000).round();
+      final endDate = currentDate.add(Duration(milliseconds: durationMs));
 
       pratyantardashas.add(DashaPeriod(
         lord: yogini.planet,
         lordName: yogini.name,
         startDate: currentDate,
         endDate: endDate,
-        duration: Duration(days: durationDays.round()),
+        duration: Duration(milliseconds: durationMs),
         level: 2,
         subPeriods: const [],
       ));
@@ -548,8 +554,15 @@ class DashaService {
         lagnaStrength >= seventhStrength ? lagnaSign : seventhSign;
 
     final sequence = <Rashi>[];
+    // Issue 13: Narayana Dasha follows consecutive zodiacal order.
+    // If starting sign is odd (Aries=1, Gemini=3, ...), sequence proceeds
+    // forward. If even, it proceeds in reverse. (Jaimini rule)
+    final isOdd = startingSign.number % 2 != 0;
     for (var i = 0; i < 12; i++) {
-      sequence.add(Rashi.fromIndex((startingSign.number + (i * 6)) % 12));
+      final idx = isOdd
+          ? (startingSign.number + i) % 12
+          : (startingSign.number - i + 12) % 12;
+      sequence.add(Rashi.fromIndex(idx));
     }
 
     final mahadashas = <DashaPeriod>[];
@@ -731,9 +744,19 @@ class DashaService {
     final mahadashas = <DashaPeriod>[];
     var currentDate = chart.dateTime;
 
-    for (var sign in sequence) {
+    // Issue 12: Compute balance of first dasha from Moon's position in pada
+    final padaWidth = nakshatraWidth / 4;
+    final posInNakshatra = moonLongitude % nakshatraWidth;
+    final posInPada = posInNakshatra % padaWidth;
+    final portionRemaining = 1.0 - (posInPada / padaWidth);
+    final firstDashaYears = _getKalachakraYears(sequence.first);
+    final balanceDays = firstDashaYears * 365.25 * portionRemaining;
+
+    for (var idx = 0; idx < sequence.length; idx++) {
+      final sign = sequence[idx];
       final years = _getKalachakraYears(sign);
-      final durationDays = years * 365.25;
+      // First sign uses balance, rest use full duration
+      final durationDays = (idx == 0) ? balanceDays : years * 365.25;
       final endDate = currentDate.add(Duration(days: durationDays.round()));
       mahadashas.add(DashaPeriod(
           rashi: sign,
@@ -750,7 +773,7 @@ class DashaService {
       moonLongitude: moonLongitude,
       birthNakshatra: _nakshatraNames[nakshatraIndex],
       birthPada: pada,
-      balanceOfFirstDasha: 0,
+      balanceOfFirstDasha: balanceDays,
       allMahadashas: mahadashas,
     );
   }

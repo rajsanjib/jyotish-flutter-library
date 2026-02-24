@@ -183,6 +183,7 @@ class AspectConfig {
     this.customOrbs,
     this.minimumStrength = 0.0,
     this.includeNodes = true,
+    this.useWholeSignAspects = true,
   });
 
   /// Whether to include special planetary aspects (Mars, Jupiter, Saturn)
@@ -197,10 +198,31 @@ class AspectConfig {
   /// Whether to include Rahu/Ketu in aspect calculations
   final bool includeNodes;
 
-  /// Default configuration for Vedic astrology
+  /// Whether to use whole-sign (sign-to-sign) Vedic aspects.
+  ///
+  /// When [true] (default), a planet aspects an entire sign regardless of
+  /// degree separation — the classical Parashari Graha Drishti model.
+  /// Aspect strength is always 1.0 (binary).
+  ///
+  /// When [false], degree-based orb calculations are used (suitable for
+  /// Western astrology, KP, or custom research).
+  final bool useWholeSignAspects;
+
+  /// Default configuration for Vedic (Parashari) astrology.
+  ///
+  /// Uses whole-sign aspects per BPHS standard.
   static const AspectConfig vedic = AspectConfig(
     includeSpecialAspects: true,
     includeNodes: true,
     minimumStrength: 0.0,
+    useWholeSignAspects: true,
+  );
+
+  /// Configuration for Western / KP astrology (degree-based orb aspects).
+  static const AspectConfig western = AspectConfig(
+    includeSpecialAspects: false,
+    includeNodes: false,
+    minimumStrength: 0.0,
+    useWholeSignAspects: false,
   );
 }

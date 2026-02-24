@@ -1394,6 +1394,129 @@ class Jyotish {
   }
 
   // ============================================================
+  // KP TRANSIT VS NATAL COMPARISON
+  // ============================================================
+
+  /// Compares transit KP Sub-Lords against natal Sub-Lords for every planet.
+  ///
+  /// Calculates transit positions at [transitDateTime] (default: now), converts
+  /// them to KP divisions with the same ayanamsa as the natal chart, then
+  /// checks each planet's Star-Lord and Sub-Lord against the natal chart.
+  ///
+  /// **The primary KP rule**: an event is activated when the transiting planet's
+  /// Sub-Lord matches, or signifies the same houses as, the natal Sub-Lord.
+  ///
+  /// [natalChart] - The birth chart used to build [natalKP].
+  /// [natalKP]    - Pre-computed natal KP data (from [calculateKPData]).
+  ///                If omitted, it is computed internally.
+  /// [transitDateTime] - Moment to check (default: current time).
+  /// [location]   - Geographic location for transit house calculation.
+  /// [useNewAyanamsa] - Use KP New VP291 (default) or old KP ayanamsa.
+  ///
+  /// Returns a list of [KPTransitComparison], sorted strongest-match first.
+  ///
+  /// Example:
+  /// ```dart
+  /// final comparisons = await jyotish.compareKPTransitToNatal(
+  ///   natalChart: birthChart,
+  ///   location: location,
+  /// );
+  /// for (final c in comparisons.where((c) => c.subLordMatches)) {
+  ///   print('${c.planet}: transit sub-lord matches natal!');
+  /// }
+  /// ```
+  Future<List<KPTransitComparison>> compareKPTransitToNatal({
+    required VedicChart natalChart,
+    KPCalculations? natalKP,
+    DateTime? transitDateTime,
+    required GeographicLocation location,
+    bool useNewAyanamsa = true,
+  }) async {
+    _ensureInitialized();
+
+    try {
+      final queryTime = transitDateTime ?? DateTime.now();
+
+      // Build natal KP if not provided
+      final resolvedNatalKP =
+          natalKP ?? await _kpService!.calculateKPData(natalChart);
+
+      // Get transit planet positions using the Jyotish public method
+      final transitRawPositions = await getAllPlanetPositions(
+        dateTime: queryTime,
+        location: location,
+      );
+
+      // Convert to KP divisions (ayanamsa-adjusted)
+      final transitDivisions =
+          _kpService!.calculateTransitKPDivisions(transitRawPositions);
+
+      return _kpService!.compareTransitToNatal(
+        natalKP: resolvedNatalKP,
+        transitDivisions: transitDivisions,
+      );
+    } catch (e) {
+      if (e is JyotishException) rethrow;
+      throw JyotishException(
+        'Failed to compare KP transit to natal: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
+  // ============================================================
+  // KP RULING PLANETS (PRASHNA)
+  // ============================================================
+
+  /// Calculates the seven KP Ruling Planets at a Prashna (horary) query moment.
+  ///
+  /// The Ruling Planets are the Sign, Star, and Sub lords of:
+  /// - **Day Lord** (weekday planetary ruler)
+  /// - **Ascendant** (lagna at the query time)
+  /// - **Moon** (position at the query time)
+  ///
+  /// This is the mandatory first step in any KP Prashna reading.
+  /// The resulting [KPRulingPlanets.rulingPlanets] list (deduplicated, priority-ordered)
+  /// is used to narrow down which significators are currently "empowered."
+  ///
+  /// [chart] - The Prashna chart at the exact query moment.
+  ///           Compute with `calculateVedicChart(houseSystem: 'P')` for Placidus.
+  /// [useNewAyanamsa] - Use KP New VP291 (default) or old KP ayanamsa.
+  ///
+  /// Returns [KPRulingPlanets] with all seven lords and their full KP divisions.
+  ///
+  /// Example:
+  /// ```dart
+  /// final prashnaChart = await jyotish.calculateVedicChart(
+  ///   dateTime: DateTime.now(),
+  ///   location: location,
+  ///   houseSystem: 'P', // Placidus — required for KP
+  /// );
+  /// final rp = await jyotish.getKPRulingPlanets(chart: prashnaChart);
+  /// print('Ruling Planets: ${rp.rulingPlanets}');
+  /// print('Day Lord: ${rp.dayLord}');
+  /// ```
+  Future<KPRulingPlanets> getKPRulingPlanets({
+    required VedicChart chart,
+    bool useNewAyanamsa = true,
+  }) async {
+    _ensureInitialized();
+
+    try {
+      return await _kpService!.calculateRulingPlanets(
+        chart,
+        useNewAyanamsa: useNewAyanamsa,
+      );
+    } catch (e) {
+      if (e is JyotishException) rethrow;
+      throw JyotishException(
+        'Failed to calculate KP Ruling Planets: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
+  // ============================================================
   // SPECIAL TRANSIT FEATURES
   // ============================================================
 

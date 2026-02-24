@@ -137,13 +137,13 @@ class CompatibilityService {
   // Score 2 = same category, 1 = compatible, 0 = incompatible.
 
   int calculateVashya(VedicChart boyChart, VedicChart girlChart) {
-    final boyMoonSign =
-        Rashi.fromLongitude(boyChart.getPlanet(Planet.moon)?.longitude ?? 0);
-    final girlMoonSign =
-        Rashi.fromLongitude(girlChart.getPlanet(Planet.moon)?.longitude ?? 0);
+    final boyMoonLong = boyChart.getPlanet(Planet.moon)?.longitude ?? 0;
+    final girlMoonLong = girlChart.getPlanet(Planet.moon)?.longitude ?? 0;
+    final boyMoonSign = Rashi.fromLongitude(boyMoonLong);
+    final girlMoonSign = Rashi.fromLongitude(girlMoonLong);
 
-    final boyVashya = _getRashiVashya(boyMoonSign);
-    final girlVashya = _getRashiVashya(girlMoonSign);
+    final boyVashya = _getRashiVashya(boyMoonSign, boyMoonLong);
+    final girlVashya = _getRashiVashya(girlMoonSign, girlMoonLong);
 
     if (boyVashya == girlVashya) return 2;
     // Compatible pairs per tradition
@@ -154,17 +154,32 @@ class CompatibilityService {
     return 0;
   }
 
-  String _getRashiVashya(Rashi rashi) {
-    return switch (rashi) {
-      Rashi.gemini || Rashi.virgo || Rashi.libra || Rashi.aquarius => 'Manava',
-      Rashi.sagittarius =>
-        'Manava', // First half is Manava, simplified to whole sign
-      Rashi.leo => 'Vanachara',
-      Rashi.aries || Rashi.taurus => 'Chatushpada',
-      Rashi.capricorn => 'Chatushpada', // First half is Chatushpada, simplified
-      Rashi.cancer || Rashi.pisces => 'Jalachara',
-      Rashi.scorpio => 'Keeta',
-    };
+  /// Returns Vashya category for a Moon sign.
+  ///
+  /// Dual signs (Sagittarius, Capricorn) are split at the 15° boundary per
+  /// classical texts to account for their mixed Vashya nature.
+  String _getRashiVashya(Rashi rashi, double longitude) {
+    final degreeInSign = longitude % 30; // 0–30° within the sign
+    switch (rashi) {
+      // Dual-Vashya signs: split at 15°
+      case Rashi.sagittarius:
+        // 0°–15° Sagittarius → Chatushpada (animal); 15°–30° → Manava (human)
+        return degreeInSign < 15 ? 'Chatushpada' : 'Manava';
+      case Rashi.capricorn:
+        // 0°–15° Capricorn → Chatushpada; 15°–30° → Jalachara (aquatic)
+        return degreeInSign < 15 ? 'Chatushpada' : 'Jalachara';
+      // Standard single-Vashya signs
+      case Rashi.gemini || Rashi.virgo || Rashi.libra || Rashi.aquarius:
+        return 'Manava';
+      case Rashi.leo:
+        return 'Vanachara';
+      case Rashi.aries || Rashi.taurus:
+        return 'Chatushpada';
+      case Rashi.cancer || Rashi.pisces:
+        return 'Jalachara';
+      case Rashi.scorpio:
+        return 'Keeta';
+    }
   }
 
   // ─── Tara Koota (max 3 points) ──────────────────────────────────────────────
@@ -601,6 +616,18 @@ class CompatibilityService {
     );
   }
 
+  /// Checks for Manglik Dosha and its cancellations.
+  ///
+  /// Dosha is confirmed when Mars occupies houses 1, 2, 4, 7, 8, or 12
+  /// from the Ascendant, Moon, or Venus charts.
+  ///
+  /// Cancellation rules per BPHS and Phaladeepika:
+  /// 1. Mars in own sign (Aries, Scorpio) or exalted (Capricorn)
+  /// 2. Mars conjunct Jupiter or Moon (benefic conjunction)
+  /// 3. Mars in Leo or Aquarius (weakens the dosha in houses 7/8)
+  /// 4. Mars aspected by Jupiter or Venus in the same chart
+  /// 5. Mars is the lagna lord (chart has Aries or Scorpio Ascendant)
+  /// 6. Both partners are Manglik — mutual cancellation (check at compatibility level)
   ManglikDoshaResult checkManglikDosha(VedicChart chart) {
     bool isManglik = false;
     final housesAffected = <int>[];
@@ -628,68 +655,100 @@ class CompatibilityService {
     final marsSign = Rashi.fromLongitude(mars.longitude);
 
     // Get houses of Mars from Ascendant, Moon, and Venus
-    int marsFromAsc = _getHouseDistance(ascendantSign, marsSign);
-    int marsFromMoon = _getHouseDistance(moonSign, marsSign);
-    int marsFromVenus = _getHouseDistance(venusSign, marsSign);
+    final marsFromAsc = _getHouseDistance(ascendantSign, marsSign);
+    final marsFromMoon = _getHouseDistance(moonSign, marsSign);
+    final marsFromVenus = _getHouseDistance(venusSign, marsSign);
 
-    final manglikHouses = [1, 2, 4, 7, 8, 12];
+    const manglikHouses = [1, 2, 4, 7, 8, 12];
 
-    bool manglikFromAsc = manglikHouses.contains(marsFromAsc);
-    bool manglikFromMoon = manglikHouses.contains(marsFromMoon);
-    bool manglikFromVenus = manglikHouses.contains(marsFromVenus);
+    final manglikFromAsc = manglikHouses.contains(marsFromAsc);
+    final manglikFromMoon = manglikHouses.contains(marsFromMoon);
+    final manglikFromVenus = manglikHouses.contains(marsFromVenus);
 
     if (manglikFromAsc || manglikFromMoon || manglikFromVenus) {
       isManglik = true;
       if (manglikFromAsc) housesAffected.add(marsFromAsc);
 
       // Determine severity
-      int doshaCount = (manglikFromAsc ? 1 : 0) +
+      final doshaCount = (manglikFromAsc ? 1 : 0) +
           (manglikFromMoon ? 1 : 0) +
           (manglikFromVenus ? 1 : 0);
       severity = doshaCount >= 2 ? 'High' : 'Moderate';
 
-      // Check Cancellations (Parihara)
+      // ─── Cancellation checks (Parihara) ──────────────────────────────────
       bool isCancelled = false;
 
-      // 1. Mars in own sign (Aries, Scorpio) or exalted (Capricorn)
+      // Rule 1: Mars in own sign (Aries, Scorpio) or exalted (Capricorn)
       if (marsSign == Rashi.aries ||
           marsSign == Rashi.scorpio ||
           marsSign == Rashi.capricorn) {
         isCancelled = true;
+        remedies.add('Mars in own/exalted sign — Dosha cancelled (Parihara 1)');
       }
 
-      // 2. Mars conjunct Jupiter or Moon
+      // Rule 2: Mars conjunct (same sign as) Jupiter or Moon
       final jupiter = chart.getPlanet(Planet.jupiter);
       final moon = chart.getPlanet(Planet.moon);
-      if ((jupiter != null &&
-              _getHouseDistance(
-                      ascendantSign, Rashi.fromLongitude(jupiter.longitude)) ==
-                  marsFromAsc) ||
-          (moon != null &&
-              _getHouseDistance(
-                      ascendantSign, Rashi.fromLongitude(moon.longitude)) ==
-                  marsFromAsc)) {
+      final jupiterSign =
+          jupiter != null ? Rashi.fromLongitude(jupiter.longitude) : null;
+      final moonSignCurrent =
+          moon != null ? Rashi.fromLongitude(moon.longitude) : null;
+      if (jupiterSign == marsSign || moonSignCurrent == marsSign) {
         isCancelled = true;
+        remedies
+            .add('Mars conjunct Jupiter/Moon — Dosha cancelled (Parihara 2)');
+      }
+
+      // Rule 3: Mars in Leo or Aquarius (weakens dosha in houses 7 and 8)
+      if (marsSign == Rashi.leo || marsSign == Rashi.aquarius) {
+        isCancelled = true;
+        remedies.add('Mars in Leo/Aquarius — Dosha cancelled (Parihara 3)');
+      }
+
+      // Rule 4: Mars aspected (same sign) by Jupiter or Venus
+      final venus = chart.getPlanet(Planet.venus);
+      final venusSignForAspect =
+          venus != null ? Rashi.fromLongitude(venus.longitude) : null;
+      // Whole-sign aspect: check if Jupiter or Venus is in a sign that
+      // aspects Mars's sign (7th from each aspecting planet)
+      bool marsAspectedByBenefic = false;
+      if (jupiterSign != null) {
+        final jupAspectsSign = Rashi.fromIndex((jupiterSign.index + 6) % 12);
+        if (jupAspectsSign == marsSign) marsAspectedByBenefic = true;
+      }
+      if (venusSignForAspect != null) {
+        final venAspectsSign =
+            Rashi.fromIndex((venusSignForAspect.index + 6) % 12);
+        if (venAspectsSign == marsSign) marsAspectedByBenefic = true;
+      }
+      if (marsAspectedByBenefic) {
+        isCancelled = true;
+        remedies.add(
+            'Mars aspected by Jupiter or Venus — Dosha cancelled (Parihara 4)');
+      }
+
+      // Rule 5: Mars is the lagna lord (Aries or Scorpio Ascendant)
+      if (ascendantSign == Rashi.aries || ascendantSign == Rashi.scorpio) {
+        isCancelled = true;
+        remedies.add('Mars rules the Ascendant — Dosha cancelled (Parihara 5)');
       }
 
       if (isCancelled) {
         isManglik = false;
         severity = 'Cancelled';
-        remedies.add(
-            'Manglik Dosha is present but cancelled by planetary placements (Parhiara).');
       } else {
         remedies.addAll([
-          'Chant Mangal Mantra',
-          'Donate red clothes on Tuesdays',
-          'Fast on Tuesdays'
+          'Chant Mangal Mantra daily',
+          'Donate red clothes or red lentils on Tuesdays',
+          'Fast on Tuesdays',
+          'Perform Mangal Shanti puja',
         ]);
       }
     }
 
     return ManglikDoshaResult(
       isManglik: isManglik,
-      housesAffected:
-          housesAffected.toSet().toList(), // unique houses from ascendant
+      housesAffected: housesAffected.toSet().toList(),
       severity: severity,
       remedies: remedies,
     );

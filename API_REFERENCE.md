@@ -247,11 +247,15 @@ await jyotish.initialize({String? ephemerisPath});
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `calculateKPData(natalChart, {useNewAyanamsa?})` | `KPCalculations` | Complete KP data |
+| `calculateKPData(natalChart, {useNewAyanamsa?})` | `Future<KPCalculations>` | Complete KP data (ayanamsa-adjusted Sub-Lords, cusp-based significators) |
 | `getSubLord(longitude)` | `Planet` | Sub-Lord for longitude |
 | `getSubSubLord(longitude)` | `Planet` | Sub-Sub-Lord |
 | `getHouseGroupSignificators(significators)` | `KPHouseGroupSignificators` | House group significators |
 | `calculateTransitKPDivisions(transitPositions)` | `Map<Planet, KPDivision>` | Transit KP divisions |
+| `compareKPTransitToNatal({natalChart, natalKP?, transitDateTime?, location, useNewAyanamsa?})` | `Future<List<KPTransitComparison>>` | Transit vs natal Sub-Lord comparison, sorted by match strength |
+| `getKPRulingPlanets({chart, useNewAyanamsa?})` | `Future<KPRulingPlanets>` | Seven KP Ruling Planets for a Prashna query moment |
+
+> **Accuracy note (v2.2.0)**: C and D significators now use the chart's actual Placidus house cusps (`getOwnedHousesFromChart`) instead of the fixed natural Aries Lagna sign map. This ensures Mars correctly shows houses 5 & 12 for a chart where Aries falls on the 5th cusp, rather than always returning houses 1 & 8.
 
 #### Muhurta Methods
 
@@ -382,6 +386,13 @@ await jyotish.initialize({String? ephemerisPath});
 > - **Yoni Koota**: Replaced simple friend/enemy array pairs with the standard precision 14x14 Yoni points matrix to correctly return intermediate scores.
 > - **Samvatsara (Varsha Bala)**: The 60-year cycle calculation inside `ShadbalaService` now correctly computes the elapsed Jovian Years since the Kali Yuga epoch using Mean Jupiter motion (Ahargana) rather than simply reading Jupiter's spatial position.
 > - **Maasa Bala**: Month-lord mapping updated to align correctly with the Drik Siddhanta.
+>
+> **Accuracy Fixes (v2.3.0)**:
+> - **Vashya Dual Signs (Issue 10)**: Sagittarius and Capricorn are now split at the 15° boundary: Sagittarius 0°–15° = Chatushpada, 15°–30° = Manava; Capricorn 0°–15° = Chatushpada, 15°–30° = Jalachara. A `longitude` parameter is now passed to the internal `_getRashiVashya` method.
+> - **Manglik Dosha Cancellations (Issue 11)**: Added 3 additional BPHS/Phaladeepika Parihara rules:
+>   1. Mars in Leo or Aquarius
+>   2. Mars aspected (whole-sign 7th) by Jupiter or Venus
+>   3. Mars is the Lagna Lord (Aries or Scorpio Ascendant)
 
 #### Service Accessors
 
@@ -571,6 +582,42 @@ final service = VedicChartService(ephemerisService);
 |--------|---------|-------------|
 | `calculateChart({dateTime, location, houseSystem?, includeOuterPlanets?, flags?})` | `Future<VedicChart>` | Complete Vedic chart |
 
+**Planetary Dignity Priority (BPHS order)**
+
+| Priority | Dignity | Rule |
+|----------|---------|------|
+| 1 | `exalted` | Planet in its exaltation sign |
+| 2 | `debilitated` | Planet in its debilitation sign |
+| 3 | `moolaTrikona` | Planet within BPHS MT degree range in MT sign |
+| 4 | `ownSign` | Planet in its own sign (outside MT range) |
+| 5 | `friendSign` / `enemySign` / `neutralSign` | Sign-lord friendship |
+
+**Moola Trikona Degree Ranges (BPHS)**
+
+| Planet | Sign | MT Range |
+|--------|------|----------|
+| Sun | Leo | 0°–20° |
+| Moon | Taurus | 4°–20° |
+| Mars | Aries | 0°–12° |
+| Mercury | Virgo | 16°–20° |
+| Jupiter | Sagittarius | 0°–10° |
+| Venus | Libra | 0°–15° |
+| Saturn | Aquarius | 0°–20° |
+
+**Debilitation Degree Corrections (v2.3.0)**
+
+| Planet | Old value | Correct value |
+|--------|-----------|---------------|
+| Venus | 165.0° (15° Virgo) | 177.0° (27° Virgo) |
+
+**Rahu/Ketu Dignity (v2.3.0)**
+- Both `Planet.meanNode` and `Planet.trueNode` are supported for exaltation and debilitation
+- **Rahu**: Exalted in Gemini, Debilitated in Sagittarius
+- **Ketu**: Exalted in Sagittarius, Debilitated in Gemini (opposite Rahu)
+
+**Planetary Relationships (v2.3.0)**
+- Moon→Venus: corrected to **enemy** (-1) per BPHS (was incorrectly set to friend)
+
 ---
 
 ### DashaService
@@ -584,11 +631,16 @@ final service = DashaService();
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `calculateVimshottariDasha({moonLongitude, birthDateTime, levels?, birthTimeUncertainty?})` | `DashaResult` | Vimshottari (120-year) dasha |
-| `calculateYoginiDasha({moonLongitude, birthDateTime, levels?, birthTimeUncertainty?})` | `DashaResult` | Yogini (36-year) dasha with sub-periods |
+| `calculateYoginiDasha({moonLongitude, birthDateTime, levels?, birthTimeUncertainty?})` | `DashaResult` | Yogini (36-year) dasha — durations computed in **milliseconds** for precision |
 | `calculateCharaDasha(rashiChart, {levels?})` | `CharaDashaResult` | Chara (Jaimini) dasha |
-| `getNarayanaDasha(rashiChart, {levels?})` | `NarayanaDashaResult` | Jaimini sign-based dasha |
+| `getNarayanaDasha(rashiChart, {levels?})` | `NarayanaDashaResult` | Jaimini sign-based dasha — consecutive zodiacal/reverse sequence per Jaimini odd/even sign rule |
 | `getAshtottariDasha(chart, {scheme?})` | `AshtottariDashaResult` | 108-year cycle dasha |
-| `getKalachakraDasha(chart)` | `KalachakraDashaResult` | Nakshatra-based dasha |
+| `getKalachakraDasha(chart)` | `KalachakraDashaResult` | Nakshatra-based dasha — `balanceOfFirstDasha` computed from Moon's actual pada position |
+
+> **Accuracy Fixes (v2.3.0)**:
+> - **Yogini Dasha (Issue 8)**: Antardasha and Pratyantardasha durations now accumulated in milliseconds to eliminate day-rounding drift across sub-period chains.
+> - **Kalachakra Dasha (Issue 12)**: `DashaResult.balanceOfFirstDasha` is now the actual remaining days calculated from the Moon's proportional position within its pada (was hardcoded to 0).
+> - **Narayana Dasha (Issue 13)**: The 12-sign sequence now follows consecutive zodiacal order (forward for odd starting signs, reverse for even) per the Jaimini rule, replacing the incorrect `i × 6` modulo formula.
 
 ---
 
@@ -678,11 +730,46 @@ final service = AspectService();
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `calculateAspects(positions, {config?})` | `List<AspectInfo>` | All aspects |
+| `calculateAspects(positions, {config?})` | `List<AspectInfo>` | All aspects (whole-sign by default) |
 | `getAspectsForPlanet(planet, positions, {config?})` | `List<AspectInfo>` | Aspects involving planet |
 | `getAspectsCastBy(planet, positions, {config?})` | `List<AspectInfo>` | Aspects cast by planet |
 | `getAspectsReceivedBy(planet, positions, {config?})` | `List<AspectInfo>` | Aspects received by planet |
-| `getPlanetsAspectingSign(houseSignIndex, positions)` | `List<Planet>` | Planets aspecting sign |
+| `getPlanetsAspectingSign(houseSignIndex, positions, {useWholeSign?})` | `List<Planet>` | Planets aspecting sign (whole-sign default) |
+
+**AspectConfig**
+
+| Preset | `useWholeSignAspects` | Description |
+|--------|-----------------------|-------------|
+| `AspectConfig.vedic` *(default)* | `true` | Sign-to-sign Parashari aspects — planets aspect the entire sign, strength = 1.0 |
+| `AspectConfig.western` | `false` | Degree + orb system for Western / KP use |
+
+```dart
+// Vedic (whole-sign) — default
+final aspects = service.calculateAspects(positions);
+
+// Western/KP (degree-based)
+final aspects = service.calculateAspects(
+  positions,
+  config: AspectConfig.western,
+);
+
+// Custom: whole-sign with special aspects disabled
+final config = AspectConfig(
+  useWholeSignAspects: true,
+  includeSpecialAspects: false,
+);
+```
+
+**Vedic Special Aspects (whole-sign)**
+
+| Planet | Houses Aspected |
+|--------|----------------|
+| All planets | 7th (opposition) |
+| Mars | 4th, 7th, 8th |
+| Jupiter | 5th, 7th, 9th |
+| Saturn | 3rd, 7th, 10th |
+
+> **Accuracy Fix (v2.3.0)**: Aspects are now calculated sign-to-sign (Parashari whole-sign model) rather than degree+orb. A planet in sign X aspects every planet in the target sign regardless of exact degree separation. Strength is always `1.0`. Use `AspectConfig.western` to retain degree-based orb calculations for KP or Western use.
 
 ---
 
@@ -755,6 +842,9 @@ final service = ShadbalaService(ephemerisService);
 5. **Naisargika Bala** - Natural strength
 6. **Drik Bala** - Aspectual strength (linear interpolation, partial aspects)
 
+> **Accuracy Fix (v2.3.0) — Paksha Bala (Issue 9)**:
+> Paksha Bala now correctly peaks for **benefics** (Jupiter, Venus) at Full Moon (elongation = 180°) and for **malefics** (Sun, Mars, Saturn) at New Moon (elongation = 0°), per BPHS. The previous formula was using a simple linear elongation ratio which gave malefics maximum strength at Full Moon — the opposite of classical texts. Moon's own Paksha Bala still peaks at Full Moon irrespective of paksha type.
+
 ---
 
 ### KPService
@@ -767,11 +857,29 @@ final service = KPService(ephemerisService);
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `calculateKPData(natalChart, {useNewAyanamsa?})` | `KPCalculations` | Complete KP data |
+| `calculateKPData(natalChart, {useNewAyanamsa?})` | `Future<KPCalculations>` | Complete KP data with cusp-based ABCD significators |
 | `getSubLord(longitude)` | `Planet` | Sub-Lord for longitude |
 | `getSubSubLord(longitude)` | `Planet` | Sub-Sub-Lord |
-| `getHouseGroupSignificators(significators)` | `Map<int, Set<Planet>>` | House significators |
-| `calculateTransitKPDivisions(transitPositions)` | `Map<Planet, KPDivision>` | Transit KP data |
+| `getHouseGroupSignificators(significators)` | `KPHouseGroupSignificators` | House group significators |
+| `calculateTransitKPDivisions(transitPositions)` | `Map<Planet, KPDivision>` | Transit KP divisions |
+| `compareTransitToNatal({natalKP, transitDivisions})` | `List<KPTransitComparison>` | Sync transit Sub-Lords against natal; sorted by match strength |
+| `calculateRulingPlanets(chart, {useNewAyanamsa?})` | `Future<KPRulingPlanets>` | Seven KP Ruling Planets (Day, Asc Sign/Star/Sub, Moon Sign/Star/Sub) |
+
+**ABCD Significator Grades**:
+- **A**: Houses *occupied* by the planet's Sign Lord  
+- **B**: Houses *occupied* by the planet's Star Lord  
+- **C**: Houses *owned* by the planet (based on actual chart cusps — v2.2.0 fix)  
+- **D**: Houses *owned* by the planet's Sign Lord (based on actual chart cusps — v2.2.0 fix)  
+
+**Transit Comparison** (`compareTransitToNatal`):
+- Checks Star-Lord match, Sub-Lord match, and common house significators
+- Returns list sorted by `matchStrength` (0–3)
+- `isActive` is true when any of the three triggers fire
+
+**Ruling Planets** (`calculateRulingPlanets` / `getKPRulingPlanets`):
+- Computes Sign, Star, and Sub lords of the Ascendant and Moon
+- Adds the weekday Day Lord
+- Deduplicates by priority order; returns `KPRulingPlanets.rulingPlanets`
 
 ---
 

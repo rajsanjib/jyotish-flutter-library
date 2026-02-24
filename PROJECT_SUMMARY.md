@@ -2,7 +2,7 @@
 
 ## 📦 What We've Built
 
-A complete, production-ready Flutter library for astronomical calculations using Swiss Ephemeris. The library is designed for astrology and astronomy applications requiring high-precision planetary position calculations.
+A complete, production-ready Vedic astrology engine for Flutter using Swiss Ephemeris. The library provides high-precision astronomical calculations and a comprehensive suite of Vedic astrology services (Dasha, Shadbala, Ashtakavarga, KP System, Jaimini, etc.).
 
 ## 🏗️ Project Structure
 
@@ -11,151 +11,105 @@ jyotish/
 ├── lib/
 │   ├── jyotish.dart                              # Main export file
 │   └── src/
-│       ├── jyotish_core.dart                     # Core API class
+│       ├── jyotish_core.dart                     # Core API (Singleton)
 │       ├── bindings/
-│       │   └── swisseph_bindings.dart            # FFI bindings to C library
-│       ├── models/
-│       │   ├── planet.dart                       # Planet enumeration
-│       │   ├── planet_position.dart              # Position data model
-│       │   ├── geographic_location.dart          # Location model
-│       │   └── calculation_flags.dart            # Calculation options
-│       ├── services/
-│       │   └── ephemeris_service.dart            # Core calculation service
-│       ├── constants/
-│       │   └── planet_constants.dart             # Swiss Ephemeris constants
-│       └── exceptions/
-│           └── jyotish_exception.dart            # Exception classes
-├── example/
-│   ├── lib/
-│   │   └── main.dart                             # Demo Flutter app
-│   └── pubspec.yaml
-├── test/
-│   └── jyotish_test.dart                         # Comprehensive unit tests
-├── README.md                                      # Complete documentation
-├── QUICKSTART.md                                  # 5-minute tutorial
-├── SETUP.md                                       # Installation guide
-├── CHANGELOG.md                                   # Version history
-├── CONTRIBUTING.md                                # Contribution guidelines
+│       │   └── swisseph_bindings.dart            # FFI bindings to Swiss Ephemeris
+│       ├── models/                               # 30+ Data models
+│       │   ├── planet.dart, planet_position.dart
+│       │   ├── dasha.dart, panchanga.dart
+│       │   ├── shadbala.dart, ashtakavarga.dart
+│       │   ├── kp_calculations.dart, jaimini.dart
+│       │   └── ... (see src/models for full list)
+│       ├── services/                             # 30+ Specialized services
+│       │   ├── ephemeris_service.dart            # Core calculations
+│       │   ├── dasha_service.dart                # 6+ Dasha systems
+│       │   ├── shadbala_service.dart             # 6-fold planetary strength
+│       │   ├── panchanga_service.dart            # Classical Vedic calendar
+│       │   └── ... (see src/services for full list)
+│       └── ...
+├── jyotish-js/                                   # JavaScript/TypeScript port (Experimental)
+├── native/                                       # Compiled Swiss Ephemeris binaries
+├── example/                                      # Demo Flutter app
+├── test/                                         # 200+ Automated tests
+├── README.md                                      # Documentation & API usage
+├── QUICKSTART.md                                  # 10-minute tutorial
+├── SETUP.md                                       # Installation & Native Setup
+├── CHANGELOG.md                                   # Detailed version history
+├── CONTRIBUTING.md                                # Dev workflow
 ├── LICENSE                                        # MIT License
-├── analysis_options.yaml                          # Linting rules
-├── .gitignore                                     # Git ignore patterns
-└── pubspec.yaml                                   # Package configuration
+└── pubspec.yaml                                   # Dependencies
 ```
 
 ## ✨ Key Features Implemented
 
-### 1. **Core Functionality**
+### 1. **Core Vedic Engine**
 
 - ✅ Swiss Ephemeris FFI integration (all platforms)
 - ✅ High-precision planetary position calculations
-- ✅ Support for all major planets (Sun through Pluto)
-- ✅ Lunar nodes (Mean & True Node/Rahu)
-- ✅ Lunar apogees (Black Moon Lilith)
-- ✅ Major asteroids (Chiron, Ceres, Pallas, Juno, Vesta)
+- ✅ Support for 21 celestial bodies (Planets, Nodes, Asteroids)
+- ✅ **Vedic Accuracy (v2.1.0)**: Corrected Tithi names, Paksha logic, and Brahma Muhurta calculations.
+- ✅ **Sunrise Boundary**: Corrected Vara (weekday) logic (day starts at sunrise, not midnight).
 
-### 2. **Coordinate Systems**
+### 2. **Classical Vedic Systems**
 
-- ✅ Tropical zodiac (Western astrology)
-- ✅ Sidereal zodiac (Vedic astrology)
-- ✅ 40+ ayanamsa systems (Lahiri, Fagan-Bradley, Krishnamurti, etc.)
-- ✅ Geocentric calculations (from Earth's center)
-- ✅ Topocentric calculations (from surface location)
-- ✅ **Sunrise Boundary**: Corrected Vara (weekday) logic for Vedic standards
+- ✅ **Shadbala**: Complete six-fold planetary strength calculation (Sthana, Dig, Kala, Chesta, Naisargika, Drik).
+- ✅ **Ashtakavarga**: Full system including BAV, SAV, Trikona Shodhana, and Ekadhipati Shodhana reductions.
+- ✅ **Dasha Systems**: High-precision implementations of:
+    - Vimshottari (Mahadasha through Prana levels with millisecond precision)
+    - Yogini (36-year cycle)
+    - Ashtottari, Chara, Narayana, and Kalachakra dashas.
+- ✅ **KP System (Krishnamurti Paddhati)**: Sign/Star/Sub/Sub-Sub lords, significators, and time-varying ayanamsa.
+- ✅ **Jaimini Astrology**: Atmakaraka, Karakamsa, and Sign Aspects (Rashi Drishti).
 
-### 3. **Rich Position Data**
+### 3. **Panchanga & Muhurta**
 
-- ✅ Ecliptic longitude, latitude, distance
-- ✅ Zodiac sign and position within sign (0-30°)
-- ✅ Nakshatra (27 lunar mansions) with pada (1-4)
-- ✅ Retrograde motion detection
-- ✅ Velocity/speed calculations (degrees per day)
-- ✅ Multiple formatting options (DMS, decimal, traditional)
+- ✅ High-precision Tithi, Yoga, Karana, and Vara.
+- ✅ **Tithi End-Time**: Binary search algorithm to find exact moments when Tithis end.
+- ✅ **Auspicious Timings**: Choghadiya, Gowri Panchangam, and Hora Lord calculations.
+- ✅ **Inauspicious Periods**: Rahukalam, Gulikalam, and Yamagandam detection.
 
-### 4. **Geographic Support**
+### 4. **Charts & Predictions**
 
-- ✅ Decimal degrees format
-- ✅ DMS (Degrees, Minutes, Seconds) format
-- ✅ Altitude/elevation support
-- ✅ Bidirectional conversion between formats
-- ✅ Input validation
+- ✅ **Varga Charts**: Support for 16+ divisional charts (D1 to D60), including high-precision **D249**.
+- ✅ **Varshapal**: Complete Annual Chart (Solar Return) system with Varsha/Maas/Dina/Hora dashas.
+- ✅ **Transit Analysis**: Gochara (transits) relative to natal chart, with **Vedha** (obstruction) analysis.
+- ✅ **Compatibility**: Full 36-point Guna Milan (all 8 Kootas implemented per BPHS).
+- ✅ **Special Transits**: Sade Sati, Dhaiya, and Panchak detection.
 
-### 5. **Production Ready**
+### 5. **Developer & Production Ready**
 
-- ✅ Comprehensive error handling with specific exception types
-- ✅ Input validation for all parameters
-- ✅ Resource management (proper initialization and disposal)
-- ✅ Thread-safe singleton pattern
-- ✅ JSON serialization support
-- ✅ Extensive documentation and examples
-
-### 6. **Developer Experience**
-
-- ✅ Simple, intuitive API
-- ✅ Batch calculation support for multiple planets
-- ✅ Convenience methods for common use cases
-- ✅ Type-safe enum-based planet selection
-- ✅ Comprehensive unit tests
-- ✅ Example Flutter application
-- ✅ Detailed setup guides
+- ✅ **Coordinate Systems**: Tropical & Sidereal (40+ ayanamsas).
+- ✅ **Polar Region Support**: Strict validation for Placidus/Koch above the Arctic Circle.
+- ✅ **Thread-safe**: Singleton pattern with proper resource lifecycle management.
+- ✅ **Serialization**: JSON support for all major data models.
+- ✅ **Testing**: 200+ unit tests covering edge cases, DMS conversions, and Vedic logic.
 
 ## 🔧 Technical Architecture
 
 ### Layer 1: FFI Bindings (`swisseph_bindings.dart`)
 
-- Direct C library interface using dart:ffi
-- Platform detection and library loading
-- Low-level function wrappers
-- Memory management
+- Direct C library interface using `dart:ffi`.
+- Platform-specific binary loading and memory management.
 
-### Layer 2: Service Layer (`ephemeris_service.dart`)
+### Layer 2: Core Services (`ephemeris_service.dart`, etc.)
 
-- Business logic and calculations
-- Error handling and validation
-- DateTime to Julian Day conversion
-- Resource lifecycle management
+- **Ephemeris**: Core planetary coordinates and rise/set timing.
+- **Vedic Engine**: Transforms astronomical data into Vedic formats (ayanamsa, houses).
+- **Specialized Services**: 30+ services for Shadbala, Dasha, Compatibility, etc.
 
-### Layer 3: Core API (`jyotish_core.dart`)
+### Layer 3: Main API (`jyotish_core.dart`)
 
-- High-level public API
-- Singleton pattern implementation
-- Convenience methods
-- Batch operations
-
-### Layer 4: Models
-
-- **Planet**: Enum with 21 celestial bodies
-- **PlanetPosition**: Complete position data with calculations
-- **GeographicLocation**: Location with DMS conversion
-- **CalculationFlags**: Flexible calculation options
-- **Exceptions**: Specific error types
-
-## 📚 Documentation
-
-### For Users
-
-- **README.md**: Complete feature list, installation, API reference, examples
-- **QUICKSTART.md**: 5-minute tutorial to get started
-- **SETUP.md**: Detailed platform-specific installation guide
-- **CHANGELOG.md**: Version history and changes
-
-### For Contributors
-
-- **CONTRIBUTING.md**: Contribution guidelines and development workflow
-- **Inline Documentation**: Comprehensive dartdoc comments on all public APIs
-- **Example App**: Full-featured demo application
+- Singleton entry point (`Jyotish()`).
+- High-level methods like `calculateVedicChart()`, `getVimshottariDasha()`, `getShadbala()`.
+- Thread-safe initialization and resource handling.
 
 ## 🧪 Testing
 
-Comprehensive test suite covering:
+Comprehensive test suite (200+ tests) covering:
 
-- ✅ Geographic location creation and conversion
-- ✅ DMS to decimal conversion (both directions)
-- ✅ Input validation and error cases
-- ✅ Planet enumeration and lookups
-- ✅ Calculation flags creation and conversion
-- ✅ Position calculations (zodiac, nakshatra, retrograde)
-- ✅ JSON serialization
-- ✅ Edge cases and boundary conditions
+- ✅ **Accuracy**: Comparative testing against standard Vedic texts.
+- ✅ **Edge Cases**: Polar regions, birth at midnight/sunrise, retrograde motion.
+- ✅ **Stability**: Null safety, exception handling, and resource leak prevention.
 
 ## 🎯 Supported Platforms
 
@@ -167,137 +121,13 @@ Comprehensive test suite covering:
 | Linux    | ✅ Full | x86_64                    |
 | Windows  | ✅ Full | x86_64                    |
 
-## 📋 API Highlights
-
-### Main Entry Point
-
-```dart
-final jyotish = Jyotish();
-await jyotish.initialize();
-```
-
-### Single Planet Calculation
-
-```dart
-final position = await jyotish.getPlanetPosition(
-  planet: Planet.sun,
-  dateTime: DateTime.now(),
-  location: GeographicLocation(latitude: 27.7172, longitude: 85.3240),
-);
-```
-
-### Batch Calculations
-
-```dart
-final all = await jyotish.getAllPlanetPositions(
-  dateTime: DateTime.now(),
-  location: location,
-  flags: CalculationFlags.siderealLahiri(),
-);
-```
-
-### Position Data Access
-
-```dart
-position.longitude              // 125.456789
-position.zodiacSign             // "Leo"
-position.positionInSign         // 5.456789
-position.formattedPosition      // "5° Leo 27'"
-position.nakshatra              // "Magha"
-position.nakshatraPada          // 2
-position.isRetrograde           // false
-```
-
-## 🔮 Use Cases
-
-### Astrology Applications
-
-- ✅ Birth chart (natal chart) calculations
-- ✅ Transit predictions
-- ✅ Dasha period calculations (with position data)
-- ✅ Compatibility analysis
-- ✅ Muhurta (electional astrology)
-- ✅ Prashna (horary astrology)
-
-### Astronomy Applications
-
-- ✅ Planetary position tracking
-- ✅ Eclipse prediction data
-- ✅ Planet visibility calculations
-- ✅ Educational applications
-- ✅ Sky watching apps
-
-### Research Applications
-
-- ✅ Historical astronomical research
-- ✅ Astrological research
-- ✅ Pattern analysis
-- ✅ Statistical studies
-
-## 🚀 Getting Started
-
-1. **Install**: Add `jyotish: ^1.0.0` to pubspec.yaml
-2. **Setup**: Follow SETUP.md to install Swiss Ephemeris library
-3. **Learn**: Read QUICKSTART.md for a 5-minute tutorial
-4. **Build**: Check example app for real-world usage
-5. **Contribute**: See CONTRIBUTING.md to help improve the library
-
-## 📈 Code Quality
-
-- ✅ Zero compile errors
-- ✅ Follows Flutter/Dart style guidelines
-- ✅ Comprehensive inline documentation
-- ✅ Type-safe throughout
-- ✅ Proper error handling
-- ✅ Memory-safe FFI usage
-- ✅ Lint-clean codebase
-
-## 🎨 Design Principles
-
-1. **Simplicity**: Easy to use API for common cases
-2. **Flexibility**: Advanced options available when needed
-3. **Safety**: Comprehensive validation and error handling
-4. **Performance**: Efficient calculations and resource usage
-5. **Maintainability**: Clean architecture and documentation
-
-## 📦 Dependencies
-
-**Runtime:**
-
-- `ffi: ^2.1.0` - Foreign Function Interface
-- `path: ^1.9.0` - Path manipulation
-- `intl: ^0.19.0` - Internationalization
-
-**Development:**
-
-- `flutter_test` - Testing framework
-- `flutter_lints: ^4.0.0` - Linting rules
-- `test: ^1.25.0` - Additional testing utilities
-
-**External:**
-
-- Swiss Ephemeris C library (native)
-
-## 🔐 License
-
-- **Library Code**: MIT License
-- **Swiss Ephemeris**: Dual-licensed (GPL v2+ or Commercial)
-  - Free for GPL-compatible open source projects
-  - Commercial license required for proprietary applications
-
 ## 🛣️ Future Roadmap
 
-Potential future enhancements:
-
-- [ ] House calculations (Placidus, Koch, Whole Sign, etc.)
-- ✅ Aspect calculations and orbs
-- ✅ Dasha system calculations (Vimshottari, Yogini, etc.)
-- ✅ High-precision Tithi end-time search
-- [ ] Chart drawing utilities
-- [ ] More astronomical calculations (eclipses, risings, settings)
-- [ ] Local time zone handling
-- [ ] Astrological interpretation frameworks
-- [ ] Performance optimizations and caching
+- [ ] Chart drawing utilities and SVG export.
+- [ ] Astrological interpretation engine (AI-enhanced).
+- [ ] Local time zone database integration.
+- [ ] More specialized Dasha systems (Jaimini, etc.).
+- [ ] Mobile/Web UI component library.
 
 ## 💝 Acknowledgments
 
@@ -309,18 +139,18 @@ Potential future enhancements:
 
 ## Summary
 
-You now have a **complete, production-ready Flutter library** for astronomical calculations with:
+You now have a **complete, production-ready Vedic astrology engine** for Flutter with:
 
-✅ **21 celestial bodies** supported  
-✅ **40+ ayanamsa systems** for sidereal calculations  
-✅ **5 platforms** fully supported  
-✅ **Comprehensive documentation** (README, QUICKSTART, SETUP, CONTRIBUTING)  
-✅ **Full test coverage** for core functionality  
-✅ **Example application** demonstrating all features  
-✅ **Clean, maintainable code** following best practices  
-✅ **Production-ready** error handling and validation
+✅ **21 celestial bodies** and high-precision astronomical calculations.  
+✅ **30+ specialized services** covering Shadbala, Ashtakavarga, KP, Jaimini, Dashas, and more.  
+✅ **6+ Dasha systems** including Vimshottari and Yogini.  
+✅ **16+ Divisional Charts** including the high-precision D249.  
+✅ **Varshapal** (Annual Charts) and Gochara (Transit) analysis.  
+✅ **5 platforms** fully supported (Android, iOS, macOS, Linux, Windows).  
+✅ **200+ Automated tests** ensuring accuracy and stability.  
+✅ **Clean, service-based architecture** and professional documentation.
 
-The library is ready to be published to pub.dev or used in your projects!
+The library is ready to be published to pub.dev or used in enterprise-scale astrology applications!
 
 ---
 

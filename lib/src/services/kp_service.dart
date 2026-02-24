@@ -255,6 +255,9 @@ class KPService {
   }
 
   /// Calculates ABCD significators for a planet.
+  ///
+  /// C and D significators now use the chart's actual Placidus house cusps
+  /// (via [KPPlanetOwnership.getOwnedHousesFromChart]) for correct KP analysis.
   KPSignificators _calculateSignificators(
     Planet planet,
     KPDivision division,
@@ -272,11 +275,13 @@ class KPService {
       natalChart,
     );
 
-    // C Significators: Houses owned by the planet itself
-    final cSignificators = KPPlanetOwnership.getOwnedHouses(planet);
+    // C Significators: Houses OWNED by the planet (cusp-based, not Aries Lagna)
+    final cSignificators =
+        KPPlanetOwnership.getOwnedHousesFromChart(planet, natalChart);
 
-    // D Significators: Houses owned by the planet's sign lord
-    final dSignificators = KPPlanetOwnership.getOwnedHouses(division.signLord);
+    // D Significators: Houses OWNED by the planet's sign lord (cusp-based)
+    final dSignificators = KPPlanetOwnership.getOwnedHousesFromChart(
+        division.signLord, natalChart);
 
     return KPSignificators(
       planet: planet,
@@ -382,6 +387,167 @@ class KPService {
 
     return divisions;
   }
+
+  // ============================================================
+  // TRANSIT VS NATAL COMPARISON
+  // ============================================================
+
+  /// Compares transit KP divisions against natal KP divisions for each planet.
+  ///
+  /// For each planet present in both [natalKP] and [transitDivisions], this
+  /// method checks:
+  /// - Whether the **Star-Lord** matches between transit and natal.
+  /// - Whether the **Sub-Lord** matches (primary KP activation trigger).
+  /// - Which house significators are **common** to both sides.
+  ///
+  /// [natalKP] - The birth chart's KP data from [calculateKPData].
+  /// [transitDivisions] - Transit KP divisions from [calculateTransitKPDivisions].
+  /// [natalSignificators] - Optional: if omitted, A+B significators are used.
+  ///
+  /// Returns a sorted list, strongest matches first.
+  List<KPTransitComparison> compareTransitToNatal({
+    required KPCalculations natalKP,
+    required Map<Planet, KPDivision> transitDivisions,
+  }) {
+    final comparisons = <KPTransitComparison>[];
+
+    for (final entry in transitDivisions.entries) {
+      final planet = entry.key;
+      final transitDiv = entry.value;
+      final natalDiv = natalKP.planetDivisions[planet];
+
+      if (natalDiv == null) continue;
+
+      final starLordMatches = transitDiv.starLord == natalDiv.starLord;
+      final subLordMatches = transitDiv.subLord == natalDiv.subLord;
+
+      // Collect natal significators for this planet (A + B grades)
+      final natalSig = natalKP.planetSignificators[planet];
+      final natalHouses = natalSig != null
+          ? {...natalSig.aSignificators, ...natalSig.bSignificators}
+          : <int>{};
+
+      // Collect transit significators (star lord and sign lord occupied houses)
+      // Use transit star lord's star as a proxy for transit significators
+      final transitHouses = <int>{};
+      // Transit A: houses occupied by transit sign lord in natal chart
+      final natalTransitSignLordInfo =
+          natalKP.planetSignificators[transitDiv.signLord];
+      if (natalTransitSignLordInfo != null) {
+        transitHouses.addAll(natalTransitSignLordInfo.aSignificators);
+      }
+      // Transit B: houses occupied by transit star lord in natal chart
+      final natalTransitStarLordInfo =
+          natalKP.planetSignificators[transitDiv.starLord];
+      if (natalTransitStarLordInfo != null) {
+        transitHouses.addAll(natalTransitStarLordInfo.bSignificators);
+      }
+
+      final commonHouses = natalHouses.intersection(transitHouses).toList()
+        ..sort();
+
+      comparisons.add(KPTransitComparison(
+        planet: planet,
+        transitDivision: transitDiv,
+        natalDivision: natalDiv,
+        starLordMatches: starLordMatches,
+        subLordMatches: subLordMatches,
+        commonNatalSignificators: commonHouses,
+      ));
+    }
+
+    // Sort: strongest matches first
+    comparisons.sort((a, b) => b.matchStrength.compareTo(a.matchStrength));
+    return comparisons;
+  }
+
+  // ============================================================
+  // RULING PLANETS (KP PRASHNA)
+  // ============================================================
+
+  /// Calculates the seven KP Ruling Planets at a query moment.
+  ///
+  /// The Ruling Planets are the lords of the Sign, Star and Sub at:
+  /// 1. Day Lord (weekday planet)
+  /// 2. Ascendant (Sign, Star, Sub lords)
+  /// 3. Moon (Sign, Star, Sub lords)
+  ///
+  /// This is the first step in any KP Prashna (horary) reading.
+  ///
+  /// [chart] - The Prashna chart calculated at the exact query moment.
+  ///           Must be computed with Placidus houses and KP ayanamsa.
+  /// [useNewAyanamsa] - Use KP New VP291 (true, default) or old KP ayanamsa.
+  ///
+  /// Returns [KPRulingPlanets] with all seven lords.
+  Future<KPRulingPlanets> calculateRulingPlanets(
+    VedicChart chart, {
+    bool useNewAyanamsa = true,
+  }) async {
+    final queryDateTime = chart.dateTime;
+
+    // 1. Day Lord — use weekday
+    final dayLord = _getDayLord(queryDateTime);
+
+    // 2. Calculate KP ayanamsa and adjustment for this chart
+    final kpAyanamsa = await _calculateKPAyanamsa(
+      queryDateTime,
+      useNewAyanamsa: useNewAyanamsa,
+    );
+    final lahiriAyanamsa = await _ephemerisService.getAyanamsa(
+      dateTime: queryDateTime,
+      mode: SiderealMode.lahiri,
+    );
+    final ayanamsaDiff = kpAyanamsa - lahiriAyanamsa;
+
+    // 3. Ascendant division
+    final rawAscendant = chart.houses.ascendant;
+    final adjustedAscendant = (rawAscendant - ayanamsaDiff + 360) % 360;
+    final ascDiv = _calculateKPDivision(adjustedAscendant, null);
+
+    // 4. Moon division
+    final moonInfo = chart.planets[Planet.moon];
+    if (moonInfo == null) {
+      throw ArgumentError('Moon not found in Prashna chart');
+    }
+    final rawMoonLong = moonInfo.position.longitude;
+    final adjustedMoonLong = (rawMoonLong - ayanamsaDiff + 360) % 360;
+    final moonDiv = _calculateKPDivision(adjustedMoonLong, Planet.moon);
+
+    return KPRulingPlanets(
+      dayLord: dayLord,
+      ascendantSignLord: ascDiv.signLord,
+      ascendantStarLord: ascDiv.starLord,
+      ascendantSubLord: ascDiv.subLord,
+      moonSignLord: moonDiv.signLord,
+      moonStarLord: moonDiv.starLord,
+      moonSubLord: moonDiv.subLord,
+      queryDateTime: queryDateTime,
+      ascendantDivision: ascDiv,
+      moonDivision: moonDiv,
+    );
+  }
+
+  /// Returns the traditional KP day lord for a given date/time.
+  ///
+  /// KP day sequence (same as Hora weekday order):
+  /// Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn.
+  Planet _getDayLord(DateTime dt) {
+    // weekday: Mon=1, Tue=2, Wed=3, Thu=4, Fri=5, Sat=6, Sun=7
+    const weekdayLords = [
+      Planet.moon, // Monday
+      Planet.mars, // Tuesday
+      Planet.mercury, // Wednesday
+      Planet.jupiter, // Thursday
+      Planet.venus, // Friday
+      Planet.saturn, // Saturday
+      Planet.sun, // Sunday
+    ];
+    return weekdayLords[dt.weekday - 1];
+  }
+
+  // ============================================================
+  // AYANAMSA
+  // ============================================================
 
   /// Calculates KP Ayanamsa using Swiss Ephemeris precise time-varying formula.
   ///

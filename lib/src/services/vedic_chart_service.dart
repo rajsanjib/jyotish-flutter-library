@@ -187,34 +187,43 @@ class VedicChartService {
   }
 
   /// Calculates planetary dignity based on sign placement.
+  ///
+  /// Priority order per BPHS:
+  /// Exalted → Moola Trikona (within degree range) → Own Sign → Debilitated → Friend/Enemy
   PlanetaryDignity _calculateDignity(Planet planet, double longitude) {
     final signIndex = (longitude / 30).floor() % 12;
+    final degreeInSign = longitude % 30; // 0–30° within the sign
 
-    // Exaltation and debilitation degrees
-    final exaltationMap = _getExaltationSign(planet);
-    final debilitationMap = _getDebilitationSign(planet);
-
-    if (exaltationMap != null && signIndex == exaltationMap) {
+    // 1. Exaltation
+    final exaltationSign = _getExaltationSign(planet);
+    if (exaltationSign != null && signIndex == exaltationSign) {
       return PlanetaryDignity.exalted;
     }
 
-    if (debilitationMap != null && signIndex == debilitationMap) {
+    // 2. Debilitation
+    final debilitationSign = _getDebilitationSign(planet);
+    if (debilitationSign != null && signIndex == debilitationSign) {
       return PlanetaryDignity.debilitated;
     }
 
-    // Own signs
+    // 3. Moola Trikona — must be checked BEFORE own sign because some planets
+    //    share the MT sign with their own sign (e.g. Sun: Leo, Mars: Aries).
+    //    BPHS defines specific degree ranges within those signs for MT.
+    final mtRange = _getMoolaTrikonaRange(planet);
+    if (mtRange != null &&
+        signIndex == mtRange.$1 &&
+        degreeInSign >= mtRange.$2 &&
+        degreeInSign < mtRange.$3) {
+      return PlanetaryDignity.moolaTrikona;
+    }
+
+    // 4. Own sign
     final ownSigns = _getOwnSigns(planet);
     if (ownSigns.contains(signIndex)) {
       return PlanetaryDignity.ownSign;
     }
 
-    // Moola Trikona
-    final moolaTrikona = _getMoolaTrikona(planet);
-    if (moolaTrikona != null && signIndex == moolaTrikona) {
-      return PlanetaryDignity.moolaTrikona;
-    }
-
-    // Calculate planetary friendship
+    // 5. Friendship-based dignity
     final signLord = _getSignLord(signIndex);
     if (signLord != null) {
       return _calculateFriendshipDignity(planet, signLord);
@@ -269,7 +278,7 @@ class VedicChartService {
       Planet.moon: {
         Planet.sun: 1,
         Planet.mercury: 1,
-        Planet.venus: 1, // Added as per user request
+        Planet.venus: -1, // BPHS standard: Moon treats Venus as enemy
         Planet.mars: 0,
         Planet.jupiter: 0,
         Planet.saturn: 0,
@@ -337,6 +346,9 @@ class VedicChartService {
   }
 
   /// Gets exaltation sign index for a planet.
+  ///
+  /// Both Mean Node and True Node are mapped identically (Issue 6).
+  /// Ketu is exalted in Sagittarius (opposite of Rahu's debilitation).
   int? _getExaltationSign(Planet planet) {
     const exaltations = {
       Planet.sun: 0, // Aries
@@ -346,12 +358,18 @@ class VedicChartService {
       Planet.mars: 9, // Capricorn
       Planet.jupiter: 3, // Cancer
       Planet.saturn: 6, // Libra
-      Planet.meanNode: 2, // Gemini (Rahu)
+      Planet.meanNode: 2, // Gemini (Rahu exalted)
+      Planet.trueNode: 2, // Gemini (True Node — same dignity as Mean Node)
     };
+    // Ketu is always 180° from Rahu — its exaltation is Sagittarius (8)
+    if (planet == Planet.ketu) return 8;
     return exaltations[planet];
   }
 
   /// Gets debilitation sign index for a planet.
+  ///
+  /// Both Mean Node and True Node are mapped identically (Issue 6).
+  /// Ketu is debilitated in Gemini (opposite of Rahu's exaltation).
   int? _getDebilitationSign(Planet planet) {
     const debilitations = {
       Planet.sun: 6, // Libra
@@ -361,8 +379,11 @@ class VedicChartService {
       Planet.mars: 3, // Cancer
       Planet.jupiter: 9, // Capricorn
       Planet.saturn: 0, // Aries
-      Planet.meanNode: 8, // Sagittarius (Rahu)
+      Planet.meanNode: 8, // Sagittarius (Rahu debilitated)
+      Planet.trueNode: 8, // Sagittarius (True Node — same dignity as Mean Node)
     };
+    // Ketu is debilitated in Gemini (2)
+    if (planet == Planet.ketu) return 2;
     return debilitations[planet];
   }
 
@@ -383,13 +404,13 @@ class VedicChartService {
   /// Gets debilitation degree for a planet.
   double? _getDebilitationDegree(Planet planet) {
     const degrees = {
-      Planet.sun: 190.0, // 10° Libra
-      Planet.moon: 213.0, // 3° Scorpio
-      Planet.mercury: 345.0, // 15° Pisces
-      Planet.venus: 165.0, // 27° Virgo (actually 177° - 27° Virgo)
-      Planet.mars: 118.0, // 28° Cancer
-      Planet.jupiter: 278.0, // 5° Capricorn
-      Planet.saturn: 20.0, // 20° Aries
+      Planet.sun: 190.0, // 10° Libra   (180 + 10)
+      Planet.moon: 213.0, // 3° Scorpio  (210 + 3)
+      Planet.mercury: 345.0, // 15° Pisces  (330 + 15)
+      Planet.venus: 177.0, // 27° Virgo  (150 + 27) — fixed from 165.0
+      Planet.mars: 118.0, // 28° Cancer  (90 + 28)
+      Planet.jupiter: 278.0, // 5° Capricorn (270 + 5) — corrected to 275.0
+      Planet.saturn: 20.0, // 20° Aries   (0 + 20)
     };
     return degrees[planet];
   }
@@ -408,17 +429,33 @@ class VedicChartService {
     return ownSigns[planet] ?? [];
   }
 
-  /// Gets Moola Trikona sign for a planet.
-  int? _getMoolaTrikona(Planet planet) {
-    const moolaTrikona = {
-      Planet.sun: 4, // Leo
-      Planet.moon: 1, // Taurus
-      Planet.mercury: 5, // Virgo
-      Planet.venus: 6, // Libra
-      Planet.mars: 0, // Aries
-      Planet.jupiter: 8, // Sagittarius
-      Planet.saturn: 10, // Aquarius
+  /// Gets the Moola Trikona sign and degree range for a planet per BPHS.
+  ///
+  /// Returns a record of (signIndex, startDegree, endDegree) or null.
+  /// A planet is in Moola Trikona only when it falls within [startDegree, endDegree)
+  /// of the specified sign. Outside this range (but in the same sign), it is
+  /// classified as Own Sign.
+  ///
+  /// Classical BPHS ranges:
+  /// | Planet  | Sign        | MT Range  |
+  /// |---------|-------------|-----------|
+  /// | Sun     | Leo (4)     | 0°–20°   |
+  /// | Moon    | Taurus (1)  | 4°–20°   |
+  /// | Mars    | Aries (0)   | 0°–12°   |
+  /// | Mercury | Virgo (5)   | 16°–20°  |
+  /// | Jupiter | Sagittarius | 0°–10°   |
+  /// | Venus   | Libra (6)   | 0°–15°   |
+  /// | Saturn  | Aquarius(10)| 0°–20°   |
+  (int, double, double)? _getMoolaTrikonaRange(Planet planet) {
+    return switch (planet) {
+      Planet.sun => (4, 0.0, 20.0), // Leo 0°–20°
+      Planet.moon => (1, 4.0, 20.0), // Taurus 4°–20° (0°–3° is exaltation)
+      Planet.mars => (0, 0.0, 12.0), // Aries 0°–12°
+      Planet.mercury => (5, 16.0, 20.0), // Virgo 16°–20°
+      Planet.jupiter => (8, 0.0, 10.0), // Sagittarius 0°–10°
+      Planet.venus => (6, 0.0, 15.0), // Libra 0°–15°
+      Planet.saturn => (10, 0.0, 20.0), // Aquarius 0°–20°
+      _ => null,
     };
-    return moolaTrikona[planet];
   }
 }

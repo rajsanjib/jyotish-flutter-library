@@ -4,11 +4,19 @@ import '../models/planet_position.dart';
 
 /// Service for calculating Vedic planetary aspects (Graha Drishti).
 ///
-/// In Vedic astrology, aspects are based on house/sign positions:
-/// - All planets aspect the 7th house from their position (opposition)
-/// - Mars has special aspects on 4th and 8th houses
-/// - Jupiter has special aspects on 5th and 9th houses
-/// - Saturn has special aspects on 3rd and 10th houses
+/// **Vedic (whole-sign) mode** [default for [AspectConfig.vedic]]:
+/// Aspects are cast sign-to-sign — a planet in sign X aspects every planet
+/// in the target sign regardless of exact degree separation. Strength is
+/// always 1.0 (full).
+///
+/// Aspect houses from aspecting planet’s sign:
+/// - All planets aspect the 7th house (opposition sign)
+/// - Mars also aspects the 4th and 8th houses
+/// - Jupiter also aspects the 5th and 9th houses
+/// - Saturn also aspects the 3rd and 10th houses
+///
+/// **Western (degree-based) mode** [AspectConfig with useWholeSignAspects=false]:
+/// Standard degree+orb calculation, useful for KP or Western tropical use.
 class AspectService {
   /// Calculates all aspects between planetary positions.
   ///
@@ -129,48 +137,88 @@ class AspectService {
     AspectConfig config,
   ) {
     final aspects = <AspectInfo>[];
-    final angularDiff =
-        _calculateAngularDifference(pos1.longitude, pos2.longitude);
 
-    // Check conjunction (same sign)
-    final conjunctionOrb = _getOrb(AspectType.conjunction, config);
-    if (angularDiff.abs() <= conjunctionOrb) {
-      aspects.add(_createAspect(
-        planet1,
-        pos1,
-        planet2,
-        pos2,
-        AspectType.conjunction,
-        angularDiff,
-        config,
-      ));
-    }
+    if (config.useWholeSignAspects) {
+      // —— WHOLE-SIGN VEDIC ASPECTS ——
+      // Convert both planets to their sign index (0-11)
+      final sign1 = (pos1.longitude / 30).floor() % 12;
+      final sign2 = (pos2.longitude / 30).floor() % 12;
+      // Forward distance from planet1’s sign to planet2’s sign
+      final d = (sign2 - sign1 + 12) % 12;
 
-    // Check 7th house aspect (opposition) - all planets have this
-    final oppositionOrb = _getOrb(AspectType.opposition, config);
-    final oppDiff = (angularDiff - 180).abs();
-    if (oppDiff <= oppositionOrb) {
-      aspects.add(_createAspect(
-        planet1,
-        pos1,
-        planet2,
-        pos2,
-        AspectType.opposition,
-        180 - angularDiff.abs(),
-        config,
-      ));
-    }
+      // Conjunction: same sign (d == 0)
+      if (d == 0) {
+        aspects.add(_createWholeSignAspect(
+            planet1, pos1, planet2, pos2, AspectType.conjunction));
+      }
 
-    // Special aspects
-    if (config.includeSpecialAspects) {
-      aspects.addAll(_checkSpecialAspects(
-        planet1,
-        pos1,
-        planet2,
-        pos2,
-        angularDiff,
-        config,
-      ));
+      // 7th house: all planets aspect the sign 6 signs ahead
+      if (d == 6) {
+        aspects.add(_createWholeSignAspect(
+            planet1, pos1, planet2, pos2, AspectType.opposition));
+      }
+
+      // Special aspects (only when configured)
+      if (config.includeSpecialAspects) {
+        // Mars: 4th (d==3) and 8th (d==7)
+        if (planet1 == Planet.mars) {
+          if (d == 3) {
+            aspects.add(_createWholeSignAspect(
+                planet1, pos1, planet2, pos2, AspectType.marsSpecial4th));
+          }
+          if (d == 7) {
+            aspects.add(_createWholeSignAspect(
+                planet1, pos1, planet2, pos2, AspectType.marsSpecial8th));
+          }
+        }
+        // Jupiter: 5th (d==4) and 9th (d==8)
+        if (planet1 == Planet.jupiter) {
+          if (d == 4) {
+            aspects.add(_createWholeSignAspect(
+                planet1, pos1, planet2, pos2, AspectType.jupiterSpecial5th));
+          }
+          if (d == 8) {
+            aspects.add(_createWholeSignAspect(
+                planet1, pos1, planet2, pos2, AspectType.jupiterSpecial9th));
+          }
+        }
+        // Saturn: 3rd (d==2) and 10th (d==9)
+        if (planet1 == Planet.saturn) {
+          if (d == 2) {
+            aspects.add(_createWholeSignAspect(
+                planet1, pos1, planet2, pos2, AspectType.saturnSpecial3rd));
+          }
+          if (d == 9) {
+            aspects.add(_createWholeSignAspect(
+                planet1, pos1, planet2, pos2, AspectType.saturnSpecial10th));
+          }
+        }
+      }
+    } else {
+      // —— DEGREE-BASED WESTERN ASPECTS (KP / Western tropical) ——
+      final angularDiff =
+          _calculateAngularDifference(pos1.longitude, pos2.longitude);
+
+      // Conjunction
+      final conjunctionOrb = _getOrb(AspectType.conjunction, config);
+      if (angularDiff.abs() <= conjunctionOrb) {
+        aspects.add(_createAspect(planet1, pos1, planet2, pos2,
+            AspectType.conjunction, angularDiff, config));
+      }
+
+      // 7th house aspect (opposition)
+      final oppositionOrb = _getOrb(AspectType.opposition, config);
+      final oppDiff = (angularDiff - 180).abs();
+      if (oppDiff <= oppositionOrb) {
+        aspects.add(_createAspect(planet1, pos1, planet2, pos2,
+            AspectType.opposition, 180 - angularDiff.abs(), config));
+      }
+
+      // Special aspects
+      if (config.includeSpecialAspects) {
+        aspects.addAll(_checkSpecialAspects(
+            planet1, pos1, planet2, pos2, angularDiff, config));
+      }
     }
 
     return aspects;
@@ -289,6 +337,26 @@ class AspectService {
     return config.customOrbs?[type] ?? type.defaultOrb;
   }
 
+  /// Internal: Create a whole-sign aspect (strength always 1.0, orb = 0).
+  AspectInfo _createWholeSignAspect(
+    Planet planet1,
+    PlanetPosition pos1,
+    Planet planet2,
+    PlanetPosition pos2,
+    AspectType type,
+  ) {
+    return AspectInfo(
+      aspectingPlanet: planet1,
+      aspectedPlanet: planet2,
+      type: type,
+      exactOrb: 0.0,
+      isApplying: false, // not meaningful for whole-sign
+      strength: 1.0, // full strength — whole signs are binary
+      aspectingLongitude: pos1.longitude,
+      aspectedLongitude: pos2.longitude,
+    );
+  }
+
   /// Internal: Create an AspectInfo.
   AspectInfo _createAspect(
     Planet planet1,
@@ -323,48 +391,75 @@ class AspectService {
   ///
   /// [houseSignIndex] - The sign index (0-11) to check
   /// [positions] - All planetary positions
+  /// [useWholeSign] - Use whole-sign model (default: true, Vedic standard)
   ///
   /// Returns list of planets that aspect the sign.
   List<Planet> getPlanetsAspectingSign(
     int houseSignIndex,
-    Map<Planet, PlanetPosition> positions,
-  ) {
+    Map<Planet, PlanetPosition> positions, {
+    bool useWholeSign = true,
+  }) {
     final aspectingPlanets = <Planet>[];
-    final targetMidpoint = (houseSignIndex * 30) + 15; // Midpoint of sign
 
     for (final entry in positions.entries) {
       final planet = entry.key;
       final pos = entry.value;
 
-      final angularDiff =
-          _calculateAngularDifference(pos.longitude, targetMidpoint.toDouble());
+      if (useWholeSign) {
+        // Whole-sign model: purely sign-index arithmetic
+        final planetSign = (pos.longitude / 30).floor() % 12;
+        final d = (houseSignIndex - planetSign + 12) % 12;
 
-      // 7th aspect (all planets)
-      if ((angularDiff - 180).abs() <= 15) {
-        aspectingPlanets.add(planet);
-        continue;
-      }
-
-      // Mars special aspects
-      if (planet == Planet.mars) {
-        if ((angularDiff - 90).abs() <= 15 || (angularDiff - 210).abs() <= 15) {
+        // 7th aspect (all planets)
+        if (d == 6) {
           aspectingPlanets.add(planet);
           continue;
         }
-      }
-
-      // Jupiter special aspects
-      if (planet == Planet.jupiter) {
-        if ((angularDiff - 120).abs() <= 15 ||
-            (angularDiff - 240).abs() <= 15) {
+        // Conjunction (same sign)
+        if (d == 0) {
           aspectingPlanets.add(planet);
           continue;
         }
-      }
+        // Mars special: 4th (d==3) and 8th (d==7)
+        if (planet == Planet.mars && (d == 3 || d == 7)) {
+          aspectingPlanets.add(planet);
+          continue;
+        }
+        // Jupiter special: 5th (d==4) and 9th (d==8)
+        if (planet == Planet.jupiter && (d == 4 || d == 8)) {
+          aspectingPlanets.add(planet);
+          continue;
+        }
+        // Saturn special: 3rd (d==2) and 10th (d==9)
+        if (planet == Planet.saturn && (d == 2 || d == 9)) {
+          aspectingPlanets.add(planet);
+          continue;
+        }
+      } else {
+        // Degree-based fallback (± 15° orb around sign midpoint)
+        final targetMidpoint = (houseSignIndex * 30) + 15;
+        final angularDiff = _calculateAngularDifference(
+            pos.longitude, targetMidpoint.toDouble());
 
-      // Saturn special aspects
-      if (planet == Planet.saturn) {
-        if ((angularDiff - 60).abs() <= 15 || (angularDiff - 270).abs() <= 15) {
+        if ((angularDiff - 180).abs() <= 15) {
+          aspectingPlanets.add(planet);
+          continue;
+        }
+        if (planet == Planet.mars &&
+            ((angularDiff - 90).abs() <= 15 ||
+                (angularDiff - 210).abs() <= 15)) {
+          aspectingPlanets.add(planet);
+          continue;
+        }
+        if (planet == Planet.jupiter &&
+            ((angularDiff - 120).abs() <= 15 ||
+                (angularDiff - 240).abs() <= 15)) {
+          aspectingPlanets.add(planet);
+          continue;
+        }
+        if (planet == Planet.saturn &&
+            ((angularDiff - 60).abs() <= 15 ||
+                (angularDiff - 270).abs() <= 15)) {
           aspectingPlanets.add(planet);
           continue;
         }

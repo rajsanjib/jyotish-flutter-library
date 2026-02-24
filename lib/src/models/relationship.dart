@@ -100,6 +100,26 @@ class RelationshipCalculator {
       Planet.mars: RelationshipType.enemy,
       Planet.jupiter: RelationshipType.neutral,
     },
+    // Rahu acts like Saturn (per Narasimha Rao / BPHS Sambandha Adhyaya)
+    Planet.meanNode: {
+      Planet.mercury: RelationshipType.friend,
+      Planet.venus: RelationshipType.friend,
+      Planet.saturn: RelationshipType.friend,
+      Planet.sun: RelationshipType.enemy,
+      Planet.moon: RelationshipType.enemy,
+      Planet.mars: RelationshipType.enemy,
+      Planet.jupiter: RelationshipType.neutral,
+    },
+    // Ketu acts like Mars
+    Planet.ketu: {
+      Planet.sun: RelationshipType.friend,
+      Planet.moon: RelationshipType.friend,
+      Planet.jupiter: RelationshipType.friend,
+      Planet.mercury: RelationshipType.enemy,
+      Planet.venus: RelationshipType.neutral,
+      Planet.saturn: RelationshipType.neutral,
+      Planet.mars: RelationshipType.neutral,
+    },
   };
 
   /// Calculates the compound relationship (Panchadha Maitri).

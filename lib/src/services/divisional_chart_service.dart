@@ -2,6 +2,7 @@ import '../exceptions/jyotish_exception.dart';
 import '../models/divisional_chart_type.dart';
 import '../models/planet.dart';
 import '../models/planet_position.dart';
+import '../models/relationship.dart';
 import '../models/vedic_chart.dart';
 
 /// Service for calculating Divisional Charts (Varga).
@@ -36,28 +37,79 @@ class DivisionalChartService {
     // Create new House System (Whole Sign based on D-Ascendant)
     final dHouses = _createWholeSignHouses(newAscendantDegree);
 
-    final finalPlanets = <Planet, VedicPlanetInfo>{};
+    // First pass: Calculate positions and houses
+    final tempInfos = <Planet, VedicPlanetInfo>{};
+    final planetHouseMap = <Planet, int>{};
 
     for (final entry in rashiChart.planets.entries) {
       final planet = entry.key;
-      final originalInfo = entry.value;
-
       final newInfo = _calculatePlanetVarga(
-        originalInfo: originalInfo,
+        originalInfo: entry.value,
         type: type,
         dHouses: dHouses,
+        planetHouseMap: null,
       );
-      finalPlanets[planet] = newInfo;
+      tempInfos[planet] = newInfo;
+      planetHouseMap[planet] = newInfo.house;
     }
 
     // Handle Rahu/Ketu special
-    final rahuInfo = _calculatePlanetVarga(
+    final rahuInfoTemp = _calculatePlanetVarga(
       originalInfo: rashiChart.rahu,
       type: type,
       dHouses: dHouses,
+      planetHouseMap: null,
+    );
+    planetHouseMap[rahuInfoTemp.position.planet] = rahuInfoTemp.house;
+
+    final ketuInfoTemp = KetuPosition(rahuPosition: rahuInfoTemp.position);
+    final ketuHouse = dHouses.getHouseForLongitude(ketuInfoTemp.longitude);
+    planetHouseMap[Planet.ketu] = ketuHouse;
+
+    // Second pass: Calculate dignity
+    final finalPlanets = <Planet, VedicPlanetInfo>{};
+    for (final entry in tempInfos.entries) {
+      final planet = entry.key;
+      final info = entry.value;
+
+      final dignity = _calculateDignityForVarga(
+        planet,
+        info.longitude,
+        planetHouseMap,
+        info.house,
+      );
+
+      finalPlanets[planet] = VedicPlanetInfo(
+        position: info.position,
+        house: info.house,
+        dignity: dignity,
+        isCombust: info.isCombust,
+        exaltationDegree: info.exaltationDegree,
+        debilitationDegree: info.debilitationDegree,
+        positionInSign: info.positionInSign,
+        subSpan: info.subSpan,
+      );
+    }
+
+    final rahuDignity = _calculateDignityForVarga(
+      rahuInfoTemp.position.planet,
+      rahuInfoTemp.longitude,
+      planetHouseMap,
+      rahuInfoTemp.house,
     );
 
-    final ketuInfo = KetuPosition(rahuPosition: rahuInfo.position);
+    final finalRahu = VedicPlanetInfo(
+      position: rahuInfoTemp.position,
+      house: rahuInfoTemp.house,
+      dignity: rahuDignity,
+      isCombust: rahuInfoTemp.isCombust,
+      exaltationDegree: rahuInfoTemp.exaltationDegree,
+      debilitationDegree: rahuInfoTemp.debilitationDegree,
+      positionInSign: rahuInfoTemp.positionInSign,
+      subSpan: rahuInfoTemp.subSpan,
+    );
+
+    final finalKetu = KetuPosition(rahuPosition: finalRahu.position);
 
     return VedicChart(
       dateTime: rashiChart.dateTime,
@@ -66,8 +118,8 @@ class DivisionalChartService {
       longitudeCoord: rashiChart.longitudeCoord,
       houses: dHouses,
       planets: finalPlanets,
-      rahu: rahuInfo,
-      ketu: ketuInfo,
+      rahu: finalRahu,
+      ketu: finalKetu,
     );
   }
 
@@ -75,6 +127,7 @@ class DivisionalChartService {
     required VedicPlanetInfo originalInfo,
     required DivisionalChartType type,
     required HouseSystem dHouses,
+    Map<Planet, int>? planetHouseMap,
   }) {
     double newLongitude;
     double? vPositionInSign;
@@ -107,10 +160,14 @@ class DivisionalChartService {
     final house = dHouses.getHouseForLongitude(newLongitude);
 
     // Calculate dignity in the D-Chart context
-    final dignity = _calculateDignityForVarga(
-      originalInfo.position.planet,
-      newLongitude,
-    );
+    final dignity = planetHouseMap != null
+        ? _calculateDignityForVarga(
+            originalInfo.position.planet,
+            newLongitude,
+            planetHouseMap,
+            house,
+          )
+        : PlanetaryDignity.neutralSign;
 
     return VedicPlanetInfo(
       position: newPosition,
@@ -123,7 +180,12 @@ class DivisionalChartService {
   }
 
   /// Calculates planetary dignity in a divisional chart.
-  PlanetaryDignity _calculateDignityForVarga(Planet planet, double longitude) {
+  PlanetaryDignity _calculateDignityForVarga(
+    Planet planet,
+    double longitude,
+    Map<Planet, int> planetHouseMap,
+    int planetHouse,
+  ) {
     final signIndex = (longitude / 30).floor() % 12;
 
     // Exaltation and debilitation
@@ -153,93 +215,38 @@ class DivisionalChartService {
     // Friend/enemy/neutral based on sign lord
     final signLord = _getSignLord(signIndex);
     if (signLord != null) {
-      return _calculateFriendshipDignity(planet, signLord);
+      return _calculateFriendshipDignity(
+          planet, signLord, planetHouseMap, planetHouse);
     }
 
     return PlanetaryDignity.neutralSign;
   }
 
   /// Calculates friendship-based dignity.
-  PlanetaryDignity _calculateFriendshipDignity(Planet planet, Planet signLord) {
-    final relationships = _getPlanetaryRelationships();
-    final relationship = relationships[planet]?[signLord] ?? 0;
+  PlanetaryDignity _calculateFriendshipDignity(
+    Planet planet,
+    Planet signLord,
+    Map<Planet, int> planetHouseMap,
+    int planetHouse,
+  ) {
+    final natural = RelationshipCalculator.naturalRelationships[planet]
+            ?[signLord] ??
+        RelationshipType.neutral;
 
-    if (relationship == 1) {
-      final reverseRelationship = relationships[signLord]?[planet] ?? 0;
-      if (reverseRelationship == 1) {
-        return PlanetaryDignity.greatFriend;
-      }
-      return PlanetaryDignity.friendSign;
-    } else if (relationship == -1) {
-      final reverseRelationship = relationships[signLord]?[planet] ?? 0;
-      if (reverseRelationship == -1) {
-        return PlanetaryDignity.greatEnemy;
-      }
-      return PlanetaryDignity.enemySign;
-    }
+    final signLordHouse = planetHouseMap[signLord];
+    final temporary = signLordHouse != null
+        ? RelationshipCalculator.calculateTemporary(planetHouse, signLordHouse)
+        : RelationshipType.neutral;
 
-    return PlanetaryDignity.neutralSign;
-  }
+    final compound =
+        RelationshipCalculator.calculateCompound(natural, temporary);
 
-  /// Gets planetary relationships map.
-  Map<Planet, Map<Planet, int>> _getPlanetaryRelationships() {
-    return {
-      Planet.sun: {
-        Planet.moon: 1,
-        Planet.mars: 1,
-        Planet.jupiter: 1,
-        Planet.mercury: 0,
-        Planet.venus: -1,
-        Planet.saturn: -1,
-      },
-      Planet.moon: {
-        Planet.sun: 0,
-        Planet.mercury: 0,
-        Planet.venus: 0,
-        Planet.mars: 0,
-        Planet.jupiter: 0,
-        Planet.saturn: 0,
-      },
-      Planet.mars: {
-        Planet.sun: 1,
-        Planet.moon: 1,
-        Planet.jupiter: 1,
-        Planet.mercury: -1,
-        Planet.venus: -1,
-        Planet.saturn: 0,
-      },
-      Planet.mercury: {
-        Planet.sun: 1,
-        Planet.venus: 1,
-        Planet.saturn: 1,
-        Planet.mars: 0,
-        Planet.jupiter: 0,
-        Planet.moon: 0,
-      },
-      Planet.jupiter: {
-        Planet.sun: 1,
-        Planet.moon: 1,
-        Planet.mars: 1,
-        Planet.mercury: -1,
-        Planet.venus: 0,
-        Planet.saturn: 0,
-      },
-      Planet.venus: {
-        Planet.mercury: 1,
-        Planet.saturn: 1,
-        Planet.mars: 0,
-        Planet.jupiter: 0,
-        Planet.sun: -1,
-        Planet.moon: 0,
-      },
-      Planet.saturn: {
-        Planet.mercury: 1,
-        Planet.venus: 1,
-        Planet.jupiter: 0,
-        Planet.mars: -1,
-        Planet.sun: -1,
-        Planet.moon: -1,
-      },
+    return switch (compound) {
+      RelationshipType.greatFriend => PlanetaryDignity.greatFriend,
+      RelationshipType.friend => PlanetaryDignity.friendSign,
+      RelationshipType.neutral => PlanetaryDignity.neutralSign,
+      RelationshipType.enemy => PlanetaryDignity.enemySign,
+      RelationshipType.greatEnemy => PlanetaryDignity.greatEnemy,
     };
   }
 
@@ -677,7 +684,10 @@ class DivisionalChartService {
   }
 
   int _calculateD30Sign(int signIndex, double degree) {
-    // Trimsamsa
+    // Trimsamsa (D-30)
+    // Note: This implements the standard BPHS Trimsamsa rules where degrees are
+    // unevenly mapped to 5 specific signs (ruled by Mars, Saturn, Jupiter, Mercury, Venus).
+    // The Sun and Moon do not rule any Trimsamsa regions.
     final sign = signIndex + 1;
     final isOdd = sign % 2 != 0;
 

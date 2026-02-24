@@ -3,6 +3,7 @@ import '../models/calculation_flags.dart';
 import '../models/geographic_location.dart';
 import '../models/planet.dart';
 import '../models/planet_position.dart';
+import '../models/relationship.dart';
 import '../models/vedic_chart.dart';
 import 'ephemeris_service.dart';
 
@@ -67,6 +68,12 @@ class VedicChartService {
       // Calculate Sun position for combustion checks
       final sunPosition = planetPositions[Planet.sun]!;
 
+      // Build house map for Tatkalika (temporal) friendship calculation
+      final planetHouseMap = <Planet, int>{
+        for (final e in planetPositions.entries)
+          e.key: houses.getHouseForLongitude(e.value.longitude),
+      };
+
       // Create Vedic planet info for each planet
       final vedicPlanets = <Planet, VedicPlanetInfo>{};
       for (final entry in planetPositions.entries) {
@@ -74,9 +81,11 @@ class VedicChartService {
         final position = entry.value;
 
         final house = houses.getHouseForLongitude(position.longitude);
-        final dignity = _calculateDignity(planet, position.longitude);
+        final dignity = _calculateDignity(
+            planet, position.longitude, planetHouseMap, house);
         final isCombust = PlanetPosition.calculateCombustion(
-            planet, position.longitude, sunPosition.longitude);
+            planet, position.longitude, sunPosition.longitude,
+            longitudeSpeed: position.longitudeSpeed);
 
         vedicPlanets[planet] = VedicPlanetInfo(
           position: position,
@@ -90,8 +99,8 @@ class VedicChartService {
 
       // Create Vedic info for Rahu
       final rahuHouse = houses.getHouseForLongitude(rahuPosition.longitude);
-      final rahuDignity =
-          _calculateDignity(flags.nodeType.planet, rahuPosition.longitude);
+      final rahuDignity = _calculateDignity(flags.nodeType.planet,
+          rahuPosition.longitude, planetHouseMap, rahuHouse);
       final rahuInfo = VedicPlanetInfo(
         position: rahuPosition,
         house: rahuHouse,
@@ -205,7 +214,12 @@ class VedicChartService {
   ///
   /// Priority order per BPHS:
   /// Exalted → Moola Trikona (within degree range) → Own Sign → Debilitated → Friend/Enemy
-  PlanetaryDignity _calculateDignity(Planet planet, double longitude) {
+  PlanetaryDignity _calculateDignity(
+    Planet planet,
+    double longitude,
+    Map<Planet, int> planetHouseMap,
+    int planetHouse,
+  ) {
     final signIndex = (longitude / 30).floor() % 12;
     final degreeInSign = longitude % 30; // 0–30° within the sign
 
@@ -241,103 +255,41 @@ class VedicChartService {
     // 5. Friendship-based dignity
     final signLord = _getSignLord(signIndex);
     if (signLord != null) {
-      return _calculateFriendshipDignity(planet, signLord);
+      return _calculateFriendshipDignity(
+          planet, signLord, planetHouseMap, planetHouse);
     }
 
     return PlanetaryDignity.neutralSign;
   }
 
   /// Calculates friendship-based dignity.
-  PlanetaryDignity _calculateFriendshipDignity(Planet planet, Planet signLord) {
-    // Define planetary relationships
-    // Friend (Mitra): +1 relationship value
-    // Enemy (Shatru): -1 relationship value
-    // Neutral (Sama): 0 relationship value
+  PlanetaryDignity _calculateFriendshipDignity(
+    Planet planet,
+    Planet signLord,
+    Map<Planet, int> planetHouseMap,
+    int planetHouse,
+  ) {
+    // 1. Naisargika (natural / permanent) friendship
+    final natural = RelationshipCalculator.naturalRelationships[planet]
+            ?[signLord] ??
+        RelationshipType.neutral;
 
-    final relationships = _getPlanetaryRelationships();
-    final relationship = relationships[planet]?[signLord] ?? 0;
+    // 2. Tatkalika (temporal / chart-based) friendship
+    final signLordHouse = planetHouseMap[signLord];
+    final temporary = signLordHouse != null
+        ? RelationshipCalculator.calculateTemporary(planetHouse, signLordHouse)
+        : RelationshipType.neutral;
 
-    // Check for Great Friend (Adhi-Mitra): Friend's friend
-    // Check for Great Enemy (Adhi-Shatru): Enemy's friend or Friend's enemy
-    if (relationship == 1) {
-      // Check if signLord considers planet as friend (mutual friendship = Great Friend)
-      final reverseRelationship = relationships[signLord]?[planet] ?? 0;
-      if (reverseRelationship == 1) {
-        return PlanetaryDignity.greatFriend;
-      }
-      return PlanetaryDignity.friendSign;
-    } else if (relationship == -1) {
-      // Check if signLord considers planet as enemy (mutual enmity = Great Enemy)
-      final reverseRelationship = relationships[signLord]?[planet] ?? 0;
-      if (reverseRelationship == -1) {
-        return PlanetaryDignity.greatEnemy;
-      }
-      return PlanetaryDignity.enemySign;
-    }
+    // 3. Panchadha Maitri (compound)
+    final compound =
+        RelationshipCalculator.calculateCompound(natural, temporary);
 
-    return PlanetaryDignity.neutralSign;
-  }
-
-  /// Gets planetary relationships map.
-  /// 1 = Friend, -1 = Enemy, 0 = Neutral
-  Map<Planet, Map<Planet, int>> _getPlanetaryRelationships() {
-    return {
-      Planet.sun: {
-        Planet.moon: 1,
-        Planet.mars: 1,
-        Planet.jupiter: 1,
-        Planet.mercury: 0,
-        Planet.venus: -1,
-        Planet.saturn: -1,
-      },
-      Planet.moon: {
-        Planet.sun: 1,
-        Planet.mercury: 1,
-        Planet.venus: -1, // BPHS standard: Moon treats Venus as enemy
-        Planet.mars: 0,
-        Planet.jupiter: 0,
-        Planet.saturn: 0,
-      },
-      Planet.mars: {
-        Planet.sun: 1,
-        Planet.moon: 1,
-        Planet.jupiter: 1,
-        Planet.mercury: -1,
-        Planet.venus: 0,
-        Planet.saturn: 0,
-      },
-      Planet.mercury: {
-        Planet.sun: 1,
-        Planet.venus: 1,
-        Planet.moon: -1, // Added as per user request
-        Planet.mars: 0,
-        Planet.jupiter: 0,
-        Planet.saturn: 0,
-      },
-      Planet.jupiter: {
-        Planet.sun: 1,
-        Planet.moon: 1,
-        Planet.mars: 1,
-        Planet.mercury: -1,
-        Planet.venus: -1,
-        Planet.saturn: 0,
-      },
-      Planet.venus: {
-        Planet.mercury: 1,
-        Planet.saturn: 1,
-        Planet.mars: 0,
-        Planet.jupiter: 0,
-        Planet.sun: -1,
-        Planet.moon: -1,
-      },
-      Planet.saturn: {
-        Planet.mercury: 1,
-        Planet.venus: 1,
-        Planet.jupiter: 0,
-        Planet.mars: -1,
-        Planet.sun: -1,
-        Planet.moon: -1,
-      },
+    return switch (compound) {
+      RelationshipType.greatFriend => PlanetaryDignity.greatFriend,
+      RelationshipType.friend => PlanetaryDignity.friendSign,
+      RelationshipType.neutral => PlanetaryDignity.neutralSign,
+      RelationshipType.enemy => PlanetaryDignity.enemySign,
+      RelationshipType.greatEnemy => PlanetaryDignity.greatEnemy,
     };
   }
 

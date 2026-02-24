@@ -175,8 +175,7 @@ class ShadbalaService {
       PlanetaryDignity.enemySign => 7.0,
       PlanetaryDignity.greatEnemy => 5.0,
       PlanetaryDignity.debilitated => 0.0,
-      _ =>
-        10.0, // Default for MoolaTrikona (usually treated as Own/Exalted or High) -> Let's map MoolaTrikona to 20 or 18? usually same as Own/Exalted in this scheme
+      PlanetaryDignity.moolaTrikona => 18.0,
     };
   }
 
@@ -373,53 +372,52 @@ class ShadbalaService {
 
     // Determine if birth time is during day or night
     final birthTime = chart.dateTime.toUtc();
-    final isDay = birthTime.isAfter(sunrise) && birthTime.isBefore(sunset);
 
-    // Planets that are strong during day
-    final isDayPowerful = [
-      Planet.sun,
-      Planet.jupiter,
-      Planet.saturn,
-    ].contains(planet);
+    final noon = sunrise.add(
+        Duration(seconds: (sunset.difference(sunrise).inSeconds / 2).round()));
 
-    // Planets that are strong during night
-    final isNightPowerful = [
-      Planet.moon,
-      Planet.mars,
-      Planet.venus,
-    ].contains(planet);
-
-    if (isDay) {
-      return isDayPowerful ? 60.0 : 0.0;
-    } else {
-      return isNightPowerful ? 60.0 : 0.0;
+    var distFromNoon = birthTime.difference(noon).inSeconds.abs().toDouble();
+    if (distFromNoon > 43200.0) {
+      distFromNoon = 86400.0 - distFromNoon; // Wrap around 24 hours
     }
+
+    final isDayPowerful =
+        [Planet.sun, Planet.jupiter, Planet.saturn].contains(planet);
+    final isNightPowerful =
+        [Planet.moon, Planet.mars, Planet.venus].contains(planet);
+
+    if (isDayPowerful) {
+      return 60.0 * (1.0 - (distFromNoon / 43200.0));
+    } else if (isNightPowerful) {
+      return 60.0 * (distFromNoon / 43200.0);
+    }
+
+    return 30.0;
   }
 
   /// Fallback calculation using house position when sunrise/sunset unavailable.
   /// This is less accurate and should only be used as a last resort.
   double _calculateNatonnataBalaFallback(Planet planet, VedicChart chart) {
     final sunHouse = chart.getPlanet(Planet.sun)?.house ?? 1;
-    final isDay = sunHouse > 6; // Simplified: Sun in houses 7-12 = day
-
-    final isDayPowerful = [
-      Planet.sun,
-      Planet.jupiter,
-      Planet.saturn,
-    ].contains(planet);
-
-    final isNightPowerful = [
-      Planet.moon,
-      Planet.mars,
-      Planet.venus,
-    ].contains(planet);
 
     if (planet == Planet.mercury) return 60.0;
-    if (isDay) {
-      return isDayPowerful ? 60.0 : 0.0;
-    } else {
-      return isNightPowerful ? 60.0 : 0.0;
+
+    final isDayPowerful =
+        [Planet.sun, Planet.jupiter, Planet.saturn].contains(planet);
+    final isNightPowerful =
+        [Planet.moon, Planet.mars, Planet.venus].contains(planet);
+
+    // Sun in 10th house = Noon (0 distance from noon).
+    // Sun in 4th house = Midnight (6 houses away from noon).
+    final sunDistFrom10th = (sunHouse - 10).abs();
+    final circularDist =
+        sunDistFrom10th > 6 ? 12 - sunDistFrom10th : sunDistFrom10th; // 0 to 6
+    if (isDayPowerful) {
+      return 60.0 * (1.0 - (circularDist / 6.0));
+    } else if (isNightPowerful) {
+      return 60.0 * (circularDist / 6.0);
     }
+    return 30.0;
   }
 
   double _calculatePakshaBala(
@@ -1108,32 +1106,30 @@ class ShadbalaService {
   }
 
   /// Chesta Bala (Motional Strength) calculation.
-  ///
-  /// Traditional categories (per Parashara):
-  /// - Vakra (Retrograde): Maximum strength - 60 virupas
-  /// - Vikala (Stationary): Minimum strength - 0 virupas
-  /// - Mandi (Slow): Based on ratio to average speed
-  /// - Sama (Normal): Based on ratio to average speed
-  ///
-  /// This implementation uses the simplified ratio method but considers
-  /// retrograde motion for full strength.
   double _calculateChestaBala(Planet planet, VedicPlanetInfo planetInfo) {
     if (planet == Planet.sun || planet == Planet.moon) return 0.0;
 
     final speed = planetInfo.position.longitudeSpeed;
-
-    // Retrograde (Vakra) - maximum strength per traditional rules
-    if (speed < 0) return 60.0;
-
-    // Stationary (Vikala) - near zero speed
-    if (speed.abs() < 0.01) return 0.0;
-
-    // Calculate ratio to average speed (Mandi/Sama)
     final avgSpeed = _averageSpeeds[planet] ?? 1.0;
-    final ratio = (speed / avgSpeed).clamp(0.0, 1.0);
 
-    // Convert ratio to virupas (traditional: max 60)
-    return ratio * 60.0;
+    if (speed < 0) {
+      // Retrograde states
+      if (speed.abs() > avgSpeed) {
+        return 60.0; // Vakra (Full Retrograde)
+      } else {
+        return 30.0; // Anuvakra (Slow Retrograde) - Simplified mapping
+      }
+    } else if (speed.abs() < 0.05) {
+      return 15.0; // Vikala (Stationary)
+    } else {
+      // Forward states
+      final ratio = speed / avgSpeed;
+      if (ratio < 0.5) return 22.5; // Mandatara (Very Slow)
+      if (ratio < 1.0) return 30.0; // Manda (Slow)
+      if (ratio < 1.5) return 45.0; // Sama (Normal/Even)
+      if (ratio < 2.0) return 15.0; // Chara (Fast)
+      return 7.5; // Atichara (Very Fast)
+    }
   }
 
   double _calculateNaisargikaBala(Planet planet) {

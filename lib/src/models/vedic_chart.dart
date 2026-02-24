@@ -95,7 +95,7 @@ class KetuPosition {
   double get distance => rahuPosition.distance;
 
   /// Ketu's speed (opposite to Rahu)
-  double get longitudeSpeed => -rahuPosition.longitudeSpeed;
+  double get longitudeSpeed => rahuPosition.longitudeSpeed;
 
   /// Ketu always moves retrograde (like Rahu)
   bool get isRetrograde => true;

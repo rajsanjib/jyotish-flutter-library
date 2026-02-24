@@ -359,7 +359,8 @@ class DashaService {
     const nakshatraWidth = 360.0 / 27;
     final nakshatraIndex = (moonLongitude / nakshatraWidth).floor() % 27;
     final positionInNakshatra = moonLongitude % nakshatraWidth;
-    final startingYoginiIndex = (nakshatraIndex + 3) % 8;
+    final startingYoginiIndex =
+        nakshatraIndex % 8; // Ashwini -> Mangala (index 0)
     final portionRemaining = 1.0 - (positionInNakshatra / nakshatraWidth);
     final firstDashaYears = Yogini.values[startingYoginiIndex].years;
     final balanceDays = firstDashaYears * 365.25 * portionRemaining;
@@ -613,7 +614,11 @@ class DashaService {
     final lordPos = chart.getPlanet(lord)?.position;
     if (lordPos == null) return 0;
     final lordSign = Rashi.fromLongitude(lordPos.longitude);
-    final diff = (lordSign.number - sign.number + 12) % 12;
+    // Odd signs (Aries=1,Gem=3,...) count forward; Even signs count backward
+    final isOdd = sign.number % 2 != 0;
+    final diff = isOdd
+        ? (lordSign.number - sign.number + 12) % 12
+        : (sign.number - lordSign.number + 12) % 12;
     return diff == 0 ? 12 : diff;
   }
 
@@ -704,6 +709,7 @@ class DashaService {
     VedicChart chart, {
     AshtottariScheme scheme = AshtottariScheme.ardraAdi,
     bool forceCalculation = false,
+    int levels = 2,
   }) {
     if (!forceCalculation && !isAshtottariApplicable(chart)) {
       throw JyotishException(
@@ -765,12 +771,23 @@ class DashaService {
       final durationDays = i == 0 ? balanceDays : years * 365.25;
       final endDate = currentDate.add(Duration(days: durationDays.round()));
 
+      final subPeriods = levels >= 2
+          ? _calculateAshtottariAntardashas(
+              mahadashaStart: currentDate,
+              mahadashaDays: durationDays,
+              startingLordIndex: lordIdx,
+              sequence: ashtottariSequence,
+              yearMap: ashtottariYears,
+            )
+          : const <DashaPeriod>[];
+
       mahadashas.add(DashaPeriod(
         lord: planet,
         startDate: currentDate,
         endDate: endDate,
         duration: Duration(days: durationDays.round()),
         level: 0,
+        subPeriods: subPeriods,
       ));
       currentDate = endDate;
     }
@@ -787,6 +804,36 @@ class DashaService {
       balanceOfFirstDasha: balanceDays,
       allMahadashas: mahadashas,
     );
+  }
+
+  List<DashaPeriod> _calculateAshtottariAntardashas({
+    required DateTime mahadashaStart,
+    required double mahadashaDays,
+    required int startingLordIndex,
+    required List<Planet> sequence,
+    required Map<Planet, double> yearMap,
+  }) {
+    final periods = <DashaPeriod>[];
+    var current = mahadashaStart;
+    const totalYears = 108.0;
+
+    for (var i = 0; i < 8; i++) {
+      final idx = (startingLordIndex + i) % 8;
+      final planet = sequence[idx];
+      final days = mahadashaDays * ((yearMap[planet] ?? 6.0) / totalYears);
+      final ms = (days * 86400000).round();
+      final end = current.add(Duration(milliseconds: ms));
+      periods.add(DashaPeriod(
+        lord: planet,
+        startDate: current,
+        endDate: end,
+        duration: Duration(milliseconds: ms),
+        level: 1,
+        subPeriods: const [],
+      ));
+      current = end;
+    }
+    return periods;
   }
 
   /// Gets the lord of a zodiac sign index (0-11).

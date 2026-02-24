@@ -1,6 +1,9 @@
 import '../models/aspect.dart';
+import '../models/jaimini.dart';
 import '../models/planet.dart';
 import '../models/planet_position.dart';
+import '../models/vedic_chart.dart';
+import 'jaimini_service.dart';
 
 /// Service for calculating Vedic planetary aspects (Graha Drishti).
 ///
@@ -18,6 +21,22 @@ import '../models/planet_position.dart';
 /// **Western (degree-based) mode** [AspectConfig with useWholeSignAspects=false]:
 /// Standard degree+orb calculation, useful for KP or Western tropical use.
 class AspectService {
+  /// Returns Rashi Drishti (sign aspects) for the chart.
+  ///
+  /// Delegates to [JaiminiService] which implements the Jaimini sign-aspect rules:
+  /// - Movable signs aspect all Fixed signs (except adjacent)
+  /// - Fixed signs aspect all Movable signs (except adjacent)
+  /// - Dual signs aspect all other Dual signs
+  List<RashiDrishtiInfo> getRashiAspects(
+    VedicChart chart, {
+    bool activeOnly = true,
+  }) {
+    final jaiminiService = JaiminiService();
+    return activeOnly
+        ? jaiminiService.calculateActiveRashiDrishti(chart)
+        : jaiminiService.calculateRashiDrishti(chart);
+  }
+
   /// Calculates all aspects between planetary positions.
   ///
   /// [positions] - Map of planets to their positions

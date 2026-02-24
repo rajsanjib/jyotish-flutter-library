@@ -50,7 +50,8 @@ class PlanetPosition {
       distanceSpeed: results[5],
       declination: results.length > 6 ? results[6] : 0.0,
       isCombust: sunLongitude != null
-          ? calculateCombustion(planet, results[0], sunLongitude)
+          ? calculateCombustion(planet, results[0], sunLongitude,
+              longitudeSpeed: results.length > 3 ? results[3] : 1.0)
           : false,
       isRetrograde: isRetrograde,
     );
@@ -94,7 +95,8 @@ class PlanetPosition {
   /// Calculates if a planet is combust (too close to the Sun).
   /// Uses traditional Vedic astrology combustion distances.
   static bool calculateCombustion(
-      Planet planet, double planetLongitude, double sunLongitude) {
+      Planet planet, double planetLongitude, double sunLongitude,
+      {double? longitudeSpeed}) {
     // Sun is never combust
     if (planet == Planet.sun) return false;
 
@@ -102,11 +104,13 @@ class PlanetPosition {
     final difference = ((planetLongitude - sunLongitude + 540) % 360) - 180;
     final absDiff = difference.abs();
 
+    final isRetrograde = (longitudeSpeed ?? 1.0) < 0;
+
     // Vedic astrology combustion distances (in degrees)
     final combustionDistances = {
       Planet.moon: 12.0,
-      Planet.mercury: 14.0,
-      Planet.venus: 10.0,
+      Planet.mercury: isRetrograde ? 12.0 : 14.0,
+      Planet.venus: isRetrograde ? 8.0 : 10.0,
       Planet.mars: 17.0,
       Planet.jupiter: 11.0,
       Planet.saturn: 15.0,
@@ -128,7 +132,8 @@ class PlanetPosition {
       longitudeSpeed: longitudeSpeed,
       latitudeSpeed: latitudeSpeed,
       distanceSpeed: distanceSpeed,
-      isCombust: calculateCombustion(planet, longitude, sunLongitude),
+      isCombust: calculateCombustion(planet, longitude, sunLongitude,
+          longitudeSpeed: longitudeSpeed),
     );
   }
 

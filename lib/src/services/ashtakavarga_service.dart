@@ -248,12 +248,10 @@ class AshtakavargaService {
 
   /// Applies Trikona Shodhana (Trine Reduction) to Ashtakavarga.
   ///
-  /// Trikona Shodhana reduces the bindus in trinal houses (1-5-9, 2-6-10, 3-7-11, 4-8-12)
-  /// according to Parashari rules:
-  /// - If all three signs in a trikona have bindus, keep the minimum
-  /// - If two have bindus, keep the lower one
-  /// - If one has bindus, keep that value
-  /// - If none have bindus, all remain zero
+  /// Note: The implementation strictly subtracts the minimum non-zero value
+  /// of the three signs from all three signs in the trine, leaving the lowest
+  /// sign with 0 bindus. This differs from some interpretations but strictly
+  /// follows the standard BPHS method of subtraction.
   Ashtakavarga applyTrikonaShodhana(Ashtakavarga ashtakavarga) {
     final reducedBhinnashtakavarga = <Planet, Bhinnashtakavarga>{};
 

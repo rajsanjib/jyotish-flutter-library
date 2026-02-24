@@ -190,6 +190,7 @@ await jyotish.initialize({String? ephemerisPath});
 | `getAspects({dateTime, location, config?})` | `Future<List<AspectInfo>>` | All planetary aspects |
 | `getAspectsForPlanet({planet, dateTime, location})` | `Future<List<AspectInfo>>` | Aspects for specific planet |
 | `getChartAspects(chart, {config?})` | `List<AspectInfo>` | Aspects within a chart |
+| `getRashiAspects(chart, {activeOnly?})` | `List<RashiDrishtiInfo>` | Jaimini Sign Aspects (Movable/Fixed/Dual) |
 
 #### Dasha Methods
 
@@ -199,7 +200,7 @@ await jyotish.initialize({String? ephemerisPath});
 | `getYoginiDasha({natalChart, levels?})` | `Future<DashaResult>` | Yogini Dasha (36-year) |
 | `getCharaDasha({natalChart, levels?})` | `Future<CharaDashaResult>` | Chara Dasha (Jaimini) |
 | `getNarayanaDasha({chart, levels?})` | `Future<NarayanaDashaResult>` | Narayana Dasha (Jaimini) |
-| `getAshtottariDasha({natalChart, scheme?, forceCalculation?})` | `Future<DashaResult>` | Ashtottari Dasha (108-year) |
+| `getAshtottariDasha({natalChart, scheme?, forceCalculation?, levels?})` | `Future<DashaResult>` | Ashtottari Dasha (108-year) |
 | `getKalachakraDasha({natalChart})` | `Future<KalachakraDashaResult>` | Kalachakra Dasha |
 | `getCurrentDasha({natalChart, targetDate, type?})` | `DashaPeriod` | Current active period |
 
@@ -773,8 +774,9 @@ final service = VedicChartService(ephemerisService);
 - **Rahu**: Exalted in Gemini, Debilitated in Sagittarius
 - **Ketu**: Exalted in Sagittarius, Debilitated in Gemini (opposite Rahu)
 
-**Planetary Relationships (v2.3.0)**
-- Moon→Venus: corrected to **enemy** (-1) per BPHS (was incorrectly set to friend)
+**Planetary Relationships (v2.2.0)**
+- Moon→Venus: corrected to **neutral** (0) per BPHS (was incorrectly set to enemy)
+- Rahu/Ketu: full natural relationship sets added for Panchadha Maitri support.
 
 ---
 
@@ -791,8 +793,8 @@ final service = DashaService();
 | `calculateVimshottariDasha({moonLongitude, birthDateTime, levels?, birthTimeUncertainty?})` | `DashaResult` | Vimshottari (120-year) dasha |
 | `calculateYoginiDasha({moonLongitude, birthDateTime, levels?, birthTimeUncertainty?})` | `DashaResult` | Yogini (36-year) dasha — durations computed in **milliseconds** for precision |
 | `calculateCharaDasha(rashiChart, {levels?})` | `CharaDashaResult` | Chara (Jaimini) dasha |
-| `getNarayanaDasha(rashiChart, {levels?})` | `NarayanaDashaResult` | Jaimini sign-based dasha — consecutive zodiacal/reverse sequence per Jaimini odd/even sign rule |
-| `getAshtottariDasha(chart, {scheme?, forceCalculation?})` | `DashaResult` | 108-year cycle dasha |
+| `getNarayanaDasha(rashiChart, {levels?})` | `NarayanaDashaResult` | Jaimini sign-based dasha — uses reverse count for even signs |
+| `getAshtottariDasha(chart, {scheme?, forceCalculation?, levels?})` | `DashaResult` | 108-year cycle dasha — supports nested Antardashas |
 | `getKalachakraDasha(chart)` | `KalachakraDashaResult` | Nakshatra-based dasha — `balanceOfFirstDasha` computed from Moon's actual pada position |
 
 > **Accuracy Fixes (v2.3.0)**:
@@ -893,6 +895,7 @@ final service = AspectService();
 | `getAspectsCastBy(planet, positions, {config?})` | `List<AspectInfo>` | Aspects cast by planet |
 | `getAspectsReceivedBy(planet, positions, {config?})` | `List<AspectInfo>` | Aspects received by planet |
 | `getPlanetsAspectingSign(houseSignIndex, positions, {useWholeSign?})` | `List<Planet>` | Planets aspecting sign (whole-sign default) |
+| `getRashiAspects(chart, {activeOnly?})` | `List<RashiDrishtiInfo>` | Jaimini sign-based aspects (Movable/Fixed/Dual rules) |
 
 **AspectConfig**
 
@@ -990,7 +993,7 @@ final service = ShadbalaService(ephemerisService);
 | `calculateShadbala(chart)` | `Map<Planet, ShadbalaResult>` | Complete Shadbala |
 | `getUchchaBalaOnly(planet, longitude)` | `double` | Uchcha Bala (exaltation strength) for a planet |
 | `calculateHoraLordsForDay({date, location})` | `Future<List<Planet>>` | 24 Hora lords |
-| `checkCombustion({planet, planetLongitude, sunLongitude, planetSpeed?})` | `CombustionInfo` | Detailed combustion status. planetSpeed enables retrograde-aware orbs for Mercury/Venus |
+| `checkCombustion({planet, planetLongitude, sunLongitude, planetSpeed?})` | `CombustionInfo` | Detailed combustion status. Refined orbs (v2.2.0) + retrograde logic |
 
 **Shadbala Components**:
 1. **Sthana Bala** - Positional strength (Uchcha, Saptavargaja, Ojayugma, Drekkana, Kendra)

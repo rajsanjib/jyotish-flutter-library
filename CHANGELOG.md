@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-02-25
+
+### Fixed — Vedic System Accuracy & Strength Logic
+
+This major accuracy release addresses several core discrepancies in planetary strength and relationship logic.
+
+#### Core Models & Relationships
+- **Moon→Venus Relationship**: Corrected to **Neutral** (0) per BPHS. Previously incorrectly set to Enemy (-1).
+- **Rahu/Ketu Natural Relations**: Added Rahu (acts like Saturn) and Ketu (acts like Mars) entries to `RelationshipCalculator` to support full Panchadha logic.
+- **Ketu Direction**: Fixed `KetuPosition.longitudeSpeed` to match Rahu exactly (negation removed).
+- **Combustion Refs**: Mercury (12°/14°) and Venus (8°/10°) orbs now tighten in retrograde. All planets now use specialized orbs per BPHS rules.
+
+#### Dignity & Friendship
+- **Panchadha Maitri Implementation**: Refactored `VedicChartService` and `DivisionalChartService` to use a two-pass house mapping. Dignities now correctly account for **Temporal (Tatkalika)** friendship in every chart.
+- **Vimshopaka Points**: Fixed MoolaTrikona value to 18 points (previously 10).
+
+#### Dasha System Corrections
+- **Narayana Dasha**: Fixed sign counting direction. Even signs now correctly count in reverse.
+- **Yogini Dasha**: Removed incorrect +3 offset from starting lord index. Ashwini now correctly starts with Mangala.
+- **Ashtottari Dasha**: Added support for 2 levels (Antardashas) with proportional segment allocation.
+
+#### Shadbala & Aspects
+- **Natonnata Bala**: Replaced binary 60/0 logic with a proportional **Day/Night arc gradient**. Strength peaks at temporal mid-points (Noon/Midnight).
+- **Chesta Bala**: Implemented the traditional **8-state motion classification** (Vakra, Anuvakra, Vikala, etc.) based on planetary speed vs mean speed.
+- **Rashi Drishti**: Exposed `getRashiAspects` bridge in `AspectService` for Jaimini sign-based aspects.
+
+### Added
+- **Unit Tests**: Added `relationship_test.dart`, `dignity_test.dart`, `bhava_chalit_test.dart`, and `dasha_accuracy_test.dart`.
+
 ## [2.1.0] - 2026-02-24
 
 ### Fixed — Vedic Astrology Accuracy (Panchanga & Compatibility)

@@ -641,24 +641,27 @@ class ShadbalaService {
     // Determine which sign the Sun is in (0-11)
     final signIndex = (normalizedLong / 30).floor();
 
-    // Traditional month lords based on Sun's sign position
-    // Chaitra (Aries/0) = Jupiter, Vaishakha (Taurus/1) = Venus, etc.
+    // Drik Siddhanta mapping
     final monthLords = [
-      Planet.jupiter, // Chaitra - Aries (0°-30°)
-      Planet.venus, // Vaishakha - Taurus (30°-60°)
-      Planet.mercury, // Jyeshtha - Gemini (60°-90°)
-      Planet.saturn, // Ashadha - Cancer (90°-120°)
-      Planet.saturn, // Shravana - Leo (120°-150°)
-      Planet.jupiter, // Bhadrapada - Virgo (150°-180°)
-      Planet.mars, // Ashwin - Libra (180°-210°)
-      Planet.moon, // Kartik - Scorpio (210°-240°)
-      Planet.venus, // Agrahayana - Sagittarius (240°-270°)
-      Planet.mercury, // Pausha - Capricorn (270°-300°)
-      Planet.jupiter, // Magha - Aquarius (300°-330°)
-      Planet.sun, // Phalguna - Pisces (330°-360°)
+      Planet.mars, // Chaitra - Sun in Pisces (330°-360°)
+      Planet.venus, // Vaishakha - Sun in Aries (0°-30°)
+      Planet.mercury, // Jyeshtha - Sun in Taurus (30°-60°)
+      Planet.moon, // Ashadha - Sun in Gemini (60°-90°)
+      Planet.sun, // Shravana - Sun in Cancer (90°-120°)
+      Planet.mercury, // Bhadrapada - Sun in Leo (120°-150°)
+      Planet.venus, // Ashwin - Sun in Virgo (150°-180°)
+      Planet.mars, // Kartik - Sun in Libra (180°-210°)
+      Planet.jupiter, // Margashirsha - Sun in Scorpio (210°-240°)
+      Planet.saturn, // Pausha - Sun in Sagittarius (240°-270°)
+      Planet.saturn, // Magha - Sun in Capricorn (270°-300°)
+      Planet.jupiter, // Phalguna - Sun in Aquarius (300°-330°)
     ];
 
-    return monthLords[signIndex % 12];
+    // Align the sign index where Sun in Pisces (index 11) -> month 0 (Chaitra)
+    // Sun in Aries (index 0) -> month 1 (Vaishakha)
+    final monthIndex = (signIndex + 1) % 12;
+
+    return monthLords[monthIndex];
   }
 
   /// Varsha Bala: 15 virupas for the year lord.
@@ -668,42 +671,48 @@ class ShadbalaService {
   /// - Each year is associated with a specific planet as per the Samvatsara system
   /// - The cycle accurately follows Jupiter's orbital period (~11.86 years x 5 = 59.3 years)
   Future<double> _calculateVarshaBala(Planet planet, VedicChart chart) async {
-    final yearLord = await _getYearLordFromJupiter(chart);
+    final yearLord = await _getYearLordFromMeanJupiter(chart);
     return planet == yearLord ? 15.0 : 0.0;
   }
 
-  /// Gets the lord of the year based on Jupiter's position in the 60-year cycle.
+  /// Gets the lord of the year based on the Mean Longitude of Jupiter.
   ///
-  /// The 60-year Samvatsara cycle is based on Jupiter's position in the zodiac.
-  /// Jupiter takes approximately 11.86 years to orbit the Sun, and 5 Jupiter years
-  /// equal approximately 60 solar years (59.3 years).
-  ///
-  /// The cycle assigns lords to each of the 60 years following traditional rules:
-  /// - Years are ruled by planets in a specific sequence
-  /// - All 7 traditional planets (Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn)
-  /// serve as year lords
-  ///
-  /// [chart] - The Vedic chart containing planetary positions
-  Future<Planet> _getYearLordFromJupiter(VedicChart chart) async {
-    // Get Jupiter's position
-    final jupiterInfo = chart.getPlanet(Planet.jupiter);
-    if (jupiterInfo == null) return Planet.jupiter;
+  /// This calculates the elapsed Jovian years since the Kali Yuga epoch
+  /// using the traditional Barhaspatya Mana (Jovian Year) tracking system,
+  /// derived from the Surya Siddhanta constants.
+  Future<Planet> _getYearLordFromMeanJupiter(VedicChart chart) async {
+    final dt = chart.dateTime.toUtc();
+    int y = dt.year;
+    int m = dt.month;
+    if (m < 3) {
+      y -= 1;
+      m += 12;
+    }
 
-    final jupiterLongitude = jupiterInfo.longitude;
+    // Calculate Julian Date (Proleptic Gregorian)
+    final jd = dt.day +
+        ((153 * m - 457) / 5).floor() +
+        365 * y +
+        (y / 4).floor() -
+        (y / 100).floor() +
+        (y / 400).floor() +
+        1721118.5 +
+        (dt.hour + dt.minute / 60.0 + dt.second / 3600.0) / 24.0;
 
-    // Jupiter's sign position (0-11)
-    final jupiterSign = (jupiterLongitude / 30).floor();
+    // Kali Yuga epoch JD (midnight at Ujjain)
+    const kaliEpochJd = 588465.50;
 
-    // Jupiter's degree within sign (0-30)
-    final jupiterDegree = jupiterLongitude % 30;
+    // Ahargana = elapsed days since Kali Yuga
+    final ahargana = jd - kaliEpochJd;
 
-    // Calculate which 60-year cycle position we're in
-    // Jupiter moves through ~5 signs in 60 years
-    // We combine sign position with degree to determine the exact year lord
+    // Surya Siddhanta constants:
+    // Total signs (Jovian years) in Mahayuga = 364,220 * 12 = 4,370,640
+    // Days in Mahayuga = 1,577,917,828 civil days
+    final elapsedJovianYears = (ahargana * 4370640) / 1577917828;
 
-    // Base calculation: 60-year cycle position
-    // Reference: When Jupiter is at 0° Aries, it marks a cycle starting point
-    final baseCyclePosition = (jupiterSign * 5) + (jupiterDegree / 6).floor();
+    // Kali Yuga started in the 28th Samvatsara (Vijaya).
+    // We add 27 so that Index 0 aligns with Prabhava (the 1st Samvatsara).
+    final samvatsaraIndex = (elapsedJovianYears.floor() + 27) % 60;
 
     // Full 60-year cycle with all 7 planets as lords
     // Sequence follows traditional Samvatsara assignments
@@ -770,7 +779,7 @@ class ShadbalaService {
       Planet.saturn, // Akshaya
     ];
 
-    return samvatsaraLords[baseCyclePosition % 60];
+    return samvatsaraLords[samvatsaraIndex];
   }
 
   /// Hora Bala: 60 virupas for the current Hora (planetary hour) lord.

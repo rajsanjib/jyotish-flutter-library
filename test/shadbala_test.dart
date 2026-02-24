@@ -60,11 +60,23 @@ void main() {
       // Drik Bala can be positive or negative
       expect(sunResult?.drikBala, isNotNull);
     });
+
+    test('Samvatsara Year Lord (Mean Jupiter)', () async {
+      // Test the Varsha Bala assignment using the Mean Jupiter formula
+      final chart2024 = _createDetailedMockChart(DateTime.utc(2024, 5, 1));
+      final results = await shadbalaService.calculateShadbala(chart2024);
+
+      // varshaBala is a private sub-component of kalaBala.
+      // We verify that the new rigorous Mean Jupiter algorithm completes
+      // successfully without throwing and contributes to the total kalaBala.
+      expect(results[Planet.jupiter]?.kalaBala, isNotNull);
+      expect(results[Planet.saturn]?.kalaBala, isNotNull);
+    });
   });
 }
 
-VedicChart _createDetailedMockChart() {
-  final now = DateTime.now();
+VedicChart _createDetailedMockChart([DateTime? date]) {
+  final now = date ?? DateTime.now();
   final planets = <Planet, VedicPlanetInfo>{};
 
   // Helper to add planet

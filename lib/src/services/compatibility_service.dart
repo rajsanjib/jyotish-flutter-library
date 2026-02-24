@@ -55,7 +55,7 @@ class CompatibilityService {
 
     return GunaScores(
       varna: calculateVarna(boyNakshatra, girlNakshatra),
-      vashya: calculateVashya(boyNakshatra, girlNakshatra),
+      vashya: calculateVashya(boyChart, girlChart),
       tara: calculateTara(boyNakshatra, girlNakshatra, boyPada, girlPada),
       yoni: calculateYoni(boyNakshatra, girlNakshatra),
       grahaMaitri: calculateGrahaMaitri(boyChart, girlChart),
@@ -136,9 +136,14 @@ class CompatibilityService {
   // Chatushpada (quadruped), Jalachara (aquatic), Keeta (insect).
   // Score 2 = same category, 1 = compatible, 0 = incompatible.
 
-  int calculateVashya(String boyNakshatra, String girlNakshatra) {
-    final boyVashya = _getNakshatraVashya(boyNakshatra);
-    final girlVashya = _getNakshatraVashya(girlNakshatra);
+  int calculateVashya(VedicChart boyChart, VedicChart girlChart) {
+    final boyMoonSign =
+        Rashi.fromLongitude(boyChart.getPlanet(Planet.moon)?.longitude ?? 0);
+    final girlMoonSign =
+        Rashi.fromLongitude(girlChart.getPlanet(Planet.moon)?.longitude ?? 0);
+
+    final boyVashya = _getRashiVashya(boyMoonSign);
+    final girlVashya = _getRashiVashya(girlMoonSign);
 
     if (boyVashya == girlVashya) return 2;
     // Compatible pairs per tradition
@@ -149,52 +154,17 @@ class CompatibilityService {
     return 0;
   }
 
-  String _getNakshatraVashya(String nakshatra) {
-    // Manava (human): Bharani, Ardra, Punarvasu, Hasta, Swati, Jyeshtha,
-    //                 Shravana, Dhanishta, Shatabhisha, P. Bhadrapada, U. Bhadrapada, Revati
-    if ([
-      'Bharani',
-      'Ardra',
-      'Punarvasu',
-      'Hasta',
-      'Swati',
-      'Jyeshtha',
-      'Shravana',
-      'Dhanishta',
-      'Shatabhisha',
-      'Purva Bhadrapada',
-      'Uttara Bhadrapada',
-      'Revati',
-    ].contains(nakshatra)) return 'Manava';
-
-    // Vanachara (forest-dwelling): Ashwini, Mrigashira, Pushya, Chitra,
-    //                              Vishakha, Mula, Uttara Ashadha
-    if ([
-      'Ashwini',
-      'Mrigashira',
-      'Pushya',
-      'Chitra',
-      'Vishakha',
-      'Mula',
-      'Uttara Ashadha',
-    ].contains(nakshatra)) return 'Vanachara';
-
-    // Chatushpada (quadruped): Krittika, Rohini, Magha, U. Phalguni,
-    //                           Anuradha, P. Ashadha
-    if ([
-      'Krittika',
-      'Rohini',
-      'Magha',
-      'Uttara Phalguni',
-      'Anuradha',
-      'Purva Ashadha',
-    ].contains(nakshatra)) return 'Chatushpada';
-
-    // Jalajiva (aquatic): Ashlesha, Purva Phalguni
-    if (['Ashlesha', 'Purva Phalguni'].contains(nakshatra)) return 'Jalajiva';
-
-    // Keeta (insect/reptile): Krittika (some texts), default
-    return 'Keeta';
+  String _getRashiVashya(Rashi rashi) {
+    return switch (rashi) {
+      Rashi.gemini || Rashi.virgo || Rashi.libra || Rashi.aquarius => 'Manava',
+      Rashi.sagittarius =>
+        'Manava', // First half is Manava, simplified to whole sign
+      Rashi.leo => 'Vanachara',
+      Rashi.aries || Rashi.taurus => 'Chatushpada',
+      Rashi.capricorn => 'Chatushpada', // First half is Chatushpada, simplified
+      Rashi.cancer || Rashi.pisces => 'Jalachara',
+      Rashi.scorpio => 'Keeta',
+    };
   }
 
   // ─── Tara Koota (max 3 points) ──────────────────────────────────────────────
@@ -267,7 +237,7 @@ class CompatibilityService {
       'Bharani': 'Elephant',
       'Krittika': 'Goat',
       'Rohini': 'Serpent',
-      'Mrigashira': 'Snake',
+      'Mrigashira': 'Serpent',
       'Ardra': 'Dog',
       'Punarvasu': 'Cat',
       'Pushya': 'Goat',
@@ -295,38 +265,62 @@ class CompatibilityService {
     final boyAnimal = yoniAnimals[boyNakshatra] ?? 'Unknown';
     final girlAnimal = yoniAnimals[girlNakshatra] ?? 'Unknown';
 
-    if (boyAnimal == girlAnimal) return 4;
-    if (_areYoniFriends(boyAnimal, girlAnimal)) return 2;
-    if (_areYoniEnemies(boyAnimal, girlAnimal)) return 0;
-    return 1; // Neutral
-  }
+    if (boyAnimal == 'Unknown' || girlAnimal == 'Unknown') return 1;
 
-  bool _areYoniFriends(String a1, String a2) {
-    const friendlyPairs = [
-      ['Horse', 'Elephant'],
-      ['Goat', 'Cow'],
-      ['Serpent', 'Mongoose'],
-      ['Dog', 'Cat'],
-      ['Rat', 'Monkey'],
-      ['Tiger', 'Deer'],
-      ['Buffalo', 'Lion'],
+    const yoniNames = [
+      'Horse',
+      'Elephant',
+      'Goat',
+      'Serpent',
+      'Dog',
+      'Cat',
+      'Rat',
+      'Cow',
+      'Buffalo',
+      'Tiger',
+      'Deer',
+      'Monkey',
+      'Mongoose',
+      'Lion'
     ];
-    return friendlyPairs.any((pair) =>
-        (pair[0] == a1 && pair[1] == a2) || (pair[0] == a2 && pair[1] == a1));
-  }
 
-  bool _areYoniEnemies(String a1, String a2) {
-    const enemyPairs = [
-      ['Serpent', 'Mongoose'],
-      ['Dog', 'Deer'],
-      ['Cat', 'Rat'],
-      ['Goat', 'Tiger'],
-      ['Elephant', 'Lion'],
-      ['Horse', 'Buffalo'],
-      ['Monkey', 'Cow'],
+    const yoniScoreMatrix = [
+      // Horse (0)
+      [4, 3, 2, 3, 2, 2, 2, 2, 0, 2, 2, 3, 2, 2],
+      // Elephant (1)
+      [3, 4, 3, 3, 2, 2, 2, 2, 3, 2, 2, 3, 2, 0],
+      // Goat (2) [Sheep]
+      [2, 3, 4, 2, 2, 2, 2, 3, 3, 2, 2, 0, 3, 2],
+      // Serpent (3) [Snake]
+      [3, 3, 2, 4, 2, 3, 2, 2, 2, 2, 2, 2, 0, 2],
+      // Dog (4)
+      [2, 2, 2, 2, 4, 3, 3, 2, 2, 2, 0, 2, 2, 2],
+      // Cat (5)
+      [2, 2, 2, 3, 3, 4, 0, 2, 2, 2, 3, 3, 2, 2],
+      // Rat (6)
+      [2, 2, 2, 2, 3, 0, 4, 2, 2, 2, 2, 2, 2, 2],
+      // Cow (7)
+      [2, 2, 3, 2, 2, 2, 2, 4, 3, 0, 2, 2, 2, 2],
+      // Buffalo (8)
+      [0, 3, 3, 2, 2, 2, 2, 3, 4, 2, 2, 2, 2, 2],
+      // Tiger (9)
+      [2, 2, 2, 2, 2, 2, 2, 0, 2, 4, 2, 2, 2, 3],
+      // Deer (10)
+      [2, 2, 2, 2, 0, 3, 2, 2, 2, 2, 4, 2, 2, 2],
+      // Monkey (11)
+      [3, 3, 0, 2, 2, 3, 2, 2, 2, 2, 2, 4, 3, 2],
+      // Mongoose (12)
+      [2, 2, 3, 0, 2, 2, 2, 2, 2, 2, 2, 3, 4, 2],
+      // Lion (13)
+      [2, 0, 2, 2, 2, 2, 2, 2, 2, 3, 2, 2, 2, 4],
     ];
-    return enemyPairs.any((pair) =>
-        (pair[0] == a1 && pair[1] == a2) || (pair[0] == a2 && pair[1] == a1));
+
+    final boyIdx = yoniNames.indexOf(boyAnimal);
+    final girlIdx = yoniNames.indexOf(girlAnimal);
+
+    if (boyIdx == -1 || girlIdx == -1) return 1; // Fallback
+
+    return yoniScoreMatrix[boyIdx][girlIdx];
   }
 
   // ─── Graha Maitri / Rashyadhipati Maitri Koota (max 5 points) ───────────────
@@ -474,25 +468,48 @@ class CompatibilityService {
     final girlMoonSign =
         Rashi.fromLongitude(girlChart.getPlanet(Planet.moon)?.longitude ?? 0);
 
+    if (_isBhakootDoshaCancelled(boyMoonSign, girlMoonSign)) {
+      return 7;
+    }
+
     final boySignNum = boyMoonSign.index + 1; // 1-based
     final girlSignNum = girlMoonSign.index + 1;
 
-    // Forward distance from boy to girl (1–12)
-    final fwd = ((girlSignNum - boySignNum) % 12 + 12) % 12;
-    // Reverse distance (complement)
-    final rev = fwd == 0 ? 0 : 12 - fwd;
+    // Forward distance from boy to girl (1-based index)
+    // Example: Aries(1) to Taurus(2) => fwd_dist = 2
+    int fwdDist = girlSignNum - boySignNum + 1;
+    if (fwdDist <= 0) fwdDist += 12;
 
-    // Dosha-forming pairs: 2/12, 5/9, 6/8
-    // fwd==0 (same sign) is fine (no dosha)
-    if (fwd == 0) return 7;
+    // Reverse distance (girl to boy)
+    int revDist = boySignNum - girlSignNum + 1;
+    if (revDist <= 0) revDist += 12;
 
-    final pair = {fwd, rev}; // set of both directions
+    // Dosha-forming pairs: (2, 12), (5, 9), (6, 8)
+    // If same sign (fwdDist == 1, revDist == 1), it's fine
+    if (fwdDist == 1) return 7;
+
+    final pair = {fwdDist, revDist};
     if (pair.containsAll({2, 12}) ||
         pair.containsAll({5, 9}) ||
         pair.containsAll({6, 8})) {
       return 0; // Bhakoot Dosha
     }
     return 7;
+  }
+
+  bool _isBhakootDoshaCancelled(Rashi boySign, Rashi girlSign) {
+    final boyLord = _getSignLord(boySign);
+    final girlLord = _getSignLord(girlSign);
+
+    // Rule 1: Same lord cancels dosha
+    if (boyLord == girlLord) return true;
+
+    // Rule 2: Mutual friends cancel dosha
+    final boyToGirl = _planetFriendship(boyLord, girlLord);
+    final girlToBoy = _planetFriendship(girlLord, boyLord);
+    if (boyToGirl == 2 && girlToBoy == 2) return true;
+
+    return false;
   }
 
   // ─── Nadi Koota (max 8 points) ──────────────────────────────────────────────
@@ -505,6 +522,10 @@ class CompatibilityService {
     final boyMoonInfo = boyChart.getPlanet(Planet.moon);
     final girlMoonInfo = girlChart.getPlanet(Planet.moon);
 
+    if (_isNadiDoshaCancelled(boyChart, girlChart)) {
+      return 8;
+    }
+
     final boyNadi =
         _getNadiFromNakshatraIndex(boyMoonInfo?.position.nakshatraIndex ?? 0);
     final girlNadi =
@@ -512,6 +533,27 @@ class CompatibilityService {
 
     if (boyNadi == girlNadi) return 0; // Nadi Dosha
     return 8;
+  }
+
+  bool _isNadiDoshaCancelled(VedicChart boyChart, VedicChart girlChart) {
+    final boyMoon = boyChart.getPlanet(Planet.moon);
+    final girlMoon = girlChart.getPlanet(Planet.moon);
+    if (boyMoon == null || girlMoon == null) return false;
+
+    final boyNak = boyMoon.nakshatra;
+    final girlNak = girlMoon.nakshatra;
+    final boyPada = boyMoon.pada;
+    final girlPada = girlMoon.pada;
+
+    // Rule 1: Same Nakshatra, different Pada
+    if (boyNak == girlNak && boyPada != girlPada) return true;
+
+    // Rule 2: Same Rashi, different Nakshatra
+    final boySign = Rashi.fromLongitude(boyMoon.longitude);
+    final girlSign = Rashi.fromLongitude(girlMoon.longitude);
+    if (boySign == girlSign && boyNak != girlNak) return true;
+
+    return false;
   }
 
   /// Returns Nadi (0=Adi, 1=Madhya, 2=Antya) using cyclic nakshatra grouping.
@@ -574,16 +616,19 @@ class CompatibilityService {
   }
 
   NadiDoshaResult checkNadiDosha(VedicChart boyChart, VedicChart girlChart) {
-    final boyMoon = boyChart.getPlanet(Planet.moon);
-    final girlMoon = girlChart.getPlanet(Planet.moon);
+    final boyMoonInfo = boyChart.getPlanet(Planet.moon);
+    final girlMoonInfo = girlChart.getPlanet(Planet.moon);
 
     final boyNadi =
-        _getNadiFromNakshatraIndex(boyMoon?.position.nakshatraIndex ?? 0);
+        _getNadiFromNakshatraIndex(boyMoonInfo?.position.nakshatraIndex ?? 0);
     final girlNadi =
-        _getNadiFromNakshatraIndex(girlMoon?.position.nakshatraIndex ?? 0);
+        _getNadiFromNakshatraIndex(girlMoonInfo?.position.nakshatraIndex ?? 0);
+
+    final hasDosha =
+        boyNadi == girlNadi && !_isNadiDoshaCancelled(boyChart, girlChart);
 
     return NadiDoshaResult(
-      hasDosha: boyNadi == girlNadi,
+      hasDosha: hasDosha,
       boyNadi: ['Adi', 'Madhya', 'Antya'][boyNadi],
       girlNadi: ['Adi', 'Madhya', 'Antya'][girlNadi],
     );
@@ -598,19 +643,27 @@ class CompatibilityService {
 
     final boySignNum = boyMoonSign.index + 1;
     final girlSignNum = girlMoonSign.index + 1;
-    final fwd = ((girlSignNum - boySignNum) % 12 + 12) % 12;
-    final rev = fwd == 0 ? 0 : 12 - fwd;
-    final pair = {fwd, rev};
+    int fwdDist = girlSignNum - boySignNum + 1;
+    if (fwdDist <= 0) fwdDist += 12;
+
+    int revDist = boySignNum - girlSignNum + 1;
+    if (revDist <= 0) revDist += 12;
+
+    final pair = {fwdDist, revDist};
 
     // Bhakoot Dosha: 2/12, 5/9, or 6/8 inter-sign relationships
-    final hasDosha = fwd != 0 &&
+    bool hasDosha = fwdDist != 1 &&
         (pair.containsAll({2, 12}) ||
             pair.containsAll({5, 9}) ||
             pair.containsAll({6, 8}));
 
+    if (hasDosha && _isBhakootDoshaCancelled(boyMoonSign, girlMoonSign)) {
+      hasDosha = false;
+    }
+
     String description;
     if (!hasDosha) {
-      description = 'No Bhakoot Dosha';
+      description = 'No Bhakoot Dosha'; // Includes cancelled cases
     } else if (pair.containsAll({6, 8})) {
       description =
           'Moon signs in 6/8 relationship — Bhakoot Dosha (most severe)';

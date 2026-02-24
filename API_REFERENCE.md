@@ -367,11 +367,21 @@ await jyotish.initialize({String? ephemerisPath});
 |--------|---------|-------------|
 | `calculateCompatibility(boyChart, girlChart)` | `CompatibilityResult` | Full compatibility + doshas |
 | `calculateGunaMilan(boyChart, girlChart)` | `GunaScores` | All 8 Ashtakoota scores |
+| `calculateVashya(boyChart, girlChart)` | `int` | **[CHANGED v2.1.0]** Rashi-based classification (0-2 pts) |
+| `calculateYoni(boyNakshatra, girlNakshatra)` | `int` | Uses correct 14x14 matrix scoring (0-4 pts) |
 | `checkManglikDosha(chart)` | `ManglikDoshaResult` | Mars in 1/2/4/7/8/12 houses |
-| `checkNadiDosha(boyChart, girlChart)` | `NadiDoshaResult` | Nadi match (cyclic grouping) |
-| `checkBhakootDosha(boyChart, girlChart)` | `BhakootDoshaResult` | 2/12, 5/9, or 6/8 moon-sign pairs |
+| `checkNadiDosha(boyChart, girlChart)` | `NadiDoshaResult` | Nadi match with cancellation rules |
+| `checkBhakootDosha(boyChart, girlChart)` | `BhakootDoshaResult` | 2/12, 5/9, 6/8 pairs with cancellation rules |
 | `checkDoshas(boyChart, girlChart)` | `DoshaCheck` | All dosha checks combined |
 | `calculateDashaCompatibility(boyChart, girlChart)` | `DashaCompatibility` | Dasha timing compatibility |
+
+> **API Change (v2.1.0)**: `calculateVashya` signature has changed from `(String boyNakshatra, String girlNakshatra)` to `(VedicChart boyChart, VedicChart girlChart)` to implement correct Rashi-based Vashya Koota classification according to traditional texts.
+>
+> **Calculation Updates (v2.1.0)**:
+> - **Bhakoot & Nadi Dosha**: Now implements extensive cancellation rules based on sign lords, mutual friendship, Nakshatra Padas, and Rashi/Nakshatra combinations.
+> - **Yoni Koota**: Replaced simple friend/enemy array pairs with the standard precision 14x14 Yoni points matrix to correctly return intermediate scores.
+> - **Samvatsara (Varsha Bala)**: The 60-year cycle calculation inside `ShadbalaService` now correctly computes the elapsed Jovian Years since the Kali Yuga epoch using Mean Jupiter motion (Ahargana) rather than simply reading Jupiter's spatial position.
+> - **Maasa Bala**: Month-lord mapping updated to align correctly with the Drik Siddhanta.
 
 #### Service Accessors
 

@@ -155,6 +155,10 @@ await jyotish.initialize({String? ephemerisPath});
 |-----------|------|----------|-------------|
 | `ephemerisPath` | `String?` | No | Custom path to Swiss Ephemeris data files |
 
+| Property | Type | Description |
+|----------|------|-------------|
+| `isInitialized` | `bool` | Whether the library has been initialized |
+
 #### Planetary Position Methods
 
 | Method | Returns | Description |
@@ -204,6 +208,14 @@ await jyotish.initialize({String? ephemerisPath});
 | `getTransitPositions({natalChart, transitDateTime?, location})` | `Future<Map<Planet, TransitInfo>>` | Transit positions vs natal |
 | `getTransitEvents({natalChart, startDate, endDate, location, planets?})` | `Future<List<TransitEvent>>` | Transit events in date range |
 | `calculateSpecialTransits({natalChart, checkDate?, location})` | `Future<SpecialTransits>` | Sade Sati, Dhaiya, Panchak |
+| `predictSadeSatiPeriods(natalChart, {yearsBefore?, yearsAfter?})` | `List<Map<String, dynamic>>` | Past/future Sade Sati periods |
+
+#### Sunrise/Sunset & Rise/Set Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getSunriseSunset({date, location, atpress?, attemp?})` | `Future<(DateTime?, DateTime?)>` | High-precision sunrise/sunset |
+| `getRiseSet({planet, date, location, rsmi, atpress?, attemp?})` | `Future<DateTime?>` | Rise/set time for any planet |
 
 #### Panchanga Methods
 
@@ -225,6 +237,11 @@ await jyotish.initialize({String? ephemerisPath});
 | `calculateAshtakavarga(natalChart)` | `Ashtakavarga` | Complete Ashtakavarga |
 | `analyzeAshtakavargaTransit({ashtakavarga, transitPlanet, transitSign})` | `TransitAnalysis` | Transit strength analysis |
 | `getAshtakavargaReductions(ashtakavarga, {trikonaReduction?, ekadhipatiReduction?})` | `Ashtakavarga` | Reduced Ashtakavarga |
+| `calculatePinda(ashtakavarga)` | `Map<Planet, PindaResult>` | Rashi + Graha Pinda strength |
+| `calculateYogaPinda(ashtakavarga)` | `Map<Planet, YogaPindaResult>` | Auspicious Yoga Pinda |
+| `calculateShodhyaPinda(ashtakavarga)` | `ShodhyaPindaResult` | Reduced Shodhya Pinda |
+| `calculateHousePinda(ashtakavarga, houseNumber)` | `double` | Pinda for specific house |
+| `calculateAllHousesPinda(ashtakavarga)` | `Map<int, double>` | Pinda for all 12 houses |
 
 #### KP System Methods
 
@@ -233,6 +250,8 @@ await jyotish.initialize({String? ephemerisPath});
 | `calculateKPData(natalChart, {useNewAyanamsa?})` | `KPCalculations` | Complete KP data |
 | `getSubLord(longitude)` | `Planet` | Sub-Lord for longitude |
 | `getSubSubLord(longitude)` | `Planet` | Sub-Sub-Lord |
+| `getHouseGroupSignificators(significators)` | `KPHouseGroupSignificators` | House group significators |
+| `calculateTransitKPDivisions(transitPositions)` | `Map<Planet, KPDivision>` | Transit KP divisions |
 
 #### Muhurta Methods
 
@@ -267,9 +286,16 @@ await jyotish.initialize({String? ephemerisPath});
 | `getMasa({dateTime, location, type?})` | `Future<MasaInfo>` | Lunar month |
 | `getAmantaMasa({dateTime, location})` | `Future<MasaInfo>` | Amanta system |
 | `getPurnimantaMasa({dateTime, location})` | `Future<MasaInfo>` | Purnimanta system |
-vatsara({dateTime, location| `getSam})` | `Future<String>` | 60-year cycle name |
+| `getSamvatsara({dateTime, location})` | `Future<String>` | 60-year cycle name |
 | `getMasaListForYear({year, location, type?})` | `Future<List<MasaInfo>>` | All months in year |
 | `getRitu(masaInfo)` | `Ritu` | Hindu season |
+| `getRituDetails({dateTime, location})` | `Future<RituInfo>` | Detailed season info |
+
+#### Ephemeris Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `calculateHouses({dateTime, location, houseSystem?})` | `Future<Map<String, List<double>>>` | House cusps and ascendant/MC |
 
 #### Shadbala & Strength Methods
 
@@ -363,6 +389,7 @@ vatsara({dateTime, location| `getSam})` | `Future<String>` | 60-year cycle name 
 | `getArudhaLagna(chart)` | `Rashi` | Arudha Lagna (AL) |
 | `getUpapada(chart)` | `Rashi` | Upapada Lagna (UL) |
 | `getAllArgalas(chart)` | `Map<int, List<ArgalaInfo>>` | Argalas for all houses |
+| `getArgalaForHouse(chart, house)` | `List<ArgalaInfo>` | Argala for specific house |
 
 #### Prashna (Horary) Methods
 
@@ -376,7 +403,7 @@ vatsara({dateTime, location| `getSam})` | `Future<String>` | 60-year cycle name 
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `getPlanetaryRelationships({natalChart})` | `Map<Planet, Map<Planet, RelationshipInfo>>` | Panchadha Maitri |
+| `getPlanetaryRelationships({natalChart})` | `List<PlanetaryRelationship>` | Panchadha Maitri |
 
 #### Cleanup
 
@@ -582,7 +609,7 @@ final service = PanchangaService(ephemerisService);
 | `getTithi({dateTime, location})` | `Future<TithiInfo>` | Tithi (lunar day) |
 | `getYoga({dateTime, location})` | `Future<YogaInfo>` | Yoga (Sun+Moon combination) |
 | `getKarana({dateTime, location})` | `Future<KaranaInfo>` | Karana (half-Tithi) |
-| `getVara(dateTime, location)` | `Future<VaraInfo>` | Vara (weekday lord) |
+| `getVara({dateTime, location})` | `Future<VaraInfo>` | Vara (weekday lord) |
 | `getNakshatra({dateTime, location})` | `Future<NakshatraInfo>` | Moon's nakshatra |
 | `getTithiEndTime({dateTime, location, accuracyThreshold?})` | `Future<DateTime>` | Precise Tithi end |
 | `calculateAbhijitMuhurta({date, location})` | `Future<AbhijitMuhurta>` | 8th Muhurta (1/15th of daytime) |
@@ -692,6 +719,7 @@ final service = ShadbalaService(ephemerisService);
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `calculateShadbala(chart)` | `Map<Planet, ShadbalaResult>` | Complete Shadbala |
+| `getUchchaBalaOnly(planet, longitude)` | `double` | Uchcha Bala (exaltation strength) for a planet |
 | `calculateHoraLordsForDay({date, location})` | `Future<List<Planet>>` | 24 Hora lords |
 | `checkCombustion({planet, planetLongitude, sunLongitude, planetSpeed?})` | `CombustionInfo` | Detailed combustion status. planetSpeed enables retrograde-aware orbs for Mercury/Venus |
 

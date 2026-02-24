@@ -1253,6 +1253,68 @@ class Jyotish {
     return _ashtakavargaService!.getFavorableTransitSigns(ashtakavarga, planet);
   }
 
+  /// Calculates Pinda (Rashi + Graha planetary strength) from Ashtakavarga.
+  ///
+  /// [ashtakavarga] - The Ashtakavarga to calculate from
+  ///
+  /// Returns Pinda values for each planet.
+  Map<Planet, PindaResult> calculatePinda(Ashtakavarga ashtakavarga) {
+    _ensureInitialized();
+    _ashtakavargaService ??= AshtakavargaService();
+    return _ashtakavargaService!.calculatePinda(ashtakavarga);
+  }
+
+  /// Calculates Yoga Pinda (auspicious strength) from Ashtakavarga.
+  ///
+  /// [ashtakavarga] - The Ashtakavarga (after reductions)
+  ///
+  /// Returns Yoga Pinda values for each planet.
+  Map<Planet, YogaPindaResult> calculateYogaPinda(Ashtakavarga ashtakavarga) {
+    _ensureInitialized();
+    _ashtakavargaService ??= AshtakavargaService();
+    return _ashtakavargaService!.calculateYogaPinda(ashtakavarga);
+  }
+
+  /// Calculates Shodhya Pinda (reduced strength) from Ashtakavarga.
+  ///
+  /// Applies Trikona and Ekadhipati Shodhana, then calculates Pinda.
+  ///
+  /// [ashtakavarga] - The Ashtakavarga to calculate from
+  ///
+  /// Returns complete Shodhya Pinda analysis.
+  ShodhyaPindaResult calculateShodhyaPinda(Ashtakavarga ashtakavarga) {
+    _ensureInitialized();
+    _ashtakavargaService ??= AshtakavargaService();
+    return _ashtakavargaService!.calculateShodhyaPinda(ashtakavarga);
+  }
+
+  /// Calculates Ashtakavarga Pinda for a specific house.
+  ///
+  /// [ashtakavarga] - The Ashtakavarga
+  /// [houseNumber] - House number (1-12)
+  ///
+  /// Returns the house Pinda value.
+  double calculateHousePinda(Ashtakavarga ashtakavarga, int houseNumber) {
+    _ensureInitialized();
+    _ashtakavargaService ??= AshtakavargaService();
+    return _ashtakavargaService!.calculateHousePinda(ashtakavarga, houseNumber);
+  }
+
+  /// Calculates Ashtakavarga Pinda for all 12 houses.
+  ///
+  /// [ashtakavarga] - The Ashtakavarga
+  ///
+  /// Returns map of house number (1-12) to Pinda value.
+  Map<int, double> calculateAllHousesPinda(Ashtakavarga ashtakavarga) {
+    _ensureInitialized();
+    _ashtakavargaService ??= AshtakavargaService();
+    final result = <int, double>{};
+    for (var i = 1; i <= 12; i++) {
+      result[i] = _ashtakavargaService!.calculateHousePinda(ashtakavarga, i);
+    }
+    return result;
+  }
+
   // ============================================================
   // KP (KRISHNAMURTI PADDHATI) CALCULATIONS
   // ============================================================
@@ -1302,6 +1364,33 @@ class Jyotish {
   Planet? getSubSubLord(double longitude) {
     _ensureInitialized();
     return _kpService!.getSubSubLord(longitude);
+  }
+
+  /// Gets house group significators for a chart.
+  ///
+  /// Groups planets by their house significators for life areas:
+  /// Self, Wealth, Career, Marriage, Children, Health.
+  ///
+  /// [significators] - KP significators from calculateKPData
+  ///
+  /// Returns grouped significators.
+  KPHouseGroupSignificators getHouseGroupSignificators(
+    Map<Planet, KPSignificators> significators,
+  ) {
+    _ensureInitialized();
+    return _kpService!.getHouseGroupSignificators(significators);
+  }
+
+  /// Calculates transit KP divisions for planet positions.
+  ///
+  /// [transitPositions] - Map of planet to their transit positions
+  ///
+  /// Returns KP division data for each transit planet.
+  Map<Planet, KPDivision> calculateTransitKPDivisions(
+    Map<Planet, PlanetPosition> transitPositions,
+  ) {
+    _ensureInitialized();
+    return _kpService!.calculateTransitKPDivisions(transitPositions);
   }
 
   // ============================================================
@@ -1852,6 +1941,69 @@ class Jyotish {
     } catch (e) {
       throw JyotishException(
         'Failed to get Masa list: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
+  /// Gets the Hindu season (Ritu) based on the lunar month.
+  ///
+  /// [masaInfo] - The MasaInfo containing the lunar month
+  ///
+  /// Returns the corresponding Ritu.
+  Ritu getRitu(MasaInfo masaInfo) {
+    _ensureInitialized();
+    return _masaService!.getRitu(masaInfo);
+  }
+
+  /// Gets detailed Ritu (season) information for a specific date.
+  ///
+  /// [dateTime] - The date to check
+  /// [location] - Geographic location
+  ///
+  /// Returns detailed Ritu information including description and characteristics.
+  Future<RituInfo> getRituDetails({
+    required DateTime dateTime,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+
+    try {
+      return await _masaService!.getRituDetails(
+        dateTime: dateTime,
+        location: location,
+      );
+    } catch (e) {
+      throw JyotishException(
+        'Failed to get Ritu details: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
+  /// Calculates house cusps and ascendant/midheaven.
+  ///
+  /// [dateTime] - The date and time for calculation
+  /// [location] - Geographic location
+  /// [houseSystem] - House system ('P' = Placidus, 'K' = Koch, 'W' = Whole Sign, etc.)
+  ///
+  /// Returns a map with 'cusps' and 'ascmc' arrays.
+  Future<Map<String, List<double>>> calculateHouses({
+    required DateTime dateTime,
+    required GeographicLocation location,
+    String houseSystem = 'P',
+  }) async {
+    _ensureInitialized();
+
+    try {
+      return await _ephemerisService!.calculateHouses(
+        dateTime: dateTime,
+        location: location,
+        houseSystem: houseSystem,
+      );
+    } catch (e) {
+      throw JyotishException(
+        'Failed to calculate houses: ${e.toString()}',
         originalError: e,
       );
     }

@@ -1405,6 +1405,19 @@ class ShadbalaService {
     Planet.venus: 357.0,
     Planet.saturn: 200.0,
   };
+
+  /// BPHS Minimum required Shadbala in Virupas for each planet.
+  ///
+  /// Source: Brihat Parashara Hora Shastra
+  static const _minimumShadbala = {
+    Planet.sun: 390.0, // 6.5 Rupas
+    Planet.moon: 360.0, // 6.0 Rupas
+    Planet.mars: 300.0, // 5.0 Rupas
+    Planet.mercury: 420.0, // 7.0 Rupas
+    Planet.jupiter: 390.0, // 6.5 Rupas
+    Planet.venus: 330.0, // 5.5 Rupas
+    Planet.saturn: 300.0, // 5.0 Rupas
+  };
 }
 
 class ShadbalaResult {
@@ -1442,8 +1455,22 @@ class ShadbalaResult {
   /// Net Phala (Ishta - Kashta)
   final double netPhala;
 
-  bool get isStrong => totalBala >= 330;
-  bool get isWeak => totalBala < 280;
+  /// BPHS minimum required Shadbala in Virupas.
+  double get minimumRequired =>
+      ShadbalaService._minimumShadbala[planet] ?? 330.0;
+
+  /// Whether the planet meets its specific BPHS minimum strength requirement.
+  bool get meetsMinimumStrength => totalBala >= minimumRequired;
+
+  /// The ratio of actual strength to minimum required strength (1.0 = exactly meets).
+  double get shadbalaRatio => totalBala / minimumRequired;
+
+  /// A planet is considered strong if it has at least 100% of its required strength
+  bool get isStrong => shadbalaRatio >= 1.0;
+
+  /// A planet is considered weak if it has less than 85% of its required strength
+  bool get isWeak => shadbalaRatio < 0.85;
+
   double get rupas => totalBala / 60.0;
 
   @override

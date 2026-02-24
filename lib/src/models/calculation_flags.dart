@@ -56,6 +56,25 @@ class CalculationFlags {
         useTopocentric: true,
       );
 
+  /// Creates flags for the KP (Krishnamurti Paddhati) system.
+  ///
+  /// KP uses Krishnamurti VP291 ayanamsa (also called "KP New Ayanamsa"),
+  /// which is distinct from the classical Lahiri ayanamsa.
+  /// This is the professionally correct choice for all KP chart work.
+  ///
+  /// Example:
+  /// ```dart
+  /// final chart = await jyotish.calculateVedicChart(
+  ///   dateTime: birthDateTime,
+  ///   location: location,
+  ///   houseSystem: 'P', // Placidus — standard for KP
+  ///   flags: CalculationFlags.kp(),
+  /// );
+  /// ```
+  factory CalculationFlags.kp() => const CalculationFlags(
+        siderealMode: SiderealMode.krishnamurtiVP291,
+      );
+
   /// Creates flags with specified node type.
   ///
   /// [nodeType] - Type of lunar node (meanNode or trueNode)

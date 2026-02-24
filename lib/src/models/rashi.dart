@@ -1,3 +1,5 @@
+import 'planet.dart';
+
 /// Enumeration of the 12 Rashi (Zodiac Signs).
 enum Rashi {
   aries('Aries', 'Mesha', 0),
@@ -40,6 +42,26 @@ enum Rashi {
 
   /// Whether this is an even sign (Taurus, Cancer, etc.)
   bool get isEven => !isOdd;
+
+  /// Returns the traditional ruling planet (lord) of this sign.
+  ///
+  /// Traditional sign-lords per Parashara:
+  /// - Aries, Scorpio → Mars
+  /// - Taurus, Libra → Venus
+  /// - Gemini, Virgo → Mercury
+  /// - Cancer → Moon
+  /// - Leo → Sun
+  /// - Sagittarius, Pisces → Jupiter
+  /// - Capricorn, Aquarius → Saturn
+  Planet get lord => switch (this) {
+        Rashi.aries || Rashi.scorpio => Planet.mars,
+        Rashi.taurus || Rashi.libra => Planet.venus,
+        Rashi.gemini || Rashi.virgo => Planet.mercury,
+        Rashi.cancer => Planet.moon,
+        Rashi.leo => Planet.sun,
+        Rashi.sagittarius || Rashi.pisces => Planet.jupiter,
+        Rashi.capricorn || Rashi.aquarius => Planet.saturn,
+      };
 
   @override
   String toString() => name;

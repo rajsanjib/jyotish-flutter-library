@@ -1,3 +1,4 @@
+import '../exceptions/jyotish_exception.dart';
 import '../models/dasha.dart';
 import '../models/planet.dart';
 import '../models/rashi.dart';
@@ -649,9 +650,67 @@ class DashaService {
     return subPeriods;
   }
 
+  /// Returns true if Ashtottari Dasha is applicable per BPHS rules.
+  /// Conditions (either must be true):
+  ///   1. Rahu is in a Kendra (1,4,7,10) or Trikona (1,5,9) from the Lagna Lord.
+  ///   2. Birth is during Krishna Paksha night.
+  bool isAshtottariApplicable(VedicChart chart) {
+    // Condition 1: Rahu in Kendra/Trikona from Lagna Lord
+    final lagnaSign = Rashi.fromLongitude(chart.houses.ascendant);
+    final lagnaLord = _getSignLord(lagnaSign.number);
+    if (lagnaLord == null) return false;
+
+    final lagnaLordInfo = chart.planets[lagnaLord];
+    final rahuInfo =
+        chart.planets[Planet.meanNode] ?? chart.planets[Planet.trueNode];
+
+    if (lagnaLordInfo != null && rahuInfo != null) {
+      // Calculate house distance (inclusive counting from 1 to 12)
+      int houseDiff = rahuInfo.house - lagnaLordInfo.house;
+      if (houseDiff < 0) {
+        houseDiff += 12; // 12 houses in zodiac
+      }
+      final houseDistance = houseDiff + 1; // 1-based indexing for houses
+
+      if ([1, 4, 5, 7, 9, 10].contains(houseDistance)) {
+        return true;
+      }
+    }
+
+    // Condition 2: Krishna Paksha night birth
+    // We cannot accurately determine "night birth" without sunrise/sunset calculation
+    // from EphemerisService, which is not available directly in DashaService.
+    // However, we can approximate Paksha by checking the Moon/Sun distance:
+    final sunInfo = chart.planets[Planet.sun];
+    final moonInfo = chart.planets[Planet.moon];
+
+    if (sunInfo != null && moonInfo != null) {
+      double diff = moonInfo.position.longitude - sunInfo.position.longitude;
+      if (diff < 0) diff += 360;
+
+      // Krishna Paksha is from 180 to 360 degrees
+      if (diff > 180.0 && diff < 360.0) {
+        return true; // As an approximation since we can't reliably determine night.
+      }
+    }
+
+    return false;
+  }
+
   /// Calculates Ashtottari Dasha (108-year cycle).
-  DashaResult getAshtottariDasha(VedicChart chart,
-      {AshtottariScheme scheme = AshtottariScheme.ardraAdi}) {
+  ///
+  /// [forceCalculation] ignores applicability rules and forces calculation.
+  DashaResult getAshtottariDasha(
+    VedicChart chart, {
+    AshtottariScheme scheme = AshtottariScheme.ardraAdi,
+    bool forceCalculation = false,
+  }) {
+    if (!forceCalculation && !isAshtottariApplicable(chart)) {
+      throw JyotishException(
+        'Ashtottari Dasha is not applicable for this chart according to BPHS rules. '
+        'Set forceCalculation: true to bypass this check.',
+      );
+    }
     final moonLongitude = chart.planets[Planet.moon]!.longitude;
     final ashtottariSequence = [
       Planet.sun,
@@ -728,6 +787,25 @@ class DashaService {
       balanceOfFirstDasha: balanceDays,
       allMahadashas: mahadashas,
     );
+  }
+
+  /// Gets the lord of a zodiac sign index (0-11).
+  Planet? _getSignLord(int signIndex) {
+    const signLords = {
+      0: Planet.mars, // Aries
+      1: Planet.venus, // Taurus
+      2: Planet.mercury, // Gemini
+      3: Planet.moon, // Cancer
+      4: Planet.sun, // Leo
+      5: Planet.mercury, // Virgo
+      6: Planet.venus, // Libra
+      7: Planet.mars, // Scorpio
+      8: Planet.jupiter, // Sagittarius
+      9: Planet.saturn, // Capricorn
+      10: Planet.saturn, // Aquarius
+      11: Planet.jupiter, // Pisces
+    };
+    return signLords[signIndex];
   }
 
   /// Calculates Kalachakra Dasha.

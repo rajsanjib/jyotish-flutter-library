@@ -205,6 +205,8 @@ class AshtakavargaService {
       transitDate: transitDate ?? DateTime.now(),
       transitPlanet: transitPlanet,
       transitSign: transitSign,
+      sarvashtakavargaTotal: totalBindus,
+      planetBindus: bindus,
       bindus: bindus,
       isFavorable: isFavorable,
       strengthScore: strengthScore,

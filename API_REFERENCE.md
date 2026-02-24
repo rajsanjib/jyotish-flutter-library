@@ -11,6 +11,11 @@ A comprehensive API reference for the Jyotish Flutter library - production-ready
   - [Jyotish](#jyotish)
   - [GeographicLocation](#geographiclocation)
   - [CalculationFlags](#calculationflags)
+- [New in v2.4.0](#new-in-v240)
+  - [Bhava Chalit (Cuspal Chart)](#bhava-chalit-cuspal-chart)
+  - [Pancha-Vargeeya Maitri (5-fold Friendship)](#pancha-vargeeya-maitri)
+  - [Ayanamsa Utility](#ayanamsa-utility)
+  - [Reference Chart Test Suite](#reference-chart-test-suite)
 - [Services](#services)
   - [EphemerisService](#ephemerisservice)
   - [VedicChartService](#vedicchartservice)
@@ -426,7 +431,10 @@ await jyotish.initialize({String? ephemerisPath});
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `getPlanetaryRelationships({natalChart})` | `List<PlanetaryRelationship>` | Panchadha Maitri |
+| `getPlanetaryRelationships({natalChart})` | `List<PlanetaryRelationship>` | Panchadha Maitri (flat list) |
+| `getPlanetaryRelationshipsMatrix(chart)` | `Map<Planet, Map<Planet, PlanetaryRelationship>>` | 5-fold friendship matrix (O(1) lookup) |
+| `getBhavaChalit(chart)` | `BhavaChalit` | Cuspal chart with mid-cusp boundaries |
+| `getAyanamsa({dateTime, mode?, location?})` | `Future<double>` | Ayanamsa offset for a date/mode |
 
 #### Cleanup
 
@@ -435,6 +443,144 @@ jyotish.dispose();
 ```
 
 ---
+
+## New in v2.4.0
+
+### Bhava Chalit (Cuspal Chart)
+
+Bhava Chalit redistributes planets to houses based on **mid-cusp boundaries** (midpoint between
+adjacent house cusps) rather than fixed 30° sign edges. This distinction is most significant with
+non-Whole-Sign house systems (Placidus, Koch…) and is key for transit/dasha timing.
+
+```dart
+// Get the Rashi chart first
+final rashiChart = await jyotish.calculateVedicChart(
+  dateTime: birthDate,
+  location: location,
+  houseSystem: 'P', // Placidus — most meaningful for Chalit
+);
+
+// Compute Bhava Chalit
+final chalit = jyotish.getBhavaChalit(rashiChart);
+
+// See which planets shifted
+for (final s in chalit.shiftedPlanets) {
+  print('${s.planet.displayName}: Rashi H${s.rashiHouse} → Chalit H${s.bhavaHouse}');
+}
+
+// Query a specific planet
+final jupBhava = chalit.getBhavaForPlanet(Planet.jupiter);
+
+// Query by longitude
+final bhavaNum = chalit.getBhavaForLongitude(56.7);
+```
+
+**BhavaChalit properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `bhavas` | `List<BhavaInfo>` | 12 bhavas with mid-cusp boundaries |
+| `chart` | `VedicChart` | Source Rashi chart |
+| `shiftedPlanets` | `List<({planet, rashiHouse, bhavaHouse})>` | Planets that changed house |
+
+**BhavaInfo properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `houseNumber` | `int` | 1–12 |
+| `midCuspStart` | `double` | Entry longitude (°) |
+| `midCuspEnd` | `double` | Exit longitude (°) |
+| `cusp` | `double` | Actual house cusp (°) |
+| `planets` | `List<Planet>` | Planets in this bhava |
+
+---
+
+### Pancha-Vargeeya Maitri
+
+The 5-fold friendship table combines Naisargika (natural) + Tatkalika (temporal) relationships
+into the Panchadha Maitri compound result.
+
+```dart
+// Flat list — one entry per ordered pair (7×6 = 42 items)
+final rels = jyotish.getPlanetaryRelationships(natalChart: chart);
+for (final r in rels) {
+  print('${r.planet.displayName}→${r.otherPlanet.displayName}: ${r.compound.displayName}');
+}
+
+// Matrix — nested map for O(1) pair lookups
+final matrix = jyotish.getPlanetaryRelationshipsMatrix(chart);
+final sunJupiter = matrix[Planet.sun]![Planet.jupiter]!;
+print('Natural: ${sunJupiter.natural}')    // friend
+print('Temporal: ${sunJupiter.temporary}') // depends on chart
+print('Compound: ${sunJupiter.compound}')  // Panchadha result
+```
+
+**PlanetaryRelationship fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `natural` | `RelationshipType` | Naisargika Maitri |
+| `temporary` | `RelationshipType` | Tatkalika Maitri (chart placement) |
+| `compound` | `RelationshipType` | Panchadha Maitri (combined) |
+
+**Panchadha Maitri combination rule:**
+
+| Natural | Temporal | Compound |
+|---------|----------|----------|
+| Friend | Friend | `greatFriend` |
+| Friend | Enemy | `neutral` |
+| Neutral | Friend | `friend` |
+| Neutral | Enemy | `enemy` |
+| Enemy | Friend | `neutral` |
+| Enemy | Enemy | `greatEnemy` |
+
+---
+
+### Ayanamsa Utility
+
+```dart
+// Get Lahiri ayanamsa for a date
+final lah = await jyotish.getAyanamsa(dateTime: date);
+print('Lahiri: ${lah.toStringAsFixed(4)}°');
+
+// Compare with KP ayanamsa
+final kp = await jyotish.getAyanamsa(
+  dateTime: date,
+  mode: SiderealMode.krishnamurtiVP291,
+);
+print('KP: ${kp.toStringAsFixed(4)}°');
+print('Difference: ${(kp - lah).abs().toStringAsFixed(4)}°');
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `dateTime` | `DateTime` | required | Date for calculation |
+| `mode` | `SiderealMode` | `lahiri` | Ayanamsa system |
+| `location` | `GeographicLocation?` | null | Optional for timezone |
+
+---
+
+### Reference Chart Test Suite
+
+A validated regression test suite is provided at `test/reference_charts_test.dart`.
+The primary reference chart is **India Independence (15 Aug 1947, 00:00 IST, New Delhi)**.
+
+Run with:
+```bash
+dart test test/reference_charts_test.dart
+```
+
+Requires Swiss Ephemeris data files in the `ephe/` directory (same as integration tests).
+
+Tests cover:
+- Planetary sign placements (all 7 planets + Rahu)
+- House placements (Whole Sign, Taurus Ascendant)
+- Planetary dignities
+- Vimshottari dasha starting lord
+- `getAyanamsa()` values and `CalculationFlags.kp()` mode
+- `getBhavaChalit()` output for Whole Sign chart
+- `getPlanetaryRelationshipsMatrix()` for known pairs
+
 
 ### GeographicLocation
 
@@ -506,7 +652,10 @@ CalculationFlags.traditionalist();
 // Modern precision standard (True Node, Lahiri)
 CalculationFlags.modernPrecision();
 
-// Sidereal with Lahiri ayanamsa 
+// KP system (Krishnamurti VP291 ayanamsa — correct for KP charts)
+CalculationFlags.kp();
+
+// Sidereal with Lahiri ayanamsa
 CalculationFlags.siderealLahiri();
 
 // Custom sidereal mode
@@ -518,6 +667,10 @@ CalculationFlags.topocentric();
 // Specify node type (Mean vs True Node)
 CalculationFlags.withNodeType(NodeType nodeType);
 ```
+
+> **v2.4.0**: `CalculationFlags.kp()` added — uses `SiderealMode.krishnamurtiVP291` (the
+> correct KP New Ayanamsa). Distinct from `SiderealMode.krishnamurti` (old Krishnamurti).
+> Always use `kp()` for Krishnamurti Paddhati charts.
 
 #### Main Constructor
 

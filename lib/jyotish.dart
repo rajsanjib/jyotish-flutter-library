@@ -88,3 +88,8 @@ export 'src/services/progeny_service.dart';
 // Marriage Compatibility
 export 'src/models/compatibility.dart';
 export 'src/services/compatibility_service.dart';
+// Bhava Chalit (Cuspal Chart)
+export 'src/models/bhava_chalit.dart';
+export 'src/services/bhava_chalit_service.dart';
+// Planetary Relationships (Pancha-Vargeeya Maitri)
+export 'src/services/planetary_relationship_service.dart';

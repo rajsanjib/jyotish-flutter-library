@@ -177,6 +177,8 @@ class AshtakavargaTransit {
     required this.transitDate,
     required this.transitPlanet,
     required this.transitSign,
+    required this.sarvashtakavargaTotal,
+    required this.planetBindus,
     required this.bindus,
     required this.isFavorable,
     required this.strengthScore,
@@ -191,7 +193,13 @@ class AshtakavargaTransit {
   /// Sign being transited (0-11)
   final int transitSign;
 
-  /// Bindus in that sign for the transiting planet
+  /// Total bindus in that sign from Sarvashtakavarga
+  final int sarvashtakavargaTotal;
+
+  /// Bindus in that sign from the planet's own Bhinnashtakavarga
+  final int planetBindus;
+
+  /// Overall or combined bindus (usually refers to planetBindus, kept for backward compatibility)
   final int bindus;
 
   /// Whether this is a favorable transit (> 28 total bindus in Sarvashtakavarga)
@@ -348,4 +356,34 @@ class AshtakavargaTables {
         throw ArgumentError('Ashtakavarga not defined for $planet');
     }
   }
+}
+
+/// A composite model holding the raw Ashtakavarga and its reduced forms (Shodhana).
+///
+/// This provides easy access to the complete Shodhya Pinda calculations
+/// without needing to manually call the reduction sequence.
+///
+/// Note: [shodhyaPinda] is typed as `dynamic` to avoid a circular import between
+/// this model and `ashtakavarga_service.dart`. Cast it to `ShodhyaPindaResult`
+/// (from `ashtakavarga_service.dart`) when accessing the result fields.
+class AshtakavargaWithShodhana {
+  const AshtakavargaWithShodhana({
+    required this.raw,
+    required this.trikonaReduced,
+    required this.ekadhipatiReduced,
+    required this.shodhyaPinda,
+  });
+
+  /// The original, unreduced Ashtakavarga
+  final Ashtakavarga raw;
+
+  /// The Ashtakavarga after Trikona Shodhana (Trine Reduction)
+  final Ashtakavarga trikonaReduced;
+
+  /// The Ashtakavarga after Ekadhipati Shodhana (Reduction for same lordship)
+  final Ashtakavarga ekadhipatiReduced;
+
+  /// The final Shodhya Pinda and Yoga Pinda analysis.
+  /// Type: `ShodhyaPindaResult` (from `ashtakavarga_service.dart`).
+  final dynamic shodhyaPinda;
 }

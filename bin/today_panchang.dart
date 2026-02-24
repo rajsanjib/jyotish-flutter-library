@@ -215,8 +215,6 @@ void main() async {
     // Filter transitions to only those relevant to the calendar day
     // (exclude items that ended before the previous day or start after next day)
     List<(DateTime, String)> dayOnly(List<(DateTime, String)> all) {
-      // Only show transitions that end after 00:01 IST of the day
-      final cutoffIST = DateTime(2026, 2, 24, 0, 1);
       return all.where((t) {
         final endIST = t.$1.toUtc().add(istOffset);
         return endIST.day >= 24; // on or after Feb 24

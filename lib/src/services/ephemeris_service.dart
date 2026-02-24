@@ -239,6 +239,19 @@ class EphemerisService {
       throw CalculationException('EphemerisService is not initialized');
     }
 
+    final absLat = location.latitude.abs();
+    if (houseSystem == 'P' || houseSystem == 'K') {
+      const arcticCircle = 66.5;
+      if (absLat >= arcticCircle) {
+        throw PolarRegionException(
+          'House system "$houseSystem" is mathematically unstable/undefined above ${arcticCircle}° latitude ($absLat° requested). '
+          'Switch to Whole Sign ("W"), Campanus ("C"), or Equal ("E").',
+          latitude: location.latitude,
+          houseSystem: houseSystem,
+        );
+      }
+    }
+
     try {
       // Convert DateTime to Julian Day
       final julianDay =

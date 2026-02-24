@@ -111,10 +111,14 @@ void main() {
     setUpAll(() async {
       jyotish = Jyotish();
       await jyotish.initialize();
-      final location = GeographicLocation(latitude: 28.6139, longitude: 77.2090);
+      final location =
+          GeographicLocation(latitude: 28.6139, longitude: 77.2090);
       chart = await jyotish.calculateVedicChart(
         dateTime: DateTime(1990, 5, 15, 14, 30),
         location: location,
+        flags: const CalculationFlags(
+          siderealMode: SiderealMode.krishnamurtiVP291,
+        ),
       );
     });
 
@@ -124,10 +128,14 @@ void main() {
 
     // Helper function - defined before use
     Future<VedicChart> createChartWithSunAt(double longitude) async {
-      final location = GeographicLocation(latitude: 28.6139, longitude: 77.2090);
+      final location =
+          GeographicLocation(latitude: 28.6139, longitude: 77.2090);
       return await jyotish.calculateVedicChart(
         dateTime: DateTime(1990, 5, 15, 14, 30),
         location: location,
+        flags: const CalculationFlags(
+          siderealMode: SiderealMode.krishnamurtiVP291,
+        ),
       );
     }
 
@@ -141,6 +149,24 @@ void main() {
       // Ketu subdivision should map to Aries (0)
       expect(d249.planets[Planet.sun]!.zodiacSign, 'Aries');
       expect(d249.ascendantSign, 'Aries');
+    });
+
+    test('D249: Throws AyanamsaMismatchException if not KP Ayanamsa', () async {
+      final location =
+          GeographicLocation(latitude: 28.6139, longitude: 77.2090);
+      final wrongChart = await jyotish.calculateVedicChart(
+        dateTime: DateTime(1990, 5, 15, 14, 30),
+        location: location,
+        flags: const CalculationFlags(siderealMode: SiderealMode.lahiri),
+      );
+
+      expect(
+        () => jyotish.getDivisionalChart(
+          rashiChart: wrongChart,
+          type: DivisionalChartType.d249,
+        ),
+        throwsA(isA<AyanamsaMismatchException>()),
+      );
     });
 
     test('D249: Venus subdivision at 1.76° maps correctly', () async {
@@ -237,7 +263,8 @@ void main() {
       var testAt = 0.0;
       const expectedSpan = 5.0;
 
-      for (var i = 0; i <= 54; i++) { // 54 subdivisions per sign
+      for (var i = 0; i <= 54; i++) {
+        // 54 subdivisions per sign
         final sunChart = await createChartWithSunAt(testAt);
         final d249 = jyotish.getDivisionalChart(
           rashiChart: sunChart,
@@ -257,7 +284,8 @@ void main() {
       var testAt = 12.0;
       const expectedSpan = 4.5;
 
-      for (var i = 0; i <= 54; i++) { // 54 subdivisions per sign
+      for (var i = 0; i <= 54; i++) {
+        // 54 subdivisions per sign
         final chart = await createChartWithSunAt(testAt);
         final d249 = jyotish.getDivisionalChart(
           rashiChart: chart,

@@ -62,3 +62,29 @@ class ValidationException extends JyotishException {
     super.stackTrace,
   });
 }
+
+/// Exception thrown when a divisional chart is requested with an incorrect ayanamsa.
+class AyanamsaMismatchException extends JyotishException {
+  AyanamsaMismatchException(
+    super.message, {
+    super.originalError,
+    super.stackTrace,
+  });
+}
+
+/// Exception thrown when requested house systems fail in polar regions due to extreme latitudes.
+class PolarRegionException extends JyotishException {
+  PolarRegionException(
+    super.message, {
+    required this.latitude,
+    required this.houseSystem,
+    super.originalError,
+    super.stackTrace,
+  });
+
+  /// The latitude that caused the failure
+  final double latitude;
+
+  /// The requested house system ('P', 'K', etc.)
+  final String houseSystem;
+}

@@ -1,5 +1,6 @@
 import '../models/planet.dart';
 import '../models/planet_position.dart';
+import 'calculation_flags.dart';
 
 /// Represents Vedic astrology house system information.
 ///
@@ -281,6 +282,7 @@ class VedicChart {
     required this.planets,
     required this.rahu,
     required this.ketu,
+    this.calculationFlags,
   });
 
   /// Date and time of the chart
@@ -306,6 +308,9 @@ class VedicChart {
 
   /// Ketu (South Node) position
   final KetuPosition ketu;
+
+  /// Flags used to calculate the chart (preserves ayanamsa choice)
+  final CalculationFlags? calculationFlags;
 
   /// Gets the Ascendant sign
   String get ascendantSign => houses.ascendantSign;

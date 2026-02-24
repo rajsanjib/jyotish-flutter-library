@@ -446,10 +446,17 @@ Controls calculation behavior for planetary positions.
 #### Factory Constructors
 
 ```dart
-// Default flags
+// Default flags (Deprecated - use traditionalist/modernPrecision)
+@Deprecated('Use traditionalist() or modernPrecision()')
 CalculationFlags.defaultFlags();
 
-// Sidereal with Lahiri ayanamsa (default for Vedic)
+// Traditional Vedic standard (Mean Node, Lahiri)
+CalculationFlags.traditionalist();
+
+// Modern precision standard (True Node, Lahiri)
+CalculationFlags.modernPrecision();
+
+// Sidereal with Lahiri ayanamsa 
 CalculationFlags.siderealLahiri();
 
 // Custom sidereal mode
@@ -1880,6 +1887,12 @@ try {
   // Library not initialized
 } on CalculationException catch (e) {
   // Calculation failed
+} on PolarRegionException catch (e) {
+  // Latitude too high for Placidus/Koch house systems
+} on AyanamsaMismatchException catch (e) {
+  // Base chart Ayanamsa incompatible with requested divisional chart
+} on ValidationException catch (e) {
+  // Invalid inputs
 } on JyotishException catch (e) {
   // General error
 }

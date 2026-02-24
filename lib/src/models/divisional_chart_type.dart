@@ -1,3 +1,5 @@
+import 'calculation_flags.dart';
+
 /// Represents the different Divisional Charts (Varga) in Vedic Astrology.
 enum DivisionalChartType {
   /// D1 - Rashi (Root/Body)
@@ -64,14 +66,27 @@ enum DivisionalChartType {
   d150('D150', 'Nadi Amsa', 'Micro Destiny', 150),
 
   /// D249 - 249 Subdivisions (Micro-Level Analysis)
-  d249('D249', '249 Subdivisions', 'Micro Analysis', 249);
+  d249(
+    'D249',
+    '249 Subdivisions',
+    'Micro Analysis',
+    249,
+    requiredAyanamsa: SiderealMode.krishnamurtiVP291,
+  );
 
   const DivisionalChartType(
-      this.code, this.name, this.significance, this.divisions, {this.vimsopakaWeight = 0.0});
+    this.code,
+    this.name,
+    this.significance,
+    this.divisions, {
+    this.vimsopakaWeight = 0.0,
+    this.requiredAyanamsa,
+  });
 
   final String code;
   final String name;
   final String significance;
   final int divisions;
   final double vimsopakaWeight;
+  final SiderealMode? requiredAyanamsa;
 }

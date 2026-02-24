@@ -23,8 +23,23 @@ class CalculationFlags {
     this.nodeType = NodeType.meanNode,
   });
 
-  /// Creates default calculation flags (Lahiri sidereal, geocentric, with speed).
+  /// Creates default calculation flags (Lahiri sidereal, geocentric, with speed, mean node).
+  ///
+  /// **Deprecated**: Use `CalculationFlags.traditionalist()` or `CalculationFlags.modernPrecision()`
+  /// to explicitly declare node type choice.
+  @Deprecated(
+      'Use CalculationFlags.traditionalist() for Mean Node or CalculationFlags.modernPrecision() for True Node')
   factory CalculationFlags.defaultFlags() => const CalculationFlags();
+
+  /// Strong default for traditional Indian astrology.
+  /// Uses Lahiri ayanamsa and Mean Node (standard for BPHS texts).
+  factory CalculationFlags.traditionalist() => const CalculationFlags();
+
+  /// Strong default for precision-focused modern Vedic astrology.
+  /// Uses Lahiri ayanamsa and True Node (standard for contemporary precision researchers).
+  factory CalculationFlags.modernPrecision() => const CalculationFlags(
+        nodeType: NodeType.trueNode,
+      );
 
   /// Creates flags for sidereal calculations with custom ayanamsa.
   factory CalculationFlags.sidereal(SiderealMode mode) => CalculationFlags(

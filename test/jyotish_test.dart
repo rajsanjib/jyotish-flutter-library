@@ -528,5 +528,32 @@ void main() {
       expect(dasha.birthNakshatra, isNotEmpty);
       expect(dasha.allMahadashas.length, greaterThan(9));
     });
+
+    test('throws PolarRegionException for Placidus at extreme latitudes',
+        () async {
+      // Tromsø, Norway at 69.6492° N
+      final location = GeographicLocation(
+        latitude: 69.6492,
+        longitude: 18.9553,
+      );
+      final dateTime = DateTime.utc(1990, 5, 15, 14, 30);
+
+      // We expect the chart calculation to fail when using house System P (default)
+      expect(
+        () => jyotish.calculateVedicChart(
+          dateTime: dateTime,
+          location: location,
+        ),
+        throwsA(isA<PolarRegionException>()),
+      );
+
+      // But Whole Sign should succeed
+      final chart = await jyotish.calculateVedicChart(
+        dateTime: dateTime,
+        location: location,
+        houseSystem: 'W',
+      );
+      expect(chart.houses.cusps, isNotEmpty);
+    });
   });
 }

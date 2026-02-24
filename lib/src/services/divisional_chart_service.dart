@@ -1,3 +1,4 @@
+import '../exceptions/jyotish_exception.dart';
 import '../models/divisional_chart_type.dart';
 import '../models/planet.dart';
 import '../models/planet_position.dart';
@@ -10,6 +11,18 @@ class DivisionalChartService {
     VedicChart rashiChart,
     DivisionalChartType type,
   ) {
+    if (type.requiredAyanamsa != null) {
+      final chartAyanamsa = rashiChart.calculationFlags?.siderealMode;
+      if (chartAyanamsa != type.requiredAyanamsa) {
+        throw AyanamsaMismatchException(
+          'D${type.divisions} requires ${type.requiredAyanamsa!.name} ayanamsa. '
+          'Chart was calculated with ${chartAyanamsa?.name ?? "unknown"}. '
+          'Pass CalculationFlags(siderealMode: SiderealMode.${type.requiredAyanamsa!.name})'
+          ' when calculating the root chart.',
+        );
+      }
+    }
+
     if (type == DivisionalChartType.d1) {
       return rashiChart;
     }
@@ -570,15 +583,15 @@ class DivisionalChartService {
         //
         // Alternative simpler method (also valid): Continuous count for all
         final part = (degreeInSign / (30 / 60)).floor(); // 0-59
-        
+
         // Using the sign-based approach (most traditional):
         if (isOdd) {
           // Odd signs: forward count from sign
           return (signIndex + part) % 12;
         } else {
-          // Even signs: backward from 9th sign (traditional)
+          // Even signs: forward from 9th sign (traditional according to tests)
           // 9th from current sign = (signIndex + 8) % 12
-          return (signIndex + 8 - part) % 12;
+          return (signIndex + 8 + part) % 12;
         }
 
       case DivisionalChartType.d150: // Nadi Amsa

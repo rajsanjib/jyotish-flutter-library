@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Strict Mode Validation for D249**
+  - Added validation to ensure D249 uses new KP Ayanamsa only.
+  - Throws `AyanamsaMismatchException` if an improper Ayanamsa is used on D249 calculation.
+
+- **Polar Region Strictness**
+  - Calculates checking for Absolute Latitude >= 66.5°.
+  - Throws `PolarRegionException` when evaluating Placidus or Koch above the Arctic Circle.
+
+- **True Node / Mean Node Configuration (Rahu/Ketu)**
+  - Added new explicit standard factories `CalculationFlags.traditionalist()` and `CalculationFlags.modernPrecision()`.
+  - Deprecated ambiguous `CalculationFlags.defaultFlags()`.
 - **D249 - 249 Subdivisions (High-Precision Micro Analysis)**
   - Complete implementation of 249 subdivisions per zodiac sign
   - Ultra-fine granularity for advanced Vedic analysis (~0.12° per subdivision)

@@ -21,6 +21,8 @@ class SpecialTransitService {
     required VedicChart natalChart,
     DateTime? checkDate,
     required GeographicLocation location,
+    Duration signExitAccuracy = const Duration(minutes: 1),
+    Duration signEntryAccuracy = const Duration(minutes: 10),
   }) async {
     final date = checkDate ?? DateTime.now();
     final flags = CalculationFlags.defaultFlags();
@@ -53,6 +55,8 @@ class SpecialTransitService {
       natalMoonLongitude: natalMoonLongitude,
       transitSaturnLongitude: saturnPos.longitude,
       checkDate: date,
+      signExitAccuracy: signExitAccuracy,
+      signEntryAccuracy: signEntryAccuracy,
     );
 
     // Calculate Dhaiya
@@ -60,6 +64,8 @@ class SpecialTransitService {
       natalMoonLongitude: natalMoonLongitude,
       transitSaturnLongitude: saturnPos.longitude,
       checkDate: date,
+      signExitAccuracy: signExitAccuracy,
+      signEntryAccuracy: signEntryAccuracy,
     );
 
     // Calculate Panchak
@@ -93,6 +99,8 @@ class SpecialTransitService {
     required double natalMoonLongitude,
     required double transitSaturnLongitude,
     required DateTime checkDate,
+    required Duration signExitAccuracy,
+    required Duration signEntryAccuracy,
   }) async {
     final moonSign = (natalMoonLongitude / 30).floor();
     final saturnSign = (transitSaturnLongitude / 30).floor();
@@ -135,6 +143,8 @@ class SpecialTransitService {
         natalMoonLongitude: natalMoonLongitude,
         transitSaturnLongitude: transitSaturnLongitude,
         phase: phase!,
+        signExitAccuracy: signExitAccuracy,
+        signEntryAccuracy: signEntryAccuracy,
       );
 
       startDate = dates.$1;
@@ -166,6 +176,8 @@ class SpecialTransitService {
     required double natalMoonLongitude,
     required double transitSaturnLongitude,
     required SadeSatiPhase phase,
+    required Duration signExitAccuracy,
+    required Duration signEntryAccuracy,
   }) async {
     final location = GeographicLocation(
       latitude: 0,
@@ -180,6 +192,7 @@ class SpecialTransitService {
       startLongitude: transitSaturnLongitude,
       location: location,
       flags: flags,
+      accuracyThreshold: signExitAccuracy,
     );
 
     // Calculate start date by looking backwards
@@ -189,6 +202,7 @@ class SpecialTransitService {
       phase: phase,
       location: location,
       flags: flags,
+      accuracyThreshold: signEntryAccuracy,
     );
 
     return (startDate, endDate);
@@ -203,6 +217,7 @@ class SpecialTransitService {
     required double startLongitude,
     required GeographicLocation location,
     required CalculationFlags flags,
+    required Duration accuracyThreshold,
   }) async {
     final currentSign = (startLongitude / 30).floor();
 
@@ -214,7 +229,6 @@ class SpecialTransitService {
     var lateBound = startDate.add(const Duration(days: 1100)); // Max ~3 years
 
     const maxIterations = 50;
-    const accuracyThreshold = Duration(minutes: 1); // 1 minute precision
 
     for (var i = 0; i < maxIterations; i++) {
       if (lateBound.difference(earlyBound) <= accuracyThreshold) {
@@ -258,6 +272,7 @@ class SpecialTransitService {
     required SadeSatiPhase phase,
     required GeographicLocation location,
     required CalculationFlags flags,
+    required Duration accuracyThreshold,
   }) async {
     final moonSign = (natalMoonLongitude / 30).floor();
 
@@ -278,7 +293,6 @@ class SpecialTransitService {
     var lateBound = checkDate;
 
     const maxIterations = 50;
-    const accuracyThreshold = Duration(hours: 1);
 
     for (var i = 0; i < maxIterations; i++) {
       if (lateBound.difference(earlyBound) <= accuracyThreshold) {
@@ -342,6 +356,8 @@ class SpecialTransitService {
     required double natalMoonLongitude,
     required double transitSaturnLongitude,
     required DateTime checkDate,
+    required Duration signExitAccuracy,
+    required Duration signEntryAccuracy,
   }) async {
     final moonSign = (natalMoonLongitude / 30).floor();
     final saturnSign = (transitSaturnLongitude / 30).floor();
@@ -375,6 +391,7 @@ class SpecialTransitService {
         startLongitude: transitSaturnLongitude,
         location: location,
         flags: flags,
+        accuracyThreshold: signExitAccuracy,
       );
 
       // Calculate start date when Saturn entered current sign
@@ -383,6 +400,7 @@ class SpecialTransitService {
         currentLongitude: transitSaturnLongitude,
         location: location,
         flags: flags,
+        accuracyThreshold: signEntryAccuracy,
       );
     }
 
@@ -402,6 +420,7 @@ class SpecialTransitService {
     required double currentLongitude,
     required GeographicLocation location,
     required CalculationFlags flags,
+    required Duration accuracyThreshold,
   }) async {
     final currentSign = (currentLongitude / 30).floor();
 

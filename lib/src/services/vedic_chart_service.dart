@@ -109,6 +109,7 @@ class VedicChartService {
         planets: vedicPlanets,
         rahu: rahuInfo,
         ketu: ketu,
+        calculationFlags: flags,
       );
     } catch (e, stackTrace) {
       throw CalculationException(

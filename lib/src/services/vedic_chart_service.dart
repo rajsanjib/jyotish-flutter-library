@@ -112,6 +112,9 @@ class VedicChartService {
         calculationFlags: flags,
       );
     } catch (e, stackTrace) {
+      // Re-throw JyotishException subclasses (e.g. PolarRegionException) without wrapping
+      // so callers can catch the specific type.
+      if (e is JyotishException) rethrow;
       throw CalculationException(
         'Failed to calculate Vedic chart: ${e.toString()}',
         originalError: e,

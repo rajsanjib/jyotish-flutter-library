@@ -8,7 +8,7 @@ void main() {
     setUpAll(() async {
       jyotish = Jyotish();
       try {
-        await jyotish.initialize();
+        await jyotish.initialize(ephemerisPath: 'ephe');
       } catch (e) {
         print(
             'Warning: Initialization failed. Tests may fail if they rely on services requiring Ephemeris.');
@@ -229,6 +229,17 @@ VedicChart _createMockChart() {
     distanceSpeed: 0.0,
   );
 
+  final rahuPosition = PlanetPosition(
+    planet: Planet.meanNode,
+    dateTime: DateTime.now(),
+    longitude: 180.0, // Rahu in Libra
+    latitude: 0.0,
+    distance: 1.0,
+    longitudeSpeed: -0.05,
+    latitudeSpeed: 0.0,
+    distanceSpeed: 0.0,
+  );
+
   final planets = <Planet, VedicPlanetInfo>{
     Planet.sun: VedicPlanetInfo(
       position: sunPosition,
@@ -250,6 +261,13 @@ VedicChart _createMockChart() {
       dignity: PlanetaryDignity.neutralSign,
       isCombust: false,
     ),
+    // Rahu required for Prashna sphuta calculation
+    Planet.meanNode: VedicPlanetInfo(
+      position: rahuPosition,
+      house: 7,
+      dignity: PlanetaryDignity.neutralSign,
+      isCombust: false,
+    ),
   };
 
   return VedicChart(
@@ -260,11 +278,20 @@ VedicChart _createMockChart() {
     houses: houses,
     planets: planets,
     rahu: VedicPlanetInfo(
-      position: sunPosition, // Placeholder
-      house: 1,
+      position: PlanetPosition(
+        planet: Planet.meanNode,
+        dateTime: DateTime.now(),
+        longitude: 180.0, // Rahu in Libra
+        latitude: 0.0,
+        distance: 1.0,
+        longitudeSpeed: -0.05,
+        latitudeSpeed: 0.0,
+        distanceSpeed: 0.0,
+      ),
+      house: 7,
       dignity: PlanetaryDignity.neutralSign,
       isCombust: false,
     ),
-    ketu: KetuPosition(rahuPosition: sunPosition),
+    ketu: KetuPosition(rahuPosition: rahuPosition),
   );
 }

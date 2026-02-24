@@ -87,15 +87,13 @@ void main() {
 
       final reduced = service.applyTrikonaShodhana(av);
 
-      // Trikona 1: Aries(0), Leo(4), Sag(8)
-      // Original: 4, 4, 4. Min is 4. Reduced: 4, 4, 4.
-      expect(reduced.bhinnashtakavarga[Planet.sun]!.bindus[0], 4);
+      // Trikona 1: Aries(0)=4, Leo(4)=4, Sag(8)=4. Min=4. All become 4-4=0.
+      expect(reduced.bhinnashtakavarga[Planet.sun]!.bindus[0], 0);
 
-      // Trikona 2: Taurus(1), Virgo(5), Cap(9)
-      // Original: 5, 1, 3. Min is 1. Reduced: 1, 1, 1.
-      expect(reduced.bhinnashtakavarga[Planet.sun]!.bindus[1], 1);
-      expect(reduced.bhinnashtakavarga[Planet.sun]!.bindus[5], 1);
-      expect(reduced.bhinnashtakavarga[Planet.sun]!.bindus[9], 1);
+      // Trikona 2: Taurus(1)=5, Virgo(5)=1, Cap(9)=3. Min=1. Results: 4, 0, 2.
+      expect(reduced.bhinnashtakavarga[Planet.sun]!.bindus[1], 4); // 5-1=4
+      expect(reduced.bhinnashtakavarga[Planet.sun]!.bindus[5], 0); // 1-1=0
+      expect(reduced.bhinnashtakavarga[Planet.sun]!.bindus[9], 2); // 3-1=2
     });
   });
 }

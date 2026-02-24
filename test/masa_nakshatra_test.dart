@@ -8,7 +8,7 @@ void main() {
 
     setUpAll(() async {
       jyotish = Jyotish();
-      await jyotish.initialize();
+      await jyotish.initialize(ephemerisPath: 'ephe');
       location = GeographicLocation(
         latitude: 28.6139,
         longitude: 77.2090,
@@ -23,7 +23,8 @@ void main() {
     test('Abhijit is within Capricorn 6°40\' to 10°40\'', () async {
       expect(jyotish.isInAbhijitNakshatra(276.6666667), true);
       expect(jyotish.isInAbhijitNakshatra(280.0), true);
-      expect(jyotish.isInAbhijitNakshatra(286.6666666), false);
+      // 287.0 is clearly past the end boundary of Abhijit (286.6666667)
+      expect(jyotish.isInAbhijitNakshatra(287.0), false);
     });
 
     test('getNakshatraWithAbhijit returns 28 for Abhijit', () async {
@@ -69,7 +70,7 @@ void main() {
 
     setUpAll(() async {
       jyotish = Jyotish();
-      await jyotish.initialize();
+      await jyotish.initialize(ephemerisPath: 'ephe');
       location = GeographicLocation(
         latitude: 28.6139,
         longitude: 77.2090,
@@ -153,9 +154,14 @@ void main() {
     });
 
     test('MasaInfo.getMonthFromSunLongitude returns correct month', () {
-      expect(MasaInfo.getMonthFromSunLongitude(0), LunarMonth.chaitra);
-      expect(MasaInfo.getMonthFromSunLongitude(30), LunarMonth.vaishakha);
-      expect(MasaInfo.getMonthFromSunLongitude(330), LunarMonth.magha);
+      expect(MasaInfo.getMonthFromSunLongitude(0),
+          LunarMonth.chaitra); // Aries => Chaitra
+      expect(MasaInfo.getMonthFromSunLongitude(30),
+          LunarMonth.vaishakha); // Taurus => Vaishakha
+      // Sun at 300° = Capricorn (sign index 10) => Magha
+      expect(MasaInfo.getMonthFromSunLongitude(300), LunarMonth.magha);
+      // Sun at 330° = Pisces (sign index 11) => Phalguna
+      expect(MasaInfo.getMonthFromSunLongitude(330), LunarMonth.phalguna);
     });
 
     test('getSamvatsara returns valid name', () async {

@@ -321,6 +321,9 @@ class Jyotish {
         flags: flags,
       );
     } catch (e) {
+      // Re-throw JyotishException subclasses (e.g. PolarRegionException) without wrapping
+      // so callers can catch the specific type.
+      if (e is JyotishException) rethrow;
       throw JyotishException(
         'Failed to calculate Vedic chart: ${e.toString()}',
         originalError: e,
@@ -571,7 +574,7 @@ class Jyotish {
   /// print('Current dasha: ${dasha.getCurrentPeriodString(DateTime.now())}');
   /// print('Birth nakshatra: ${dasha.birthNakshatra}');
   /// ```
-  /// 
+  ///
   /// [yearLength] - Optional year length in days. Default is 365.25 (sidereal).
   /// Use 360.0 for traditional Savana year calculations.
   Future<DashaResult> getVimshottariDasha({
@@ -2065,7 +2068,8 @@ class Jyotish {
   // ============================================================
 
   /// Calculates enhanced Bhava Bala with Vimsopaka integration.
-  Future<Map<int, EnhancedBhavaBalaResult>> getEnhancedBhavaBala(VedicChart chart) async {
+  Future<Map<int, EnhancedBhavaBalaResult>> getEnhancedBhavaBala(
+      VedicChart chart) async {
     _ensureInitialized();
     return await _houseStrengthService!.calculateEnhancedBhavaBala(chart);
   }
@@ -2137,7 +2141,8 @@ class Jyotish {
   // ============================================================
 
   /// Calculates compatibility between two charts.
-  CompatibilityResult calculateCompatibility(VedicChart boyChart, VedicChart girlChart) {
+  CompatibilityResult calculateCompatibility(
+      VedicChart boyChart, VedicChart girlChart) {
     _ensureInitialized();
     return _compatibilityService!.calculateCompatibility(boyChart, girlChart);
   }
@@ -2161,7 +2166,8 @@ class Jyotish {
   }
 
   /// Checks for Bhakoot Dosha between two charts.
-  BhakootDoshaResult checkBhakootDosha(VedicChart boyChart, VedicChart girlChart) {
+  BhakootDoshaResult checkBhakootDosha(
+      VedicChart boyChart, VedicChart girlChart) {
     _ensureInitialized();
     return _compatibilityService!.checkBhakootDosha(boyChart, girlChart);
   }

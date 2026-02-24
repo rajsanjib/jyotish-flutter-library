@@ -106,49 +106,167 @@ void main() {
 
   group('DivisionalChartService - D249 249 Subdivisions', () {
     late Jyotish jyotish;
-    late VedicChart chart;
+
+    // Helper to create a mock chart with Sun at a given absolute longitude
+    // Uses CalculationFlags with KP ayanamsa (required by D249)
+    VedicChart createD249MockChart(
+      double sunLongitude, {
+      SiderealMode siderealMode = SiderealMode.krishnamurtiVP291,
+    }) {
+      final houses = HouseSystem(
+        system: 'Whole Sign',
+        cusps: List.generate(12, (i) => i * 30.0),
+        ascendant: 0.0,
+        midheaven: 270.0,
+      );
+      final sunPos = PlanetPosition(
+        planet: Planet.sun,
+        dateTime: DateTime(1990, 5, 15),
+        longitude: sunLongitude,
+        latitude: 0,
+        distance: 1,
+        longitudeSpeed: 1,
+        latitudeSpeed: 0,
+        distanceSpeed: 0,
+      );
+      final sunInfo = VedicPlanetInfo(
+        position: sunPos,
+        house: (sunLongitude / 30).floor() + 1,
+        dignity: PlanetaryDignity.neutralSign,
+      );
+      return VedicChart(
+        dateTime: DateTime(1990, 5, 15),
+        location: 'Test',
+        latitude: 0,
+        longitudeCoord: 0,
+        houses: houses,
+        planets: {Planet.sun: sunInfo},
+        rahu: sunInfo,
+        ketu: KetuPosition(rahuPosition: sunPos),
+        calculationFlags: CalculationFlags(siderealMode: siderealMode),
+      );
+    }
 
     setUpAll(() async {
       jyotish = Jyotish();
-      await jyotish.initialize();
-      final location =
-          GeographicLocation(latitude: 28.6139, longitude: 77.2090);
-      chart = await jyotish.calculateVedicChart(
-        dateTime: DateTime(1990, 5, 15, 14, 30),
-        location: location,
-        flags: const CalculationFlags(
-          siderealMode: SiderealMode.krishnamurtiVP291,
-        ),
-      );
+      await jyotish.initialize(ephemerisPath: 'ephe');
     });
 
     tearDownAll(() {
       jyotish.dispose();
     });
 
-    // Helper function - defined before use
-    Future<VedicChart> createChartWithSunAt(double longitude) async {
-      final location =
-          GeographicLocation(latitude: 28.6139, longitude: 77.2090);
-      return await jyotish.calculateVedicChart(
-        dateTime: DateTime(1990, 5, 15, 14, 30),
-        location: location,
-        flags: const CalculationFlags(
-          siderealMode: SiderealMode.krishnamurtiVP291,
-        ),
-      );
-    }
+    // D249 subdivision ranges for ODD sign (Aries, signIndex=0, startSign=0):
+    // Ketu:    0.00 -  1.75° → Aries (0)
+    // Venus:   1.75 -  6.75° → Taurus (1)
+    // Sun:     6.75 -  8.25° → Gemini (2)
+    // Moon:    8.25 - 10.75° → Cancer (3)
+    // Mars:   10.75 - 12.50° → Leo (4)
+    // Rahu:   12.50 - 17.00° → Virgo (5)
+    // Jupiter:17.00 - 21.00° → Libra (6)
+    // Saturn: 21.00 - 25.75° → Scorpio (7)
+    // Mercury:25.75 - 30.00° → Sagittarius (8)
 
-    test('D249: Ketu subdivision at 0° maps correctly', () {
+    test('D249: Ketu subdivision at 0.5° maps to Aries', () {
       final d249 = jyotish.getDivisionalChart(
-        rashiChart: chart,
+        rashiChart: createD249MockChart(0.5),
         type: DivisionalChartType.d249,
       );
-
-      // 0° falls in Ketu subdivision (0-1.75°)
-      // Ketu subdivision should map to Aries (0)
       expect(d249.planets[Planet.sun]!.zodiacSign, 'Aries');
-      expect(d249.ascendantSign, 'Aries');
+    });
+
+    test('D249: Venus subdivision at 2.0° maps to Taurus', () {
+      final d249 = jyotish.getDivisionalChart(
+        rashiChart: createD249MockChart(2.0),
+        type: DivisionalChartType.d249,
+      );
+      expect(d249.planets[Planet.sun]!.zodiacSign, 'Taurus');
+    });
+
+    test('D249: Sun subdivision at 7.0° maps to Gemini', () {
+      final d249 = jyotish.getDivisionalChart(
+        rashiChart: createD249MockChart(7.0),
+        type: DivisionalChartType.d249,
+      );
+      expect(d249.planets[Planet.sun]!.zodiacSign, 'Gemini');
+    });
+
+    test('D249: Moon subdivision at 9.0° maps to Cancer', () {
+      final d249 = jyotish.getDivisionalChart(
+        rashiChart: createD249MockChart(9.0),
+        type: DivisionalChartType.d249,
+      );
+      expect(d249.planets[Planet.sun]!.zodiacSign, 'Cancer');
+    });
+
+    test('D249: Mars subdivision at 11.0° maps to Leo', () {
+      final d249 = jyotish.getDivisionalChart(
+        rashiChart: createD249MockChart(11.0),
+        type: DivisionalChartType.d249,
+      );
+      expect(d249.planets[Planet.sun]!.zodiacSign, 'Leo');
+    });
+
+    test('D249: Rahu subdivision at 13.0° maps to Virgo', () {
+      final d249 = jyotish.getDivisionalChart(
+        rashiChart: createD249MockChart(13.0),
+        type: DivisionalChartType.d249,
+      );
+      expect(d249.planets[Planet.sun]!.zodiacSign, 'Virgo');
+    });
+
+    test('D249: Jupiter subdivision at 17.5° maps to Libra', () {
+      final d249 = jyotish.getDivisionalChart(
+        rashiChart: createD249MockChart(17.5),
+        type: DivisionalChartType.d249,
+      );
+      expect(d249.planets[Planet.sun]!.zodiacSign, 'Libra');
+    });
+
+    test('D249: Saturn subdivision at 22.0° maps to Scorpio', () {
+      final d249 = jyotish.getDivisionalChart(
+        rashiChart: createD249MockChart(22.0),
+        type: DivisionalChartType.d249,
+      );
+      expect(d249.planets[Planet.sun]!.zodiacSign, 'Scorpio');
+    });
+
+    test('D249: Mercury subdivision at 26.0° maps to Sagittarius', () {
+      final d249 = jyotish.getDivisionalChart(
+        rashiChart: createD249MockChart(26.0),
+        type: DivisionalChartType.d249,
+      );
+      expect(d249.planets[Planet.sun]!.zodiacSign, 'Sagittarius');
+    });
+
+    test('D249: All 9 subdivision spans sum to exactly 30 degrees', () {
+      // Ketu=1.75, Venus=5.0, Sun=1.5, Moon=2.5, Mars=1.75,
+      // Rahu=4.5, Jupiter=4.0, Saturn=4.75, Mercury=4.25
+      const expectedSpans = [1.75, 5.0, 1.5, 2.5, 1.75, 4.5, 4.0, 4.75, 4.25];
+      final total = expectedSpans.reduce((a, b) => a + b);
+      expect(total, closeTo(30.0, 0.01));
+
+      // Verify subSpan reported correctly for each subdivision
+      final testPositions = [0.5, 2.0, 7.0, 9.0, 11.0, 13.0, 17.5, 22.0, 26.0];
+      for (var i = 0; i < testPositions.length; i++) {
+        final d249 = jyotish.getDivisionalChart(
+          rashiChart: createD249MockChart(testPositions[i]),
+          type: DivisionalChartType.d249,
+        );
+        expect(
+          d249.planets[Planet.sun]!.subSpan,
+          closeTo(expectedSpans[i], 0.01),
+          reason: 'SubSpan mismatch at position ${testPositions[i]}°',
+        );
+      }
+    });
+
+    test('D249: Rahu subdivision has correct 4.5° span', () {
+      final d249 = jyotish.getDivisionalChart(
+        rashiChart: createD249MockChart(13.0),
+        type: DivisionalChartType.d249,
+      );
+      expect(d249.planets[Planet.sun]!.subSpan, closeTo(4.5, 0.01));
     });
 
     test('D249: Throws AyanamsaMismatchException if not KP Ayanamsa', () async {
@@ -159,7 +277,6 @@ void main() {
         location: location,
         flags: const CalculationFlags(siderealMode: SiderealMode.lahiri),
       );
-
       expect(
         () => jyotish.getDivisionalChart(
           rashiChart: wrongChart,
@@ -167,137 +284,6 @@ void main() {
         ),
         throwsA(isA<AyanamsaMismatchException>()),
       );
-    });
-
-    test('D249: Venus subdivision at 1.76° maps correctly', () async {
-      // Create chart with Sun at 1.76° (within Venus subdivision: 1.75-6.75°)
-      final sunChart = await createChartWithSunAt(1.76);
-      final d249 = jyotish.getDivisionalChart(
-        rashiChart: sunChart,
-        type: DivisionalChartType.d249,
-      );
-
-      // Should map to Taurus (1) after Ketu
-      expect(d249.planets[Planet.sun]!.zodiacSign, 'Taurus');
-    });
-
-    test('D249: Sun subdivision at 3.26° maps correctly', () async {
-      final sunChart = await createChartWithSunAt(3.26);
-      final d249 = jyotish.getDivisionalChart(
-        rashiChart: sunChart,
-        type: DivisionalChartType.d249,
-      );
-
-      // Should map to Gemini (2) after Venus
-      expect(d249.planets[Planet.sun]!.zodiacSign, 'Gemini');
-    });
-
-    test('D249: Moon subdivision at 6.51° maps correctly', () async {
-      final sunChart = await createChartWithSunAt(6.51);
-      final d249 = jyotish.getDivisionalChart(
-        rashiChart: sunChart,
-        type: DivisionalChartType.d249,
-      );
-
-      // Should map to Cancer (3) after Sun
-      expect(d249.planets[Planet.sun]!.zodiacSign, 'Cancer');
-    });
-
-    test('D249: Mars subdivision at 8.26° maps correctly', () async {
-      final sunChart = await createChartWithSunAt(8.26);
-      final d249 = jyotish.getDivisionalChart(
-        rashiChart: sunChart,
-        type: DivisionalChartType.d249,
-      );
-
-      // Should map to Leo (4) after Moon
-      expect(d249.planets[Planet.sun]!.zodiacSign, 'Leo');
-    });
-
-    test('D249: Rahu subdivision at 12.01° maps correctly', () async {
-      final sunChart = await createChartWithSunAt(12.01);
-      final d249 = jyotish.getDivisionalChart(
-        rashiChart: sunChart,
-        type: DivisionalChartType.d249,
-      );
-
-      // Rahu subdivision: 12.0-16.5°, should map to Virgo (5) after Jupiter
-      expect(d249.planets[Planet.sun]!.zodiacSign, 'Virgo');
-    });
-
-    test('D249: Jupiter subdivision at 16.0° maps correctly', () async {
-      final sunChart = await createChartWithSunAt(16.0);
-      final d249 = jyotish.getDivisionalChart(
-        rashiChart: sunChart,
-        type: DivisionalChartType.d249,
-      );
-
-      // Should map to Libra (6) after Rahu
-      expect(d249.planets[Planet.sun]!.zodiacSign, 'Libra');
-    });
-
-    test('D249: Saturn subdivision at 20.75° maps correctly', () async {
-      final sunChart = await createChartWithSunAt(20.75);
-      final d249 = jyotish.getDivisionalChart(
-        rashiChart: sunChart,
-        type: DivisionalChartType.d249,
-      );
-
-      // Should map to Scorpio (7) after Jupiter
-      expect(d249.planets[Planet.sun]!.zodiacSign, 'Scorpio');
-    });
-
-    test('D249: Mercury subdivision at 25.0° maps correctly', () async {
-      final sunChart = await createChartWithSunAt(25.0);
-      final d249 = jyotish.getDivisionalChart(
-        rashiChart: sunChart,
-        type: DivisionalChartType.d249,
-      );
-
-      // Should map to Sagittarius (8) after Saturn
-      expect(d249.planets[Planet.sun]!.zodiacSign, 'Sagittarius');
-    });
-
-    test('D249: All 9 subdivisions in one cycle map correctly', () async {
-      // Test 9 subdivisions spanning exactly 30° (one complete cycle)
-      var testAt = 0.0;
-      const expectedSpan = 5.0;
-
-      for (var i = 0; i <= 54; i++) {
-        // 54 subdivisions per sign
-        final sunChart = await createChartWithSunAt(testAt);
-        final d249 = jyotish.getDivisionalChart(
-          rashiChart: sunChart,
-          type: DivisionalChartType.d249,
-        );
-
-        final subdivisionSpan = d249.planets[Planet.sun]!.subSpan ?? 0.0;
-        testAt += subdivisionSpan;
-      }
-
-      // Total should be 5.0° (Venus dasha period)
-      expect(testAt, closeTo(expectedSpan, 0.01));
-    });
-
-    test('D249: Correct degree span for Rahu subdivision', () async {
-      // Rahu subdivision: 12.0-16.5° (4.5° total)
-      var testAt = 12.0;
-      const expectedSpan = 4.5;
-
-      for (var i = 0; i <= 54; i++) {
-        // 54 subdivisions per sign
-        final chart = await createChartWithSunAt(testAt);
-        final d249 = jyotish.getDivisionalChart(
-          rashiChart: chart,
-          type: DivisionalChartType.d249,
-        );
-
-        final subdivisionSpan = d249.planets[Planet.sun]!.subSpan ?? 0.0;
-        testAt += subdivisionSpan;
-      }
-
-      // Total should be 4.5° (Rahu dasha period)
-      expect(testAt, closeTo(expectedSpan, 0.01));
     });
   });
 }

@@ -177,6 +177,10 @@ class SwissEphBindings {
     required ffi.Pointer<ffi.Char> errorBuffer,
   }) {
     final resultPtr = malloc<ffi.Double>(6);
+    for (var i = 0; i < 6; i++) {
+      resultPtr[i] = 0.0;
+    }
+
     try {
       final returnCode = _sweCalcUt(
         julianDay,
@@ -187,7 +191,15 @@ class SwissEphBindings {
       );
 
       if (returnCode < 0) {
-        return null;
+        return null; // The exact error is in errorBuffer
+      }
+
+      // If it falls back to Moshier (4) instead of Swiss (2), or has warnings
+      if (returnCode != flags && returnCode != 2) {
+        final msg = errorBuffer.cast<Utf8>().toDartString();
+        if (msg.isNotEmpty) {
+          print('SwissEph Warning (Planet $planetId): $msg');
+        }
       }
 
       return List.generate(6, (i) => resultPtr[i]);

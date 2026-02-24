@@ -62,7 +62,7 @@ coverage/
 *.lcov
 
 # Swiss Ephemeris data files (optional, depends on your strategy)
-# **/ephe/
+**/ephe/
 
 # Native build artifacts
 *.so

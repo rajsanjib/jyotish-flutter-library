@@ -365,11 +365,13 @@ await jyotish.initialize({String? ephemerisPath});
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `calculateCompatibility(boyChart, girlChart)` | `CompatibilityResult` | Full compatibility |
-| `calculateGunaMilan(boyChart, girlChart)` | `GunaScores` | Ashtakoota scores |
-| `checkManglikDosha(chart)` | `ManglikDoshaResult` | Mars placement |
-| `checkNadiDosha(boyChart, girlChart)` | `NadiDoshaResult` | Nadi compatibility |
-| `checkBhakootDosha(boyChart, girlChart)` | `BhakootDoshaResult` | Moon sign compatibility |
+| `calculateCompatibility(boyChart, girlChart)` | `CompatibilityResult` | Full compatibility + doshas |
+| `calculateGunaMilan(boyChart, girlChart)` | `GunaScores` | All 8 Ashtakoota scores |
+| `checkManglikDosha(chart)` | `ManglikDoshaResult` | Mars in 1/2/4/7/8/12 houses |
+| `checkNadiDosha(boyChart, girlChart)` | `NadiDoshaResult` | Nadi match (cyclic grouping) |
+| `checkBhakootDosha(boyChart, girlChart)` | `BhakootDoshaResult` | 2/12, 5/9, or 6/8 moon-sign pairs |
+| `checkDoshas(boyChart, girlChart)` | `DoshaCheck` | All dosha checks combined |
+| `calculateDashaCompatibility(boyChart, girlChart)` | `DashaCompatibility` | Dasha timing compatibility |
 
 #### Service Accessors
 
@@ -613,10 +615,22 @@ final service = PanchangaService(ephemerisService);
 | `getNakshatra({dateTime, location})` | `Future<NakshatraInfo>` | Moon's nakshatra |
 | `getTithiEndTime({dateTime, location, accuracyThreshold?})` | `Future<DateTime>` | Precise Tithi end |
 | `calculateAbhijitMuhurta({date, location})` | `Future<AbhijitMuhurta>` | 8th Muhurta (1/15th of daytime) |
-| `calculateBrahmaMuhurta({date, location})` | `Future<BrahmaMuhurta>` | 14th Muhurta of night (1/15th of nighttime) |
+| `calculateBrahmaMuhurta({date, location})` | `Future<BrahmaMuhurta>` | 14th Muhurta of night (uses previous sunset → today sunrise) |
 | `calculateNighttimeInauspicious({date, location})` | `Future<NighttimeInauspiciousPeriods>` | Night Rahu/Gulika/Yamagandam |
 | `getTithiJunction({targetTithiNumber, startDate, location})` | `Future<DateTime>` | Microsecond-precision Tithi change |
 | `getMoonPhaseDetails({dateTime, location})` | `Future<MoonPhaseDetails>` | Comprehensive lunar data |
+
+> **API Change (v2.1.0)**: `TithiInfo.tithiNames` has been replaced.
+> Use `TithiInfo.nameFromNumber(int tithiNumber)` to get the correct name for
+> any Tithi (1–30). This correctly returns **"Purnima"** for Shukla Tithi 15
+> and **"Amavasya"** for Krishna Tithi 15. Direct access via `shuklaTithiNames`
+> and `krishnaTithiNames` lists is also available.
+>
+> **API Change (v2.1.0)**: `MoonPhaseDetails.illumination` now uses the correct
+> cosine formula. New Moon (elongation=0°) = **0%**, Full Moon (180°) = **100%**.
+> The old formula was inverted.
+
+
 
 ---
 
@@ -1706,18 +1720,25 @@ Marriage compatibility result.
 
 ### GunaScores
 
-Ashtakoota (36 Guna) scoring.
+Ashtakoota (36 Guna) scoring. All 8 Kootas are calculated per BPHS and
+standard Vedic texts. Scores are added to produce the total out of 36.
 
-| Koota | Max Points |
-|-------|------------|
-| `varna` | 1 |
-| `vashya` | 2 |
-| `tara` | 3 |
-| `yoni` | 4 |
-| `grahaMaitri` | 5 |
-| `gana` | 6 |
-| `bhakoot` | 7 |
-| `nadi` | 8 |
+| Koota | Max Points | Classification Basis |
+|-------|------------|---------------------|
+| `varna` | 1 | BPHS 4-tier: Brahmin / Kshatriya / Vaishya / Shudra per nakshatra |
+| `vashya` | 2 | 5-category: Manava / Vanachara / Chatushpada / Jalajiva / Keeta per nakshatra |
+| `tara` | 3 | Count from boy's nakshatra to girl's; groups of 9 (birth, sampat, vipat…) |
+| `yoni` | 4 | Animal pair per nakshatra (all 27 correctly mapped); friend/enemy pairs scored |
+| `grahaMaitri` | 5 | Natural friendship between Moon sign lords per BPHS friendship table |
+| `gana` | 6 | BPHS: Deva / Manushya / Rakshasa — same=6, Deva+Manushya=3, Rakshasa=0 |
+| `bhakoot` | 7 | No dosha = 7; Dosha (2/12, 5/9, or 6/8 moon-sign relationship) = 0 |
+| `nadi` | 8 | Cyclic modulo-3 grouping: 0% same Nadi (Dosha) = 0, different = 8 |
+
+**Bhakoot Dosha** is checked for three problematic inter-sign relationships:
+2/12 (financial stress), 5/9 (progeny issues), and 6/8 (health/longevity).
+
+**Nadi** is determined by `nakshatraIndex % 3` (cyclic): 0=Adi, 1=Madhya, 2=Antya.
+This differs from the old sequential block-of-9 approach which was incorrect.
 
 ### CompatibilityLevel
 

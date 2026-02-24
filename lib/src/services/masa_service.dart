@@ -71,8 +71,8 @@ class MasaService {
     final elapsed = (elongation % tithiDegrees) / tithiDegrees;
 
     final paksha = Paksha.fromTithiNumber(tithiNumber);
-    final nameIndex = (tithiNumber - 1) % 15;
-    final name = TithiInfo.tithiNames[nameIndex];
+    // Use paksha-aware lookup to correctly distinguish Purnima (Shukla 15) from Amavasya (Krishna 15)
+    final name = TithiInfo.nameFromNumber(tithiNumber);
 
     return TithiInfo(
       number: tithiNumber,
@@ -170,12 +170,12 @@ class MasaService {
   }
 
   /// Calculates nakshatra information from a longitude value.
-  /// 
+  ///
   /// This is the core calculation used by other methods. It determines
   /// which of the 27 nakshatras a given longitude falls into.
-  /// 
+  ///
   /// [longitude] - The longitude in degrees (0-360)
-  /// 
+  ///
   /// Returns [NakshatraInfo] without Abhijit calculation (standard 27 nakshatras)
   NakshatraInfo calculateNakshatraFromLongitude(double longitude) {
     var normalizedLongitude = longitude % 360;

@@ -22,7 +22,7 @@ class _VimshottariPlanetInfo {
 class DashaService {
   /// Default year length (sidereal year with leap days)
   static const double defaultYearLength = 365.25;
-  
+
   /// Traditional Savana year length (360 days)
   static const double savanaYearLength = 360.0;
 
@@ -130,7 +130,7 @@ class DashaService {
 
     // Add note about year length used
     if (yearLength != defaultYearLength) {
-      precisionWarning = precisionWarning != null 
+      precisionWarning = precisionWarning != null
           ? '$precisionWarning Using $yearLength-day year for calculations.'
           : 'Using $yearLength-day year for calculations.';
     }
@@ -161,9 +161,13 @@ class DashaService {
       for (var i = 0; i < 9; i++) {
         final lordIndex = (startingLordIndex + i) % 9;
         final planetInfo = _vimshottariPlanets[lordIndex];
-        double durationDays =
-            (cycle == 0 && i == 0) ? balanceDays : planetInfo.years * yearLength;
-        final endDate = currentDate.add(Duration(days: durationDays.round()));
+        final durationDays = (cycle == 0 && i == 0)
+            ? balanceDays
+            : planetInfo.years * yearLength;
+        // Use millisecond precision to prevent cumulative rounding drift
+        final durationMs = (durationDays * 86400000).round();
+        final duration = Duration(milliseconds: durationMs);
+        final endDate = currentDate.add(duration);
 
         List<DashaPeriod> subPeriods = [];
         if (levels >= 2) {
@@ -181,7 +185,7 @@ class DashaService {
           lordName: planetInfo.name,
           startDate: currentDate,
           endDate: endDate,
-          duration: Duration(days: durationDays.round()),
+          duration: duration,
           level: 0,
           subPeriods: subPeriods,
         ));
@@ -205,7 +209,9 @@ class DashaService {
       final lordIndex = (startingLordIndex + i) % 9;
       final planetInfo = _vimshottariPlanets[lordIndex];
       final durationDays = mahadashaDays * (planetInfo.years / 120.0);
-      final endDate = currentDate.add(Duration(days: durationDays.round()));
+      final durationMs = (durationDays * 86400000).round();
+      final duration = Duration(milliseconds: durationMs);
+      final endDate = currentDate.add(duration);
 
       List<DashaPeriod> subPeriods = [];
       if (levels >= 3) {
@@ -222,7 +228,7 @@ class DashaService {
         lordName: planetInfo.name,
         startDate: currentDate,
         endDate: endDate,
-        duration: Duration(days: durationDays.round()),
+        duration: duration,
         level: 1,
         subPeriods: subPeriods,
       ));
@@ -244,7 +250,9 @@ class DashaService {
       final lordIndex = (startingLordIndex + i) % 9;
       final planetInfo = _vimshottariPlanets[lordIndex];
       final durationDays = antardashaDays * (planetInfo.years / 120.0);
-      final endDate = currentDate.add(Duration(days: durationDays.round()));
+      final durationMs = (durationDays * 86400000).round();
+      final duration = Duration(milliseconds: durationMs);
+      final endDate = currentDate.add(duration);
 
       List<DashaPeriod> subPeriods = [];
       if (levels >= 4) {
@@ -261,7 +269,7 @@ class DashaService {
         lordName: planetInfo.name,
         startDate: currentDate,
         endDate: endDate,
-        duration: Duration(days: durationDays.round()),
+        duration: duration,
         level: 2,
         subPeriods: subPeriods,
       ));
@@ -283,7 +291,9 @@ class DashaService {
       final lordIndex = (startingLordIndex + i) % 9;
       final planetInfo = _vimshottariPlanets[lordIndex];
       final durationDays = pratyantharDays * (planetInfo.years / 120.0);
-      final endDate = currentDate.add(Duration(days: durationDays.round()));
+      final durationMs = (durationDays * 86400000).round();
+      final duration = Duration(milliseconds: durationMs);
+      final endDate = currentDate.add(duration);
 
       List<DashaPeriod> subPeriods = [];
       if (levels >= 5) {
@@ -299,7 +309,7 @@ class DashaService {
         lordName: planetInfo.name,
         startDate: currentDate,
         endDate: endDate,
-        duration: Duration(days: durationDays.round()),
+        duration: duration,
         level: 3,
         subPeriods: subPeriods,
       ));
@@ -320,14 +330,16 @@ class DashaService {
       final lordIndex = (startingLordIndex + i) % 9;
       final planetInfo = _vimshottariPlanets[lordIndex];
       final durationDays = sookshmaDays * (planetInfo.years / 120.0);
-      final endDate = currentDate.add(Duration(days: durationDays.round()));
+      final durationMs = (durationDays * 86400000).round();
+      final duration = Duration(milliseconds: durationMs);
+      final endDate = currentDate.add(duration);
 
       pranadashas.add(DashaPeriod(
         lord: planetInfo.planet,
         lordName: planetInfo.name,
         startDate: currentDate,
         endDate: endDate,
-        duration: Duration(days: durationDays.round()),
+        duration: duration,
         level: 4,
         subPeriods: const [],
       ));

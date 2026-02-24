@@ -91,7 +91,8 @@ class TithiInfo {
   /// Whether the tithi is complete (> 0.9)
   bool get isComplete => elapsed > 0.9;
 
-  static const List<String> tithiNames = [
+  /// Tithi names for Shukla Paksha (tithiNumber 1–15).
+  static const List<String> shuklaTithiNames = [
     'Pratipada',
     'Dwitiya',
     'Tritiya',
@@ -106,8 +107,36 @@ class TithiInfo {
     'Dwadashi',
     'Trayodashi',
     'Chaturdashi',
-    'Purnima/Amavasya',
+    'Purnima', // Shukla 15th = Full Moon
   ];
+
+  /// Tithi names for Krishna Paksha (tithiNumber 16–30).
+  static const List<String> krishnaTithiNames = [
+    'Pratipada',
+    'Dwitiya',
+    'Tritiya',
+    'Chaturthi',
+    'Panchami',
+    'Shashthi',
+    'Saptami',
+    'Ashtami',
+    'Navami',
+    'Dashami',
+    'Ekadashi',
+    'Dwadashi',
+    'Trayodashi',
+    'Chaturdashi',
+    'Amavasya', // Krishna 15th = New Moon
+  ];
+
+  /// Returns the correct tithi name based on [tithiNumber] (1–30).
+  static String nameFromNumber(int tithiNumber) {
+    if (tithiNumber <= 15) {
+      return shuklaTithiNames[tithiNumber - 1];
+    } else {
+      return krishnaTithiNames[tithiNumber - 16];
+    }
+  }
 }
 
 /// Lunar fortnight (Paksha)
@@ -256,9 +285,16 @@ class YogaDetails {
       name: 'Vishkumbha',
       nature: YogaNature.malefic,
       rulingPlanet: Planet.sun,
-      description: 'Supported or Pillar Yoga - Indication of support and foundation',
-      effects: 'Good for laying foundations, starting enterprises. Avoid confrontations.',
-      recommendations: ['Construction', 'Business start', 'Planting', 'Marriage'],
+      description:
+          'Supported or Pillar Yoga - Indication of support and foundation',
+      effects:
+          'Good for laying foundations, starting enterprises. Avoid confrontations.',
+      recommendations: [
+        'Construction',
+        'Business start',
+        'Planting',
+        'Marriage'
+      ],
     ),
     // 2. Priti
     YogaDetails(
@@ -267,7 +303,8 @@ class YogaDetails {
       nature: YogaNature.benefic,
       rulingPlanet: Planet.moon,
       description: 'Love or Affection Yoga - Indicates harmony and love',
-      effects: 'Excellent for relationships, artistic pursuits, and social activities.',
+      effects:
+          'Excellent for relationships, artistic pursuits, and social activities.',
       recommendations: ['Marriage', 'Social events', 'Art', 'Reconciliation'],
     ),
     // 3. Ayushman
@@ -276,9 +313,15 @@ class YogaDetails {
       name: 'Ayushman',
       nature: YogaNature.benefic,
       rulingPlanet: Planet.mars,
-      description: 'Longevity or Life-span Yoga - Promotes health and long life',
+      description:
+          'Longevity or Life-span Yoga - Promotes health and long life',
       effects: 'Good for health matters, physical activities, and longevity.',
-      recommendations: ['Health treatments', 'Exercise', 'Construction', 'Investment'],
+      recommendations: [
+        'Health treatments',
+        'Exercise',
+        'Construction',
+        'Investment'
+      ],
     ),
     // 4. Saubhagya
     YogaDetails(
@@ -287,7 +330,8 @@ class YogaDetails {
       nature: YogaNature.benefic,
       rulingPlanet: Planet.mercury,
       description: 'Good Fortune Yoga - Indicates luck and prosperity',
-      effects: 'Excellent for starting new ventures, signing contracts, and education.',
+      effects:
+          'Excellent for starting new ventures, signing contracts, and education.',
       recommendations: ['New beginnings', 'Education', 'Commerce', 'Travel'],
     ),
     // 5. Shobhana
@@ -297,8 +341,15 @@ class YogaDetails {
       nature: YogaNature.benefic,
       rulingPlanet: Planet.jupiter,
       description: 'Splendor or Brilliance Yoga - Promotes beauty and success',
-      effects: 'Very auspicious for all activities, especially ceremonies and celebrations.',
-      recommendations: ['Marriage', 'Ceremonies', 'Business', 'Education', 'Travel'],
+      effects:
+          'Very auspicious for all activities, especially ceremonies and celebrations.',
+      recommendations: [
+        'Marriage',
+        'Ceremonies',
+        'Business',
+        'Education',
+        'Travel'
+      ],
     ),
     // 6. Atiganda
     YogaDetails(
@@ -308,7 +359,12 @@ class YogaDetails {
       rulingPlanet: Planet.saturn,
       description: 'Great Danger Yoga - Caution required',
       effects: 'Avoid risky activities, conflicts, and important decisions.',
-      recommendations: ['Rest', 'Spiritual practice', 'Avoid: new ventures', 'Avoid: conflicts'],
+      recommendations: [
+        'Rest',
+        'Spiritual practice',
+        'Avoid: new ventures',
+        'Avoid: conflicts'
+      ],
     ),
     // 7. Sukarma
     YogaDetails(
@@ -317,7 +373,8 @@ class YogaDetails {
       nature: YogaNature.benefic,
       rulingPlanet: Planet.mercury,
       description: 'Good Work Yoga - Excellent for positive actions',
-      effects: 'Very favorable for all good works, charity, and virtuous activities.',
+      effects:
+          'Very favorable for all good works, charity, and virtuous activities.',
       recommendations: ['Charity', 'Religious acts', 'Good deeds', 'Learning'],
     ),
     // 8. Dhriti
@@ -327,7 +384,8 @@ class YogaDetails {
       nature: YogaNature.benefic,
       rulingPlanet: Planet.jupiter,
       description: 'Determination or Firmness Yoga - Promotes stability',
-      effects: 'Good for perseverance, completing tasks, and long-term projects.',
+      effects:
+          'Good for perseverance, completing tasks, and long-term projects.',
       recommendations: ['Long-term projects', 'Research', 'Study', 'Building'],
     ),
     // 9. Shula
@@ -338,7 +396,12 @@ class YogaDetails {
       rulingPlanet: Planet.mars,
       description: 'Spear or Pain Yoga - Indicates difficulties',
       effects: 'Challenging period. Avoid confrontations and risky activities.',
-      recommendations: ['Caution', 'Spiritual practice', 'Avoid: conflicts', 'Avoid: travel'],
+      recommendations: [
+        'Caution',
+        'Spiritual practice',
+        'Avoid: conflicts',
+        'Avoid: travel'
+      ],
     ),
     // 10. Ganda
     YogaDetails(
@@ -348,7 +411,12 @@ class YogaDetails {
       rulingPlanet: Planet.saturn,
       description: 'Knot or Obstacle Yoga - Indicates obstacles',
       effects: 'Difficult period. Patience required. Avoid major decisions.',
-      recommendations: ['Patience', 'Meditation', 'Avoid: new ventures', 'Avoid: disputes'],
+      recommendations: [
+        'Patience',
+        'Meditation',
+        'Avoid: new ventures',
+        'Avoid: disputes'
+      ],
     ),
     // 11. Vriddhi
     YogaDetails(
@@ -358,7 +426,12 @@ class YogaDetails {
       rulingPlanet: Planet.mercury,
       description: 'Growth or Increase Yoga - Promotes expansion',
       effects: 'Excellent for growth, learning, and accumulation of wealth.',
-      recommendations: ['Investment', 'Education', 'Business expansion', 'Learning'],
+      recommendations: [
+        'Investment',
+        'Education',
+        'Business expansion',
+        'Learning'
+      ],
     ),
     // 12. Dhruva
     YogaDetails(
@@ -367,8 +440,14 @@ class YogaDetails {
       nature: YogaNature.benefic,
       rulingPlanet: Planet.jupiter,
       description: 'Fixed or Constant Yoga - Promotes stability',
-      effects: 'Very favorable for permanent arrangements and long-term commitments.',
-      recommendations: ['Marriage', 'Property purchase', 'Permanent settlement', 'Oaths'],
+      effects:
+          'Very favorable for permanent arrangements and long-term commitments.',
+      recommendations: [
+        'Marriage',
+        'Property purchase',
+        'Permanent settlement',
+        'Oaths'
+      ],
     ),
     // 13. Vyaghata
     YogaDetails(
@@ -377,8 +456,14 @@ class YogaDetails {
       nature: YogaNature.malefic,
       rulingPlanet: Planet.mars,
       description: 'Obstacle or Hindrance Yoga - Indicates setbacks',
-      effects: 'Challenging period with potential obstacles. Proceed with caution.',
-      recommendations: ['Caution', 'Patience', 'Avoid: new ventures', 'Avoid: risks'],
+      effects:
+          'Challenging period with potential obstacles. Proceed with caution.',
+      recommendations: [
+        'Caution',
+        'Patience',
+        'Avoid: new ventures',
+        'Avoid: risks'
+      ],
     ),
     // 14. Harshana
     YogaDetails(
@@ -387,8 +472,14 @@ class YogaDetails {
       nature: YogaNature.benefic,
       rulingPlanet: Planet.moon,
       description: 'Joy or Delight Yoga - Promotes happiness',
-      effects: 'Very auspicious for celebrations, social gatherings, and enjoyment.',
-      recommendations: ['Celebrations', 'Social events', 'Marriage', 'Entertainment'],
+      effects:
+          'Very auspicious for celebrations, social gatherings, and enjoyment.',
+      recommendations: [
+        'Celebrations',
+        'Social events',
+        'Marriage',
+        'Entertainment'
+      ],
     ),
     // 15. Vajra
     YogaDetails(
@@ -397,8 +488,14 @@ class YogaDetails {
       nature: YogaNature.benefic,
       rulingPlanet: Planet.jupiter,
       description: 'Thunderbolt or Diamond Yoga - Indicates strength',
-      effects: 'Good for overcoming obstacles and achieving success through effort.',
-      recommendations: ['Overcoming obstacles', 'Legal matters', 'Disputes', 'Competition'],
+      effects:
+          'Good for overcoming obstacles and achieving success through effort.',
+      recommendations: [
+        'Overcoming obstacles',
+        'Legal matters',
+        'Disputes',
+        'Competition'
+      ],
     ),
     // 16. Siddhi
     YogaDetails(
@@ -408,7 +505,12 @@ class YogaDetails {
       rulingPlanet: Planet.mercury,
       description: 'Success or Accomplishment Yoga - Promotes achievement',
       effects: 'Excellent for completing tasks and achieving goals.',
-      recommendations: ['Completing projects', 'Exams', 'Competitions', 'Business'],
+      recommendations: [
+        'Completing projects',
+        'Exams',
+        'Competitions',
+        'Business'
+      ],
     ),
     // 17. Vyatipata
     YogaDetails(
@@ -418,7 +520,12 @@ class YogaDetails {
       rulingPlanet: Planet.sun,
       description: 'Calamity or Disaster Yoga - Caution required',
       effects: 'Very challenging period. Avoid all important activities.',
-      recommendations: ['Spiritual practice', 'Rest', 'Avoid: all major activities', 'Caution'],
+      recommendations: [
+        'Spiritual practice',
+        'Rest',
+        'Avoid: all major activities',
+        'Caution'
+      ],
     ),
     // 18. Variyana
     YogaDetails(
@@ -428,7 +535,12 @@ class YogaDetails {
       rulingPlanet: Planet.venus,
       description: 'Comfort or Luxury Yoga - Promotes enjoyment',
       effects: 'Good for comfort, luxury, and enjoying life\'s pleasures.',
-      recommendations: ['Comfortable activities', 'Art', 'Entertainment', 'Social gatherings'],
+      recommendations: [
+        'Comfortable activities',
+        'Art',
+        'Entertainment',
+        'Social gatherings'
+      ],
     ),
     // 19. Parigha
     YogaDetails(
@@ -437,8 +549,14 @@ class YogaDetails {
       nature: YogaNature.malefic,
       rulingPlanet: Planet.saturn,
       description: 'Obstacle or Barrier Yoga - Indicates blockages',
-      effects: 'Difficult period with obstacles. Patience and perseverance needed.',
-      recommendations: ['Patience', 'Persistence', 'Avoid: new ventures', 'Planning'],
+      effects:
+          'Difficult period with obstacles. Patience and perseverance needed.',
+      recommendations: [
+        'Patience',
+        'Persistence',
+        'Avoid: new ventures',
+        'Planning'
+      ],
     ),
     // 20. Shiva
     YogaDetails(
@@ -447,8 +565,14 @@ class YogaDetails {
       nature: YogaNature.benefic,
       rulingPlanet: Planet.jupiter,
       description: 'Auspicious Yoga - Highly favorable',
-      effects: 'One of the best yogas. Excellent for all auspicious activities.',
-      recommendations: ['All auspicious activities', 'Marriage', 'Ceremonies', 'Spiritual practice'],
+      effects:
+          'One of the best yogas. Excellent for all auspicious activities.',
+      recommendations: [
+        'All auspicious activities',
+        'Marriage',
+        'Ceremonies',
+        'Spiritual practice'
+      ],
     ),
     // 21. Siddha
     YogaDetails(
@@ -458,7 +582,12 @@ class YogaDetails {
       rulingPlanet: Planet.mercury,
       description: 'Perfection or Completion Yoga - Promotes success',
       effects: 'Very favorable for achieving perfection and completing tasks.',
-      recommendations: ['Perfection in work', 'Mastery', 'Learning', 'Teaching'],
+      recommendations: [
+        'Perfection in work',
+        'Mastery',
+        'Learning',
+        'Teaching'
+      ],
     ),
     // 22. Sadhya
     YogaDetails(
@@ -468,7 +597,12 @@ class YogaDetails {
       rulingPlanet: Planet.mars,
       description: 'Attainable or Possible Yoga - Success achievable',
       effects: 'Good for pursuing goals and achieving what is desired.',
-      recommendations: ['Goal setting', 'Pursuing ambitions', 'Competition', 'Effort'],
+      recommendations: [
+        'Goal setting',
+        'Pursuing ambitions',
+        'Competition',
+        'Effort'
+      ],
     ),
     // 23. Shubha
     YogaDetails(
@@ -478,7 +612,12 @@ class YogaDetails {
       rulingPlanet: Planet.venus,
       description: 'Auspicious Yoga - Highly favorable',
       effects: 'Very auspicious for beauty, arts, and pleasant activities.',
-      recommendations: ['Beauty treatments', 'Art', 'Marriage', 'Social events'],
+      recommendations: [
+        'Beauty treatments',
+        'Art',
+        'Marriage',
+        'Social events'
+      ],
     ),
     // 24. Shukla
     YogaDetails(
@@ -488,7 +627,12 @@ class YogaDetails {
       rulingPlanet: Planet.moon,
       description: 'Bright or Pure Yoga - Promotes clarity',
       effects: 'Excellent for clarity, purity, and spiritual activities.',
-      recommendations: ['Spiritual practice', 'Purification', 'Study', 'Teaching'],
+      recommendations: [
+        'Spiritual practice',
+        'Purification',
+        'Study',
+        'Teaching'
+      ],
     ),
     // 25. Brahma
     YogaDetails(
@@ -497,8 +641,14 @@ class YogaDetails {
       nature: YogaNature.benefic,
       rulingPlanet: Planet.jupiter,
       description: 'Creator or Knowledge Yoga - Highly spiritual',
-      effects: 'Excellent for spiritual growth, knowledge, and creative activities.',
-      recommendations: ['Spiritual practice', 'Study', 'Teaching', 'Creative work'],
+      effects:
+          'Excellent for spiritual growth, knowledge, and creative activities.',
+      recommendations: [
+        'Spiritual practice',
+        'Study',
+        'Teaching',
+        'Creative work'
+      ],
     ),
     // 26. Indra
     YogaDetails(
@@ -508,7 +658,12 @@ class YogaDetails {
       rulingPlanet: Planet.sun,
       description: 'King or Leader Yoga - Promotes authority',
       effects: 'Good for leadership, authority, and gaining recognition.',
-      recommendations: ['Leadership', 'Authority matters', 'Public activities', 'Government'],
+      recommendations: [
+        'Leadership',
+        'Authority matters',
+        'Public activities',
+        'Government'
+      ],
     ),
     // 27. Vaidhriti
     YogaDetails(
@@ -518,7 +673,12 @@ class YogaDetails {
       rulingPlanet: Planet.saturn,
       description: 'Supporting or Holding Yoga - Requires caution',
       effects: 'Challenging period. Best for rest and spiritual practice.',
-      recommendations: ['Rest', 'Spiritual practice', 'Avoid: new ventures', 'Patience'],
+      recommendations: [
+        'Rest',
+        'Spiritual practice',
+        'Avoid: new ventures',
+        'Patience'
+      ],
     ),
   ];
 }

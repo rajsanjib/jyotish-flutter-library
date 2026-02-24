@@ -5,7 +5,81 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-02-24
+
+### Fixed — Vedic Astrology Accuracy (Panchanga & Compatibility)
+
+This release corrects several significant discrepancies between the library's
+calculations and widely-followed Vedic astrology principles (BPHS, Muhurta
+Chintamani, Surya Siddhanta).
+
+#### Panchanga (`panchanga.dart`, `panchanga_service.dart`)
+
+- **Tithi 15 distinction**: `TithiInfo` now has separate `shuklaTithiNames` and
+  `krishnaTithiNames` lists. Tithi 15 of Shukla Paksha is correctly named
+  **"Purnima"** and Tithi 15 of Krishna Paksha is correctly named **"Amavasya"**.
+  The old merged list `tithiNames` has been replaced with the static helper
+  `TithiInfo.nameFromNumber(int tithiNumber)` which selects the correct name
+  based on paksha. `masa_service.dart` is updated to use the same helper.
+- **Moon illumination formula**: Corrected from an inverted linear formula
+  (which showed 100% at New Moon) to the astronomically correct cosine formula:
+  `((1 − cos(elongation × π/180)) / 2) × 100`. New Moon (0°) now correctly
+  yields 0% and Full Moon (180°) yields 100%.
+- **Moon phase names**: `_getMoonPhaseName()` previously only covered 0°–168°
+  and returned "New Moon" for the entire Krishna Paksha (168°–360°). Now covers
+  the full 0°–360° elongation range with correct Tithi-aligned thresholds
+  (Purnima at 168°–192°, Krishna Ashtami at 264°–288°, etc.).
+- **Brahma Muhurta**: Night duration was previously computed as `sunrise −
+  same-day sunset`, yielding a negative value and placing Brahma Muhurta after
+  sunrise. Now uses **previous day's sunset** for the correct nighttime duration.
+
+#### Compatibility / Guna Milan (`compatibility_service.dart`)
+
+All eight Kootas are now calculated per standard Vedic texts:
+
+- **Yoni Koota**: Complete and correct animal map for all 27 nakshatras
+  (Anuradha→Deer, Jyeshtha→Deer, Mula→Dog, P.Ashadha→Monkey,
+  U.Ashadha→Mongoose, Shravana→Monkey, Dhanishta→Lion, Shatabhisha→Horse,
+  P.Bhadrapada→Lion, U.Bhadrapada→Cow, Revati→Elephant — previously all
+  mapped to "Tiger"). Separate friend/enemy pair logic added.
+- **Varna Koota**: Classification reworked per BPHS (Brahmin: Krittika, Pushya,
+  Ashlesha, Magha, U.Phalguni, Hasta, Swati, Anuradha, Shravana, P.Ashadha,
+  P.Bhadrapada, Revati — and so on for other varnas).
+- **Gana Koota**: Classification fixed per BPHS (Deva: Ashwini, Mrigashira,
+  Punarvasu, Pushya, Hasta, Swati, Anuradha, Shravana, Revati; Manushya: 9;
+  Rakshasa: Krittika, Ashlesha, Magha, Chitra, Vishakha, Jyeshtha, Mula,
+  Dhanishta, Shatabhisha). Scoring: same = 6, Deva+Manushya = 3, any
+  Rakshasa pair = 0.
+- **Graha Maitri Koota**: Was a stub returning 0. Now fully implemented with
+  the BPHS natural planetary friendship table (friends/enemies/neutrals for
+  each of the 7 traditional planets). Sign lords are looked up per classical
+  rules (e.g. Mars rules Aries and Scorpio).
+- **Bhakoot Koota**: Dosha check now covers all three problematic inter-sign
+  relationships: **2/12, 5/9, and 6/8** (previously only checked for 6/12).
+- **Nadi Koota**: Nadi (Adi/Madhya/Antya) now uses correct **cyclic modulo-3**
+  grouping (`nakshatraIndex % 3`) instead of the incorrect sequential blocks of
+  9 nakshatras.
+
+#### Dasha (`dasha_service.dart`)
+
+- **Period precision**: All five Vimshottari Dasha levels (Mahadasha,
+  Antardasha, Pratyantardasha, Sookshma, Prana) now use `Duration(milliseconds:)`
+  instead of `Duration(days: .round())`. This prevents cumulative rounding
+  errors that could cause drifts of days or weeks over a 120-year cycle.
+
+### Changed API
+
+| Symbol | Change |
+|---|---|
+| `TithiInfo.tithiNames` | **Replaced** by `TithiInfo.shuklaTithiNames`, `TithiInfo.krishnaTithiNames`, and `TithiInfo.nameFromNumber(int)` |
+| `MoonPhaseDetails.illumination` | **Formula corrected** — values are now inverted relative to the old (wrong) output |
+
+> **Migration note**: Any code referencing `TithiInfo.tithiNames[...]` directly
+> must be updated to use `TithiInfo.nameFromNumber(tithiNumber)` or index into
+> the appropriate paksha list. The old `tithiNames` list no longer exists.
+
 ## [2.0.0] - 2026-02-08
+
 
 ### Added
 

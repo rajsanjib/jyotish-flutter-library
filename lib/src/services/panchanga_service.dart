@@ -98,9 +98,8 @@ class PanchangaService {
     // Determine paksha
     final paksha = Paksha.fromTithiNumber(tithiNumber);
 
-    // Get tithi name
-    final nameIndex = (tithiNumber - 1) % 15;
-    final name = TithiInfo.tithiNames[nameIndex];
+    // Get tithi name — use paksha-aware lookup to correctly distinguish Purnima / Amavasya
+    final name = TithiInfo.nameFromNumber(tithiNumber);
 
     return TithiInfo(
       number: tithiNumber,
@@ -197,10 +196,10 @@ class PanchangaService {
     // - Karana 8: Vishti (fixed) - last of first tithi half
     // - Karanas 9-11: Shakuni, Chatushpada, Naga (variable)
     // - Karana 12 onwards: Repeat Bava-Vishti cycle
-    
+
     // Fixed karanas: Bava(2), Balava(3), Kaulava(4), Taitila(5), Garaja(6), Vanija(7), Vishti(8)
     // Variable: Shakuni(9), Chatushpada(10), Naga(11), Kimstughna(12)
-    
+
     // Check for variable karanas first (Shakuni, Chatushpada, Naga, Kimstughna)
     if (karanaNumber == 57) {
       name = KaranaInfo.variableKaranaNames[0]; // Shakuni
@@ -212,7 +211,8 @@ class PanchangaService {
       name = KaranaInfo.variableKaranaNames[2]; // Naga
       isFixed = false;
     } else if (karanaNumber == 60) {
-      name = KaranaInfo.variableKaranaNames[3]; // Kimstughna - traditionally last
+      name =
+          KaranaInfo.variableKaranaNames[3]; // Kimstughna - traditionally last
       isFixed = false;
     } else if (karanaNumber == 1) {
       // Traditional: Kimstughna should be at karana 1 (Shukla Pratipada first half)
@@ -221,7 +221,7 @@ class PanchangaService {
       name = KaranaInfo.variableKaranaNames[3]; // Kimstughna at position 1
       isFixed = false;
     } else if (karanaNumber >= 2 && karanaNumber <= 8) {
-      // Fixed karanas: Bava(2), Balava(3), Kaulava(4), Taitila(5), 
+      // Fixed karanas: Bava(2), Balava(3), Kaulava(4), Taitila(5),
       // Garaja(6), Vanija(7), Vishti(8)
       // Map: karanaNumber-1 gives index in fixedKaranaNames
       final index = (karanaNumber - 2) % 7;
@@ -711,18 +711,19 @@ class PanchangaService {
       startTime: abhijitStart,
       endTime: abhijitEnd,
       duration: muhurtaDuration,
-      description: 'The 8th Muhurta (~${muhurtaDuration.inMinutes} min) - highly auspicious for all activities',
+      description:
+          'The 8th Muhurta (~${muhurtaDuration.inMinutes} min) - highly auspicious for all activities',
     );
   }
 
   /// Calculates Brahma Muhurta (the auspicious pre-dawn period).
   ///
   /// Brahma Muhurta is traditionally the 14th Muhurta of the night,
-  /// ending at sunrise. It is considered the most auspicious time 
+  /// ending at sunrise. It is considered the most auspicious time
   /// for meditation, yoga, and spiritual practices.
   ///
   /// Traditional calculation: Night is divided into 15 Muhurtas.
-  /// Brahma Muhurta is the 14th Muhurta (2nd from last), 
+  /// Brahma Muhurta is the 14th Muhurta (2nd from last),
   /// making it 1/15th of nighttime duration.
   ///
   /// [date] - The date to calculate for
@@ -733,24 +734,29 @@ class PanchangaService {
     required DateTime date,
     required GeographicLocation location,
   }) async {
-    // Get sunrise and sunset
-    final (sunrise, sunset) = await _calculateSunriseSunset(
+    // Get today's sunrise
+    final (sunrise, _) = await _calculateSunriseSunset(
       dateTime: date,
       location: location,
     );
 
-    // Calculate nighttime duration (previous sunset to current sunrise)
-    final nightDuration = sunrise.difference(sunset);
+    // Get PREVIOUS day's sunset — night runs from yesterday-sunset to today-sunrise
+    final previousDay = date.subtract(const Duration(days: 1));
+    final (_, previousSunset) = await _calculateSunriseSunset(
+      dateTime: previousDay,
+      location: location,
+    );
 
-    // Traditional: Brahma Muhurta is 14th Muhurta of night = 1/15th of night
-    // This varies by season/latitude, unlike the fixed 48-minute version
+    // Calculate nighttime duration (previous sunset → today sunrise)
+    final nightDuration = sunrise.difference(previousSunset);
+
+    // Traditional: Brahma Muhurta is 14th Muhurta of night = 1/15th of night duration.
+    // Night is divided into 15 equal muhurtas. Brahma Muhurta is the 14th (second to last),
+    // ending right at sunrise.
     final brahmaDuration = Duration(
       milliseconds: (nightDuration.inMilliseconds / 15).round(),
     );
 
-    // Brahma Muhurta is the 14th Muhurta of night, ending at sunrise
-    // So it starts at: sunrise - 2*muhurtaDuration (since Muhurtas 15-14-13... work backwards)
-    // Alternatively: it's Muhurta 14 counting from sunset = nightDuration * 14/15
     final brahmaStart = sunrise.subtract(brahmaDuration);
     final brahmaEnd = sunrise;
 
@@ -759,7 +765,8 @@ class PanchangaService {
       startTime: brahmaStart,
       endTime: brahmaEnd,
       duration: brahmaDuration,
-      description: 'The 14th Muhurta of night (~${brahmaDuration.inMinutes} min) ending at sunrise - highly auspicious for spiritual practices',
+      description:
+          'The 14th Muhurta of night (~${brahmaDuration.inMinutes} min) ending at sunrise - highly auspicious for spiritual practices',
     );
   }
 
@@ -935,13 +942,15 @@ class PanchangaService {
       flags: flags,
     );
 
-    // Calculate elongation (Moon - Sun)
+    // Calculate elongation (Moon - Sun), normalized to 0–360°
     var elongation = moonPos.longitude - sunPos.longitude;
     if (elongation < 0) elongation += 360;
 
-    // Calculate percent illumination
-    // Full moon = 100%, New moon = 0%
-    final illumination = (1 - (elongation / 180).abs().clamp(0.0, 1.0)) * 100;
+    // Calculate percent illumination using correct cosine formula:
+    // New Moon (0°) = 0%, Full Moon (180°) = 100%
+    final illumination = ((1 - Math.cos(elongation * Math.pi / 180)) / 2) * 100;
+
+    // Waxing: elongation 0–180° (Shukla Paksha), Waning: 180–360° (Krishna Paksha)
     final isWaxing = elongation < 180;
 
     // Calculate lunar age (days since new moon)
@@ -968,17 +977,27 @@ class PanchangaService {
     );
   }
 
-  /// Gets the Moon phase name based on elongation.
+  /// Gets the Moon phase name based on elongation (0–360°).
+  ///
+  /// Elongation is measured as Moon − Sun, normalized 0–360°.
+  /// Shukla Paksha (waxing) = 0°–180°, Krishna Paksha (waning) = 180°–360°.
   String _getMoonPhaseName(double elongation) {
-    if (elongation < 12 || elongation > 348) return 'New Moon (Amavasya)';
-    if (elongation < 36) return 'Waxing Crescent';
-    if (elongation < 60) return 'First Quarter (Shukla Saptami)';
-    if (elongation < 84) return 'Waxing Gibbous';
-    if (elongation < 96) return 'Full Moon (Purnima)';
-    if (elongation < 120) return 'Waning Gibbous';
-    if (elongation < 144) return 'Last Quarter (Krishna Saptami)';
-    if (elongation < 168) return 'Waning Crescent';
-    return 'New Moon (Amavasya)';
+    // New Moon window: within 6° of 0°/360° (Tithi 1 of Shukla)
+    if (elongation < 6 || elongation >= 354) return 'New Moon (Amavasya)';
+    // Waxing Crescent: Tithi 2–6 of Shukla Paksha
+    if (elongation < 72) return 'Waxing Crescent';
+    // First Quarter / Ashtami: Tithi 7–8 (Shukla)
+    if (elongation < 96) return 'First Quarter (Shukla Ashtami)';
+    // Waxing Gibbous: Tithi 9–14 (Shukla)
+    if (elongation < 168) return 'Waxing Gibbous';
+    // Full Moon: Tithi 15 (Purnima) ≈ 168°–192°
+    if (elongation < 192) return 'Full Moon (Purnima)';
+    // Waning Gibbous: Tithi 1–6 of Krishna Paksha
+    if (elongation < 264) return 'Waning Gibbous';
+    // Last Quarter / Krishna Ashtami: Tithi 7–8 (Krishna)
+    if (elongation < 288) return 'Last Quarter (Krishna Ashtami)';
+    // Waning Crescent: Tithi 9–14 (Krishna)
+    return 'Waning Crescent';
   }
 }
 

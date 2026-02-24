@@ -20,6 +20,11 @@ A comprehensive API reference for the Jyotish Flutter library - production-ready
   - [Ashtakavarga Shodhana (Reductions)](#ashtakavarga-shodhana-reductions)
   - [BPHS Dasha Applicability](#bphs-dasha-applicability)
   - [Shadbala Minimum Requirements](#shadbala-minimum-requirements)
+- [New in v2.3.0](#new-in-v230)
+  - [Professional Features Suite](#professional-features-suite)
+  - [Graha Avastha & Strength Reports](#graha-avastha--strength-reports)
+  - [Event Timing Engine](#event-timing-engine)
+  - [Sarvatobhadra Chakra](#sarvatobhadra-chakra)
 - [Services](#services)
   - [EphemerisService](#ephemerisservice)
   - [VedicChartService](#vedicchartservice)
@@ -98,17 +103,7 @@ A comprehensive API reference for the Jyotish Flutter library - production-ready
   - [GunaScores](#gunascores)
   - [CompatibilityLevel](#compatibilitylevel)
 - [Enums](#enums)
-  - [Planet](#planet)
-  - [SiderealMode](#siderealmode)
-  - [DivisionalChartType](#divisionalcharttype)
-  - [PlanetaryDignity](#planetarydignity)
-  - [NodeType](#nodetype)
-  - [MasaType](#masatype)
-  - [LunarMonth](#lunarmonth)
-  - [Ritu](#ritu)
-  - [VisibilityType](#visibilitytype)
-  - [VarshapalPeriodType](#varshapaperiodtype)
-  - [EclipseType](#eclipsetype)
+- [Professional Features (v2.3.0)](#professional-features-v230)
 - [Error Handling](#error-handling)
 - [Best Practices](#best-practices)
 
@@ -201,8 +196,21 @@ await jyotish.initialize({String? ephemerisPath});
 | `getCharaDasha({natalChart, levels?})` | `Future<CharaDashaResult>` | Chara Dasha (Jaimini) |
 | `getNarayanaDasha({chart, levels?})` | `Future<NarayanaDashaResult>` | Narayana Dasha (Jaimini) |
 | `getAshtottariDasha({natalChart, scheme?, forceCalculation?, levels?})` | `Future<DashaResult>` | Ashtottari Dasha (108-year) |
-| `getKalachakraDasha({natalChart})` | `Future<KalachakraDashaResult>` | Kalachakra Dasha |
+| `getKalachakraDasha({natalChart, levels?})` | `Future<DashaResult>` | Kalachakra Dasha (levels 1=MD, 2=AD) |
 | `getCurrentDasha({natalChart, targetDate, type?})` | `DashaPeriod` | Current active period |
+
+#### Professional Analysis Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getStrengthReport(chart)` | `Future<StrengthReport>` | Combined planetary strength summary |
+| `getGrahaAvastha(planet, chart)` | `GrahaAvastha` | Baladi & Jagratadi states |
+| `findEventTimingWindows(request)` | `Future<List<EventTimingWindow>>` | Search for dates matching Dasha+Transit criteria |
+| `getD10CareerAnalysis(natalChart)` | `Future<D10CareerAnalysis>` | Career specialization from Dashamsha |
+| `getKPDivisionTable()` | `List<KPDivisionEntry>` | Full 249 sub-lord boundary table |
+| `analyzeSarvatobhadra({natalChart, transitPositions})` | `SarvatobhadraAnalysis` | Transit Vedha analysis on star grid |
+| `getTajakaEnhancements({natalChart, annualChart, age})` | `TajakaEnhancement` | Muntha, Sahams, and Tajaka Yogas |
+
 
 #### Varshapal (Annual Chart) Methods
 
@@ -801,6 +809,42 @@ final service = DashaService();
 > - **Yogini Dasha (Issue 8)**: Antardasha and Pratyantardasha durations now accumulated in milliseconds to eliminate day-rounding drift across sub-period chains.
 > - **Kalachakra Dasha (Issue 12)**: `DashaResult.balanceOfFirstDasha` is now the actual remaining days calculated from the Moon's proportional position within its pada (was hardcoded to 0).
 > - **Narayana Dasha (Issue 13)**: The 12-sign sequence now follows consecutive zodiacal order (forward for odd starting signs, reverse for even) per the Jaimini rule, replacing the incorrect `i × 6` modulo formula.
+
+---
+
+## New in v2.3.0
+
+### Professional Features Suite
+
+The "Professional Features" suite adds high-level analysis engines that aggregate core library data into predictive and strength-based reports.
+
+### Graha Avastha & Strength Reports
+
+Strength analysis now considers the **Avastha** (state) of the planet:
+- **Baladi Avastha**: 5 states (Bala, Kumara, Yuva, Vriddha, Mrita) based on longitude parity in signs.
+- **Jagratadi Avastha**: 3 states (Jagrat, Swapna, Sushupti) based on dignity.
+
+The `StrengthReport` aggregates Shadbala, Vimshopaka, Dignity, and Avastha into a single score.
+
+### Event Timing Engine
+
+The `EventTimingService` searches for optimal windows by scoring:
+1. **Dasha Favorability**: Active Dasha/Antardasha lords.
+2. **Transit Support**: Transit positions of Dasha lords.
+3. **Gochara Vedha**: Obstructions from other transiting planets.
+4. **House Activation**: Transits through houses relevant to the event category (e.g., 2nd/7th for Marriage).
+
+### Sarvatobhadra Chakra
+
+A comprehensive transit analysis grid. It maps the 27 Nakshatras onto a square lattice and identifies **Vedha** (aspects) cast by transiting planets onto natal points (Moon, Ascendant, Sun).
+
+### Tajaka Enhancements
+
+Expands the annual `Varshapal` chart with:
+- **Muntha**: The progressed Ascendant sign for the year.
+- **Sahams**: Arabic Parts (Punya, Vidya, etc.) calculated from Sun/Moon/Ascendant.
+- **Tajaka Yogas**: Specific annual aspects like *Itthasala* (applying) and *Ishrafa* (separating).
+
 
 ---
 

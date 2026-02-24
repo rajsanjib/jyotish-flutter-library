@@ -1,3 +1,4 @@
+import '../models/calculation_flags.dart';
 import '../models/geographic_location.dart';
 import '../models/planet.dart';
 import '../models/varshapal.dart';
@@ -59,6 +60,7 @@ class VarshapalService {
   /// [varshaDateTime] - The birthday date/time for the year to calculate
   /// [location] - Birth location (used for chart calculation)
   /// [houseSystem] - House system to use (default: Whole Sign 'W')
+  /// [flags] - Ayanamsa/calculation override
   /// [checkDate] - Optional date to check current periods (defaults to now)
   ///
   /// Returns complete Varshapal with chart and all period calculations.
@@ -67,6 +69,7 @@ class VarshapalService {
     required DateTime varshaDateTime,
     required GeographicLocation location,
     String houseSystem = 'W',
+    CalculationFlags? flags,
     DateTime? checkDate,
   }) async {
     checkDate ??= DateTime.now();
@@ -77,6 +80,7 @@ class VarshapalService {
       dateTime: varshaDateTime,
       location: location,
       houseSystem: houseSystem,
+      flags: flags ?? CalculationFlags.defaultFlags(),
     );
 
     // Get Jupiter's position to determine varsha lord
@@ -140,6 +144,7 @@ class VarshapalService {
     required DateTime birthDateTime,
     required GeographicLocation location,
     String houseSystem = 'W',
+    CalculationFlags? flags,
     DateTime? checkDate,
   }) async {
     checkDate ??= DateTime.now();
@@ -169,6 +174,7 @@ class VarshapalService {
       varshaDateTime: varshaDateTime,
       location: location,
       houseSystem: houseSystem,
+      flags: flags,
       checkDate: checkDate,
     );
   }

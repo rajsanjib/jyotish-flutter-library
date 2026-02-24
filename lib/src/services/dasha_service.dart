@@ -856,7 +856,7 @@ class DashaService {
   }
 
   /// Calculates Kalachakra Dasha.
-  DashaResult getKalachakraDasha(VedicChart chart) {
+  DashaResult getKalachakraDasha(VedicChart chart, {int levels = 1}) {
     final moonLongitude = chart.planets[Planet.moon]!.longitude;
     const nakshatraWidth = 360.0 / 27;
     final nakshatraIndex = (moonLongitude / nakshatraWidth).floor() % 27;
@@ -876,6 +876,7 @@ class DashaService {
     final portionRemaining = 1.0 - (posInPada / padaWidth);
     final firstDashaYears = _getKalachakraYears(sequence.first);
     final balanceDays = firstDashaYears * 365.25 * portionRemaining;
+    final totalCycleYears = sequence.map(_getKalachakraYears).reduce((a, b) => a + b);
 
     for (var idx = 0; idx < sequence.length; idx++) {
       final sign = sequence[idx];
@@ -883,12 +884,26 @@ class DashaService {
       // First sign uses balance, rest use full duration
       final durationDays = (idx == 0) ? balanceDays : years * 365.25;
       final endDate = currentDate.add(Duration(days: durationDays.round()));
+      
+      List<DashaPeriod> antardashas = [];
+      if (levels >= 2) {
+        antardashas = _calculateKalachakraAntardashas(
+          mahadashaSign: sign,
+          sequence: sequence,
+          mahadashaStart: currentDate,
+          mahadashaDays: durationDays,
+          totalCycleYears: totalCycleYears,
+        );
+      }
+
       mahadashas.add(DashaPeriod(
           rashi: sign,
           startDate: currentDate,
           endDate: endDate,
           duration: Duration(days: durationDays.round()),
-          level: 0));
+          level: 0,
+          subPeriods: antardashas,
+      ));
       currentDate = endDate;
     }
 
@@ -901,6 +916,44 @@ class DashaService {
       balanceOfFirstDasha: balanceDays,
       allMahadashas: mahadashas,
     );
+  }
+
+  List<DashaPeriod> _calculateKalachakraAntardashas({
+    required Rashi mahadashaSign,
+    required List<Rashi> sequence,
+    required DateTime mahadashaStart,
+    required double mahadashaDays,
+    required double totalCycleYears,
+  }) {
+    final periods = <DashaPeriod>[];
+    var current = mahadashaStart;
+    
+    // Antardashas follow the same 9-sign sequence starting from the Mahadasha sign
+    final startIndex = sequence.indexOf(mahadashaSign);
+    final startIndexToUse = startIndex == -1 ? 0 : startIndex;
+
+    for (var i = 0; i < sequence.length; i++) {
+      final idx = (startIndexToUse + i) % sequence.length;
+      final sign = sequence[idx];
+      
+      final subLordYears = _getKalachakraYears(sign);
+      final days = mahadashaDays * (subLordYears / totalCycleYears);
+      
+      final ms = (days * 86400000).round();
+      final end = current.add(Duration(milliseconds: ms));
+      
+      periods.add(DashaPeriod(
+        rashi: sign,
+        startDate: current,
+        endDate: end,
+        duration: Duration(milliseconds: ms),
+        level: 1,
+        subPeriods: const [],
+      ));
+      current = end;
+    }
+    
+    return periods;
   }
 
   double _getKalachakraYears(Rashi sign) {

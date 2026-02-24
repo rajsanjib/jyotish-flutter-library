@@ -546,6 +546,92 @@ class KPService {
   }
 
   // ============================================================
+  // 249-DIVISION TABLE
+  // ============================================================
+
+  /// Generates the complete KP 249 Sub-Lord table.
+  /// 
+  /// KP astrology divides the 27 Nakshatras into 9 Sub-Lords (27 * 9 = 243).
+  /// Because 6 Sub-Lords cross zodiac sign boundaries, they are split,
+  /// resulting in exactly 249 divisions.
+  List<KPDivisionEntry> generateKPDivisionTable() {
+    final table = <KPDivisionEntry>[];
+    var index = 1;
+    
+    for (var star = 1; star <= 27; star++) {
+      final starStart = (star - 1) * (360.0 / 27);
+      var currentSubStart = starStart;
+      
+      final dashaPeriods = [7.0, 20.0, 6.0, 10.0, 7.0, 18.0, 16.0, 19.0, 17.0];
+      const totalPeriods = 120.0;
+      final starSpan = 360.0 / 27;
+
+      final starLord = KPPlanetOwnership.getStarLord(star);
+      final planets = [Planet.ketu, Planet.venus, Planet.sun, Planet.moon, Planet.mars, Planet.meanNode, Planet.jupiter, Planet.saturn, Planet.mercury];
+      // Note: in _calculateSubLord we had meanNode. Make sure starLord logic uses meanNode for Rahu.
+      final searchStarLord = (starLord == Planet.trueNode) ? Planet.meanNode : starLord;
+      final startPlanetIndex = planets.indexOf(searchStarLord);
+      
+      for (var i = 0; i < 9; i++) {
+        final ptIndex = (startPlanetIndex + i) % 9;
+        final subLord = planets[ptIndex];
+        
+        final subSpan = starSpan * (dashaPeriods[ptIndex] / totalPeriods);
+        final subEnd = currentSubStart + subSpan;
+        
+        // Round to avoid floating point precision issues near boundary 
+        final signStart = ((currentSubStart + 0.000001) / 30).floor();
+        final signEnd = ((subEnd - 0.000001) / 30).floor();
+        
+        if (signStart != signEnd && (subEnd % 30).abs() > 0.0001) {
+          // Crosses boundary, split into two
+          final boundary = signEnd * 30.0;
+          
+          final div1 = _calculateKPDivision(currentSubStart, null);
+          table.add(KPDivisionEntry(
+            index: index++,
+            sign: div1.sign,
+            signLord: div1.signLord,
+            star: star,
+            starLord: starLord,
+            subLord: subLord,
+            startLongitude: currentSubStart,
+            endLongitude: boundary,
+          ));
+          
+          final div2 = _calculateKPDivision(boundary + 0.000001, null);
+          table.add(KPDivisionEntry(
+            index: index++,
+            sign: div2.sign,
+            signLord: div2.signLord,
+            star: star,
+            starLord: starLord,
+            subLord: subLord,
+            startLongitude: boundary,
+            endLongitude: subEnd,
+          ));
+        } else {
+          final div = _calculateKPDivision(currentSubStart + 0.000001, null);
+          table.add(KPDivisionEntry(
+            index: index++,
+            sign: div.sign,
+            signLord: div.signLord,
+            star: star,
+            starLord: starLord,
+            subLord: subLord,
+            startLongitude: currentSubStart,
+            endLongitude: subEnd,
+          ));
+        }
+        
+        currentSubStart = subEnd;
+      }
+    }
+    
+    return table;
+  }
+
+  // ============================================================
   // AYANAMSA
   // ============================================================
 

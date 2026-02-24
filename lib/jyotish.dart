@@ -28,6 +28,13 @@ export 'src/models/masa.dart';
 export 'src/models/muhurta.dart';
 export 'src/models/gowri_panchangam.dart';
 // New Feature Models
+export 'src/models/graha_avastha.dart';
+export 'src/models/strength_report.dart';
+export 'src/models/event_timing.dart';
+export 'src/models/career_analysis.dart';
+export 'src/models/kp_calculations.dart';
+export 'src/models/sarvatobhadra.dart';
+export 'src/models/tajaka.dart';
 export 'src/models/nakshatra.dart';
 export 'src/models/panchanga.dart';
 export 'src/models/planet.dart';
@@ -50,6 +57,13 @@ export 'src/services/hora_service.dart';
 export 'src/services/choghadiya_service.dart';
 export 'src/services/gowri_panchangam_service.dart';
 // New Feature Services
+export 'src/services/graha_avastha_service.dart';
+export 'src/services/strength_report_service.dart';
+export 'src/services/event_timing_service.dart';
+export 'src/services/career_analysis_service.dart';
+export 'src/services/kp_service.dart';
+export 'src/services/sarvatobhadra_service.dart';
+export 'src/services/tajaka_service.dart';
 export 'src/services/gochara_vedha_service.dart';
 export 'src/services/panchanga_service.dart';
 export 'src/services/shadbala_service.dart';

@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-02-25
+
+### Added — Professional Features (Phase 2)
+
+Integrated 9 advanced features for professional astrology analysis:
+- **Configurable Ayanamsa per Chart**: Threaded `CalculationFlags` through all services to allow per-chart Ayanamsa overrides.
+- **Graha Avastha**: Added `Baladi` (age-based) and `Jagratadi` (alertness-based) states mapping dignity and signs.
+- **Strength Summary Report**: New `StrengthReportService` aggregating Shadbala, Vimshopaka, and Avastha.
+- **Kalachakra Antardashas**: Added proportional sub-period distribution based on BPHS logic.
+- **Event Timing (Dasha + Transit)**: New engine combining Dasha periods with Gochara Vedha and house transit analysis for event scoring.
+- **D-10 Career Analysis**: Professional career domain analysis based on Dashamsha lord and strong planets.
+- **KP 249-Division Table**: Complete system generate the 249 sub-lord boundaries with high precision.
+- **Sarvatobhadra Chakra**: Transit Vedha analysis on the 27-star Nakshatra lattice for obstruction detection.
+- **Tajaka Enhancements**: Annual chart expansions including Muntha, Sahams (Punya/Vidya), and Tajaka Yogas.
+
 ## [2.2.0] - 2026-02-25
 
 ### Fixed — Vedic System Accuracy & Strength Logic
@@ -30,6 +45,15 @@ This major accuracy release addresses several core discrepancies in planetary st
 - **Natonnata Bala**: Replaced binary 60/0 logic with a proportional **Day/Night arc gradient**. Strength peaks at temporal mid-points (Noon/Midnight).
 - **Chesta Bala**: Implemented the traditional **8-state motion classification** (Vakra, Anuvakra, Vikala, etc.) based on planetary speed vs mean speed.
 - **Rashi Drishti**: Exposed `getRashiAspects` bridge in `AspectService` for Jaimini sign-based aspects.
+
+#### Ashtakavarga & Jaimini
+- **Shodhana (Reductions)**: Implemented full **Trikona Shodhana** (trine) and **Ekadhipati Shodhana** (ownership) reductions.
+- **Pinda Calculations**: Added **Rashi Pinda** and **Graha Pinda** (Yoga Pinda) with specialized multipliers for sign lords and Nodes.
+- **Dual Ownership**: Implemented Mars/Ketu (Scorpio) and Saturn/Rahu (Aquarius) dual-lordship logic for sign-based dashas.
+- **Atmakaraka**: Precision calculation of the **Soul Planet** based on the highest degree in natal chart.
+
+#### KP System Accuracy
+- **Significator Prediction**: Fixed **C & D significators** to use dynamically calculated Placidus house cusps instead of fixed 30° sign maps, aligning with high-precision KP software.
 
 ### Added
 - **Unit Tests**: Added `relationship_test.dart`, `dignity_test.dart`, `bhava_chalit_test.dart`, and `dasha_accuracy_test.dart`.
@@ -79,6 +103,11 @@ All eight Kootas are now calculated per standard Vedic texts:
   Rakshasa: Krittika, Ashlesha, Magha, Chitra, Vishakha, Jyeshtha, Mula,
   Dhanishta, Shatabhisha). Scoring: same = 6, Deva+Manushya = 3, any
   Rakshasa pair = 0.
+- **Tara Koota**: Implemented the 9-tier classification (Janma, Sampat, Vipat,
+  Kshema, Pratyari, Sadhaka, Vadha, Mitra, Ati-Mitra) based on Nakshatra
+  distance from Moon.
+- **Vashya Koota**: Added Rashi-based classification (Chatushpada, Manava,
+  Jalachara, Vanachara, Keeta) to determine interpersonal control scores.
 - **Graha Maitri Koota**: Was a stub returning 0. Now fully implemented with
   the BPHS natural planetary friendship table (friends/enemies/neutrals for
   each of the 7 traditional planets). Sign lords are looked up per classical
@@ -88,6 +117,9 @@ All eight Kootas are now calculated per standard Vedic texts:
 - **Nadi Koota**: Nadi (Adi/Madhya/Antya) now uses correct **cyclic modulo-3**
   grouping (`nakshatraIndex % 3`) instead of the incorrect sequential blocks of
   9 nakshatras.
+
+#### Health & Doshas
+- **Manglik Dosha**: Initial implementation of **Kuja Dosha** check (Mars in 1st, 2nd, 4th, 7th, 8th, or 12th houses) with high-precision longitude checking.
 
 #### Dasha (`dasha_service.dart`)
 

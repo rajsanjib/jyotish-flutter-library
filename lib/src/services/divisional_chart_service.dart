@@ -120,6 +120,7 @@ class DivisionalChartService {
       planets: finalPlanets,
       rahu: finalRahu,
       ketu: finalKetu,
+      calculationFlags: rashiChart.calculationFlags,
     );
   }
 

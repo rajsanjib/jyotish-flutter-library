@@ -133,6 +133,40 @@ class KPDivision {
   ];
 }
 
+/// Represents a row in the KP 249-Division table.
+class KPDivisionEntry {
+  const KPDivisionEntry({
+    required this.index,
+    required this.sign,
+    required this.signLord,
+    required this.star,
+    required this.starLord,
+    required this.subLord,
+    this.subSubLord,
+    required this.startLongitude,
+    required this.endLongitude,
+  });
+
+  /// The division index (1 to 249)
+  final int index;
+  final int sign;
+  final Planet signLord;
+  final int star;
+  final Planet starLord;
+  final Planet subLord;
+  final Planet? subSubLord;
+  final double startLongitude;
+  final double endLongitude;
+  
+  /// Formats longitude to DMS string
+  String get startDms {
+    final d = startLongitude.floor();
+    final m = ((startLongitude - d) * 60).floor();
+    final s = (((startLongitude - d) * 60 - m) * 60).round();
+    return '$d° $m\' $s"';
+  }
+}
+
 /// KP Significators (ABCD significators).
 ///
 /// In KP astrology, planets signify houses through:

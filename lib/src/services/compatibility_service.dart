@@ -35,7 +35,7 @@ class CompatibilityService {
     final level = _getCompatibilityLevel(totalScore);
 
     return CompatibilityResult(
-      totalScore: totalScore.clamp(0, 36),
+      totalScore: totalScore.clamp(0.0, 36.0), // Clamped with doubles
       level: level,
       gunaScores: gunaScores,
       doshaCheck: doshaCheck,
@@ -168,28 +168,38 @@ class CompatibilityService {
   }
 
   // ─── Tara Koota (max 3 points) ──────────────────────────────────────────────
+  // Calculated in both directions (Boy -> Girl and Girl -> Boy).
+  // Each direction yields 1.5 (auspicious) or 0 (inauspicious). Maximum score 3.
 
-  int calculateTara(
+  double calculateTara(
       String boyNakshatra, String girlNakshatra, int boyPada, int girlPada) {
     final boyNakshatraNum = _getNakshatraNumber(boyNakshatra);
     final girlNakshatraNum = _getNakshatraNumber(girlNakshatra);
 
-    // Count from boy's nakshatra to girl's, forward
-    final taraCount = ((girlNakshatraNum - boyNakshatraNum) % 27 + 27) % 27;
-    // Which group of 9? (1=birth, 2=sampat, 3=vipat, 4=kshema, 5=pratyak,
-    //                    6=sadhaka, 7=vadha, 8=mitra, 9=atimitra)
-    final taraGroup = (taraCount ~/ 9) + 1;
+    double score = 0;
 
-    // Auspicious: 1 (birth), 3 (vipat—avoid), 5 (pratyak—avoid), 7 (vadha—avoid)
-    // Inauspicious: 3, 5, 7
-    if (taraGroup == 3 || taraGroup == 5 || taraGroup == 7) return 0;
-    if (taraGroup == 1 ||
-        taraGroup == 2 ||
-        taraGroup == 4 ||
-        taraGroup == 6 ||
-        taraGroup == 8 ||
-        taraGroup == 9) return 3;
-    return 1;
+    // Boy to Girl
+    final boyToGirlCount =
+        ((girlNakshatraNum - boyNakshatraNum) % 27 + 27) % 27;
+    final boyToGirlGroup = (boyToGirlCount ~/ 9) + 1;
+    if (_isTaraAuspicious(boyToGirlGroup)) {
+      score += 1.5;
+    }
+
+    // Girl to Boy
+    final girlToBoyCount =
+        ((boyNakshatraNum - girlNakshatraNum) % 27 + 27) % 27;
+    final girlToBoyGroup = (girlToBoyCount ~/ 9) + 1;
+    if (_isTaraAuspicious(girlToBoyGroup)) {
+      score += 1.5;
+    }
+
+    return score;
+  }
+
+  bool _isTaraAuspicious(int taraGroup) {
+    // Inauspicious: 3 (vipat), 5 (pratyak), 7 (vadha)
+    return taraGroup != 3 && taraGroup != 5 && taraGroup != 7;
   }
 
   int _getNakshatraNumber(String nakshatra) {
@@ -335,6 +345,8 @@ class CompatibilityService {
 
     final boyLord = _getSignLord(boyMoonSign);
     final girlLord = _getSignLord(girlMoonSign);
+
+    if (boyLord == girlLord) return 5; // Same sign lord
 
     // Mutual friendship between lords determines score
     final boyToGirl = _planetFriendship(boyLord, girlLord);
@@ -590,29 +602,103 @@ class CompatibilityService {
   }
 
   ManglikDoshaResult checkManglikDosha(VedicChart chart) {
-    final houses = <int>[];
-    for (final entry in chart.planets.entries) {
-      final planet = entry.key;
-      if (planet != Planet.mars) continue;
+    bool isManglik = false;
+    final housesAffected = <int>[];
+    String severity = 'Low';
+    final remedies = <String>[];
 
-      final house = entry.value.house;
-      if ([1, 2, 4, 7, 8, 12].contains(house)) {
-        houses.add(house);
+    final mars = chart.getPlanet(Planet.mars);
+    if (mars == null) {
+      return ManglikDoshaResult(
+        isManglik: false,
+        housesAffected: [],
+        severity: 'None',
+        remedies: [],
+      );
+    }
+
+    final ascendantSignStr = chart.ascendantSign;
+    final ascendantSign = Rashi.values.firstWhere(
+        (r) => r.name.toLowerCase() == ascendantSignStr.toLowerCase(),
+        orElse: () => Rashi.aries);
+    final moonSign =
+        Rashi.fromLongitude(chart.getPlanet(Planet.moon)?.longitude ?? 0);
+    final venusSign =
+        Rashi.fromLongitude(chart.getPlanet(Planet.venus)?.longitude ?? 0);
+    final marsSign = Rashi.fromLongitude(mars.longitude);
+
+    // Get houses of Mars from Ascendant, Moon, and Venus
+    int marsFromAsc = _getHouseDistance(ascendantSign, marsSign);
+    int marsFromMoon = _getHouseDistance(moonSign, marsSign);
+    int marsFromVenus = _getHouseDistance(venusSign, marsSign);
+
+    final manglikHouses = [1, 2, 4, 7, 8, 12];
+
+    bool manglikFromAsc = manglikHouses.contains(marsFromAsc);
+    bool manglikFromMoon = manglikHouses.contains(marsFromMoon);
+    bool manglikFromVenus = manglikHouses.contains(marsFromVenus);
+
+    if (manglikFromAsc || manglikFromMoon || manglikFromVenus) {
+      isManglik = true;
+      if (manglikFromAsc) housesAffected.add(marsFromAsc);
+
+      // Determine severity
+      int doshaCount = (manglikFromAsc ? 1 : 0) +
+          (manglikFromMoon ? 1 : 0) +
+          (manglikFromVenus ? 1 : 0);
+      severity = doshaCount >= 2 ? 'High' : 'Moderate';
+
+      // Check Cancellations (Parihara)
+      bool isCancelled = false;
+
+      // 1. Mars in own sign (Aries, Scorpio) or exalted (Capricorn)
+      if (marsSign == Rashi.aries ||
+          marsSign == Rashi.scorpio ||
+          marsSign == Rashi.capricorn) {
+        isCancelled = true;
+      }
+
+      // 2. Mars conjunct Jupiter or Moon
+      final jupiter = chart.getPlanet(Planet.jupiter);
+      final moon = chart.getPlanet(Planet.moon);
+      if ((jupiter != null &&
+              _getHouseDistance(
+                      ascendantSign, Rashi.fromLongitude(jupiter.longitude)) ==
+                  marsFromAsc) ||
+          (moon != null &&
+              _getHouseDistance(
+                      ascendantSign, Rashi.fromLongitude(moon.longitude)) ==
+                  marsFromAsc)) {
+        isCancelled = true;
+      }
+
+      if (isCancelled) {
+        isManglik = false;
+        severity = 'Cancelled';
+        remedies.add(
+            'Manglik Dosha is present but cancelled by planetary placements (Parhiara).');
+      } else {
+        remedies.addAll([
+          'Chant Mangal Mantra',
+          'Donate red clothes on Tuesdays',
+          'Fast on Tuesdays'
+        ]);
       }
     }
 
     return ManglikDoshaResult(
-      isManglik: houses.isNotEmpty,
-      housesAffected: houses,
-      severity: houses.length > 2 ? 'High' : 'Low',
-      remedies: houses.isNotEmpty
-          ? [
-              'Chant Mangal Mantra',
-              'Donate red clothes on Tuesdays',
-              'Fast on Tuesdays'
-            ]
-          : [],
+      isManglik: isManglik,
+      housesAffected:
+          housesAffected.toSet().toList(), // unique houses from ascendant
+      severity: severity,
+      remedies: remedies,
     );
+  }
+
+  int _getHouseDistance(Rashi refSign, Rashi targetSign) {
+    int dist = targetSign.index - refSign.index + 1;
+    if (dist <= 0) dist += 12;
+    return dist;
   }
 
   NadiDoshaResult checkNadiDosha(VedicChart boyChart, VedicChart girlChart) {
@@ -695,7 +781,7 @@ class CompatibilityService {
     );
   }
 
-  CompatibilityLevel _getCompatibilityLevel(int score) {
+  CompatibilityLevel _getCompatibilityLevel(double score) {
     if (score >= 33) return CompatibilityLevel.excellent;
     if (score >= 25) return CompatibilityLevel.veryGood;
     if (score >= 18) return CompatibilityLevel.good;

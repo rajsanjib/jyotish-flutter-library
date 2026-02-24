@@ -5,7 +5,8 @@ enum CompatibilityLevel {
   average('Average', 12, 17, 'Average - needs work'),
   poor('Poor', 0, 11, 'Not recommended');
 
-  const CompatibilityLevel(this.name, this.minScore, this.maxScore, this.description);
+  const CompatibilityLevel(
+      this.name, this.minScore, this.maxScore, this.description);
   final String name;
   final int minScore;
   final int maxScore;
@@ -22,7 +23,7 @@ class CompatibilityResult {
     required this.analysis,
   });
 
-  final int totalScore;
+  final double totalScore;
   final CompatibilityLevel level;
   final GunaScores gunaScores;
   final DoshaCheck doshaCheck;
@@ -47,14 +48,15 @@ class GunaScores {
 
   final int varna;
   final int vashya;
-  final int tara;
+  final double tara;
   final int yoni;
   final int grahaMaitri;
   final int gana;
   final int bhakoot;
   final int nadi;
 
-  int get total => varna + vashya + tara + yoni + grahaMaitri + gana + bhakoot + nadi;
+  double get total =>
+      varna + vashya + tara + yoni + grahaMaitri + gana + bhakoot + nadi;
 }
 
 class DoshaCheck {
@@ -132,7 +134,7 @@ class AshtakootaResult {
   });
 
   final GunaScores gunaScores;
-  final int totalScore;
+  final double totalScore;
   final CompatibilityLevel level;
   final Map<String, String> details;
 }

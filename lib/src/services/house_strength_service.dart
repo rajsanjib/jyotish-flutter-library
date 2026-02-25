@@ -213,8 +213,8 @@ class HouseStrengthService {
     return switch (dignity) {
       PlanetaryDignity.exalted => 20.0,
       PlanetaryDignity.moolaTrikona => 18.0,
-      PlanetaryDignity.ownSign => 15.0,
-      PlanetaryDignity.greatFriend => 12.0,
+      PlanetaryDignity.ownSign => 18.0,
+      PlanetaryDignity.greatFriend => 15.0,
       PlanetaryDignity.friendSign => 10.0,
       PlanetaryDignity.neutralSign => 8.0,
       PlanetaryDignity.enemySign => 5.0,

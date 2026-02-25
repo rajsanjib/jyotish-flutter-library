@@ -1,3 +1,5 @@
+import 'dart:math' as Math;
+import '../models/calculation_flags.dart';
 import '../models/divisional_chart_type.dart';
 import '../models/geographic_location.dart';
 import '../models/planet.dart';
@@ -78,9 +80,9 @@ class ShadbalaService {
     final uchchaBala =
         _calculateUchchaBala(planet, planetInfo.position.longitude);
 
-    // 8. Ishta & Kashta Phala
-    final ishtaPhala = (uchchaBala * chestaBala) / 60.0;
-    final kashtaPhala = ((60.0 - uchchaBala) * (60.0 - chestaBala)) / 60.0;
+    // 8. Ishta & Kashta Phala (BPHS exact formula uses square root)
+    final ishtaPhala = Math.sqrt(uchchaBala * chestaBala);
+    final kashtaPhala = Math.sqrt((60.0 - uchchaBala) * (60.0 - chestaBala));
     final netPhala = ishtaPhala - kashtaPhala;
 
     return ShadbalaResult(
@@ -167,13 +169,12 @@ class ShadbalaService {
   double _getVimshopakaPoints(PlanetaryDignity dignity) {
     return switch (dignity) {
       PlanetaryDignity.exalted => 20.0,
-      PlanetaryDignity.ownSign =>
-        20.0, // Or sometimes 18? usually 20 in Vimshopaka
-      PlanetaryDignity.greatFriend => 18.0,
-      PlanetaryDignity.friendSign => 15.0,
-      PlanetaryDignity.neutralSign => 10.0,
-      PlanetaryDignity.enemySign => 7.0,
-      PlanetaryDignity.greatEnemy => 5.0,
+      PlanetaryDignity.ownSign => 18.0,
+      PlanetaryDignity.greatFriend => 15.0,
+      PlanetaryDignity.friendSign => 10.0,
+      PlanetaryDignity.neutralSign => 7.0,
+      PlanetaryDignity.enemySign => 5.0,
+      PlanetaryDignity.greatEnemy => 2.0,
       PlanetaryDignity.debilitated => 0.0,
       PlanetaryDignity.moolaTrikona => 18.0,
     };
@@ -615,65 +616,131 @@ class ShadbalaService {
   }
 
   /// Maasa Bala: 30 virupas for the month lord.
-  /// Based on the Hindu lunar month (Maasa) determined by Sun's position in zodiac.
+  /// Based on the Hindu solar month determined by the weekday of the Sun's ingress
+  /// (Sankranti) into the current zodiac sign.
   ///
-  /// The lunar month is determined by the Sun's position in the zodiac signs:
-  /// - Chaitra (0°-30° Aries): Jupiter
-  /// - Vaishakha (30°-60° Taurus): Venus
-  /// - Jyeshtha (60°-90° Gemini): Mercury
-  /// - Ashadha (90°-120° Cancer): Saturn
-  /// - Shravana (120°-150° Leo): Saturn
-  /// - Bhadrapada (150°-180° Virgo): Jupiter
-  /// - Ashwin (180°-210° Libra): Mars
-  /// - Kartik (210°-240° Scorpio): Moon
-  /// - Agrahayana (240°-270° Sagittarius): Venus
-  /// - Pausha (270°-300° Capricorn): Mercury
-  /// - Magha (300°-330° Aquarius): Jupiter
-  /// - Phalguna (330°-360° Pisces): Sun
+  /// Per BPHS, the lord of the month is the ruler of the weekday on which
+  /// the Sun entered the current sign.
   Future<double> _calculateMaasaBala(Planet planet, VedicChart chart) async {
-    // Get Sun's position to determine the Hindu lunar month
+    // Get Sun's position and the time of birth
     final sunInfo = chart.getPlanet(Planet.sun);
     if (sunInfo == null) return 0.0;
 
-    final monthLord = _getMonthLordFromSunLongitude(sunInfo.longitude);
+    final location = GeographicLocation(
+      latitude: chart.latitude,
+      longitude: chart.longitudeCoord,
+      altitude: 0,
+    );
+
+    // Calculate the month lord dynamically
+    final monthLord = await _getDynamicMonthLord(
+      sunInfo.longitude,
+      chart.dateTime,
+      location,
+    );
+
     return planet == monthLord ? 30.0 : 0.0;
   }
 
-  /// Gets the lord of the current month based on Sun's position in the zodiac.
-  ///
-  /// In traditional Vedic astrology, the lunar month (Maasa) is determined by
-  /// the Sun's position in the zodiac, not the Gregorian calendar month.
-  /// This provides accurate Maasa Bala calculations.
-  ///
-  /// [sunLongitude] - Sun's longitude in degrees (0-360)
-  Planet _getMonthLordFromSunLongitude(double sunLongitude) {
-    // Normalize longitude to 0-360
-    final normalizedLong = sunLongitude % 360;
+  /// Calculates the lord of the month by finding the weekday of the Sun's
+  /// latest ingress (Sankranti) into the current sign.
+  Future<Planet> _getDynamicMonthLord(
+    double currentSunLongitude,
+    DateTime currentDateTime,
+    GeographicLocation location,
+  ) async {
+    final flags = CalculationFlags.defaultFlags();
 
-    // Determine which sign the Sun is in (0-11)
-    final signIndex = (normalizedLong / 30).floor();
+    // The current sign the Sun is in (e.g., 0 for Aries, 1 for Taurus)
+    final signIndex = (currentSunLongitude / 30).floor();
 
-    // Drik Siddhanta mapping
-    final monthLords = [
-      Planet.mars, // Chaitra - Sun in Pisces (330°-360°)
-      Planet.venus, // Vaishakha - Sun in Aries (0°-30°)
-      Planet.mercury, // Jyeshtha - Sun in Taurus (30°-60°)
-      Planet.moon, // Ashadha - Sun in Gemini (60°-90°)
-      Planet.sun, // Shravana - Sun in Cancer (90°-120°)
-      Planet.mercury, // Bhadrapada - Sun in Leo (120°-150°)
-      Planet.venus, // Ashwin - Sun in Virgo (150°-180°)
-      Planet.mars, // Kartik - Sun in Libra (180°-210°)
-      Planet.jupiter, // Margashirsha - Sun in Scorpio (210°-240°)
-      Planet.saturn, // Pausha - Sun in Sagittarius (240°-270°)
-      Planet.saturn, // Magha - Sun in Capricorn (270°-300°)
-      Planet.jupiter, // Phalguna - Sun in Aquarius (300°-330°)
-    ];
+    // The exact longitude where this sign started (e.g., Aries = 0°, Taurus = 30°)
+    final signStartLongitude = signIndex * 30.0;
 
-    // Align the sign index where Sun in Pisces (index 11) -> month 0 (Chaitra)
-    // Sun in Aries (index 0) -> month 1 (Vaishakha)
-    final monthIndex = (signIndex + 1) % 12;
+    // Degrees the Sun has travelled in the current sign
+    var travelledDegrees = currentSunLongitude - signStartLongitude;
+    if (travelledDegrees < 0) travelledDegrees += 360.0;
 
-    return monthLords[monthIndex];
+    // Approximate days since the Sun entered this sign (Sun travels ~0.9856° / day)
+    final approxDaysSinceIngress = travelledDegrees / 0.9856;
+
+    // Set a search window for the exact ingress time
+    var searchTime = currentDateTime
+        .subtract(Duration(hours: (approxDaysSinceIngress * 24).toInt()));
+
+    // Binary search to find the exact moment the Sun crossed the sign boundary
+    var start = searchTime.subtract(const Duration(days: 3));
+    var end = searchTime.add(const Duration(days: 3));
+
+    int iteration = 0;
+    const maxIterations = 40; // Precision up to ~1 second
+
+    while (iteration < maxIterations) {
+      final window = end.difference(start);
+      if (window.inSeconds <= 1) break;
+
+      final mid = start.add(Duration(seconds: window.inSeconds ~/ 2));
+
+      final midSunPos = await _ephemerisService.calculatePlanetPosition(
+        planet: Planet.sun,
+        dateTime: mid,
+        location: location,
+        flags: flags,
+      );
+
+      // We must handle the 360 wrap-around if checking Aries (0°)
+      var midLong = midSunPos.longitude;
+      var targetLong = signStartLongitude;
+
+      if (targetLong == 0 && midLong > 340) {
+        midLong -= 360;
+      } else if (targetLong == 0 && midLong < 20) {
+        // Normal
+      } else if (midLong > 350 && targetLong < 10) {
+        midLong -= 360;
+      }
+
+      if (midLong < targetLong) {
+        start = mid;
+      } else {
+        end = mid;
+      }
+
+      iteration++;
+    }
+
+    // The moment 'start' is the exact time of Sankranti (Ingress)
+    // Now determine the astrological weekday at that exact time
+
+    final ingressTime = start;
+
+    // Get sunrise for the day of ingress to determine astrological weekday
+    final sunriseSunset = await _ephemerisService.getSunriseSunset(
+      date: ingressTime,
+      location: location,
+    );
+
+    final sunrise = sunriseSunset.$1;
+
+    int weekday;
+    if (sunrise != null && ingressTime.isBefore(sunrise)) {
+      // Ingress happened before sunrise, so it belongs to the previous astrological day
+      final previousDay = ingressTime.subtract(const Duration(days: 1));
+      weekday = previousDay.weekday;
+    } else {
+      weekday = ingressTime.weekday;
+    }
+
+    return switch (weekday) {
+      7 => Planet.sun, // Sunday
+      1 => Planet.moon, // Monday
+      2 => Planet.mars, // Tuesday
+      3 => Planet.mercury, // Wednesday
+      4 => Planet.jupiter, // Thursday
+      5 => Planet.venus, // Friday
+      6 => Planet.saturn, // Saturday
+      _ => Planet.sun,
+    };
   }
 
   /// Varsha Bala: 15 virupas for the year lord.
@@ -1022,7 +1089,7 @@ class ShadbalaService {
       Planet.moon: 12.0,
       Planet.mars: 17.0,
       Planet.jupiter: 11.0,
-      Planet.saturn: 16.0,
+      Planet.saturn: 15.0,
     };
 
     // Mercury and Venus have different orbs based on retrograde status

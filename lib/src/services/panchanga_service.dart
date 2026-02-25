@@ -201,35 +201,30 @@ class PanchangaService {
     // Variable: Shakuni(9), Chatushpada(10), Naga(11), Kimstughna(12)
 
     // Check for variable karanas first (Shakuni, Chatushpada, Naga, Kimstughna)
-    if (karanaNumber == 57) {
+    // - Karana 1: Kimstughna (fixed) - at start of Shukla Paksha
+    if (karanaNumber == 1) {
+      name = KaranaInfo.variableKaranaNames[3]; // Kimstughna
+      isFixed = false;
+    }
+    // - Karanas 58-60: Shakuni, Chatushpada, Naga (variable) at the end of the 60 cycle
+    else if (karanaNumber == 58) {
       name = KaranaInfo.variableKaranaNames[0]; // Shakuni
       isFixed = false;
-    } else if (karanaNumber == 58) {
+    } else if (karanaNumber == 59) {
       name = KaranaInfo.variableKaranaNames[1]; // Chatushpada
       isFixed = false;
-    } else if (karanaNumber == 59) {
+    } else if (karanaNumber == 60) {
       name = KaranaInfo.variableKaranaNames[2]; // Naga
       isFixed = false;
-    } else if (karanaNumber == 60) {
-      name =
-          KaranaInfo.variableKaranaNames[3]; // Kimstughna - traditionally last
-      isFixed = false;
-    } else if (karanaNumber == 1) {
-      // Traditional: Kimstughna should be at karana 1 (Shukla Pratipada first half)
-      // However, most modern implementations use the repeating pattern
-      // We'll follow the traditional sequence where Kimstughna starts
-      name = KaranaInfo.variableKaranaNames[3]; // Kimstughna at position 1
-      isFixed = false;
-    } else if (karanaNumber >= 2 && karanaNumber <= 8) {
-      // Fixed karanas: Bava(2), Balava(3), Kaulava(4), Taitila(5),
-      // Garaja(6), Vanija(7), Vishti(8)
-      // Map: karanaNumber-1 gives index in fixedKaranaNames
+    }
+    // Fixed karanas: Bava(2), Balava(3), Kaulava(4), Taitila(5), Garaja(6), Vanija(7), Vishti(8)
+    else if (karanaNumber >= 2 && karanaNumber <= 8) {
       final index = (karanaNumber - 2) % 7;
       name = KaranaInfo.fixedKaranaNames[index];
       isFixed = true;
-    } else {
-      // Repeating fixed karanas from position 9 onwards
-      // This gives us the standard Bava-Vishti repeating sequence
+    }
+    // Repeating fixed karanas from position 9 onwards up to 57
+    else {
       final fixedIndex = (karanaNumber - 9) % 7;
       name = KaranaInfo.fixedKaranaNames[fixedIndex];
       isFixed = true;

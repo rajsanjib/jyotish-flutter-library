@@ -165,5 +165,26 @@ class MockEphemerisService extends EphemerisService {
   }
 
   @override
+  Future<PlanetPosition> calculatePlanetPosition({
+    required Planet planet,
+    required DateTime dateTime,
+    required GeographicLocation location,
+    required CalculationFlags flags,
+  }) async {
+    // Return a dummy position; in true testing we'd mock specific longitudes.
+    // We just return 0.0 for simplicity so it doesn't crash the tests.
+    return PlanetPosition(
+      planet: planet,
+      dateTime: dateTime,
+      longitude: 0.0,
+      latitude: 0.0,
+      distance: 1.0,
+      longitudeSpeed: 1.0,
+      latitudeSpeed: 0.0,
+      distanceSpeed: 0.0,
+    );
+  }
+
+  @override
   Future<void> initialize({String? ephemerisPath}) async {}
 }

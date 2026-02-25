@@ -5,6 +5,68 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2026-02-25
+
+### Enhanced — High-Precision Lunar Eclipse Reporting
+
+Completely overhauled the lunar eclipse engine to use Swiss Ephemeris' native
+`swe_lun_eclipse_when` and `swe_lun_eclipse_how` functions. The old syzygy
+binary-search fallback is now only used for solar eclipses.
+
+#### New FFI Bindings (`swisseph_bindings.dart`)
+- **`calculateLunarEclipseHow`** — wraps `swe_lun_eclipse_how`; returns umbral
+  and penumbral magnitudes and 20 eclipse attributes at a given moment.
+- **`findLunarEclipseWhen`** — wraps `swe_lun_eclipse_when`; returns the full
+  `tret[0..9]` contact-time array for the next eclipse after a given JD.
+
+#### New `EclipseData` Fields
+| Field | Description |
+|---|---|
+| `penumbralMagnitude` | Fraction of Moon's diameter in penumbra (e.g. 2.18) |
+| `penumbralStartTime` | P1 – first contact with penumbra |
+| `penumbralEndTime` | P4 – last contact with penumbra |
+| `partialStartTime` | U1 – first contact with umbra |
+| `partialEndTime` | U4 – last contact with umbra |
+| `totalStartTime` | U2 – total phase begins |
+| `totalEndTime` | U3 – total phase ends |
+| `moonrise` | Moonrise at observer's location (UTC) |
+| `moonset` | Moonset at observer's location after moonrise (UTC) |
+
+#### New `EclipseData` Getters
+| Getter | Description |
+|---|---|
+| `localStartTime` | Later of U1 and moonrise (eclipse visible start for observer) |
+| `localEndTime` | Earlier of U4 and moonset (eclipse visible end for observer) |
+| `localDuration` | Duration of eclipse as seen from observer's location |
+| `isPenumbralOnly` | True when magnitude ≤ 0 but penumbral magnitude > 0 |
+| `sutakForSensitive` | 3-hour Sutak for children, elderly, and the sick |
+
+#### Updated Sutak Logic
+`sutakStartTime` and `sutakForSensitive` now anchor to `localStartTime`
+(moonrise if after U1) rather than global U1. This correctly models the
+traditional rule that Sutak applies from when the eclipse is *observable* at
+the observer's location.
+
+#### `getRiseSet` Enhancement
+Added optional `searchFromExactTime` parameter (default `false`). When `true`,
+the search begins at the exact DateTime provided rather than the start-of-day
+UTC — used internally to find moonset *after* moonrise.
+
+#### Verification (New Delhi — 03 March 2026 Total Lunar Eclipse)
+```
+P1 – 14:14 IST  [Ref: 14:16]   ✅
+U1 – 15:20 IST  [Ref: 15:21]   ✅
+U2 – 16:34 IST  [Ref: 16:35]   ✅
+Max – 17:03 IST [Ref: 17:04]   ✅
+U3 – 17:32 IST  [Ref: 17:33]   ✅
+U4 – 18:47 IST  [Ref: 18:46]   ✅
+P4 – 19:53 IST  [Ref: 19:52]   ✅
+Umbral Magnitude  1.1482  [Ref: 1.14]   ✅
+Penumbral Mag     2.1814  [Ref: 2.18]   ✅
+Local Start  18:22 IST   [Ref: 18:26]   ✅
+Local End    18:47 IST   [Ref: 18:46]   ✅
+```
+
 ## [2.5.0] - 2026-02-25
 
 ### Added — `AstrologicalSystem` Enum & System Clarity

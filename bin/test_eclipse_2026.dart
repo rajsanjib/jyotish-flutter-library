@@ -1,82 +1,104 @@
 import 'package:jyotish/jyotish.dart';
 
-void main() async {
-  final jyotish = Jyotish();
-  print('Initializing Jyotish library...');
-  await jyotish.initialize(ephemerisPath: 'ephe');
+String _fmt(DateTime? dt) {
+  if (dt == null) return 'N/A';
+  final local = dt.toLocal();
+  final h = local.hour.toString().padLeft(2, '0');
+  final m = local.minute.toString().padLeft(2, '0');
+  final s = local.second.toString().padLeft(2, '0');
+  return '$h:$m:$s IST';
+}
 
-  // New Delhi Coordinates
+String _fmtDuration(Duration? d) {
+  if (d == null) return 'N/A';
+  final h = d.inHours.toString().padLeft(2, '0');
+  final m = (d.inMinutes % 60).toString().padLeft(2, '0');
+  final s = (d.inSeconds % 60).toString().padLeft(2, '0');
+  return '${h}h ${m}m ${s}s';
+}
+
+void main() async {
+  final ephemService = EphemerisService();
+  await ephemService.initialize(ephemerisPath: 'ephe');
+
+  // New Delhi coordinates
   final delhi = GeographicLocation(
     latitude: 28.6139,
     longitude: 77.2090,
     altitude: 216,
   );
 
-  // Date: March 3, 2026
-  final eclipseDate = DateTime(2026, 3, 3);
+  print('=' * 60);
+  print('  Lunar Eclipse – New Delhi – 03 March 2026');
+  print('=' * 60);
 
-  print('\nSearching for Lunar Eclipse on 2026-03-03 in New Delhi...');
+  final eclipse = await ephemService.getEclipseData(
+    date: DateTime(2026, 3, 3),
+    location: delhi,
+    eclipseType: EclipseType.lunar,
+  );
 
-  // Note: EphemerisService needs to be accessed.
-  // Based on jyotish_test.dart, we might need to use the service directly or via jyotish.
-  // Looking at jyotish.dart might help.
+  if (eclipse == null) {
+    print('No lunar eclipse found on this date.');
+  } else {
+    print('Type              : ${eclipse.eclipseType.name}');
+    print('Magnitude (Umbral): ${eclipse.magnitude.toStringAsFixed(4)}   '
+        '[Ref: 1.14]');
+    print(
+        'Magnitude (Penum) : ${eclipse.penumbralMagnitude?.toStringAsFixed(4)} '
+        '[Ref: 2.18]');
 
-  try {
-    // Attempt to get eclipse data
-    // We'll use the service directly if possible, or see if Jyotish exposes it.
-    final ephemService = EphemerisService();
-    await ephemService.initialize(ephemerisPath: 'ephe');
-    // Re-initialize service just in case if needed, but it should be initialized by Jyotish
+    print('\n--- Global Phase Contact Times (IST) ---');
+    print(
+        'P1 – Penumbral Starts  : ${_fmt(eclipse.penumbralStartTime)}  [Ref: 14:16]');
+    print(
+        'U1 – Umbral Starts     : ${_fmt(eclipse.partialStartTime)}    [Ref: 15:21]');
+    print(
+        'U2 – Total Begins      : ${_fmt(eclipse.totalStartTime)}      [Ref: 16:35]');
+    print(
+        'Max Eclipse            : ${_fmt(eclipse.maxEclipseTime)}      [Ref: 17:04]');
+    print(
+        'U3 – Total Ends        : ${_fmt(eclipse.totalEndTime)}        [Ref: 17:33]');
+    print(
+        'U4 – Umbral Ends       : ${_fmt(eclipse.partialEndTime)}      [Ref: 18:46]');
+    print(
+        'P4 – Penumbral Ends    : ${_fmt(eclipse.penumbralEndTime)}    [Ref: 19:52]');
 
-    final eclipse = await ephemService.getEclipseData(
-      date: eclipseDate,
-      location: delhi,
-      eclipseType: EclipseType.lunar,
-    );
+    print('\n--- Durations ---');
+    final penumDur =
+        eclipse.penumbralEndTime != null && eclipse.penumbralStartTime != null
+            ? eclipse.penumbralEndTime!.difference(eclipse.penumbralStartTime!)
+            : null;
+    final totDur =
+        eclipse.totalEndTime != null && eclipse.totalStartTime != null
+            ? eclipse.totalEndTime!.difference(eclipse.totalStartTime!)
+            : null;
+    print(
+        'Penumbral Duration     : ${_fmtDuration(penumDur)}  [Ref: 05h 35m 45s]');
+    print(
+        'Partial Phase          : ${_fmtDuration(eclipse.duration)}  [Ref: 03h 25m 17s]');
+    print(
+        'Total Phase            : ${_fmtDuration(totDur)}  [Ref: 00h 57m 27s]');
 
-    if (eclipse == null) {
-      print('No lunar eclipse found on this date.');
-    } else {
-      print('Eclipse Found!');
-      print('Type: ${eclipse.eclipseType.name}');
-      print('Peak Time: ${eclipse.date.toLocal()}');
-      print('Magnitude: ${eclipse.magnitude.toStringAsFixed(4)}');
-      print(
-          'Penumbral Magnitude: ${eclipse.penumbralMagnitude?.toStringAsFixed(4)}');
-      print('Is Visible: ${eclipse.isVisible}');
+    print('\n--- Observer Location (New Delhi) ---');
+    print('Moonrise               : ${_fmt(eclipse.moonrise)}   [Ref: 18:26]');
+    print('Moonset                : ${_fmt(eclipse.moonset)}');
+    print(
+        'Local Eclipse Start    : ${_fmt(eclipse.localStartTime)}   [Ref: 18:26]');
+    print(
+        'Local Eclipse End      : ${_fmt(eclipse.localEndTime)}     [Ref: 18:46]');
+    print(
+        'Local Duration         : ${_fmtDuration(eclipse.localDuration)}  [Ref: 00h 20m 28s]');
 
-      print('\nPhase Timings (Local IST):');
-      if (eclipse.penumbralStartTime != null) {
-        print(
-            'P1 (Penumbral Starts):  ${eclipse.penumbralStartTime!.toLocal()}');
-      }
-      if (eclipse.partialStartTime != null) {
-        print('U1 (Umbral Starts):     ${eclipse.partialStartTime!.toLocal()}');
-      }
-      if (eclipse.totalStartTime != null) {
-        print('U2 (Total Phase Begins): ${eclipse.totalStartTime!.toLocal()}');
-      }
-      print('Maximum Eclipse:        ${eclipse.maxEclipseTime!.toLocal()}');
-      if (eclipse.totalEndTime != null) {
-        print('U3 (Total Phase Ends):   ${eclipse.totalEndTime!.toLocal()}');
-      }
-      if (eclipse.partialEndTime != null) {
-        print('U4 (Umbral Ends):       ${eclipse.partialEndTime!.toLocal()}');
-      }
-      if (eclipse.penumbralEndTime != null) {
-        print('P4 (Penumbral Ends):    ${eclipse.penumbralEndTime!.toLocal()}');
-      }
-
-      print('\nSutak (Religious Timings):');
-      print('Sutak Begins:           ${eclipse.sutakStartTime?.toLocal()}');
-      print('Sutak Ends:             ${eclipse.sutakEndTime?.toLocal()}');
-
-      print('\nDuration: ${eclipse.duration}');
-      print('Description: ${eclipse.description}');
-    }
-  } catch (e) {
-    print('Error: $e');
-  } finally {
-    jyotish.dispose();
+    print('\n--- Sutak / Religious Timings ---');
+    print(
+        'Sutak Begins (Adults)  : ${_fmt(eclipse.sutakStartTime)}  [Ref: 09:39]');
+    print(
+        'Sutak Ends             : ${_fmt(eclipse.sutakEndTime)}    [Ref: 18:46]');
+    print(
+        'Sutak (Kids/Old/Sick)  : ${_fmt(eclipse.sutakForSensitive)}  [Ref: 15:28]');
   }
+
+  ephemService.dispose();
+  print('\n' + '=' * 60);
 }

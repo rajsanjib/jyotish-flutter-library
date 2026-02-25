@@ -11,6 +11,7 @@ A comprehensive API reference for the Jyotish Flutter library - production-ready
   - [Jyotish](#jyotish)
   - [GeographicLocation](#geographiclocation)
   - [CalculationFlags](#calculationflags)
+- [New in v2.6.0 — High-Precision Eclipse Reporting](#new-in-v260--high-precision-eclipse-reporting)
 - [New in v2.5.0 — AstrologicalSystem](#new-in-v250--astrologicalsystem)
 - [New in v2.4.0](#new-in-v240)
   - [Bhava Chalit (Cuspal Chart)](#bhava-chalit-cuspal-chart)
@@ -105,6 +106,7 @@ A comprehensive API reference for the Jyotish Flutter library - production-ready
   - [CompatibilityLevel](#compatibilitylevel)
 - [Enums](#enums)
 - [Professional Features (v2.3.0)](#professional-features-v230)
+- [New in v2.6.0 — High-Precision Eclipse Reporting](#new-in-v260--high-precision-eclipse-reporting)
 - [Error Handling](#error-handling)
 - [Best Practices](#best-practices)
 
@@ -234,7 +236,7 @@ await jyotish.initialize({String? ephemerisPath});
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `getSunriseSunset({date, location, atpress?, attemp?})` | `Future<(DateTime?, DateTime?)>` | High-precision sunrise/sunset |
-| `getRiseSet({planet, date, location, rsmi, atpress?, attemp?})` | `Future<DateTime?>` | Rise/set time for any planet |
+| `getRiseSet({planet, date, location, rsmi, atpress?, attemp?, searchFromExactTime?})` | `Future<DateTime?>` | Rise/set time. `searchFromExactTime` (default false): when true, uses full DateTime for search start rather than truncating to midnight. |
 
 #### Panchanga Methods
 
@@ -747,7 +749,7 @@ await service.initialize();
 | `calculatePlanetPosition({planet, dateTime, location, flags})` | `Future<PlanetPosition>` | Calculate planet position |
 | `getAyanamsa({dateTime, mode, timezoneId?})` | `Future<double>` | Get ayanamsa value |
 | `calculateHouses({dateTime, location, houseSystem?})` | `Future<HouseSystem>` | Calculate house cusps |
-| `getRiseSet({planet, date, location, rsmi, atpress?, attemp?})` | `Future<DateTime?>` | Rise/set time |
+| `getRiseSet({planet, date, location, rsmi, atpress?, attemp?, searchFromExactTime?})` | `Future<DateTime?>` | Rise/set time. `searchFromExactTime` (default false) allows finding the correct moonset after a specific moonrise time. |
 | `getSunriseSunset({date, location, atpress?, attemp?})` | `Future<(DateTime?, DateTime?)>` | Sunrise and sunset |
 | `getPlanetRiseSet({planet, date, location})` | `Future<(DateTime?, DateTime?)>` | Rise/set for any planet |
 | `getMeridianTransit({planet, date, location, upperCulmination})` | `Future<DateTime?>` | Upper/lower culmination |
@@ -1657,9 +1659,24 @@ Solar or lunar eclipse information.
 |----------|------|-------------|
 | `date` | `DateTime` | Date of maximum eclipse |
 | `eclipseType` | `EclipseType` | Solar or Lunar |
-| `magnitude` | `double` | Eclipse magnitude |
+| `magnitude` | `double` | Umbral eclipse magnitude |
+| `penumbralMagnitude` | `double?` | Fraction of Moon diameter in penumbra |
 | `isVisible` | `bool` | Visible at location |
 | `isTotal` | `bool` | Is total eclipse |
+| `penumbralStartTime` | `DateTime?` | P1 – Penumbral start |
+| `partialStartTime` | `DateTime?` | U1 – Partial start |
+| `totalStartTime` | `DateTime?` | U2 – Total begins |
+| `totalEndTime` | `DateTime?` | U3 – Total ends |
+| `partialEndTime` | `DateTime?` | U4 – Partial ends |
+| `penumbralEndTime` | `DateTime?` | P4 – Penumbral ends |
+| `moonrise` | `DateTime?` | Observer's moonrise (UTC) |
+| `moonset` | `DateTime?` | Observer's moonset (UTC) |
+| `localStartTime` | `DateTime?` | Visible eclipse start (local window) |
+| `localEndTime` | `DateTime?` | Visible eclipse end (local window) |
+| `localDuration` | `Duration?` | Total duration visible at location |
+| `sutakStartTime` | `DateTime?` | Sutak begin (anchored to local visibility) |
+| `sutakEndTime` | `DateTime?` | Sutak end (matches U4) |
+| `sutakForSensitive` | `DateTime?` | 3-hour Sutak for vulnerable groups |
 | `description` | `String` | Eclipse description |
 
 ---
@@ -2347,6 +2364,39 @@ Type of eclipse.
 |-------|-------------|
 | `solar` | Solar eclipse |
 | `lunar` | Lunar eclipse |
+
+---
+
+## New in v2.6.0 — High-Precision Eclipse Reporting
+
+This release introduces professional-grade eclipse reporting using Swiss Ephemeris' native FFI bindings, providing all 7 major contact times and local observer visibility details.
+
+### Expanded `EclipseData`
+
+The `EclipseData` model now provides granular phase transitions for lunar eclipses:
+
+- **P1**: Penumbral Start
+- **U1**: Umbral Start (Partial begin)
+- **U2**: Total Start
+- **U3**: Total End
+- **U4**: Umbral End (Partial end)
+- **P4**: Penumbral End
+
+### Local Visibility Window
+
+Observers often want to know if an eclipse is visible from their specific location. The library now automatically calculates:
+- `moonrise` / `moonset`: Calculated for the eclipse search date.
+- `localStartTime`: The later of U1 and moonrise.
+- `localEndTime`: The earlier of U4 and moonset.
+- `localDuration`: The actual visible duration for the observer.
+
+### Location-Aware Sutak
+
+Traditional religious timings (Sutak) are now anchored to `localStartTime` instead of the global astronomical U1. This ensures that if the Moon rises *after* the eclipse has already begun globally, the Sutak period correctly shifts relative to the visibility at the observer's location.
+
+### `getRiseSet` precision
+
+The `getRiseSet` method now includes `searchFromExactTime`. Setting this to `true` allows finding the sequence of events (e.g., finding the moonset that occurs *after* a specific moonrise), which is crucial for across-midnight events.
 
 ---
 

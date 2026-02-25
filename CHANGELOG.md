@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-02-25
+
+### Fixed — Missing API Surface & Implementations
+
+- **Panchanga Service API Extension**: Exposed 5 advanced Panchanga methods directly on the `Jyotish` facade (`calculateAbhijitMuhurta`, `calculateBrahmaMuhurta`, `calculateNighttimeInauspicious`, `getTithiJunction`, `getMoonPhaseDetails`). Exported the corresponding models.
+- **Gochara Vedha API Extension**: Exposed 3 transit obstruction methods (`hasMutualVedha`, `findFavorablePeriodsWithoutVedha`, `getVedhaRemedies`) and exported their models.
+- **Strength Analysis API Extension**: Exposed alternate `getStrengthBhavaBala` and batch `getAllPlanetsVimshopakBala`. Exported related models.
+- **Tajaka Saham Expansion**: Increased calculated Sahams from 3 to 14, implementing classical daytime/nighttime reversal logic.
+- **Sarvatobhadra Chakra**: Refactored the simplified offset logic into the accurate classical 27-star Nakshatra Vedha lookup table mapping (Frontal, Left, Right aspects).
+- **Graha Avastha Deeptadi**: Added the 9 `DeeptadiAvastha` states (Mood/Condition) derived from planetary dignity, combustion, and retrograde status. Added this state to the `GrahaAvastha` model.
+- **Event Timing Dual-Scoring**: Enhanced the `EventTimingService` scoring engine to jointly evaluate both the Mahadasha and Antardasha lords' transits (and their Vedhas) when generating favorable event windows.
+
 ## [2.3.0] - 2026-02-25
 
 ### Added — Professional Features (Phase 2)

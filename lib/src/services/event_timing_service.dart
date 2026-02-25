@@ -1,9 +1,8 @@
 import '../models/planet.dart';
 import '../models/rashi.dart';
-import '../models/vedic_chart.dart';
-import '../models/dasha.dart';
-import '../models/gochara.dart';
+import '../models/planet_position.dart';
 import '../models/event_timing.dart';
+import '../models/calculation_flags.dart';
 
 import 'dasha_service.dart';
 import 'gochara_vedha_service.dart';
@@ -27,43 +26,52 @@ class EventTimingService {
   Future<List<EventTimingWindow>> findEventTimingWindows(
       EventTimingRequest request) async {
     final windows = <EventTimingWindow>[];
-    
-    // Default to Vimshottari Dasha for timing 
-    final dashaResult = _dashaService.getVimshottariDasha(request.natalChart);
-    
-    final moonSign = request.natalChart.planets[Planet.moon]!.sign;
-    final rashiWidth = 360.0 / 12;
-    final moonNakshatra = (request.natalChart.planets[Planet.moon]!.longitude / (360.0 / 27)).floor() % 27;
+
+    // Default to Vimshottari Dasha for timing
+    final dashaResult = _dashaService.calculateVimshottariDasha(
+      moonLongitude: request.natalChart.planets[Planet.moon]!.longitude,
+      birthDateTime: request.natalChart.dateTime,
+    );
+
+    final moonInfo = request.natalChart.planets[Planet.moon]!;
+    final moonRashiIndex = Rashi.fromLongitude(moonInfo.longitude).number;
+    final moonNakshatra = (moonInfo.longitude / (360.0 / 27)).floor() % 27;
 
     var current = request.startDate;
     while (current.isBefore(request.endDate)) {
       final end = current.add(request.granularity);
-      
+
       // 1. Identify active dasha period
-      final mahadasha = dashaResult.getMahadashaAt(current);
-      final antardasha = dashaResult.getAndardashaAt(current);
-      
+      final activePeriods = dashaResult.getActivePeriodsAt(current);
+      final mahadasha = activePeriods.isNotEmpty ? activePeriods[0] : null;
+      final antardasha = activePeriods.length > 1 ? activePeriods[1] : null;
+
       final dashaLord = antardasha?.lord ?? mahadasha?.lord ?? Planet.jupiter;
       final dashaContext = antardasha != null
-          ? '${mahadasha?.lordDisplayName} MD / ${antardasha.lordDisplayName} AD'
-          : '${mahadasha?.lordDisplayName} MD';
+          ? '${mahadasha?.lordName} MD / ${antardasha.lordName} AD'
+          : '${mahadasha?.lordName ?? "Unknown"} MD';
 
       // 2. Fetch all transit positions for the current step
       final transits = <Planet, int>{};
       final transitPositions = <Planet, PlanetPosition>{};
-      
+
       for (final planet in Planet.values) {
-        if (planet == Planet.uranus || planet == Planet.neptune || planet == Planet.pluto) continue;
-        
+        if (planet == Planet.uranus ||
+            planet == Planet.neptune ||
+            planet == Planet.pluto) continue;
+
         final pos = await _ephemerisService.calculatePlanetPosition(
           planet: planet,
           dateTime: current,
           location: request.location,
+          flags: request.natalChart.calculationFlags ??
+              CalculationFlags.defaultFlags(),
         );
         transitPositions[planet] = pos;
-        
+
         // Calculate house from natal Moon
-        int houseFromMoon = ((pos.sign.index - moonSign.index) % 12) + 1;
+        final transitRashiIndex = Rashi.fromLongitude(pos.longitude).number;
+        int houseFromMoon = ((transitRashiIndex - moonRashiIndex) % 12) + 1;
         if (houseFromMoon <= 0) houseFromMoon += 12;
         transits[planet] = houseFromMoon;
       }
@@ -80,23 +88,59 @@ class EventTimingService {
       // 4. Rate Quality based on Gochara favorability and Vedha
       final reasons = <String>[];
       double score = 0.5;
-      
-      if (vedhaResult.isFavorable) {
+
+      if (vedhaResult.isFavorablePosition) {
         score += 0.3;
-        reasons.add('$dashaLord is transiting favorable house $gocharaHouse from Moon.');
-        if (vedhaResult.hasVedha) {
+        reasons.add(
+            '${dashaLord.displayName} is transiting favorable house $gocharaHouse from Moon.');
+        if (vedhaResult.isObstructed) {
           score -= 0.2;
-          reasons.add('But favorable effects are obstructed (Vedha) by ${vedhaResult.obstructingPlanet}.');
+          final obstructors = vedhaResult.obstructingPlanets
+              .map((p) => p.displayName)
+              .join(", ");
+          reasons.add(
+              'But favorable effects are obstructed (Vedha) by $obstructors.');
         } else {
           score += 0.1;
           reasons.add('No Vedha obstruction.');
         }
       } else {
         score -= 0.2;
-        reasons.add('$dashaLord is transiting unfavorable house $gocharaHouse from Moon.');
-        if (vedhaResult.hasVedha) {
+        reasons.add(
+            '${dashaLord.displayName} is transiting unfavorable house $gocharaHouse from Moon.');
+        if (vedhaResult.isObstructed) {
           score += 0.1;
-          reasons.add('Harmful effects are mitigated (Vama Vedha) by ${vedhaResult.obstructingPlanet}.');
+          final obstructors = vedhaResult.obstructingPlanets
+              .map((p) => p.displayName)
+              .join(", ");
+          reasons.add(
+              'Harmful effects are mitigated (Vama Vedha) by $obstructors.');
+        }
+      }
+
+      // 4b. Secondary check for Antardasha lord (if different from Mahadasha lord)
+      if (antardasha != null &&
+          mahadasha != null &&
+          antardasha.lord != null &&
+          antardasha.lord != mahadasha.lord) {
+        final adLord = antardasha.lord!;
+        final adGoachaHouse = transits[adLord] ?? 1;
+        final adVedhaResult = _gocharaVedhaService.calculateVedha(
+          transitPlanet: adLord,
+          houseFromMoon: adGoachaHouse,
+          moonNakshatra: moonNakshatra,
+          otherTransits: transits,
+        );
+
+        if (adVedhaResult.isFavorablePosition && !adVedhaResult.isObstructed) {
+          score += 0.15;
+          reasons.add(
+              'Antardasha lord ${adLord.displayName} adds to favorable timing.');
+        } else if (!adVedhaResult.isFavorablePosition &&
+            !adVedhaResult.isObstructed) {
+          score -= 0.1;
+          reasons.add(
+              'Antardasha lord ${adLord.displayName} is transiting unfavorably.');
         }
       }
 
@@ -108,9 +152,9 @@ class EventTimingService {
           reasons.add('Dasha lord transiting key event house ($house).');
         }
       }
-      
+
       score = score.clamp(0.0, 1.0);
-      
+
       TimingQuality quality;
       if (score >= 0.8) {
         quality = TimingQuality.veryFavorable;
@@ -136,7 +180,7 @@ class EventTimingService {
 
       current = end;
     }
-    
+
     return windows;
   }
 

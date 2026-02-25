@@ -10,7 +10,7 @@ import '../models/vedic_chart.dart';
 ///
 /// See [BhavaChalit] for full documentation of what Bhava Chalit means
 /// and when it differs from the Rashi chart.
-class BhavaCalitService {
+class BhavaChalitService {
   /// Computes the Bhava Chalit chart from an existing [VedicChart].
   ///
   /// [chart] — The Rashi chart to derive the Bhava Chalit from.

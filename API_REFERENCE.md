@@ -241,12 +241,17 @@ await jyotish.initialize({String? ephemerisPath});
 |--------|---------|-------------|
 | `calculatePanchanga({dateTime, location})` | `Future<Panchanga>` | Complete Panchanga (5 limbs) |
 | `getTithi({dateTime, location})` | `Future<TithiInfo>` | Lunar day |
+| `getTithiJunction({targetTithiNumber, startDate, location})` | `Future<DateTime>` | Exact time a Tithi begins/ends |
 | `getTithiEndTime({dateTime, location, accuracyThreshold?})` | `Future<DateTime>` | Precise Tithi end time |
 | `getYoga({dateTime, location})` | `Future<YogaInfo>` | Sun-Moon combination |
 | `getKarana({dateTime, location})` | `Future<KaranaInfo>` | Half-Tithi |
 | `getVara({dateTime, location})` | `Future<VaraInfo>` | Weekday/planetary lord |
 | `getNakshatra({dateTime, location})` | `Future<NakshatraInfo>` | Moon's nakshatra |
 | `getNakshatraWithAbhijit({dateTime, location})` | `Future<NakshatraInfo>` | With 28th nakshatra |
+| `calculateAbhijitMuhurta({date, location})` | `Future<AbhijitMuhurta>` | Auspicious midday period |
+| `calculateBrahmaMuhurta({date, location})` | `Future<BrahmaMuhurta>` | Auspicious pre-dawn period |
+| `calculateNighttimeInauspicious({date, location})` | `Future<NighttimeInauspiciousPeriods>` | Nighttime inauspicious times |
+| `getMoonPhaseDetails({dateTime, location})` | `Future<MoonPhaseDetails>` | Illumination, age, velocity |
 
 #### Ashtakavarga Methods
 
@@ -325,7 +330,8 @@ await jyotish.initialize({String? ephemerisPath});
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `getShadbala(chart)` | `Future<Map<Planet, ShadbalaResult>>` | Six-fold planetary strength |
-| `getVimshopakBala(planet, chart)` | `double` | 20-fold planetary strength |
+| `getVimshopakBala(planet, chart)` | `double` | 20-fold planetary strength for one planet |
+| `getAllPlanetsVimshopakBala(chart)` | `Map<Planet, VimshopakBala>` | 20-fold strength for all planets |
 | `getIshtaphala(planet, chart, shadbala)` | `double` | Auspicious potential (0-60) |
 | `getKashtaphala(planet, chart, shadbala)` | `double` | Inauspicious potential (0-60) |
 
@@ -335,7 +341,8 @@ await jyotish.initialize({String? ephemerisPath});
 |--------|---------|-------------|
 | `calculateSudarshanChakra(chart)` | `SudarshanChakraResult` | Triple-perspective strength analysis |
 | `getSudarshanChakra(chart)` | `SudarshanChakraResult` | Get Sudarshan Chakra (alias) |
-| `getBhavaBala(chart)` | `Future<Map<int, BhavaBalaResult>>` | House Strength (Bhava Bala) |
+| `getBhavaBala(chart)` | `Future<Map<int, BhavaBalaResult>>` | House Strength (Bhava Bala service) |
+| `getStrengthBhavaBala({chart, shadbalaResults})` | `Map<int, double>` | House Strength (Strength Analysis service) |
 
 #### Gochara Vedha (Transit Obstruction)
 
@@ -343,6 +350,9 @@ await jyotish.initialize({String? ephemerisPath});
 |--------|---------|-------------|
 | `calculateGocharaVedha({transitPlanet, houseFromMoon, moonNakshatra, otherTransits})` | `VedhaResult` | Check Vedha for single transit |
 | `calculateMultipleGocharaVedha({transits, moonNakshatra})` | `List<VedhaResult>` | Check Vedha for multiple transits |
+| `hasMutualVedha(planet1, house1, planet2, house2)` | `bool` | Check bidirectional obstruction |
+| `findFavorablePeriodsWithoutVedha(transitsOverTime)` | `List<FavorablePeriod>` | Find clear transit windows |
+| `getVedhaRemedies(vedhaResult)` | `List<String>` | Suggest remedies for obstruction |
 
 #### Extended Dasha Methods
 

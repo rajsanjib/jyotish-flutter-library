@@ -36,16 +36,16 @@ class StrengthReportService {
   };
 
   /// Generates a comprehensive ChartStrengthReport for a given chart.
-  ChartStrengthReport generateChartReport(VedicChart chart) {
+  Future<ChartStrengthReport> generateChartReport(VedicChart chart) async {
     // Compute all required data
-    final shadbalas = _shadbalaService.calculateShadbala(chart);
+    final shadbalas = await _shadbalaService.calculateShadbala(chart);
     final vimsopakas = _houseStrengthService.calculateVimsopakaBala(chart);
     final avasthas = _grahaAvasthaService.calculateAllAvasthas(chart);
-    
+
     // Sort planets by Shadbala total bala to determine ranks
     final sortedByShadbala = shadbalas.entries.toList()
       ..sort((a, b) => b.value.totalBala.compareTo(a.value.totalBala));
-    
+
     final ranks = <Planet, int>{};
     for (int i = 0; i < sortedByShadbala.length; i++) {
       ranks[sortedByShadbala[i].key] = i + 1;
@@ -111,11 +111,13 @@ class StrengthReportService {
   }
 
   /// Extracts a detailed PlanetStrengthReport for a specific planet.
-  PlanetStrengthReport getPlanetReport(Planet planet, VedicChart chart) {
+  Future<PlanetStrengthReport> getPlanetReport(
+      Planet planet, VedicChart chart) async {
     if (Planet.lunarNodes.contains(planet)) {
-      throw ArgumentError('Strength report is only available for 7 main planets');
+      throw ArgumentError(
+          'Strength report is only available for 7 main planets');
     }
-    final report = generateChartReport(chart);
+    final report = await generateChartReport(chart);
     return report.byPlanet[planet]!;
   }
 }

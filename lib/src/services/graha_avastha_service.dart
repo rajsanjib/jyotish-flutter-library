@@ -21,6 +21,7 @@ class GrahaAvasthaService {
   GrahaAvastha calculateAvastha(VedicPlanetInfo planetInfo) {
     final baladi = _calculateBaladi(planetInfo.longitude);
     final jagratadi = _calculateJagratadi(planetInfo.dignity);
+    final deeptadi = _calculateDeeptadi(planetInfo);
 
     double effectStrength;
     switch (jagratadi) {
@@ -36,11 +37,12 @@ class GrahaAvasthaService {
     }
 
     final description =
-        '${baladi.sanskrit} (${baladi.english}), ${jagratadi.sanskrit} (${jagratadi.english})';
+        '${baladi.sanskrit}, ${jagratadi.sanskrit}, ${deeptadi.sanskrit}';
 
     return GrahaAvastha(
       baladi: baladi,
       jagratadi: jagratadi,
+      deeptadi: deeptadi,
       effectStrength: effectStrength,
       description: description,
     );
@@ -50,7 +52,7 @@ class GrahaAvasthaService {
   BaladiAvastha _calculateBaladi(double longitude) {
     final signIndex = (longitude / 30).floor();
     final degreeInSign = longitude % 30;
-    
+
     // Aries is 0 (1st sign -> odd). So even index = odd sign.
     final isOddSign = (signIndex % 2 == 0);
 
@@ -76,16 +78,52 @@ class GrahaAvasthaService {
       case PlanetaryDignity.moolaTrikona:
       case PlanetaryDignity.ownSign:
         return JagratadiAvastha.jagrata;
-        
+
       case PlanetaryDignity.greatFriend:
       case PlanetaryDignity.friendSign:
       case PlanetaryDignity.neutralSign:
         return JagratadiAvastha.svapna;
-        
+
       case PlanetaryDignity.enemySign:
       case PlanetaryDignity.greatEnemy:
       case PlanetaryDignity.debilitated:
         return JagratadiAvastha.sushupti;
+    }
+  }
+
+  /// Calculates Deeptadi (Mood/Condition) Avastha based on dignity and state.
+  DeeptadiAvastha _calculateDeeptadi(VedicPlanetInfo planetInfo) {
+    if (planetInfo.isCombust) {
+      return DeeptadiAvastha.khala;
+    }
+
+    // Check for retrograde status using negative longitude speed
+    if (planetInfo.position.longitudeSpeed < 0) {
+      // For retrogrades in enemy/debilitated signs, they are considered agitated/Kopa
+      if (planetInfo.dignity == PlanetaryDignity.enemySign ||
+          planetInfo.dignity == PlanetaryDignity.greatEnemy ||
+          planetInfo.dignity == PlanetaryDignity.debilitated) {
+        return DeeptadiAvastha.kopa;
+      }
+    }
+
+    switch (planetInfo.dignity) {
+      case PlanetaryDignity.exalted:
+        return DeeptadiAvastha.deepta;
+      case PlanetaryDignity.moolaTrikona:
+      case PlanetaryDignity.ownSign:
+        return DeeptadiAvastha.swastha;
+      case PlanetaryDignity.greatFriend:
+        return DeeptadiAvastha.mudita;
+      case PlanetaryDignity.friendSign:
+        return DeeptadiAvastha.shanta;
+      case PlanetaryDignity.neutralSign:
+        return DeeptadiAvastha.dina;
+      case PlanetaryDignity.enemySign:
+      case PlanetaryDignity.greatEnemy:
+        return DeeptadiAvastha.dukhita;
+      case PlanetaryDignity.debilitated:
+        return DeeptadiAvastha.vikala;
     }
   }
 }

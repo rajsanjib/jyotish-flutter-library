@@ -1,22 +1,24 @@
 import '../models/planet.dart';
 import '../models/vedic_chart.dart';
 import '../models/career_analysis.dart';
+import '../models/rashi.dart';
 
 class CareerAnalysisService {
   D10CareerAnalysis analyzeCareer(VedicChart d10Chart) {
     // Determine 10th sign (Ascendant sign index + 9)
-    final ascendantSign = d10Chart.ascendantSign;
-    final tenthSignIndex = (ascendantSign.index + 9) % 12;
+    final ascendantRashi = Rashi.fromLongitude(d10Chart.ascendant);
+    final tenthSignIndex = (ascendantRashi.number + 9) % 12;
     final tenthSign = Rashi.values[tenthSignIndex];
     final tenthLord = _getSignLord(tenthSign);
 
     final primaryDomains = <String>[];
     final strongPlanets = <Planet>[];
     final careerThemes = <String>[];
-    
+
     // Evaluate 10th lord
     primaryDomains.addAll(_getPlanetDomains(tenthLord));
-    careerThemes.add('Career path is heavily influenced by ${tenthLord.displayName} (10th Lord).');
+    careerThemes.add(
+        'Career path is heavily influenced by ${tenthLord.displayName} (10th Lord).');
 
     // Evaluate D-10 Strong Planets
     int strengthScore = 0;
@@ -29,7 +31,7 @@ class CareerAnalysisService {
           info.dignity == PlanetaryDignity.moolaTrikona) {
         strongPlanets.add(planet);
         strengthScore += 2;
-        
+
         if (planet != tenthLord) {
           primaryDomains.addAll(_getPlanetDomains(planet));
         }
@@ -39,7 +41,8 @@ class CareerAnalysisService {
     }
 
     if (strongPlanets.isNotEmpty) {
-      careerThemes.add('Strong placements in D-10 provide support: ${strongPlanets.map((p) => p.displayName).join(", ")}.');
+      careerThemes.add(
+          'Strong placements in D-10 provide support: ${strongPlanets.map((p) => p.displayName).join(", ")}.');
     }
 
     // Determine category
@@ -80,16 +83,60 @@ class CareerAnalysisService {
   List<String> _getPlanetDomains(Planet planet) {
     return switch (planet) {
       Planet.sun => ['Government', 'Authority', 'Management', 'Politics'],
-      Planet.moon => ['Public Relations', 'Caregiving', 'Food/Hospitality', 'Liquid matters'],
-      Planet.mars => ['Engineering', 'Military/Police', 'Surgeon', 'Real Estate'],
-      Planet.mercury => ['Business', 'Writing/Media', 'IT/Programming', 'Accounting'],
-      Planet.jupiter => ['Education/Teaching', 'Law', 'Finance/Banking', 'Advisory'],
+      Planet.moon => [
+          'Public Relations',
+          'Caregiving',
+          'Food/Hospitality',
+          'Liquid matters'
+        ],
+      Planet.mars => [
+          'Engineering',
+          'Military/Police',
+          'Surgeon',
+          'Real Estate'
+        ],
+      Planet.mercury => [
+          'Business',
+          'Writing/Media',
+          'IT/Programming',
+          'Accounting'
+        ],
+      Planet.jupiter => [
+          'Education/Teaching',
+          'Law',
+          'Finance/Banking',
+          'Advisory'
+        ],
       Planet.venus => ['Arts/Entertainment', 'Fashion', 'Luxury', 'Design'],
-      Planet.saturn => ['Service Sector', 'Labor', 'Research', 'Heavy Industry', 'Agriculture'],
-      Planet.meanNode => ['Technology', 'Foreign Affairs', 'Unconventional paths'], // Rahu
-      Planet.trueNode => ['Technology', 'Foreign Affairs', 'Unconventional paths'],
-      Planet.meanApogee => ['Research', 'Spirituality', 'Occult', 'Backend systems'], // Ketu
-      Planet.trueApogee => ['Research', 'Spirituality', 'Occult', 'Backend systems'],
+      Planet.saturn => [
+          'Service Sector',
+          'Labor',
+          'Research',
+          'Heavy Industry',
+          'Agriculture'
+        ],
+      Planet.meanNode => [
+          'Technology',
+          'Foreign Affairs',
+          'Unconventional paths'
+        ], // Rahu
+      Planet.trueNode => [
+          'Technology',
+          'Foreign Affairs',
+          'Unconventional paths'
+        ],
+      Planet.meanApogee => [
+          'Research',
+          'Spirituality',
+          'Occult',
+          'Backend systems'
+        ], // Ketu
+      Planet.osculatingApogee => [
+          'Research',
+          'Spirituality',
+          'Occult',
+          'Backend systems'
+        ],
       _ => [],
     };
   }

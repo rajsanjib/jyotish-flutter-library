@@ -34,7 +34,7 @@ import 'models/graha_avastha.dart';
 import 'models/strength_report.dart';
 import 'models/event_timing.dart';
 import 'models/career_analysis.dart';
-import 'models/kp_calculations.dart';
+
 import 'models/sarvatobhadra.dart';
 import 'models/tajaka.dart';
 
@@ -75,7 +75,6 @@ import 'services/graha_avastha_service.dart';
 import 'services/strength_report_service.dart';
 import 'services/event_timing_service.dart';
 import 'services/career_analysis_service.dart';
-import 'services/kp_service.dart';
 import 'services/sarvatobhadra_service.dart';
 import 'services/tajaka_service.dart';
 
@@ -142,13 +141,12 @@ class Jyotish {
   NadiService? _nadiService;
   ProgenyService? _progenyService;
   CompatibilityService? _compatibilityService;
-  BhavaCalitService? _bhavaCalitService;
+  BhavaChalitService? _bhavaChalitService;
   PlanetaryRelationshipService? _planetaryRelationshipService;
   GrahaAvasthaService? _grahaAvasthaService;
   StrengthReportService? _strengthReportService;
   EventTimingService? _eventTimingService;
   CareerAnalysisService? _careerAnalysisService;
-  KPService? _kpService;
   SarvatobhadraService? _sarvatobhadraService;
   TajakaService? _tajakaService;
   bool _isInitialized = false;
@@ -197,7 +195,7 @@ class Jyotish {
       _nadiService = NadiService();
       _progenyService = ProgenyService();
       _compatibilityService = CompatibilityService();
-      _bhavaCalitService = BhavaCalitService();
+      _bhavaChalitService = BhavaChalitService();
       _planetaryRelationshipService = PlanetaryRelationshipService();
       _grahaAvasthaService = GrahaAvasthaService();
       _strengthReportService = StrengthReportService(
@@ -2089,6 +2087,33 @@ class Jyotish {
     );
   }
 
+  /// Calculates an alternate Bhava Bala (House Strength).
+  ///
+  /// [chart] - The Vedic birth chart
+  /// [shadbalaResults] - Pre-calculated Shadbala results
+  ///
+  /// Returns map of house number (1-12) to double strength score.
+  Map<int, double> getStrengthBhavaBala({
+    required VedicChart chart,
+    required Map<Planet, double> shadbalaResults,
+  }) {
+    _ensureInitialized();
+    return _strengthAnalysisService!.getBhavaBala(
+      chart: chart,
+      shadbalaResults: shadbalaResults,
+    );
+  }
+
+  /// Calculates Vimshopak Bala for all planets.
+  ///
+  /// [chart] - The Vedic chart
+  ///
+  /// Returns a map of all traditional planets to their Vimshopak Bala
+  Map<Planet, VimshopakBala> getAllPlanetsVimshopakBala(VedicChart chart) {
+    _ensureInitialized();
+    return _strengthAnalysisService!.getAllPlanetsVimshopakBala(chart);
+  }
+
   // ============================================================
   // GOCHARA VEDHA (TRANSIT OBSTRUCTION)
   // ============================================================
@@ -2131,6 +2156,56 @@ class Jyotish {
       transits: transits,
       moonNakshatra: moonNakshatra,
     );
+  }
+
+  /// Checks if there's mutual Vedha between two planets.
+  ///
+  /// Mutual Vedha occurs when two planets obstruct each other,
+  /// effectively canceling out both results.
+  ///
+  /// [planet1] - First planet
+  /// [house1] - First planet's house from Moon
+  /// [planet2] - Second planet
+  /// [house2] - Second planet's house from Moon
+  ///
+  /// Returns true if there's mutual obstruction
+  bool hasMutualVedha(
+    Planet planet1,
+    int house1,
+    Planet planet2,
+    int house2,
+  ) {
+    _ensureInitialized();
+    return _gocharaVedhaService!.hasMutualVedha(
+      planet1,
+      house1,
+      planet2,
+      house2,
+    );
+  }
+
+  /// Finds the best transit periods without Vedha.
+  ///
+  /// [transitsOverTime] - List of transit snapshots with dates
+  ///
+  /// Returns list of favorable periods without obstruction
+  List<FavorablePeriod> findFavorablePeriodsWithoutVedha(
+    List<TransitSnapshot> transitsOverTime,
+  ) {
+    _ensureInitialized();
+    return _gocharaVedhaService!.findFavorablePeriodsWithoutVedha(
+      transitsOverTime,
+    );
+  }
+
+  /// Gets remedial measures for Vedha.
+  ///
+  /// [vedhaResult] - The Vedha result to get remedies for
+  ///
+  /// Returns list of remedial suggestions
+  List<String> getVedhaRemedies(VedhaResult vedhaResult) {
+    _ensureInitialized();
+    return _gocharaVedhaService!.getVedhaRemedies(vedhaResult);
   }
 
   /// Gets the Samvatsara (60-year Jupiter cycle) name for a given year.
@@ -2374,25 +2449,88 @@ class Jyotish {
   /// Gets whether library has been initialized.
   bool get isInitialized => _isInitialized;
 
+  /// Calculates Abhijit Muhurta (the victorious midday period).
+  ///
+  /// [date] - Date to calculate for
+  /// [location] - Geographic location
+  Future<AbhijitMuhurta> calculateAbhijitMuhurta({
+    required DateTime date,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+    return _panchangaService!.calculateAbhijitMuhurta(
+      date: date,
+      location: location,
+    );
+  }
+
+  /// Calculates Brahma Muhurta (the auspicious pre-dawn period).
+  ///
+  /// [date] - Date to calculate for
+  /// [location] - Geographic location
+  Future<BrahmaMuhurta> calculateBrahmaMuhurta({
+    required DateTime date,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+    return _panchangaService!.calculateBrahmaMuhurta(
+      date: date,
+      location: location,
+    );
+  }
+
+  /// Calculates nighttime inauspicious periods (Nighttime Rahu Kaal equivalent).
+  ///
+  /// [date] - Date to calculate for
+  /// [location] - Geographic location
+  Future<NighttimeInauspiciousPeriods> calculateNighttimeInauspicious({
+    required DateTime date,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+    return _panchangaService!.calculateNighttimeInauspicious(
+      date: date,
+      location: location,
+    );
+  }
+
+  /// Gets the exact junction (change point) of a specific Tithi.
+  ///
+  /// [targetTithiNumber] - The Tithi number (1-30)
+  /// [startDate] - Start date to search from
+  /// [location] - Geographic location
+  Future<DateTime> getTithiJunction({
+    required int targetTithiNumber,
+    required DateTime startDate,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+    return _panchangaService!.getTithiJunction(
+      targetTithiNumber: targetTithiNumber,
+      startDate: startDate,
+      location: location,
+    );
+  }
+
+  /// Gets detailed Moon phase information.
+  ///
+  /// [dateTime] - Date and time for the calculation
+  /// [location] - Geographic location
+  Future<MoonPhaseDetails> getMoonPhaseDetails({
+    required DateTime dateTime,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+    return _panchangaService!.getMoonPhaseDetails(
+      dateTime: dateTime,
+      location: location,
+    );
+  }
+
   /// Gets the PanchangaService for advanced Panchanga calculations.
   ///
-  /// Use this to access advanced Panchanga methods like:
-  /// - calculateAbhijitMuhurta()
-  /// - calculateBrahmaMuhurta()
-  /// - calculateNighttimeInauspicious()
-  /// - getTithiJunction()
-  /// - getMoonPhaseDetails()
-  ///
-  /// Example:
-  /// ```dart
-  /// final jyotish = Jyotish();
-  /// await jyotish.initialize();
-  ///
-  /// final abhijit = await jyotish.panchangaService.calculateAbhijitMuhurta(
-  ///   date: DateTime.now(),
-  ///   location: location,
-  /// );
-  /// ```
+  /// Most methods are available directly on the [Jyotish] class.
+  /// Access this service only for specialized operations.
   PanchangaService get panchangaService {
     _ensureInitialized();
     return _panchangaService!;
@@ -2601,7 +2739,7 @@ class Jyotish {
   /// ```
   BhavaChalit getBhavaChalit(VedicChart chart) {
     _ensureInitialized();
-    return _bhavaCalitService!.calculateBhavaChalit(chart);
+    return _bhavaChalitService!.calculateBhavaChalit(chart);
   }
 
   // ============================================================
@@ -2690,15 +2828,16 @@ class Jyotish {
   // ============================================================
 
   /// Generates a comprehensive ChartStrengthReport for a given chart.
-  ChartStrengthReport getChartStrengthReport(VedicChart chart) {
+  Future<ChartStrengthReport> getChartStrengthReport(VedicChart chart) async {
     _ensureInitialized();
-    return _strengthReportService!.generateChartReport(chart);
+    return await _strengthReportService!.generateChartReport(chart);
   }
 
   /// Extracts a detailed PlanetStrengthReport for a specific planet.
-  PlanetStrengthReport getPlanetStrengthReport(Planet planet, VedicChart chart) {
+  Future<PlanetStrengthReport> getPlanetStrengthReport(
+      Planet planet, VedicChart chart) async {
     _ensureInitialized();
-    return _strengthReportService!.getPlanetReport(planet, chart);
+    return await _strengthReportService!.getPlanetReport(planet, chart);
   }
 
   // ============================================================
@@ -2731,7 +2870,7 @@ class Jyotish {
   // ============================================================
 
   /// Generates the complete KP 249-Division Sub-Lord table.
-  /// 
+  ///
   /// Returns a statically or dynamically generated table of all 249 Sub-Lords.
   List<KPDivisionEntry> getKPDivisionTable() {
     _ensureInitialized();
@@ -2739,18 +2878,11 @@ class Jyotish {
   }
 
   /// Calculates complete KP data for a birth chart.
-  Future<KPCalculations> getKPCalculations(VedicChart natalChart, {bool useNewAyanamsa = true}) async {
+  Future<KPCalculations> getKPCalculations(VedicChart natalChart,
+      {bool useNewAyanamsa = true}) async {
     _ensureInitialized();
-    return await _kpService!.calculateKPData(natalChart, useNewAyanamsa: useNewAyanamsa);
-  }
-
-  /// Calculates the KP Ruling Planets at a specific moment in time.
-  Future<KPRulingPlanets> getKPRulingPlanets({
-    required VedicChart prashnaChart,
-    bool useNewAyanamsa = true,
-  }) async {
-    _ensureInitialized();
-    return await _kpService!.calculateRulingPlanets(prashnaChart, useNewAyanamsa: useNewAyanamsa);
+    return await _kpService!
+        .calculateKPData(natalChart, useNewAyanamsa: useNewAyanamsa);
   }
 
   // ============================================================

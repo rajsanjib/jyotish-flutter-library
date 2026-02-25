@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:jyotish_flutter_library_fork/jyotish.dart';
+import 'package:jyotish/jyotish.dart';
 
 void main() {
   group('Planetary Relationships (Panchadha Maitri)', () {

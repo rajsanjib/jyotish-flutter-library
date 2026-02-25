@@ -1,3 +1,4 @@
+import 'geographic_location.dart';
 import 'planet.dart';
 import 'vedic_chart.dart';
 

@@ -9,15 +9,15 @@ class TajakaService {
     required VedicChart annualChart,
     required int age,
   }) {
-    final ascendantSign = natalChart.ascendantSign;
-    
+    final ascendantSign = Rashi.fromLongitude(natalChart.ascendant);
+
     // Muntha calculation
-    final munthaSignIndex = (ascendantSign.index + age) % 12;
+    final munthaSignIndex = (ascendantSign.number + age) % 12;
     final munthaSign = Rashi.values[munthaSignIndex];
-    
+
     // Muntha House in Annual Chart
-    final annualAscSign = annualChart.ascendantSign;
-    int munthaHouse = ((munthaSignIndex - annualAscSign.index) % 12) + 1;
+    final annualAscSign = Rashi.fromLongitude(annualChart.ascendant);
+    int munthaHouse = ((munthaSignIndex - annualAscSign.number) % 12) + 1;
     if (munthaHouse <= 0) munthaHouse += 12;
 
     final munthaLord = _getSignLord(munthaSign);
@@ -27,7 +27,7 @@ class TajakaService {
 
     // Tajaka Yogas (Itthasala)
     // For a minimal demonstration, we check for yogas involving the Munthesh and Varshesh
-    final varshesh = _getSignLord(annualAscSign); 
+    final varshesh = _getSignLord(annualAscSign);
     final yogas = _detectYogas(annualChart, munthaLord, varshesh);
 
     return TajakaEnhancement(
@@ -41,41 +41,67 @@ class TajakaService {
 
   Map<String, double> _calculateSahams(VedicChart annualChart) {
     final Map<String, double> sahams = {};
-    
+
     final sunLon = annualChart.planets[Planet.sun]?.longitude ?? 0.0;
     final moonLon = annualChart.planets[Planet.moon]?.longitude ?? 0.0;
     final jupLon = annualChart.planets[Planet.jupiter]?.longitude ?? 0.0;
     final mercLon = annualChart.planets[Planet.mercury]?.longitude ?? 0.0;
+    final venLon = annualChart.planets[Planet.venus]?.longitude ?? 0.0;
+    final marsLon = annualChart.planets[Planet.mars]?.longitude ?? 0.0;
+    final satLon = annualChart.planets[Planet.saturn]?.longitude ?? 0.0;
     final ascLon = annualChart.houses.ascendant;
+    final eighthHouseCusp = annualChart.houses.cusps.length > 7
+        ? annualChart.houses.cusps[7]
+        : (ascLon + 210) % 360;
 
     // Daytime chart check
-    // Very basic check: Is Sun in houses 7-12?
-    // Accurate logic is Sun above horizon. We'll use a simplified check based on distance from Ascendant.
     // If Sun - Ascendant mod 360 is between 180 and 360, it's daytime.
     double diff = (sunLon - ascLon + 360) % 360;
     bool isDay = diff >= 180 && diff <= 360;
 
-    // Punya (Fortune)
-    double punya;
-    if (isDay) {
-      punya = (ascLon + moonLon - sunLon + 360) % 360;
-    } else {
-      punya = (ascLon + sunLon - moonLon + 360) % 360;
+    double calc(double a, double b, double c, bool reverseForNight) {
+      if (reverseForNight && !isDay) {
+        return (c + b - a + 360) % 360;
+      }
+      return (c + a - b + 360) % 360;
     }
-    sahams['Punya'] = punya;
 
-    // Vidya (Education) = As + Mercury - Sun
-    sahams['Vidya'] = (ascLon + mercLon - sunLon + 360) % 360;
-
-    // Yasas (Fame) = As + Jupiter - Sun
-    sahams['Yasas'] = (ascLon + jupLon - sunLon + 360) % 360;
+    // Punya (Fortune)
+    sahams['Punya'] = calc(moonLon, sunLon, ascLon, true);
+    // Vidya (Education)
+    sahams['Vidya'] = calc(sunLon, moonLon, ascLon, true);
+    // Yasas (Fame)
+    sahams['Yasas'] = calc(jupLon, sunLon, ascLon, true);
+    // Mrityu (Death)
+    sahams['Mrityu'] = calc(eighthHouseCusp, moonLon, ascLon, true);
+    // Pitru (Father)
+    sahams['Pitru'] = calc(sunLon, satLon, ascLon, true);
+    // Matru (Mother)
+    sahams['Matru'] = calc(moonLon, venLon, ascLon, true);
+    // Putra (Children)
+    sahams['Putra'] = calc(jupLon, moonLon, ascLon, true);
+    // Vivaha (Marriage)
+    sahams['Vivaha'] = calc(venLon, satLon, ascLon, true);
+    // Karyasiddhi (Success)
+    sahams['Karyasiddhi'] = calc(satLon, sunLon, ascLon, true);
+    // Bhratru (Sibling)
+    sahams['Bhratru'] = calc(jupLon, marsLon, ascLon, true);
+    // Rog (Disease)
+    sahams['Rog'] = calc(marsLon, satLon, ascLon, true);
+    // Kali (Conflict)
+    sahams['Kali'] = calc(jupLon, marsLon, ascLon, true);
+    // Labha (Gain)
+    sahams['Labha'] = calc(jupLon, sunLon, ascLon, false); // No reverse
+    // Karma (Action)
+    sahams['Karma'] = calc(marsLon, mercLon, ascLon, true);
 
     return sahams;
   }
 
-  List<TajakaYoga> _detectYogas(VedicChart annualChart, Planet munthesh, Planet varshesh) {
+  List<TajakaYoga> _detectYogas(
+      VedicChart annualChart, Planet munthesh, Planet varshesh) {
     final yogas = <TajakaYoga>[];
-    
+
     if (munthesh == varshesh) return yogas;
 
     final p1 = annualChart.planets[varshesh];
@@ -96,7 +122,7 @@ class TajakaService {
 
     final s1 = speed[varshesh] ?? 0.0;
     final s2 = speed[munthesh] ?? 0.0;
-    
+
     // Determine aspect distance
     final distance = (p1.longitude - p2.longitude).abs();
 
@@ -112,23 +138,26 @@ class TajakaService {
       }
     }
 
-    if (distance < 15.0) { // Deepthamsha/Orb overlap
+    if (distance < 15.0) {
+      // Deepthamsha/Orb overlap
       if (isApp) {
-         yogas.add(TajakaYoga(
-           type: TajakaYogaType.itthasala,
-           planet1: varshesh,
-           planet2: munthesh,
-           isApplying: true,
-           interpretation: 'Applying Itthasala between Annual Lord ($varshesh) and Muntha Lord ($munthesh), showing impending success.',
-         ));
+        yogas.add(TajakaYoga(
+          type: TajakaYogaType.itthasala,
+          planet1: varshesh,
+          planet2: munthesh,
+          isApplying: true,
+          interpretation:
+              'Applying Itthasala between Annual Lord ($varshesh) and Muntha Lord ($munthesh), showing impending success.',
+        ));
       } else {
-         yogas.add(TajakaYoga(
-           type: TajakaYogaType.ishrafa,
-           planet1: varshesh,
-           planet2: munthesh,
-           isApplying: false,
-           interpretation: 'Separating Ishrafa between Annual Lord and Muntha Lord. Past efforts indicated.',
-         ));
+        yogas.add(TajakaYoga(
+          type: TajakaYogaType.ishrafa,
+          planet1: varshesh,
+          planet2: munthesh,
+          isApplying: false,
+          interpretation:
+              'Separating Ishrafa between Annual Lord and Muntha Lord. Past efforts indicated.',
+        ));
       }
     }
 

@@ -1,5 +1,4 @@
 import 'dart:ffi' as ffi;
-import 'dart:math' as Math;
 
 import 'package:ffi/ffi.dart';
 
@@ -611,6 +610,19 @@ class EphemerisService {
 
       final (time, type) = syzygy;
 
+      // Filter by requested type if it's not EclipseType.any
+      if (eclipseType != EclipseType.any) {
+        final isRequestedSolar = eclipseType == EclipseType.solar ||
+            eclipseType == EclipseType.solarTotal ||
+            eclipseType == EclipseType.solarPartial ||
+            eclipseType == EclipseType.solarAnnular;
+        final isFoundSolar = type == EclipseType.solar;
+
+        if (isRequestedSolar != isFoundSolar) {
+          return null;
+        }
+      }
+
       // For Lunar Eclipses, use the superior Swiss Ephemeris built-in functions
       if (type == EclipseType.lunar ||
           type == EclipseType.lunarTotal ||
@@ -619,40 +631,15 @@ class EphemerisService {
         return _getDetailedLunarEclipse(time, location);
       }
 
-      // Fallback/Legacy for Solar (or we could implement solar built-ins too)
-      // Calculate positions at exact syzygy time
-      final sunPos = await calculatePlanetPosition(
-        planet: Planet.sun,
-        dateTime: time,
-        location: location,
-        flags: CalculationFlags.defaultFlags(),
-      );
-
-      final moonPos = await calculatePlanetPosition(
-        planet: Planet.moon,
-        dateTime: time,
-        location: location,
-        flags: CalculationFlags.defaultFlags(),
-      );
-
-      final latAbs = moonPos.latitude.abs();
-      final isSolar = type == EclipseType.solar;
-      final limit = isSolar ? 1.5 : 1.0;
-
-      if (latAbs > limit) {
-        return null;
+      // For Solar Eclipses, use the local Swiss Ephemeris built-in functions
+      if (type == EclipseType.solar ||
+          type == EclipseType.solarTotal ||
+          type == EclipseType.solarPartial ||
+          type == EclipseType.solarAnnular) {
+        return _getDetailedSolarEclipse(time, location);
       }
 
-      return EclipseData(
-        date: time,
-        eclipseType: type,
-        magnitude: _calculateEclipseMagnitude(sunPos, moonPos, isSolar),
-        isVisible:
-            isSolar ? await _isSolarEclipseVisible(time, location) : true,
-        description: isSolar
-            ? 'Solar Eclipse (${latAbs.toStringAsFixed(2)}° from node)'
-            : 'Lunar Eclipse (${latAbs.toStringAsFixed(2)}° from node)',
-      );
+      return null;
     } catch (e, stackTrace) {
       throw CalculationException(
         'Error calculating eclipse data: $e',
@@ -763,65 +750,88 @@ class EphemerisService {
     return DateTime.fromMillisecondsSinceEpoch((low + high) ~/ 2);
   }
 
-  double _calculateEclipseMagnitude(
-    PlanetPosition sunPos,
-    PlanetPosition moonPos,
-    bool isSolar,
-  ) {
-    // Geometric Magnitude Approximation
-    // Distance between centers
-    // Note: This is an approximation on the celestial sphere (valid for small angles)
-    double dLat = (moonPos.latitude - 0).abs(); // Sun lat is ~0
-    double dLon = (moonPos.longitude - sunPos.longitude).abs();
-    if (dLon > 180) dLon = 360 - dLon;
-    // For Solar, dLon should be near 0. For Lunar, dLon should be near 180.
-    if (!isSolar) dLon = (dLon - 180).abs();
+  /// Calculates detailed local solar eclipse data using Swiss Ephemeris.
+  Future<EclipseData?> _getDetailedSolarEclipse(
+      DateTime globalDate, GeographicLocation location) async {
+    final jd = _dateTimeToJulianDay(globalDate);
+    final errorBuffer = malloc<ffi.Char>(256);
 
-    // Separation
-    double separation = Math.sqrt(dLat * dLat + dLon * dLon);
+    try {
+      print('Calling findSolarEclipseWhenLoc...');
+      // 1. Get precise local maximum and contact times using swe_sol_eclipse_when_loc.
+      // We search from 1 day before the global syzygy date.
+      final result = _bindings!.findSolarEclipseWhenLoc(
+        julianDay: jd - 1.0,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        altitude: location.altitude,
+        flags: 0,
+        backward: false,
+        errorBuffer: errorBuffer,
+      );
+      print('findSolarEclipseWhenLoc returned successfully.');
 
-    // Angular radii (approx)
-    const rSun = 0.266; // approx
-    const rMoon = 0.272; // approx
+      if (result == null) return null;
 
-    // Magnitude = (Radius1 + Radius2 - Separation) / (2 * RadiusBody)
-    // For Solar: Covered body is Sun.
-    // For Lunar: Covered body is Moon (by Shadow). Shadow radius ~ 0.7 deg?
-    // Using simplified "overlap" magnitude for now.
+      // Unpack the unified tret + attr array (30 elements)
+      final tret = result.sublist(0, 10);
+      final attr = result.sublist(10, 30);
 
-    if (isSolar) {
-      return (rSun + rMoon - separation) / (2 * rSun);
-    } else {
-      // Lunar: Earth's shadow radius at Moon distance is approx 0.7 degrees (umbara)
-      const rShadow = 0.70;
-      return (rShadow + rMoon - separation) / (2 * rMoon);
+      // tret[0] = time of maximum eclipse
+      // tret[1] = first contact (partial start)
+      // tret[2] = second contact (total/annular start)
+      // tret[3] = third contact (total/annular end)
+      // tret[4] = fourth contact (partial end)
+      // tret[5] = sunrise/sunset
+      final maxTime = _julianDayToDateTime(tret[0]);
+
+      // Since findSolarEclipseWhenLoc searches forward, if this syzygy is not an eclipse,
+      // it will return the NEXT eclipse (months/years later).
+      // We must check if the returned eclipse is close to the syzygy date.
+      if (maxTime.difference(globalDate).inDays.abs() > 2) {
+        return null; // The found eclipse is for a future syzygy, not this one
+      }
+
+      final c1 = tret[1] > 0 ? _julianDayToDateTime(tret[1]) : null;
+      final c2 = tret[2] > 0 ? _julianDayToDateTime(tret[2]) : null;
+      final c3 = tret[3] > 0 ? _julianDayToDateTime(tret[3]) : null;
+      final c4 = tret[4] > 0 ? _julianDayToDateTime(tret[4]) : null;
+
+      // attr[0] = fraction of solar diameter covered by moon (magnitude)
+      // attr[1] = ratio of lunar diameter to solar one
+      // attr[2] = fraction of solar disc covered (obscuration)
+      final localMagnitude = attr[0];
+
+      if (localMagnitude <= 0) {
+        return null; // Not visible at this specific observer location
+      }
+
+      EclipseType type = EclipseType.solarPartial;
+      if (attr[1] >= 1.0 && c2 != null && c3 != null) {
+        type = EclipseType.solarTotal;
+      } else if (attr[1] < 1.0 && c2 != null && c3 != null) {
+        type = EclipseType.solarAnnular;
+      }
+
+      return EclipseData(
+        date: maxTime,
+        eclipseType: type,
+        magnitude: localMagnitude,
+        isVisible: true,
+        maxEclipseTime: maxTime,
+        startTime: c1,
+        endTime: c4,
+        partialStartTime: c1,
+        partialEndTime: c4,
+        totalStartTime: c2,
+        totalEndTime: c3,
+        duration: c4 != null && c1 != null ? c4.difference(c1) : null,
+        description:
+            '${type.name} Eclipse (Local Mag: ${localMagnitude.toStringAsFixed(3)})',
+      );
+    } finally {
+      malloc.free(errorBuffer);
     }
-  }
-
-  Future<bool> _isSolarEclipseVisible(
-    DateTime date,
-    GeographicLocation location,
-  ) async {
-    // Simplified: Check if Sun is above horizon at peak time
-    // Real implementation requires Besselian elements or complex geometry (parallax).
-    // SwissEphemeris 'swe_sol_eclipse_where' could be used if available.
-    // For now, checking if it is day time is a good first step.
-
-    // Check if Sun altitude > 0
-    // We don't have altitude directly exposed easily without `swe_azalt`.
-    // But we can approximate by Hour Angle (already implemented in PanchangaService but private).
-    // Let's assume visibility if time is between 6 AM and 6 PM local approx? No.
-    // Let's use the Ascendant/MC calculation logic?
-
-    // Better: We are updating this service, let's use the 'houses' calculation to checks Asc/MC?
-    // Actually, 'houses' gives cusp longitudes.
-
-    // Let's just return true for now if latitude check passes, effectively saying "Eclipse occurring globally".
-    // The method name is `_isSolarEclipseVisible`, which implies local.
-    // For rigorous local visibility, we need Parallax correction.
-    // Given scope, I'll document this limitation.
-
-    return true;
   }
 
   /// Converts DateTime to Julian Day.

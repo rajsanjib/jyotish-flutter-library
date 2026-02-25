@@ -1130,13 +1130,22 @@ class Jyotish {
         .getCurrentHora(dateTime: dateTime, location: location);
   }
 
-  /// Gets all 24 Horas for a complete day.
+  /// Gets Horas for a complete day.
   Future<List<HoraPeriod>> getHorasForDay({
     required DateTime date,
     required GeographicLocation location,
   }) async {
     _ensureInitialized();
     return await _horaService!.getHorasForDay(date: date, location: location);
+  }
+
+  /// Gets the Hora lord for a specific hour of the day.
+  ///
+  /// [dateTime] - The specific time to check
+  /// [sunrise] - Sunrise for the day
+  Planet getHoraLordForHour(DateTime dateTime, DateTime sunrise) {
+    _ensureInitialized();
+    return _muhurtaService!.getHoraLordForHour(dateTime, sunrise);
   }
 
   /// Gets the current Choghadiya.
@@ -1217,6 +1226,23 @@ class Jyotish {
     return _argalaService!.calculateArgalaForHouse(chart, house);
   }
 
+  /// Returns Rashi Drishti (sign aspects) for the chart.
+  ///
+  /// Delegates to JaiminiService which implements the Jaimini sign-aspect rules:
+  /// - Movable signs aspect all Fixed signs (except adjacent)
+  /// - Fixed signs aspect all Movable signs (except adjacent)
+  /// - Dual signs aspect all other Dual signs
+  ///
+  /// [chart] - The Vedic chart
+  /// [activeOnly] - If true, only returns aspects originated from occupied signs
+  List<RashiDrishtiInfo> getRashiAspects(
+    VedicChart chart, {
+    bool activeOnly = true,
+  }) {
+    _ensureInitialized();
+    return _aspectService!.getRashiAspects(chart, activeOnly: activeOnly);
+  }
+
   /// Calculates only active Rashi Drishti (from occupied signs).
   List<RashiDrishtiInfo> getActiveRashiDrishti(VedicChart chart) {
     _ensureInitialized();
@@ -1265,6 +1291,96 @@ class Jyotish {
     } catch (e) {
       throw JyotishException(
         'Failed to calculate sunrise/sunset: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
+  /// Determines planet visibility (heliacal rise/set) at a location.
+  ///
+  /// Heliacal rise: First visible appearance of a planet before sunrise
+  /// Heliacal set: Last visible appearance of a planet after sunset
+  ///
+  /// [planet] - The planet to check
+  /// [date] - The date to check
+  /// [location] - Geographic location
+  ///
+  /// Returns visibility information including whether visible, magnitude, etc.
+  Future<PlanetVisibility> getPlanetVisibility({
+    required Planet planet,
+    required DateTime date,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+    try {
+      return await _ephemerisService!.getPlanetVisibility(
+        planet: planet,
+        date: date,
+        location: location,
+      );
+    } catch (e) {
+      throw JyotishException(
+        'Failed to get planet visibility: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
+  /// Gets high-precision eclipse data for solar and lunar eclipses.
+  ///
+  /// [date] - The date to search for eclipses
+  /// [location] - Geographic location (for solar eclipse visibility)
+  /// [eclipseType] - Type of eclipse to search for (defaults to EclipseType.any)
+  ///
+  /// Returns detailed eclipse information or null if no eclipse.
+  Future<EclipseData?> getEclipseData({
+    required DateTime date,
+    required GeographicLocation location,
+    EclipseType? eclipseType,
+  }) async {
+    _ensureInitialized();
+    try {
+      return await _ephemerisService!.getEclipseData(
+        date: date,
+        location: location,
+        eclipseType: eclipseType ?? EclipseType.any,
+      );
+    } catch (e) {
+      throw JyotishException(
+        'Failed to get eclipse data: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
+  /// Calculates meridian transit (culmination) times for a planet.
+  ///
+  /// Meridian transit occurs when a planet reaches its highest (upper culmination)
+  /// or lowest (lower culmination) point in the sky.
+  ///
+  /// [planet] - The planet to calculate for
+  /// [date] - The date to calculate for
+  /// [location] - Geographic location
+  /// [upperCulmination] - If true, calculates upper culmination; if false, lower culmination
+  ///
+  /// Returns the DateTime of the transit, or null if it doesn't occur.
+  Future<DateTime?> getMeridianTransit({
+    required Planet planet,
+    required DateTime date,
+    required GeographicLocation location,
+    bool upperCulmination = true,
+  }) async {
+    _ensureInitialized();
+    try {
+      return await _ephemerisService!.getMeridianTransit(
+        planet: planet,
+        date: date,
+        location: location,
+        upperCulmination: upperCulmination,
+      );
+    } catch (e) {
+      throw JyotishException(
+        'Failed to calculate meridian transit: ${e.toString()}',
         originalError: e,
       );
     }
@@ -1919,6 +2035,32 @@ class Jyotish {
   Future<Map<Planet, ShadbalaResult>> getShadbala(VedicChart chart) async {
     _ensureInitialized();
     return await _shadbalaService!.calculateShadbala(chart);
+  }
+
+  /// Calculates all 24 Hora lords for a complete day.
+  ///
+  /// Returns a list of 24 planetary hour lords starting from sunrise.
+  /// Index 0 = first Hora after sunrise (daytime Horas 1-12)
+  /// Index 12 = first Hora after sunset (nighttime Horas 13-24)
+  ///
+  /// [date] - The date for which to calculate Horas
+  /// [location] - Geographic location for accurate sunrise/sunset
+  Future<List<Planet>> calculateHoraLordsForDay({
+    required DateTime date,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+    try {
+      return await _shadbalaService!.calculateHoraLordsForDay(
+        date: date,
+        location: location,
+      );
+    } catch (e) {
+      throw JyotishException(
+        'Failed to calculate Hora Lords for day: ${e.toString()}',
+        originalError: e,
+      );
+    }
   }
 
   // ============================================================
@@ -2613,6 +2755,13 @@ class Jyotish {
     return _houseStrengthService!.calculateVimsopakaBala(chart);
   }
 
+  /// Extracts the house strength summary from Bhava Bala results.
+  HouseStrengthSummary getHouseStrengthSummary(
+      Map<int, EnhancedBhavaBalaResult> results) {
+    _ensureInitialized();
+    return _houseStrengthService!.getHouseStrengthSummary(results);
+  }
+
   // ============================================================
   // NADI ASTROLOGY
   // ============================================================
@@ -2651,6 +2800,12 @@ class Jyotish {
     return _progenyService!.analyzeProgeny(chart);
   }
 
+  /// Analyzes the D7 (Saptamsa) chart for progeny.
+  D7Analysis analyzeD7Chart(VedicChart chart) {
+    _ensureInitialized();
+    return _progenyService!.analyzeD7Chart(chart);
+  }
+
   /// Analyzes the strength of the 5th house for children.
   FifthHouseStrength analyzeFifthHouse(VedicChart chart) {
     _ensureInitialized();
@@ -2678,6 +2833,12 @@ class Jyotish {
       VedicChart boyChart, VedicChart girlChart) {
     _ensureInitialized();
     return _compatibilityService!.calculateCompatibility(boyChart, girlChart);
+  }
+
+  /// Calculates Vashya compatibility score (0-2 pts).
+  int calculateVashya(VedicChart boyChart, VedicChart girlChart) {
+    _ensureInitialized();
+    return _compatibilityService!.calculateVashya(boyChart, girlChart);
   }
 
   /// Calculates Guna Milan (Ashtakoota) scores.
@@ -2831,6 +2992,12 @@ class Jyotish {
   Future<ChartStrengthReport> getChartStrengthReport(VedicChart chart) async {
     _ensureInitialized();
     return await _strengthReportService!.generateChartReport(chart);
+  }
+
+  /// Generates a comprehensive ChartStrengthReport for a given chart.
+  /// (Alias for getChartStrengthReport)
+  Future<ChartStrengthReport> getStrengthReport(VedicChart chart) async {
+    return getChartStrengthReport(chart);
   }
 
   /// Extracts a detailed PlanetStrengthReport for a specific planet.

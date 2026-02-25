@@ -7,13 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.6.0] - 2026-02-25
 
-### Enhanced — High-Precision Lunar Eclipse Reporting
+### [2.6.0] - High-Precision Eclipse & API Completeness
+### **Major Eclipse Enhancements (Solar & Lunar)**
+We have vastly improved the calculation of solar and lunar eclipses by exposing and integrating explicit local visibility functions from the underlying Swiss Ephemeris C-library (`swe_sol_eclipse_when_loc`, `swe_lun_eclipse_when`, etc.). 
 
-Completely overhauled the lunar eclipse engine to use Swiss Ephemeris' native
-`swe_lun_eclipse_when` and `swe_lun_eclipse_how` functions. The old syzygy
-binary-search fallback is now only used for solar eclipses.
-
-#### New FFI Bindings (`swisseph_bindings.dart`)
+- **Local Solar Eclipse Precision**: `EphemerisService.getEclipseData()` now accurately determines if a solar eclipse is visible at the provided `GeographicLocation`. It no longer defaults to global visibility, but instead accurately computes local obscuration magnitudes, contact times, and duration.
+- **Accurate Lunar Penumbral Phases**: Fixed bugs where `P4` (Penumbral End) contact times were mapping to incorrect pointers in memory. Lunar Eclipses now capture global `P1` and `P4` accurately alongside the primary `U1` to `U4` umbral contacts.
 - **`calculateLunarEclipseHow`** — wraps `swe_lun_eclipse_how`; returns umbral
   and penumbral magnitudes and 20 eclipse attributes at a given moment.
 - **`findLunarEclipseWhen`** — wraps `swe_lun_eclipse_when`; returns the full

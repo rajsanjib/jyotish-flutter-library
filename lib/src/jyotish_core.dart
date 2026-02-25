@@ -2716,27 +2716,6 @@ class Jyotish {
     _ensureInitialized();
     return _sudarshanChakraService!.calculateSudarshanChakra(chart);
   }
-  // ============================================================
-  // PRASHNA (HORARY) ASTROLOGY
-  // ============================================================
-
-  /// Calculates Arudha Lagna for Prashna based on seed.
-  Rashi calculatePrashnaArudha(int seed) {
-    _ensureInitialized();
-    return _prashnaService!.calculatePrashnaArudha(seed);
-  }
-
-  /// Calculates special Prashna Sphutas (Trisphuta, etc.).
-  Future<PrashnaSphutas> calculatePrashnaSphutas(VedicChart chart) async {
-    _ensureInitialized();
-    return await _prashnaService!.calculateSphutas(chart);
-  }
-
-  /// Calculates Gulika Sphuta for Prashna.
-  Future<double> calculateGulikaSphuta(VedicChart chart) async {
-    _ensureInitialized();
-    return await _prashnaService!.calculateGulikaSphuta(chart);
-  }
 
   // ============================================================
   // HOUSE STRENGTH (VIMSOPAKA BALA)
@@ -3084,6 +3063,40 @@ class Jyotish {
       annualChart: annualChart,
       age: age,
     );
+  }
+
+  // ============================================================
+  // PRASHNA (HORARY) CALCULATIONS
+  // ============================================================
+
+  /// Calculates the Arudha Lagna for a Prashna chart from a seed number.
+  ///
+  /// [seed] - A number (1–108 or 1–249) representing the moment of the query.
+  ///
+  /// Returns the [Rashi] corresponding to the Arudha Lagna.
+  Rashi calculatePrashnaArudha(int seed) {
+    _ensureInitialized();
+    return _prashnaService!.calculatePrashnaArudha(seed);
+  }
+
+  /// Calculates Trisphuta, Chatursphuta, and Panchasphuta for a Prashna chart.
+  ///
+  /// [chart] - A [VedicChart] calculated for the moment of the query.
+  ///
+  /// Returns [PrashnaSphutas] with all three special points.
+  Future<PrashnaSphutas> calculatePrashnaSphutas(VedicChart chart) async {
+    _ensureInitialized();
+    return await _prashnaService!.calculateSphutas(chart);
+  }
+
+  /// Calculates the Gulika Sphuta (Ascendant at Saturn's segment start).
+  ///
+  /// [chart] - A [VedicChart] calculated for the moment of the query.
+  ///
+  /// Returns the Gulika longitude in degrees (0–360).
+  Future<double> calculateGulikaSphuta(VedicChart chart) async {
+    _ensureInitialized();
+    return await _prashnaService!.calculateGulikaSphuta(chart);
   }
 
   // ============================================================

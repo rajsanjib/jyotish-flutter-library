@@ -603,6 +603,15 @@ class EphemerisService {
 
       final (time, type) = syzygy;
 
+      // For Lunar Eclipses, use the superior Swiss Ephemeris built-in functions
+      if (type == EclipseType.lunar ||
+          type == EclipseType.lunarTotal ||
+          type == EclipseType.lunarPartial ||
+          type == EclipseType.lunarPenumbral) {
+        return _getDetailedLunarEclipse(time, location);
+      }
+
+      // Fallback/Legacy for Solar (or we could implement solar built-ins too)
       // Calculate positions at exact syzygy time
       final sunPos = await calculatePlanetPosition(
         planet: Planet.sun,
@@ -618,20 +627,11 @@ class EphemerisService {
         flags: CalculationFlags.defaultFlags(),
       );
 
-      // Check Latitude for Eclipse Limit
-      // Solar Eclipse Limit: ~1.5 degrees (approx 1 degree 30 minutes)
-      // Lunar Eclipse Limit: ~1.0 degrees (approx 1 degree)
-      // These are geometric limits relative to the ecliptic.
       final latAbs = moonPos.latitude.abs();
       final isSolar = type == EclipseType.solar;
       final limit = isSolar ? 1.5 : 1.0;
 
       if (latAbs > limit) {
-        return null; // Moon too far from node
-      }
-
-      // Check user preference
-      if (eclipseType != EclipseType.any && eclipseType != type) {
         return null;
       }
 
@@ -639,9 +639,8 @@ class EphemerisService {
         date: time,
         eclipseType: type,
         magnitude: _calculateEclipseMagnitude(sunPos, moonPos, isSolar),
-        isVisible: isSolar
-            ? await _isSolarEclipseVisible(time, location)
-            : true, // Lunar eclipses visible from anywhere on night side
+        isVisible:
+            isSolar ? await _isSolarEclipseVisible(time, location) : true,
         description: isSolar
             ? 'Solar Eclipse (${latAbs.toStringAsFixed(2)}° from node)'
             : 'Lunar Eclipse (${latAbs.toStringAsFixed(2)}° from node)',
@@ -855,6 +854,88 @@ class EphemerisService {
 
   /// Gets whether the service is initialized.
   bool get isInitialized => _isInitialized;
+
+  /// Calculates detailed lunar eclipse data using Swiss Ephemeris.
+  Future<EclipseData?> _getDetailedLunarEclipse(
+      DateTime date, GeographicLocation location) async {
+    final jd = _dateTimeToJulianDay(date);
+    final errorBuffer = malloc<ffi.Char>(256);
+
+    try {
+      // 1. Get detailed magnitude and duration info
+      final attr = _bindings!.calculateLunarEclipseHow(
+        julianDay: jd,
+        flags: 0,
+        errorBuffer: errorBuffer,
+      );
+
+      if (attr == null) return null;
+
+      // attr[0] = umbral magnitude
+      // attr[1] = penumbral magnitude
+      final umbralMag = attr[0];
+      final penumbralMag = attr[1];
+
+      if (penumbralMag <= 0) return null; // Not even penumbral
+
+      // 2. Get contact times
+      final tret = _bindings!.findLunarEclipseWhen(
+        julianDay: jd - 0.5, // Start searching half a day before
+        flags: 0,
+        eclipseTypeFlags:
+            14, // SE_ECL_ALLTYPES_LUNAR (Total | Partial | Penumbral)
+        backward: false,
+        errorBuffer: errorBuffer,
+      );
+
+      if (tret == null) return null;
+
+      // Swiss Ephemeris tret mapping for lunar eclipse:
+      // tret[0] = maximum eclipse
+      // tret[1] = end of penumbral eclipse (P4)
+      // tret[2] = beginning of partial eclipse (U1)
+      // tret[3] = end of partial eclipse (U4)
+      // tret[4] = beginning of total eclipse (U2)
+      // tret[5] = end of total eclipse (U3)
+      // tret[6] = beginning of penumbral eclipse (P1)
+      final maxTime = _julianDayToDateTime(tret[0]);
+      final p4 = tret[1] > 0 ? _julianDayToDateTime(tret[1]) : null;
+      final u1 = tret[2] > 0 ? _julianDayToDateTime(tret[2]) : null;
+      final u4 = tret[3] > 0 ? _julianDayToDateTime(tret[3]) : null;
+      final u2 = tret[4] > 0 ? _julianDayToDateTime(tret[4]) : null;
+      final u3 = tret[5] > 0 ? _julianDayToDateTime(tret[5]) : null;
+      final p1 = tret[6] > 0 ? _julianDayToDateTime(tret[6]) : null;
+
+      EclipseType type = EclipseType.lunarPenumbral;
+      if (umbralMag >= 1.0) {
+        type = EclipseType.lunarTotal;
+      } else if (umbralMag > 0) {
+        type = EclipseType.lunarPartial;
+      }
+
+      return EclipseData(
+        date: maxTime,
+        eclipseType: type,
+        magnitude: umbralMag,
+        penumbralMagnitude: penumbralMag,
+        isVisible: true,
+        description:
+            '${type.name} Eclipse (Mag: ${umbralMag.toStringAsFixed(3)})',
+        maxEclipseTime: maxTime,
+        startTime: u1 ?? p1,
+        endTime: u4 ?? p4,
+        partialStartTime: u1,
+        partialEndTime: u4,
+        totalStartTime: u2,
+        totalEndTime: u3,
+        penumbralStartTime: p1,
+        penumbralEndTime: p4,
+        duration: u4 != null && u1 != null ? u4.difference(u1) : null,
+      );
+    } finally {
+      malloc.free(errorBuffer);
+    }
+  }
 }
 
 /// Represents planet visibility information.
@@ -945,38 +1026,153 @@ class EclipseData {
     this.startTime,
     this.endTime,
     this.maxEclipseTime,
+    this.penumbralMagnitude,
+    this.partialStartTime,
+    this.partialEndTime,
+    this.totalStartTime,
+    this.totalEndTime,
+    this.penumbralStartTime,
+    this.penumbralEndTime,
+    this.moonrise,
+    this.moonset,
   });
 
-  /// Date of eclipse
+  /// Date (moment of maximum eclipse – UTC)
   final DateTime date;
 
   /// Type of eclipse
   final EclipseType eclipseType;
 
-  /// Eclipse magnitude (0.0 - 1.0+)
+  /// Umbral magnitude (0 = penumbral only, ≥1.0 = total)
   final double magnitude;
 
-  /// Whether visible from location
+  /// Penumbral magnitude (2.18 for this eclipse)
+  final double? penumbralMagnitude;
+
+  /// Whether globally visible (always true for lunar)
   final bool isVisible;
 
-  /// Description
+  /// Human-readable description
   final String description;
 
-  /// Duration of eclipse
+  // ------------------------------------------------------------------
+  // Global contact times (UTC, independent of observer location)
+  // ------------------------------------------------------------------
+
+  /// Duration of the umbral/partial phase (U1→U4)
   final Duration? duration;
 
-  /// Start time
+  /// Umbral start (U1), or penumbral start (P1) when umbra absent
   final DateTime? startTime;
 
-  /// End time
+  /// Umbral end (U4), or penumbral end (P4) when umbra absent
   final DateTime? endTime;
 
-  /// Maximum eclipse time
+  /// Moment of maximum eclipse
   final DateTime? maxEclipseTime;
+
+  /// First contact with umbra – Partial begins (U1)
+  final DateTime? partialStartTime;
+
+  /// Last contact with umbra – Partial ends (U4)
+  final DateTime? partialEndTime;
+
+  /// Total phase begins – Moon fully in umbra (U2)
+  final DateTime? totalStartTime;
+
+  /// Total phase ends (U3)
+  final DateTime? totalEndTime;
+
+  /// First contact with penumbra (P1)
+  final DateTime? penumbralStartTime;
+
+  /// Last contact with penumbra (P4)
+  final DateTime? penumbralEndTime;
+
+  // ------------------------------------------------------------------
+  // Location-specific fields (set when observer location is provided)
+  // ------------------------------------------------------------------
+
+  /// Moonrise at the observer's location (UTC). Null if Moon doesn't rise.
+  final DateTime? moonrise;
+
+  /// Moonset at the observer's location (UTC). Null if Moon doesn't set.
+  final DateTime? moonset;
+
+  // ------------------------------------------------------------------
+  // Derived convenience getters
+  // ------------------------------------------------------------------
 
   /// Whether it's a total eclipse
   bool get isTotal => magnitude >= 1.0;
 
   /// Whether it's a partial eclipse
   bool get isPartial => magnitude > 0.0 && magnitude < 1.0;
+
+  /// Whether it's penumbral-only
+  bool get isPenumbralOnly => magnitude <= 0.0 && (penumbralMagnitude ?? 0) > 0;
+
+  /// The eclipse start visible from the observer's location.
+  ///
+  /// For lunar eclipses: the later of [partialStartTime] and [moonrise].
+  /// This matches the "Lunar Eclipse Starts (With Moonrise)" field
+  /// shown on astrology sites.
+  DateTime? get localStartTime {
+    final globalStart = partialStartTime ?? penumbralStartTime ?? startTime;
+    if (globalStart == null) return null;
+    if (moonrise == null) return globalStart;
+    return moonrise!.isAfter(globalStart) ? moonrise : globalStart;
+  }
+
+  /// The eclipse end visible from the observer's location.
+  ///
+  /// The earlier of [partialEndTime] and [moonset] (or global end if Moon
+  /// stays above the horizon throughout).
+  DateTime? get localEndTime {
+    final globalEnd = partialEndTime ?? penumbralEndTime ?? endTime;
+    if (globalEnd == null) return null;
+    if (moonset == null) return globalEnd;
+    return moonset!.isBefore(globalEnd) ? moonset : globalEnd;
+  }
+
+  /// Duration of the eclipse as visible from the observer's location.
+  Duration? get localDuration {
+    final s = localStartTime;
+    final e = localEndTime;
+    if (s == null || e == null) return null;
+    final d = e.difference(s);
+    return d.isNegative ? Duration.zero : d;
+  }
+
+  // ------------------------------------------------------------------
+  // Sutak (religious fast / abstinence period)
+  // ------------------------------------------------------------------
+
+  bool get _isSolar =>
+      eclipseType == EclipseType.solar ||
+      eclipseType == EclipseType.solarTotal ||
+      eclipseType == EclipseType.solarPartial ||
+      eclipseType == EclipseType.solarAnnular;
+
+  /// Sutak for healthy adults.
+  ///
+  /// Lunar Eclipse: 9 hours (3 Prahars) before umbral contact (U1).
+  /// Solar Eclipse: 12 hours (4 Prahars) before umbral contact (U1).
+  DateTime? get sutakStartTime {
+    final start = partialStartTime ?? startTime;
+    if (start == null) return null;
+    return start.subtract(Duration(hours: _isSolar ? 12 : 9));
+  }
+
+  /// Sutak for children, elderly, and the sick.
+  ///
+  /// 3 hours (1 Prahar) before umbral contact regardless of eclipse type.
+  DateTime? get sutakForSensitive {
+    final start = partialStartTime ?? startTime;
+    if (start == null) return null;
+    return start.subtract(const Duration(hours: 3));
+  }
+
+  /// Sutak ends when the umbral phase ends (U4) – same as [partialEndTime].
+  DateTime? get sutakEndTime => partialEndTime ?? endTime;
 }

@@ -5,6 +5,82 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2026-02-25
+
+### Added — `AstrologicalSystem` Enum & System Clarity
+
+This release formalises the split between the **Traditional Parashari / KN Rao**
+paradigm and the **Krishnamurti Paddhati (KP)** system. Mixing paradigms was a
+source of subtle, silent bugs (e.g., KP Sub-Lord tables computed against Lahiri
+ayanamsa). Library users now get compile-time clarity, runtime guard-rails, and
+**automated configuration** (using `CalculationFlags.kp()` now automatically
+selects the Placidus house system).
+
+#### New: `AstrologicalSystem` enum (`calculation_flags.dart`)
+
+```dart
+enum AstrologicalSystem { traditional, kp }
+```
+
+| Value | Ayanamsa | House System | Node | Use for |
+|---|---|---|---|---|
+| `traditional` | Lahiri | Whole-Sign / Equal | Mean Node (BPHS) | Parashari, KN Rao, BPHS, Jaimini, Shadbala, all Dasha systems |
+| `kp` | KP VP291 | **Placidus** (mandatory) | True Node | KP Sub-Lords, Significators, Ruling Planets, cuspal interlinks |
+
+#### Updated: `CalculationFlags`
+
+- **New field**: `system` (`AstrologicalSystem`, default `traditional`).
+- **New convenience getters**: `isKP` and `isTraditional`.
+- **Updated `copyWith`**: now accepts `system` parameter.
+- **Updated `toString`**: includes `system` name.
+- All factory constructors now explicitly set `system`:
+  - `CalculationFlags.traditionalist()` → `AstrologicalSystem.traditional`
+  - `CalculationFlags.modernPrecision()` → `AstrologicalSystem.traditional`
+  - `CalculationFlags.kp()` → `AstrologicalSystem.kp`
+  - `CalculationFlags.sidereal()`, `.siderealLahiri()`, `.topocentric()`, `.withNodeType()` → `AstrologicalSystem.traditional`
+
+#### Updated: `VedicChart`
+
+- **New getter**: `flags` — returns `calculationFlags ?? CalculationFlags.traditionalist()`.
+  Only the existing nullable `calculationFlags` field is stored; the getter is a
+  zero-breaking-change convenience accessor.
+
+#### Updated: `KPService` — system guard-rails
+
+`calculateKPData()` and `calculateRulingPlanets()` now assert that the supplied
+chart was created with `CalculationFlags.kp()`. A clear `StateError` is thrown
+if a traditional-system chart is passed by mistake:
+
+```
+StateError: calculateKPData requires CalculationFlags.kp()
+(AstrologicalSystem.kp + KP VP291 ayanamsa).
+Received system: traditional, ayanamsa: lahiri.
+Create the chart with CalculationFlags.kp() and houseSystem: "P"
+(Placidus) before calling KP-specific services.
+```
+
+### Migration Guide
+
+Existing code that does **not** pass `CalculationFlags` to `calculateVedicChart`
+continues to work unchanged (defaults to `traditional`).
+
+Existing code that uses `KPService` and passes a non-KP chart will now receive a
+`StateError` at runtime. Fix by ensuring the chart is created with the KP flags:
+
+```dart
+// Before (silently wrong — Lahiri ayanamsa used with KP tables):
+final chart = await jyotish.calculateVedicChart(...);
+final kpData = await jyotish.calculateKPData(chart); // ← no guard-rail
+
+// After (correct — fails fast if wrong flags used):
+final chart = await jyotish.calculateVedicChart(
+  ...,
+  houseSystem: 'P',               // Placidus — mandatory for KP
+  flags: CalculationFlags.kp(),   // ← KP VP291 ayanamsa + system tag
+);
+final kpData = await jyotish.calculateKPData(chart); // ← guard-rail passes
+```
+
 ## [2.4.0] - 2026-02-25
 
 ### Fixed — Missing API Surface & Implementations

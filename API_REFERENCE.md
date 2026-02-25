@@ -11,6 +11,7 @@ A comprehensive API reference for the Jyotish Flutter library - production-ready
   - [Jyotish](#jyotish)
   - [GeographicLocation](#geographiclocation)
   - [CalculationFlags](#calculationflags)
+- [New in v2.5.0 — AstrologicalSystem](#new-in-v250--astrologicalsystem)
 - [New in v2.4.0](#new-in-v240)
   - [Bhava Chalit (Cuspal Chart)](#bhava-chalit-cuspal-chart)
   - [Pancha-Vargeeya Maitri (5-fold Friendship)](#pancha-vargeeya-maitri)
@@ -417,7 +418,7 @@ await jyotish.initialize({String? ephemerisPath});
 > - **Maasa Bala**: Month-lord mapping updated to align correctly with the Drik Siddhanta.
 >
 > **Accuracy Fixes (v2.3.0)**:
-> - **Vashya Dual Signs (Issue 10)**: Sagittarius and Capricorn are now split at the 15° boundary: Sagittarius 0°–15° = Chatushpada, 15°–30° = Manava; Capricorn 0°–15° = Chatushpada, 15°–30° = Jalachara. A `longitude` parameter is now passed to the internal `_getRashiVashya` method.
+> - **Vashya Dual Signs (Issue 10)**: Sagittarius and Capricorn are now split at the 15┬░ boundary: Sagittarius 0┬░ΓÇô15┬░ = Chatushpada, 15┬░ΓÇô30┬░ = Manava; Capricorn 0┬░ΓÇô15┬░ = Chatushpada, 15┬░ΓÇô30┬░ = Jalachara. A `longitude` parameter is now passed to the internal `_getRashiVashya` method.
 > - **Manglik Dosha Cancellations (Issue 11)**: Added 3 additional BPHS/Phaladeepika Parihara rules:
 >   1. Mars in Leo or Aquarius
 >   2. Mars aspected (whole-sign 7th) by Jupiter or Venus
@@ -473,15 +474,15 @@ jyotish.dispose();
 ### Bhava Chalit (Cuspal Chart)
 
 Bhava Chalit redistributes planets to houses based on **mid-cusp boundaries** (midpoint between
-adjacent house cusps) rather than fixed 30° sign edges. This distinction is most significant with
-non-Whole-Sign house systems (Placidus, Koch…) and is key for transit/dasha timing.
+adjacent house cusps) rather than fixed 30┬░ sign edges. This distinction is most significant with
+non-Whole-Sign house systems (Placidus, KochΓÇª) and is key for transit/dasha timing.
 
 ```dart
 // Get the Rashi chart first
 final rashiChart = await jyotish.calculateVedicChart(
   dateTime: birthDate,
   location: location,
-  houseSystem: 'P', // Placidus — most meaningful for Chalit
+  houseSystem: 'P', // Placidus ΓÇö most meaningful for Chalit
 );
 
 // Compute Bhava Chalit
@@ -489,7 +490,7 @@ final chalit = jyotish.getBhavaChalit(rashiChart);
 
 // See which planets shifted
 for (final s in chalit.shiftedPlanets) {
-  print('${s.planet.displayName}: Rashi H${s.rashiHouse} → Chalit H${s.bhavaHouse}');
+  print('${s.planet.displayName}: Rashi H${s.rashiHouse} ΓåÆ Chalit H${s.bhavaHouse}');
 }
 
 // Query a specific planet
@@ -511,10 +512,10 @@ final bhavaNum = chalit.getBhavaForLongitude(56.7);
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `houseNumber` | `int` | 1–12 |
-| `midCuspStart` | `double` | Entry longitude (°) |
-| `midCuspEnd` | `double` | Exit longitude (°) |
-| `cusp` | `double` | Actual house cusp (°) |
+| `houseNumber` | `int` | 1ΓÇô12 |
+| `midCuspStart` | `double` | Entry longitude (┬░) |
+| `midCuspEnd` | `double` | Exit longitude (┬░) |
+| `cusp` | `double` | Actual house cusp (┬░) |
 | `planets` | `List<Planet>` | Planets in this bhava |
 
 ---
@@ -525,13 +526,13 @@ The 5-fold friendship table combines Naisargika (natural) + Tatkalika (temporal)
 into the Panchadha Maitri compound result.
 
 ```dart
-// Flat list — one entry per ordered pair (7×6 = 42 items)
+// Flat list ΓÇö one entry per ordered pair (7├ù6 = 42 items)
 final rels = jyotish.getPlanetaryRelationships(natalChart: chart);
 for (final r in rels) {
-  print('${r.planet.displayName}→${r.otherPlanet.displayName}: ${r.compound.displayName}');
+  print('${r.planet.displayName}ΓåÆ${r.otherPlanet.displayName}: ${r.compound.displayName}');
 }
 
-// Matrix — nested map for O(1) pair lookups
+// Matrix ΓÇö nested map for O(1) pair lookups
 final matrix = jyotish.getPlanetaryRelationshipsMatrix(chart);
 final sunJupiter = matrix[Planet.sun]![Planet.jupiter]!;
 print('Natural: ${sunJupiter.natural}')    // friend
@@ -565,15 +566,15 @@ print('Compound: ${sunJupiter.compound}')  // Panchadha result
 ```dart
 // Get Lahiri ayanamsa for a date
 final lah = await jyotish.getAyanamsa(dateTime: date);
-print('Lahiri: ${lah.toStringAsFixed(4)}°');
+print('Lahiri: ${lah.toStringAsFixed(4)}┬░');
 
 // Compare with KP ayanamsa
 final kp = await jyotish.getAyanamsa(
   dateTime: date,
   mode: SiderealMode.krishnamurtiVP291,
 );
-print('KP: ${kp.toStringAsFixed(4)}°');
-print('Difference: ${(kp - lah).abs().toStringAsFixed(4)}°');
+print('KP: ${kp.toStringAsFixed(4)}┬░');
+print('Difference: ${(kp - lah).abs().toStringAsFixed(4)}┬░');
 ```
 
 | Parameter | Type | Default | Description |
@@ -670,36 +671,43 @@ Controls calculation behavior for planetary positions.
 @Deprecated('Use traditionalist() or modernPrecision()')
 CalculationFlags.defaultFlags();
 
-// Traditional Vedic standard (Mean Node, Lahiri)
+// Traditional Vedic standard (Mean Node, Lahiri) — system: traditional
 CalculationFlags.traditionalist();
 
-// Modern precision standard (True Node, Lahiri)
+// Modern precision standard (True Node, Lahiri) — system: traditional
 CalculationFlags.modernPrecision();
 
-// KP system (Krishnamurti VP291 ayanamsa — correct for KP charts)
+// KP system (Krishnamurti VP291 ayanamsa) — system: kp
+// Automatically selects Placidus ('P') house system in VedicChartService
 CalculationFlags.kp();
 
-// Sidereal with Lahiri ayanamsa
+// Sidereal with Lahiri ayanamsa — system: traditional
 CalculationFlags.siderealLahiri();
 
-// Custom sidereal mode
+// Custom sidereal mode — system: traditional
 CalculationFlags.sidereal(SiderealMode mode);
 
-// Topocentric calculations
+// Topocentric calculations — system: traditional
 CalculationFlags.topocentric();
 
-// Specify node type (Mean vs True Node)
+// Specify node type (Mean vs True Node) — system: traditional
 CalculationFlags.withNodeType(NodeType nodeType);
 ```
 
 > **v2.4.0**: `CalculationFlags.kp()` added — uses `SiderealMode.krishnamurtiVP291` (the
 > correct KP New Ayanamsa). Distinct from `SiderealMode.krishnamurti` (old Krishnamurti).
 > Always use `kp()` for Krishnamurti Paddhati charts.
+>
+> **v2.5.0**: All factory constructors now carry an explicit `AstrologicalSystem` tag.
+> `CalculationFlags.kp()` sets `system: AstrologicalSystem.kp`; all others set
+> `system: AstrologicalSystem.traditional`. Use `.isKP` / `.isTraditional` getters to
+> branch logic at runtime. See [New in v2.5.0](#new-in-v250--astrologicalsystem).
 
 #### Main Constructor
 
 ```dart
 CalculationFlags({
+  AstrologicalSystem system = AstrologicalSystem.traditional, // NEW v2.5.0
   SiderealMode? siderealMode,
   bool useTopocentric = false,
   bool calculateSpeed = true,
@@ -711,7 +719,10 @@ CalculationFlags({
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `siderealMode` | `SiderealMode?` | Ayanamsa mode |
+| `system` | `AstrologicalSystem` | **NEW v2.5.0** — Paradigm: `traditional` or `kp` |
+| `isKP` | `bool` | **NEW v2.5.0** — `true` when `system == kp` |
+| `isTraditional` | `bool` | **NEW v2.5.0** — `true` when `system == traditional` |
+| `siderealMode` | `SiderealMode` | Ayanamsa mode |
 | `useTopocentric` | `bool` | Use topocentric calculations |
 | `calculateSpeed` | `bool` | Calculate planetary speed |
 | `nodeType` | `NodeType` | Mean or True Node |
@@ -773,19 +784,19 @@ final service = VedicChartService(ephemerisService);
 
 | Planet | Sign | MT Range |
 |--------|------|----------|
-| Sun | Leo | 0°–20° |
-| Moon | Taurus | 4°–20° |
-| Mars | Aries | 0°–12° |
-| Mercury | Virgo | 16°–20° |
-| Jupiter | Sagittarius | 0°–10° |
-| Venus | Libra | 0°–15° |
-| Saturn | Aquarius | 0°–20° |
+| Sun | Leo | 0┬░ΓÇô20┬░ |
+| Moon | Taurus | 4┬░ΓÇô20┬░ |
+| Mars | Aries | 0┬░ΓÇô12┬░ |
+| Mercury | Virgo | 16┬░ΓÇô20┬░ |
+| Jupiter | Sagittarius | 0┬░ΓÇô10┬░ |
+| Venus | Libra | 0┬░ΓÇô15┬░ |
+| Saturn | Aquarius | 0┬░ΓÇô20┬░ |
 
 **Debilitation Degree Corrections (v2.3.0)**
 
 | Planet | Old value | Correct value |
 |--------|-----------|---------------|
-| Venus | 165.0° (15° Virgo) | 177.0° (27° Virgo) |
+| Venus | 165.0┬░ (15┬░ Virgo) | 177.0┬░ (27┬░ Virgo) |
 
 **Rahu/Ketu Dignity (v2.3.0)**
 - Both `Planet.meanNode` and `Planet.trueNode` are supported for exaltation and debilitation
@@ -793,7 +804,7 @@ final service = VedicChartService(ephemerisService);
 - **Ketu**: Exalted in Sagittarius, Debilitated in Gemini (opposite Rahu)
 
 **Planetary Relationships (v2.2.0)**
-- Moon→Venus: corrected to **neutral** (0) per BPHS (was incorrectly set to enemy)
+- MoonΓåÆVenus: corrected to **neutral** (0) per BPHS (was incorrectly set to enemy)
 - Rahu/Ketu: full natural relationship sets added for Panchadha Maitri support.
 
 ---
@@ -809,16 +820,16 @@ final service = DashaService();
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `calculateVimshottariDasha({moonLongitude, birthDateTime, levels?, birthTimeUncertainty?})` | `DashaResult` | Vimshottari (120-year) dasha |
-| `calculateYoginiDasha({moonLongitude, birthDateTime, levels?, birthTimeUncertainty?})` | `DashaResult` | Yogini (36-year) dasha — durations computed in **milliseconds** for precision |
+| `calculateYoginiDasha({moonLongitude, birthDateTime, levels?, birthTimeUncertainty?})` | `DashaResult` | Yogini (36-year) dasha ΓÇö durations computed in **milliseconds** for precision |
 | `calculateCharaDasha(rashiChart, {levels?})` | `CharaDashaResult` | Chara (Jaimini) dasha |
-| `getNarayanaDasha(rashiChart, {levels?})` | `NarayanaDashaResult` | Jaimini sign-based dasha — uses reverse count for even signs |
-| `getAshtottariDasha(chart, {scheme?, forceCalculation?, levels?})` | `DashaResult` | 108-year cycle dasha — supports nested Antardashas |
-| `getKalachakraDasha(chart)` | `KalachakraDashaResult` | Nakshatra-based dasha — `balanceOfFirstDasha` computed from Moon's actual pada position |
+| `getNarayanaDasha(rashiChart, {levels?})` | `NarayanaDashaResult` | Jaimini sign-based dasha ΓÇö uses reverse count for even signs |
+| `getAshtottariDasha(chart, {scheme?, forceCalculation?, levels?})` | `DashaResult` | 108-year cycle dasha ΓÇö supports nested Antardashas |
+| `getKalachakraDasha(chart)` | `KalachakraDashaResult` | Nakshatra-based dasha ΓÇö `balanceOfFirstDasha` computed from Moon's actual pada position |
 
 > **Accuracy Fixes (v2.3.0)**:
 > - **Yogini Dasha (Issue 8)**: Antardasha and Pratyantardasha durations now accumulated in milliseconds to eliminate day-rounding drift across sub-period chains.
 > - **Kalachakra Dasha (Issue 12)**: `DashaResult.balanceOfFirstDasha` is now the actual remaining days calculated from the Moon's proportional position within its pada (was hardcoded to 0).
-> - **Narayana Dasha (Issue 13)**: The 12-sign sequence now follows consecutive zodiacal order (forward for odd starting signs, reverse for even) per the Jaimini rule, replacing the incorrect `i × 6` modulo formula.
+> - **Narayana Dasha (Issue 13)**: The 12-sign sequence now follows consecutive zodiacal order (forward for odd starting signs, reverse for even) per the Jaimini rule, replacing the incorrect `i ├ù 6` modulo formula.
 
 ---
 
@@ -891,19 +902,19 @@ final service = PanchangaService(ephemerisService);
 | `getNakshatra({dateTime, location})` | `Future<NakshatraInfo>` | Moon's nakshatra |
 | `getTithiEndTime({dateTime, location, accuracyThreshold?})` | `Future<DateTime>` | Precise Tithi end |
 | `calculateAbhijitMuhurta({date, location})` | `Future<AbhijitMuhurta>` | 8th Muhurta (1/15th of daytime) |
-| `calculateBrahmaMuhurta({date, location})` | `Future<BrahmaMuhurta>` | 14th Muhurta of night (uses previous sunset → today sunrise) |
+| `calculateBrahmaMuhurta({date, location})` | `Future<BrahmaMuhurta>` | 14th Muhurta of night (uses previous sunset ΓåÆ today sunrise) |
 | `calculateNighttimeInauspicious({date, location})` | `Future<NighttimeInauspiciousPeriods>` | Night Rahu/Gulika/Yamagandam |
 | `getTithiJunction({targetTithiNumber, startDate, location})` | `Future<DateTime>` | Microsecond-precision Tithi change |
 | `getMoonPhaseDetails({dateTime, location})` | `Future<MoonPhaseDetails>` | Comprehensive lunar data |
 
 > **API Change (v2.1.0)**: `TithiInfo.tithiNames` has been replaced.
 > Use `TithiInfo.nameFromNumber(int tithiNumber)` to get the correct name for
-> any Tithi (1–30). This correctly returns **"Purnima"** for Shukla Tithi 15
+> any Tithi (1ΓÇô30). This correctly returns **"Purnima"** for Shukla Tithi 15
 > and **"Amavasya"** for Krishna Tithi 15. Direct access via `shuklaTithiNames`
 > and `krishnaTithiNames` lists is also available.
 >
 > **API Change (v2.1.0)**: `MoonPhaseDetails.illumination` now uses the correct
-> cosine formula. New Moon (elongation=0°) = **0%**, Full Moon (180°) = **100%**.
+> cosine formula. New Moon (elongation=0┬░) = **0%**, Full Moon (180┬░) = **100%**.
 > The old formula was inverted.
 
 
@@ -955,11 +966,11 @@ final service = AspectService();
 
 | Preset | `useWholeSignAspects` | Description |
 |--------|-----------------------|-------------|
-| `AspectConfig.vedic` *(default)* | `true` | Sign-to-sign Parashari aspects — planets aspect the entire sign, strength = 1.0 |
+| `AspectConfig.vedic` *(default)* | `true` | Sign-to-sign Parashari aspects ΓÇö planets aspect the entire sign, strength = 1.0 |
 | `AspectConfig.western` | `false` | Degree + orb system for Western / KP use |
 
 ```dart
-// Vedic (whole-sign) — default
+// Vedic (whole-sign) ΓÇö default
 final aspects = service.calculateAspects(positions);
 
 // Western/KP (degree-based)
@@ -1057,8 +1068,8 @@ final service = ShadbalaService(ephemerisService);
 5. **Naisargika Bala** - Natural strength
 6. **Drik Bala** - Aspectual strength (linear interpolation, partial aspects)
 
-> **Accuracy Fix (v2.3.0) — Paksha Bala (Issue 9)**:
-> Paksha Bala now correctly peaks for **benefics** (Jupiter, Venus) at Full Moon (elongation = 180°) and for **malefics** (Sun, Mars, Saturn) at New Moon (elongation = 0°), per BPHS. The previous formula was using a simple linear elongation ratio which gave malefics maximum strength at Full Moon — the opposite of classical texts. Moon's own Paksha Bala still peaks at Full Moon irrespective of paksha type.
+> **Accuracy Fix (v2.3.0) ΓÇö Paksha Bala (Issue 9)**:
+> Paksha Bala now correctly peaks for **benefics** (Jupiter, Venus) at Full Moon (elongation = 180┬░) and for **malefics** (Sun, Mars, Saturn) at New Moon (elongation = 0┬░), per BPHS. The previous formula was using a simple linear elongation ratio which gave malefics maximum strength at Full Moon ΓÇö the opposite of classical texts. Moon's own Paksha Bala still peaks at Full Moon irrespective of paksha type.
 
 ---
 
@@ -1066,29 +1077,35 @@ final service = ShadbalaService(ephemerisService);
 
 Krishnamurti Paddhati (KP) system calculations.
 
+> **v2.5.0 — System Guard-Rail**: `calculateKPData()` and `calculateRulingPlanets()` now
+> assert that the supplied chart was created with `CalculationFlags.kp()`. A descriptive
+> `StateError` is thrown if a traditional-system chart is passed by mistake. This prevents
+> the silent bug of KP Sub-Lord tables being calculated against Lahiri ayanamsa.
+> See [New in v2.5.0](#new-in-v250--astrologicalsystem) for the migration guide.
+
 ```dart
 final service = KPService(ephemerisService);
 ```
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `calculateKPData(natalChart, {useNewAyanamsa?})` | `Future<KPCalculations>` | Complete KP data with cusp-based ABCD significators |
+| `calculateKPData(natalChart, {useNewAyanamsa?})` | `Future<KPCalculations>` | Complete KP data with cusp-based ABCD significators. **Requires KP flags (v2.5.0).** |
 | `getSubLord(longitude)` | `Planet` | Sub-Lord for longitude |
 | `getSubSubLord(longitude)` | `Planet` | Sub-Sub-Lord |
 | `getHouseGroupSignificators(significators)` | `KPHouseGroupSignificators` | House group significators |
 | `calculateTransitKPDivisions(transitPositions)` | `Map<Planet, KPDivision>` | Transit KP divisions |
 | `compareTransitToNatal({natalKP, transitDivisions})` | `List<KPTransitComparison>` | Sync transit Sub-Lords against natal; sorted by match strength |
-| `calculateRulingPlanets(chart, {useNewAyanamsa?})` | `Future<KPRulingPlanets>` | Seven KP Ruling Planets (Day, Asc Sign/Star/Sub, Moon Sign/Star/Sub) |
+| `calculateRulingPlanets(chart, {useNewAyanamsa?})` | `Future<KPRulingPlanets>` | Seven KP Ruling Planets (Day, Asc Sign/Star/Sub, Moon Sign/Star/Sub). **Requires KP flags (v2.5.0).** |
 
 **ABCD Significator Grades**:
 - **A**: Houses *occupied* by the planet's Sign Lord  
 - **B**: Houses *occupied* by the planet's Star Lord  
-- **C**: Houses *owned* by the planet (based on actual chart cusps — v2.2.0 fix)  
-- **D**: Houses *owned* by the planet's Sign Lord (based on actual chart cusps — v2.2.0 fix)  
+- **C**: Houses *owned* by the planet (based on actual chart cusps ΓÇö v2.2.0 fix)  
+- **D**: Houses *owned* by the planet's Sign Lord (based on actual chart cusps ΓÇö v2.2.0 fix)  
 
 **Transit Comparison** (`compareTransitToNatal`):
 - Checks Star-Lord match, Sub-Lord match, and common house significators
-- Returns list sorted by `matchStrength` (0–3)
+- Returns list sorted by `matchStrength` (0ΓÇô3)
 - `isActive` is true when any of the three triggers fire
 
 **Ruling Planets** (`calculateRulingPlanets` / `getKPRulingPlanets`):
@@ -1409,6 +1426,8 @@ Complete Vedic astrology chart data.
 | `houses` | `HouseSystem` | House cusps |
 | `rahu` | `VedicPlanetInfo` | Rahu position |
 | `ketu` | `KetuPosition` | Ketu position |
+| `calculationFlags` | `CalculationFlags?` | Stored flags (nullable, legacy) |
+| `flags` | `CalculationFlags` | **NEW v2.5.0** — Non-nullable; defaults to `traditionalist()` for old charts |
 
 | Method | Returns | Description |
 |--------|---------|-------------|
@@ -1424,7 +1443,7 @@ Calculated position of a celestial body.
 | Property | Type | Description |
 |----------|------|-------------|
 | `planet` | `Planet` | The planet |
-| `longitude` | `double` | Ecliptic longitude (0-360°) |
+| `longitude` | `double` | Ecliptic longitude (0-360┬░) |
 | `latitude` | `double` | Ecliptic latitude |
 | `distance` | `double` | Distance from Earth (AU) |
 | `longitudeSpeed` | `double` | Speed (degrees/day) |
@@ -1749,14 +1768,14 @@ Enum for the 8 Gowri periods.
 
 | Value | Sanskrit | Auspicious | Description |
 |-------|----------|------------|-------------|
-| `amrit` | அமிர்தம் | Yes | Nectar, success in all endeavors |
-| `rogam` | ரோகம் | No | Disease, suffering |
-| `uthi` | உதி | Yes | Progress, upliftment |
-| `labhamu` | லாபம் | Yes | Gain, profit |
-| `dhana` | தhana | Yes | Wealth, prosperity |
-| `nirkku` | நிர்க்கு | No | Obstacles, impediments |
-| `visham` | விஷம் | No | Poison, danger |
-| `soolai` | சூலை | No | Distress, pain |
+| `amrit` | α«àα««α«┐α«░α»ìα«ñα««α»ì | Yes | Nectar, success in all endeavors |
+| `rogam` | α«░α»ïα«òα««α»ì | No | Disease, suffering |
+| `uthi` | α«ëα«ñα«┐ | Yes | Progress, upliftment |
+| `labhamu` | α«▓α«╛α«¬α««α»ì | Yes | Gain, profit |
+| `dhana` | α«ñhana | Yes | Wealth, prosperity |
+| `nirkku` | α«¿α«┐α«░α»ìα«òα»ìα«òα»ü | No | Obstacles, impediments |
+| `visham` | α«╡α«┐α«╖α««α»ì | No | Poison, danger |
+| `soolai` | α«Üα»éα«▓α»ê | No | Distress, pain |
 
 ---
 
@@ -2060,10 +2079,10 @@ standard Vedic texts. Scores are added to produce the total out of 36.
 |-------|------------|---------------------|
 | `varna` | 1 | BPHS 4-tier: Brahmin / Kshatriya / Vaishya / Shudra per nakshatra |
 | `vashya` | 2 | 5-category: Manava / Vanachara / Chatushpada / Jalajiva / Keeta per nakshatra |
-| `tara` | 3 | Count from boy's nakshatra to girl's; groups of 9 (birth, sampat, vipat…) |
+| `tara` | 3 | Count from boy's nakshatra to girl's; groups of 9 (birth, sampat, vipatΓÇª) |
 | `yoni` | 4 | Animal pair per nakshatra (all 27 correctly mapped); friend/enemy pairs scored |
 | `grahaMaitri` | 5 | Natural friendship between Moon sign lords per BPHS friendship table |
-| `gana` | 6 | BPHS: Deva / Manushya / Rakshasa — same=6, Deva+Manushya=3, Rakshasa=0 |
+| `gana` | 6 | BPHS: Deva / Manushya / Rakshasa ΓÇö same=6, Deva+Manushya=3, Rakshasa=0 |
 | `bhakoot` | 7 | No dosha = 7; Dosha (2/12, 5/9, or 6/8 moon-sign relationship) = 0 |
 | `nadi` | 8 | Cyclic modulo-3 grouping: 0% same Nadi (Dosha) = 0, different = 8 |
 
@@ -2082,6 +2101,79 @@ This differs from the old sequential block-of-9 approach which was incorrect.
 | `good` | 18-24 |
 | `average` | 12-17 |
 | `poor` | 0-11 |
+
+---
+
+---
+
+## New in v2.5.0 — AstrologicalSystem
+
+This release formalises the split between the **Traditional Parashari / KN Rao** paradigm
+and the **Krishnamurti Paddhati (KP)** system at the API level.
+
+### `AstrologicalSystem` enum
+
+```dart
+enum AstrologicalSystem { traditional, kp }
+```
+
+| Value | Ayanamsa | House System | Node | Exclusive services |
+|---|---|---|---|---|
+| `traditional` | Lahiri | Whole-Sign / Equal | Mean Node (BPHS) | All except `KPService` |
+| `kp` | KP VP291 | **Placidus** (auto-selected) | True Node | `KPService` |
+
+### What changed in `CalculationFlags`
+
+| New member | Type | Description |
+|---|---|---|
+| `system` | `AstrologicalSystem` | The paradigm this flag set describes |
+| `isKP` | `bool` | Shorthand: `system == kp` |
+| `isTraditional` | `bool` | Shorthand: `system == traditional` |
+
+All factory constructors now declare their system explicitly.  
+`CalculationFlags.kp()` → `AstrologicalSystem.kp`  
+All other factories → `AstrologicalSystem.traditional`
+
+`copyWith` and `toString` are updated accordingly.
+
+### What changed in `VedicChart`
+
+- New **`flags`** getter (`CalculationFlags`, non-nullable). Returns `calculationFlags`
+  or `CalculationFlags.traditionalist()` for backwards-compatible charts.
+
+### KPService guard-rails
+
+`calculateKPData()` and `calculateRulingPlanets()` now throw `StateError` if the chart
+was not created with `CalculationFlags.kp()`. Error message includes the received
+system and ayanamsa to guide the fix.
+
+### Migration guide
+
+```dart
+// ❌ Before — silently wrong (Lahiri ayanamsa with KP Sub-Lord tables)
+final chart = await jyotish.calculateVedicChart(dateTime: dt, location: loc);
+final kp = await jyotish.calculateKPData(chart); // no guard-rail
+
+// ✅ After — fails fast, clear error if wrong
+final chart = await jyotish.calculateVedicChart(
+  dateTime: dt,
+  location: loc,
+  houseSystem: 'P',              // Placidus — mandatory for KP
+  flags: CalculationFlags.kp(),  // KP VP291 ayanamsa + system tag
+);
+final kp = await jyotish.calculateKPData(chart); // guard-rail passes
+```
+
+### Checking the system at runtime
+
+```dart
+if (chart.flags.isKP) {
+  // safe to call any KPService method
+}
+if (chart.flags.isTraditional) {
+  // safe to call Parashari / Jaimini / Shadbala methods
+}
+```
 
 ---
 
@@ -2189,18 +2281,18 @@ The 12 lunar months.
 
 | Value | Sanskrit | Period |
 |-------|----------|--------|
-| `chaitra` | चैत्र | March-April |
-| `vaishakha` | वैशाख | April-May |
-| `jyeshtha` | ज्येष्ठ | May-June |
-| `ashadha` | आषाढ़ | June-July |
-| `shravana` | श्रावण | July-August |
-| `bhadrapada` | भाद्रपद | August-September |
-| `ashwina` | अश्विन | September-October |
-| `kartika` | कार्तिक | October-November |
-| `margashirsha` | मार्गशीर्ष | November-December |
-| `pausha` | पौष | December-January |
-| `magha` | माघ | January-February |
-| `phalguna` | फाल्गुन | February-March |
+| `chaitra` | αñÜαÑêαññαÑìαñ░ | March-April |
+| `vaishakha` | αñ╡αÑêαñ╢αñ╛αñû | April-May |
+| `jyeshtha` | αñ£αÑìαñ»αÑçαñ╖αÑìαñá | May-June |
+| `ashadha` | αñåαñ╖αñ╛αñóαñ╝ | June-July |
+| `shravana` | αñ╢αÑìαñ░αñ╛αñ╡αñú | July-August |
+| `bhadrapada` | αñ¡αñ╛αñªαÑìαñ░αñ¬αñª | August-September |
+| `ashwina` | αñàαñ╢αÑìαñ╡αñ┐αñ¿ | September-October |
+| `kartika` | αñòαñ╛αñ░αÑìαññαñ┐αñò | October-November |
+| `margashirsha` | αñ«αñ╛αñ░αÑìαñùαñ╢αÑÇαñ░αÑìαñ╖ | November-December |
+| `pausha` | αñ¬αÑîαñ╖ | December-January |
+| `magha` | αñ«αñ╛αñÿ | January-February |
+| `phalguna` | αñ½αñ╛αñ▓αÑìαñùαÑüαñ¿ | February-March |
 
 ---
 

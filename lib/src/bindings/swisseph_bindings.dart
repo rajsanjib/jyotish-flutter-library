@@ -110,6 +110,40 @@ class SwissEphBindings {
         ffi.Pointer<ffi.Char>,
       )>('swe_rise_trans');
 
+  late final _sweLunEclipseHow = _lib.lookupFunction<
+      ffi.Int32 Function(
+        ffi.Double,
+        ffi.Int32,
+        ffi.Pointer<ffi.Double>,
+        ffi.Pointer<ffi.Double>,
+        ffi.Pointer<ffi.Char>,
+      ),
+      int Function(
+        double,
+        int,
+        ffi.Pointer<ffi.Double>,
+        ffi.Pointer<ffi.Double>,
+        ffi.Pointer<ffi.Char>,
+      )>('swe_lun_eclipse_how');
+
+  late final _sweLunEclipseWhen = _lib.lookupFunction<
+      ffi.Int32 Function(
+        ffi.Double,
+        ffi.Int32,
+        ffi.Int32,
+        ffi.Pointer<ffi.Double>,
+        ffi.Int32,
+        ffi.Pointer<ffi.Char>,
+      ),
+      int Function(
+        double,
+        int,
+        int,
+        ffi.Pointer<ffi.Double>,
+        int,
+        ffi.Pointer<ffi.Char>,
+      )>('swe_lun_eclipse_when');
+
   /// Loads the appropriate Swiss Ephemeris library for the platform.
   ffi.DynamicLibrary _loadLibrary() {
     // Try custom path first (from environment or development location)
@@ -355,6 +389,70 @@ class SwissEphBindings {
     } finally {
       malloc.free(geoposPtr);
       malloc.free(resultPtr);
+    }
+  }
+
+  /// Calculates details for a lunar eclipse at a given time.
+  List<double>? calculateLunarEclipseHow({
+    required double julianDay,
+    required int flags,
+    required ffi.Pointer<ffi.Char> errorBuffer,
+  }) {
+    final attrPtr = malloc<ffi.Double>(20);
+    try {
+      final returnCode = _sweLunEclipseHow(
+        julianDay,
+        flags,
+        ffi.Pointer.fromAddress(
+            0), // geopos not used for lunar eclipse (global)
+        attrPtr,
+        errorBuffer,
+      );
+
+      if (returnCode < 0) {
+        return null;
+      }
+
+      final result = <double>[];
+      for (var i = 0; i < 20; i++) {
+        result.add(attrPtr[i]);
+      }
+      return result;
+    } finally {
+      malloc.free(attrPtr);
+    }
+  }
+
+  /// Finds the next or previous lunar eclipse.
+  List<double>? findLunarEclipseWhen({
+    required double julianDay,
+    required int flags,
+    required int eclipseTypeFlags,
+    required bool backward,
+    required ffi.Pointer<ffi.Char> errorBuffer,
+  }) {
+    final tretPtr = malloc<ffi.Double>(20);
+    try {
+      final returnCode = _sweLunEclipseWhen(
+        julianDay,
+        flags,
+        eclipseTypeFlags,
+        tretPtr,
+        backward ? 1 : 0,
+        errorBuffer,
+      );
+
+      if (returnCode < 0) {
+        return null;
+      }
+
+      final result = <double>[];
+      for (var i = 0; i < 20; i++) {
+        result.add(tretPtr[i]);
+      }
+      return result;
+    } finally {
+      malloc.free(tretPtr);
     }
   }
 }

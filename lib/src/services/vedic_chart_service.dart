@@ -28,7 +28,12 @@ class VedicChartService {
   }) async {
     try {
       // Use provided flags or default Lahiri ayanamsa (sidereal is now default)
-      flags ??= CalculationFlags.defaultFlags();
+      flags ??= CalculationFlags.traditionalist();
+
+      // Automate house system selection for KP (v2.5.0)
+      if (flags.isKP) {
+        houseSystem = 'P'; // Placidus is mandatory for KP
+      }
 
       // Calculate Ascendant and house cusps
       final houses = await _calculateHouses(

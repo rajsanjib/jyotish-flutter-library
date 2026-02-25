@@ -309,8 +309,15 @@ class VedicChart {
   /// Ketu (South Node) position
   final KetuPosition ketu;
 
-  /// Flags used to calculate the chart (preserves ayanamsa choice)
+  /// Flags used to calculate the chart (preserves ayanamsa choice).
   final CalculationFlags? calculationFlags;
+
+  /// The [CalculationFlags] used to calculate this chart.
+  ///
+  /// Defaults to [CalculationFlags.traditionalist()] for charts created
+  /// before the [system] field was introduced (backwards-compatible).
+  CalculationFlags get flags =>
+      calculationFlags ?? CalculationFlags.traditionalist();
 
   /// Gets the Ascendant sign
   String get ascendantSign => houses.ascendantSign;

@@ -7,27 +7,50 @@ import 'ephemeris_service.dart';
 
 /// Service for calculating KP (Krishnamurti Paddhati) astrology elements.
 ///
-/// KP astrology is a system that uses a specific ayanamsa (KP New VP291)
-/// and subdivides the zodiac into smaller divisions called Sub-Lords.
+/// **System requirement**: All methods in this service expect charts and flags
+/// created with [CalculationFlags.kp()] (KP VP291 ayanamsa + Placidus houses).
+/// Passing a chart computed under a different system will throw a [StateError].
+///
+/// KP astrology subdivides each Nakshatra into 9 Sub-Lords (Sign → Star → Sub
+/// → Sub-Sub), giving 249 divisions across the zodiac.
 class KPService {
   KPService(this._ephemerisService);
 
   final EphemerisService _ephemerisService;
 
+  // ── Guard-rail ─────────────────────────────────────────────────────────────
+
+  /// Throws [StateError] if [flags] do not declare [AstrologicalSystem.kp].
+  ///
+  /// Call this at the top of any public method that is KP-exclusive.
+  void _assertKPSystem(CalculationFlags flags, String methodName) {
+    if (!flags.isKP) {
+      throw StateError(
+        '$methodName requires CalculationFlags.kp() '
+        '(AstrologicalSystem.kp + KP VP291 ayanamsa). '
+        'Received system: ${flags.system.name}, '
+        'ayanamsa: ${flags.siderealMode.name}. '
+        'Create the chart with CalculationFlags.kp() and houseSystem: "P" '
+        '(Placidus) before calling KP-specific services.',
+      );
+    }
+  }
+
   /// Calculates complete KP data for a birth chart.
   ///
-  /// [natalChart] - The Vedic birth chart
-  /// [useNewAyanamsa] - Whether to use KP New VP291 (true) or old KP ayanamsa (false)
+  /// [natalChart] - The Vedic birth chart. **Must** have been calculated
+  ///   with [CalculationFlags.kp()] and Placidus houses (`houseSystem: 'P'`).
+  /// [useNewAyanamsa] - Whether to use KP New VP291 (true, default)
+  ///   or old KP ayanamsa (false).
   ///
   /// Returns [KPCalculations] with Sub-Lords and significators.
   ///
-  /// **Important**: The natal chart is typically calculated with Lahiri ayanamsa.
-  /// This method adjusts house cusps and planet positions to use the correct
-  /// KP ayanamsa (VP291 or old KP) before calculating sub-lords.
+  /// Throws [StateError] if [natalChart.flags] is not [AstrologicalSystem.kp].
   Future<KPCalculations> calculateKPData(
     VedicChart natalChart, {
     bool useNewAyanamsa = true,
   }) async {
+    _assertKPSystem(natalChart.flags, 'calculateKPData');
     // Calculate KP ayanamsa using precise time-varying formula from Swiss Ephemeris
     final kpAyanamsa = await _calculateKPAyanamsa(
       natalChart.dateTime,
@@ -483,6 +506,7 @@ class KPService {
     VedicChart chart, {
     bool useNewAyanamsa = true,
   }) async {
+    _assertKPSystem(chart.flags, 'calculateRulingPlanets');
     final queryDateTime = chart.dateTime;
 
     // 1. Day Lord — use weekday
@@ -550,43 +574,54 @@ class KPService {
   // ============================================================
 
   /// Generates the complete KP 249 Sub-Lord table.
-  /// 
+  ///
   /// KP astrology divides the 27 Nakshatras into 9 Sub-Lords (27 * 9 = 243).
   /// Because 6 Sub-Lords cross zodiac sign boundaries, they are split,
   /// resulting in exactly 249 divisions.
   List<KPDivisionEntry> generateKPDivisionTable() {
     final table = <KPDivisionEntry>[];
     var index = 1;
-    
+
     for (var star = 1; star <= 27; star++) {
       final starStart = (star - 1) * (360.0 / 27);
       var currentSubStart = starStart;
-      
+
       final dashaPeriods = [7.0, 20.0, 6.0, 10.0, 7.0, 18.0, 16.0, 19.0, 17.0];
       const totalPeriods = 120.0;
       final starSpan = 360.0 / 27;
 
       final starLord = KPPlanetOwnership.getStarLord(star);
-      final planets = [Planet.ketu, Planet.venus, Planet.sun, Planet.moon, Planet.mars, Planet.meanNode, Planet.jupiter, Planet.saturn, Planet.mercury];
+      final planets = [
+        Planet.ketu,
+        Planet.venus,
+        Planet.sun,
+        Planet.moon,
+        Planet.mars,
+        Planet.meanNode,
+        Planet.jupiter,
+        Planet.saturn,
+        Planet.mercury
+      ];
       // Note: in _calculateSubLord we had meanNode. Make sure starLord logic uses meanNode for Rahu.
-      final searchStarLord = (starLord == Planet.trueNode) ? Planet.meanNode : starLord;
+      final searchStarLord =
+          (starLord == Planet.trueNode) ? Planet.meanNode : starLord;
       final startPlanetIndex = planets.indexOf(searchStarLord);
-      
+
       for (var i = 0; i < 9; i++) {
         final ptIndex = (startPlanetIndex + i) % 9;
         final subLord = planets[ptIndex];
-        
+
         final subSpan = starSpan * (dashaPeriods[ptIndex] / totalPeriods);
         final subEnd = currentSubStart + subSpan;
-        
-        // Round to avoid floating point precision issues near boundary 
+
+        // Round to avoid floating point precision issues near boundary
         final signStart = ((currentSubStart + 0.000001) / 30).floor();
         final signEnd = ((subEnd - 0.000001) / 30).floor();
-        
+
         if (signStart != signEnd && (subEnd % 30).abs() > 0.0001) {
           // Crosses boundary, split into two
           final boundary = signEnd * 30.0;
-          
+
           final div1 = _calculateKPDivision(currentSubStart, null);
           table.add(KPDivisionEntry(
             index: index++,
@@ -598,7 +633,7 @@ class KPService {
             startLongitude: currentSubStart,
             endLongitude: boundary,
           ));
-          
+
           final div2 = _calculateKPDivision(boundary + 0.000001, null);
           table.add(KPDivisionEntry(
             index: index++,
@@ -623,11 +658,11 @@ class KPService {
             endLongitude: subEnd,
           ));
         }
-        
+
         currentSubStart = subEnd;
       }
     }
-    
+
     return table;
   }
 

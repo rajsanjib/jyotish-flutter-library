@@ -66,6 +66,13 @@ class PanchangaService {
     // Calculate Vara (Day Lord) using sunrise boundary
     final vara = _calculateVara(dateTime, sunrise);
 
+    // Calculate Moonrise and Moonset
+    final (moonrise, moonset) = await _ephemerisService.getPlanetRiseSet(
+      planet: Planet.moon,
+      date: dateTime,
+      location: location,
+    );
+
     return Panchanga(
       dateTime: dateTime,
       location: '${location.latitude}, ${location.longitude}',
@@ -76,6 +83,8 @@ class PanchangaService {
       vara: vara,
       sunrise: sunrise,
       sunset: sunset,
+      moonrise: moonrise,
+      moonset: moonset,
     );
   }
 

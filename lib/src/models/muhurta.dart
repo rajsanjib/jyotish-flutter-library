@@ -246,6 +246,8 @@ class InauspiciousPeriods {
     this.rahukalam,
     this.gulikalam,
     this.yamagandam,
+    this.durMuhurtam,
+    this.varjyam,
   });
 
   /// Rahukalam (Rahu period)
@@ -257,11 +259,29 @@ class InauspiciousPeriods {
   /// Yamagandam (Yama period)
   final TimePeriod? yamagandam;
 
+  /// Dur Muhurtam (inauspicious portions of the day)
+  final List<TimePeriod>? durMuhurtam;
+
+  /// Varjyam (inauspicious portion of the Nakshatra)
+  final TimePeriod? varjyam;
+
   /// Checks if a given time is inauspicious
   bool isInauspicious(DateTime time) {
+    bool inDurMuhurtam = false;
+    if (durMuhurtam != null) {
+      for (final period in durMuhurtam!) {
+        if (period.contains(time)) {
+          inDurMuhurtam = true;
+          break;
+        }
+      }
+    }
+
     return (rahukalam?.contains(time) ?? false) ||
         (gulikalam?.contains(time) ?? false) ||
-        (yamagandam?.contains(time) ?? false);
+        (yamagandam?.contains(time) ?? false) ||
+        (varjyam?.contains(time) ?? false) ||
+        inDurMuhurtam;
   }
 
   /// Gets which inauspicious period is active
@@ -522,4 +542,49 @@ class MuhurtaConstants {
       ChoghadiyaType.labh
     ],
   };
+}
+
+/// Information about Disha Shool (Directional Flaw).
+class DishashoolInfo {
+  const DishashoolInfo({
+    required this.direction,
+    required this.weekday,
+  });
+
+  /// The unfavorable direction for travel
+  final String direction;
+
+  /// The weekday number (0-6)
+  final int weekday;
+
+  /// Mapping of weekday to unfavorable direction
+  static const Map<int, String> dishashoolByWeekday = {
+    0: 'West', // Sunday
+    1: 'East', // Monday
+    2: 'North', // Tuesday
+    3: 'North', // Wednesday
+    4: 'South', // Thursday
+    5: 'West', // Friday
+    6: 'East', // Saturday
+  };
+}
+
+/// Information about Rahu Vasa (Residence of Rahu).
+class RahuVasaInfo {
+  const RahuVasaInfo({
+    required this.location,
+  });
+
+  /// Where Rahu is residing
+  final String location;
+}
+
+/// Information about Chandra Vasa (Residence of Moon).
+class ChandraVasaInfo {
+  const ChandraVasaInfo({
+    required this.location,
+  });
+
+  /// Where Chandra (Moon) is residing
+  final String location;
 }

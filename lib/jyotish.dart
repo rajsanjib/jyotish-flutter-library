@@ -105,3 +105,11 @@ export 'src/models/bhava_chalit.dart';
 export 'src/services/bhava_chalit_service.dart';
 // Planetary Relationships (Pancha-Vargeeya Maitri)
 export 'src/services/planetary_relationship_service.dart';
+
+// New Panchang Features
+export 'src/models/chandrabalam.dart';
+export 'src/models/tarabalam.dart';
+export 'src/models/ritual_elements.dart';
+export 'src/services/panchang_strength_service.dart';
+export 'src/services/udaya_lagna_service.dart';
+export 'src/services/ritual_service.dart';

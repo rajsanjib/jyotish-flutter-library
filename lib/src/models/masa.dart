@@ -289,3 +289,53 @@ class Samvatsara {
     return samvatsaraNames[yearIndex % 60];
   }
 }
+
+/// Information about various Hindu calendar years (Samvats).
+class SamvatInfo {
+  const SamvatInfo({
+    required this.vikramSamvat,
+    required this.shakaSamvat,
+    required this.gujaratiSamvat,
+    required this.samvatsaraName,
+    required this.samvatsaraNumber,
+  });
+
+  /// Vikram Samvat year number (starts Chaitra Shukla 1)
+  final int vikramSamvat;
+
+  /// Shaka Samvat year number (starts Chaitra Shukla 1 / ~ March 22)
+  final int shakaSamvat;
+
+  /// Gujarati Samvat year number (starts Kartika Shukla 1)
+  final int gujaratiSamvat;
+
+  /// Name of the 60-year cycle Samvatsara
+  final String samvatsaraName;
+
+  /// Number of the 60-year cycle Samvatsara (0-59)
+  final int samvatsaraNumber;
+}
+
+/// Solar half-year (Ayana).
+enum Ayana {
+  uttarayana('Uttarayana', 'Northern course of the Sun'),
+  dakshinayana('Dakshinayana', 'Southern course of the Sun');
+
+  const Ayana(this.sanskrit, this.description);
+  final String sanskrit;
+  final String description;
+}
+
+/// Information about the Solar date (Pravishte / Gata).
+class PravishteInfo {
+  const PravishteInfo({
+    required this.day,
+    required this.monthName,
+  });
+
+  /// The solar day number (1-31)
+  final int day;
+
+  /// The solar month name (based on Sun's Rashi, e.g., Mesha, Vrishabha)
+  final String monthName;
+}

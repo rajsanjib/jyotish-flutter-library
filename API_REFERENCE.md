@@ -318,6 +318,9 @@ await jyotish.initialize({String? ephemerisPath});
 | `getAmantaMasa({dateTime, location})` | `Future<MasaInfo>` | Amanta system |
 | `getPurnimantaMasa({dateTime, location})` | `Future<MasaInfo>` | Purnimanta system |
 | `getSamvatsara({dateTime, location})` | `Future<String>` | 60-year cycle name |
+| `getSamvatInfo({dateTime, location})` | `Future<SamvatInfo>` | Vikram/Shaka/Gujarati Samvat |
+| `getAyana({dateTime, location})` | `Future<Ayana>` | Uttarayana or Dakshinayana |
+| `getPravishte({dateTime, location})` | `Future<PravishteInfo>` | Solar Day/Month |
 | `getMasaListForYear({year, location, type?})` | `Future<List<MasaInfo>>` | All months in year |
 | `getRitu(masaInfo)` | `Ritu` | Hindu season |
 | `getRituDetails({dateTime, location})` | `Future<RituInfo>` | Detailed season info |
@@ -337,6 +340,15 @@ await jyotish.initialize({String? ephemerisPath});
 | `getAllPlanetsVimshopakBala(chart)` | `Map<Planet, VimshopakBala>` | 20-fold strength for all planets |
 | `getIshtaphala(planet, chart, shadbala)` | `double` | Auspicious potential (0-60) |
 | `getKashtaphala(planet, chart, shadbala)` | `double` | Inauspicious potential (0-60) |
+
+#### Astrological Strength & Rituals (Panchang)
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `calculateChandrabalam({currentMoonNakshatra})` | `ChandrabalamInfo` | Moon strength for all 12 Rashis |
+| `calculateTarabalam({birthNakshatraIndex, currentNakshatra})` | `TarabalamInfo` | Star strength (Janma, Sampat, etc.) |
+| `calculateUdayaLagnas({date, location, sunrise})` | `Future<List<UdayaLagnaPeriod>>` | 12 Daily Ascendant periods |
+| `calculateRitualElements({panchanga})` | `RitualElements` | Homahuti, Agnivasa, Shivavasa, Kumbha Chakra |
 
 #### Sudarshan Chakra & Bhava Bala
 

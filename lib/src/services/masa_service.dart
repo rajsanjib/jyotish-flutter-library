@@ -313,4 +313,131 @@ class MasaService {
       governingElement: ritu.governingElement,
     );
   }
+
+  Future<SamvatInfo> getSamvatInfo({
+    required DateTime dateTime,
+    required GeographicLocation location,
+  }) async {
+    final masa = await calculateMasa(dateTime: dateTime, location: location);
+
+    int gregorianYear = dateTime.year;
+    bool beforeChaitra = false;
+
+    if (dateTime.month < 3) {
+      beforeChaitra = true;
+    } else if (dateTime.month == 3 || dateTime.month == 4) {
+      if (masa.month == LunarMonth.phalguna ||
+          masa.month == LunarMonth.magha ||
+          masa.month == LunarMonth.pausha ||
+          masa.month == LunarMonth.margashirsha) {
+        beforeChaitra = true;
+      }
+      if (masa.month == LunarMonth.chaitra &&
+          masa.tithiInfo.paksha == Paksha.krishna) {
+        beforeChaitra = true;
+      }
+    }
+
+    int vikramSamvat = gregorianYear + (beforeChaitra ? 56 : 57);
+    int shakaSamvat = gregorianYear - (beforeChaitra ? 79 : 78);
+    int gujaratiSamvat = vikramSamvat;
+
+    bool beforeKartika = false;
+    if (masa.month == LunarMonth.chaitra ||
+        masa.month == LunarMonth.vaishakha ||
+        masa.month == LunarMonth.jyeshtha ||
+        masa.month == LunarMonth.ashadha ||
+        masa.month == LunarMonth.shravana ||
+        masa.month == LunarMonth.bhadrapada ||
+        masa.month == LunarMonth.ashwin) {
+      beforeKartika = true;
+    } else if (masa.month == LunarMonth.kartika &&
+        masa.tithiInfo.paksha == Paksha.krishna) {
+      beforeKartika = true;
+    }
+
+    if (beforeKartika && !beforeChaitra) {
+      gujaratiSamvat = vikramSamvat - 1;
+    }
+
+    final samvatsaraName =
+        await getSamvatsara(dateTime: dateTime, location: location);
+    const yugaStartYear = 1986;
+    final yearDifference = dateTime.year - yugaStartYear;
+    final samvatsaraNumber = (yearDifference + 48) % 60;
+
+    return SamvatInfo(
+      vikramSamvat: vikramSamvat,
+      shakaSamvat: shakaSamvat,
+      gujaratiSamvat: gujaratiSamvat,
+      samvatsaraName: samvatsaraName,
+      samvatsaraNumber: samvatsaraNumber,
+    );
+  }
+
+  Future<Ayana> getAyana({
+    required DateTime dateTime,
+    required GeographicLocation location,
+  }) async {
+    final defaultFlags = CalculationFlags.defaultFlags();
+    final sunPos = await _ephemerisService.calculatePlanetPosition(
+      planet: Planet.sun,
+      dateTime: dateTime,
+      location: location,
+      flags: defaultFlags,
+    );
+
+    final ayanamsa = await _ephemerisService.getAyanamsa(
+      dateTime: dateTime,
+      mode: defaultFlags.siderealMode,
+    );
+
+    final tropicalLongitude = (sunPos.longitude + ayanamsa) % 360;
+
+    if (tropicalLongitude >= 270 || tropicalLongitude < 90) {
+      return Ayana.uttarayana;
+    } else {
+      return Ayana.dakshinayana;
+    }
+  }
+
+  Future<PravishteInfo> getPravishte({
+    required DateTime dateTime,
+    required GeographicLocation location,
+  }) async {
+    final flags = CalculationFlags.defaultFlags();
+    final sunPos = await _ephemerisService.calculatePlanetPosition(
+      planet: Planet.sun,
+      dateTime: dateTime,
+      location: location,
+      flags: flags,
+    );
+
+    final sunLongitude = sunPos.longitude;
+    final rashiIndex = (sunLongitude / 30).floor();
+
+    const rashiNames = [
+      'Mesha',
+      'Vrishabha',
+      'Mithuna',
+      'Karka',
+      'Simha',
+      'Kanya',
+      'Tula',
+      'Vrishchika',
+      'Dhanu',
+      'Makara',
+      'Kumbha',
+      'Meena'
+    ];
+
+    final monthName = rashiNames[rashiIndex];
+    final degreesInSign = sunLongitude % 30;
+    final dayNumber = (degreesInSign / 0.9856).floor() + 1;
+
+    return PravishteInfo(
+      day: dayNumber,
+      monthName: monthName,
+    );
+  }
 }

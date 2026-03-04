@@ -14,6 +14,8 @@ class Panchanga {
     required this.vara,
     required this.sunrise,
     required this.sunset,
+    this.moonrise,
+    this.moonset,
   });
 
   /// Date and time for which the Panchanga was calculated
@@ -42,6 +44,12 @@ class Panchanga {
 
   /// Sunset time
   final DateTime sunset;
+
+  /// Moonrise time
+  final DateTime? moonrise;
+
+  /// Moonset time
+  final DateTime? moonset;
 
   /// Gets whether it's daytime
   bool get isDaytime {

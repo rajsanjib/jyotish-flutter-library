@@ -121,19 +121,53 @@ The library assigns significators for each planet/house interaction:
 
 ---
 
-## 7. Deviations & Clarifications
+## 7. Advanced Panchang & Muhurta
 
-| Feature | Implementation | Standard | Rationale |
-| :--- | :--- | :--- | :--- |
-| **Rahu/Ketu** | Mean Node | BPHS / Traditional | Default set to Mean Node as per classical texts; True Node available as a configuration flag. |
-| **Vara Boundary** | Sunrise | Jyotish Standard | Day lord must change at Sunrise. Midnight-based Vara produces incorrect results for nighttime births. |
-| **Ishta/Kashta** | sqrt formula | PVR Narasimha Rao | Adopted from the Jagannatha Hora model for standardized strength metrics in digital astrology. |
-| **Houses in Varga** | Whole Sign | Parashara | Divisional charts use Whole-Sign houses from the Varga-calculated Ascendant. |
+This section details the newly implemented extended Panchang features, ensuring alignment with both Northern (BPHS) and Southern (Muhurta Chintamani) traditions.
+
+### Samvat & Solar Metadata
+- **Vikram Samvat**: Gregorian Year + 57 (changes at Chaitra Shukla Pratipada).
+- **Shaka Samvat**: Gregorian Year - 78 (changes at Chaitra Shukla Pratipada).
+- **Gujarati Samvat**: Vikram Samvat - 1 (lags behind until Kartiki Pratipada).
+- **Ayana**: Based on Tropical Sun Longitude. `long < 180° = Uttarayana`, `long ≥ 180° = Dakshinayana`.
+- **Pravishte**: Solar date within the current sidereal Rashi (Sun transit).
+
+### Muhurta Timing Rules
+- **Dur Muhurtam (Default)**: Divided into 8 equal parts of daytime (BPHS/Northern). One part per day is designated as the "Dur Muhurta" based on the day's ruler alignment.
+- **Dur Muhurtam (South Indian)**: Divided into 15 equal parts (Muhurta Chintamani). Two specific Muhurtas per weekday are designated as inauspicious.
+- **Varjyam (Thyajya)**: The "poisonous" portion of a Nakshatra transit. The start time is calculated as `Nakshatra_Start + (Thyajya_Ghati / 60) * Nakshatra_Duration`.
+
+### Astrological Strength (Balam)
+- **Chandrabalam**: The strength of the transit Moon relative to the native's Rashi. 
+    - *Strong*: 1st, 3rd, 6th, 7th, 10th, 11th from Moon.
+    - *Moderate*: 2nd, 5th, 9th.
+    - *Weak*: 4th, 8th, 12th.
+- **Tarabalam**: Calculated as `(Current_Nakshatra - Birth_Nakshatra + 27) % 9`. 
+    - Resulting index maps to 9 Tara types (Janma, Sampat, Vipat, etc).
+
+### Ritual Elements
+- **Krishna Paksha Offset**: For ceremonial modulo math, Krishna Paksha Tithis (1-15) are mathematically treated as **16-30** to align with Drik Panchang and textual standards.
+- **Agnivasa (Fire Residence)**: `(Tithi + Weekday + 1) % 4`. Result 0/3 = Earth, 1 = Sky, 2 = Underworld.
+- **Shivavasa (Shiva's Residence)**: A 7-period rotation based on absolute Tithi.
 
 ---
 
-## 8. Authorities & Texts
-- **BPHS**: *Brihat Parashara Hora Shastra* - Core foundation of Sage Parashara to assess strength and vargas.
-- **Surya Siddhanta**: Primary astronomical authority for Panchanga and Vara logic.
-- **KS Krishnamurti**: Authority for the KP System logic and Sub-Lord proportions.
-- **N.V. Rao / P.V.R. Narasimha Rao**: Modern references for numerical standardization of Shadbala and Ashtakavarga algorithms.
+## 8. Deviations & Clarifications
+
+| Feature | Implementation | Standard | Rationale |
+| :--- | :--- | :--- | :--- |
+| **Rahu/Ketu** | Mean Node | BPHS / Traditional | Default set to Mean Node; True Node available as a flag. |
+| **Vara Boundary** | Sunrise | Jyotish Standard | Day lord must change at Sunrise. |
+| **Dur Muhurtam** | BPHS (1/8th) | BPHS Default | Set as default for Drik Panchang compatibility; 1/15th available as option. |
+| **Ritual Tithis** | 1-30 numbering | Purnimanta/Amanta | Offset added in Krishna Paksha for correct modulo outcomes. |
+| **Ishta/Kashta** | sqrt formula | PVR Narasimha Rao | Adopted from Jagannatha Hora model. |
+
+---
+
+## 9. Authorities & Texts
+
+- **BPHS**: *Brihat Parashara Hora Shastra* - Core foundation for Shadbala and Northern Muhurta (8-part).
+- **Muhurta Chintamani**: Primary authority for the 15-part Muhurta division used in the South Indian optional method.
+- **Kala Prakashika**: Authority for Varjyam and Rahu Vasa calculations.
+- **Surya Siddhanta**: Primary astronomical authority for Panchanga logic.
+- **KS Krishnamurti / P.V.R. Narasimha Rao**: Modern references for numerical standardization.

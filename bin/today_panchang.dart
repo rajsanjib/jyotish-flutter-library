@@ -127,14 +127,14 @@ void printTransitions(
 }
 
 void main() async {
-  // Delhi, India — 24 Feb 2026
+  // Delhi, India  24 Feb 2026
   // Sunrise at 06:51 IST = 01:21 UTC
   // We scan from 00:00 IST (18:30 UTC, 23 Feb) to 06:00 IST next day (00:30 UTC, 26 Feb)
-  // Use a 30-hour IST window: 00:01 IST 24 Feb → 06:30 IST 25 Feb
+  // Use a 30-hour IST window: 00:01 IST 24 Feb  06:30 IST 25 Feb
   final istOffset = const Duration(hours: 5, minutes: 30);
   final dayStart = DateTime(2026, 2, 24, 0, 1)
       .toUtc()
-      .subtract(istOffset); // 00:01 IST → UTC
+      .subtract(istOffset); // 00:01 IST  UTC
   final dayEnd = DateTime(2026, 2, 25, 6, 30)
       .toUtc()
       .subtract(istOffset); // 06:30 IST next day
@@ -150,7 +150,7 @@ void main() async {
   await jyotish.initialize(ephemerisPath: 'ephe');
 
   try {
-    print('Calculating — this may take 30–60 seconds...');
+    print('Calculating  this may take 3060 seconds...');
     print('');
 
     // Fetch sunrise/sunset from Panchanga at local noon
@@ -202,7 +202,7 @@ void main() async {
       location: location,
     );
 
-    // ── Output ─────────────────────────────────────────────────────
+    //  Output 
     print('New Delhi, India');
     print('Tuesday, February 24, 2026');
     print('');
@@ -238,16 +238,16 @@ void main() async {
     final moonInfo = chart.getPlanet(Planet.moon);
     final sunInfo = chart.getPlanet(Planet.sun);
     print(
-        '  Moon sign    : ${moonInfo?.zodiacSign ?? "—"}  (${moonInfo?.longitude.toStringAsFixed(2)}°)');
+        '  Moon sign    : ${moonInfo?.zodiacSign ?? ""}  (${moonInfo?.longitude.toStringAsFixed(2)})');
     print(
-        '  Sun sign     : ${sunInfo?.zodiacSign ?? "—"}  (${sunInfo?.longitude.toStringAsFixed(2)}°)');
+        '  Sun sign     : ${sunInfo?.zodiacSign ?? ""}  (${sunInfo?.longitude.toStringAsFixed(2)})');
     print('');
 
     // Nakshatra at sunrise (for Masa etc.)
-    print('─── Planetary Positions at Sunrise (Sidereal / Lahiri) ────────');
+    print(' Planetary Positions at Sunrise (Sidereal / Lahiri) ');
     print(
         '  ${"Planet".padRight(12)} ${"Longitude".padRight(12)} ${"Sign".padRight(18)} House  Nakshatra');
-    print('  ${"─" * 72}');
+    print('  ${"" * 72}');
 
     final orderedPlanets = [
       Planet.sun,
@@ -262,8 +262,8 @@ void main() async {
     for (final planet in orderedPlanets) {
       final info = chart.getPlanet(planet);
       if (info == null) continue;
-      final retro = info.isRetrograde ? ' ℞' : '';
-      final combust = info.isCombust == true ? ' 🔥' : '';
+      final retro = info.isRetrograde ? ' ' : '';
+      final combust = info.isCombust == true ? ' ' : '';
       final nakStr = '${info.nakshatra} P${info.pada}';
       print('  ${planet.displayName.padRight(12)}'
           ' ${info.longitude.toStringAsFixed(4).padRight(12)}'
@@ -279,7 +279,7 @@ void main() async {
         '  ${"Ketu".padRight(12)} ${ketu.longitude.toStringAsFixed(4).padRight(12)} ${ketu.zodiacSign}');
     print('');
     print(
-        '  Ascendant    : ${chart.ascendant.toStringAsFixed(4)}°  (${chart.ascendantSign})');
+        '  Ascendant    : ${chart.ascendant.toStringAsFixed(4)}  (${chart.ascendantSign})');
     print('');
   } finally {
     jyotish.dispose();

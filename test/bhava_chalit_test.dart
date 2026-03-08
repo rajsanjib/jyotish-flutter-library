@@ -12,7 +12,7 @@ void main() {
       final chart = await vedicService.calculateChart(
         dateTime: DateTime.utc(2023, 10, 15, 12, 0),
         location: GeographicLocation(latitude: 28.6139, longitude: 77.2090),
-        houseSystem: 'P', // Placidus — cusp 1 is Ascendant
+        houseSystem: 'P', // Placidus  cusp 1 is Ascendant
       );
 
       final bhavaChalit = service.calculateBhavaChalit(chart);

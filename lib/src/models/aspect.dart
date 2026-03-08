@@ -1,4 +1,4 @@
-import 'planet.dart';
+import 'package:jyotish/src/models/planet.dart';
 
 /// Vedic aspect types (Graha Drishti).
 ///
@@ -6,28 +6,28 @@ import 'planet.dart';
 /// from their position. Additionally, Mars, Jupiter, and Saturn have special
 /// aspects (vishesh drishti).
 enum AspectType {
-  /// Conjunction - planets in same sign (0°)
+  /// Conjunction - planets in same sign (0)
   conjunction('Conjunction', 'Yuti', 0, 10.0),
 
-  /// Opposition - 7th house aspect (180°) - All planets have this
+  /// Opposition - 7th house aspect (180) - All planets have this
   opposition('Opposition', 'Sama-Saptama', 180, 10.0),
 
-  /// Trine - 5th house aspect (120°)
+  /// Trine - 5th house aspect (120)
   trine5th('5th Trine', 'Trikona (5th)', 120, 8.0),
 
-  /// Trine - 9th house aspect (240°)
+  /// Trine - 9th house aspect (240)
   trine9th('9th Trine', 'Trikona (9th)', 240, 8.0),
 
-  /// Square - 4th house aspect (90°)
+  /// Square - 4th house aspect (90)
   square4th('4th Square', 'Kendra (4th)', 90, 6.0),
 
-  /// Square - 10th house aspect (270°)
+  /// Square - 10th house aspect (270)
   square10th('10th Square', 'Kendra (10th)', 270, 6.0),
 
-  /// Sextile - 3rd house aspect (60°)
+  /// Sextile - 3rd house aspect (60)
   sextile3rd('3rd Sextile', 'Upachaya (3rd)', 60, 4.0),
 
-  /// Sextile - 11th house aspect (300°)
+  /// Sextile - 11th house aspect (300)
   sextile11th('11th Sextile', 'Upachaya (11th)', 300, 4.0),
 
   /// Mars special 4th house aspect
@@ -139,13 +139,13 @@ class AspectInfo {
   /// Gets a human-readable description of the aspect
   String get description {
     final applying = isApplying ? 'applying' : 'separating';
-    return '${aspectingPlanet.displayName} ${type.english} ${aspectedPlanet.displayName} ($applying, orb: ${exactOrb.toStringAsFixed(2)}°)';
+    return '${aspectingPlanet.displayName} ${type.english} ${aspectedPlanet.displayName} ($applying, orb: ${exactOrb.toStringAsFixed(2)})';
   }
 
-  /// Whether the aspect is exact (orb less than 1°)
+  /// Whether the aspect is exact (orb less than 1)
   bool get isExact => exactOrb.abs() < 1.0;
 
-  /// Whether the aspect is tight (orb less than 3°)
+  /// Whether the aspect is tight (orb less than 3)
   bool get isTight => exactOrb.abs() < 3.0;
 
   @override
@@ -201,7 +201,7 @@ class AspectConfig {
   /// Whether to use whole-sign (sign-to-sign) Vedic aspects.
   ///
   /// When [true] (default), a planet aspects an entire sign regardless of
-  /// degree separation — the classical Parashari Graha Drishti model.
+  /// degree separation  the classical Parashari Graha Drishti model.
   /// Aspect strength is always 1.0 (binary).
   ///
   /// When [false], degree-based orb calculations are used (suitable for

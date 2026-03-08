@@ -4,9 +4,9 @@ import 'package:jyotish/jyotish.dart';
 
 /// Example demonstrating Vedic astrology chart calculation
 /// For the date: July 28, 1994 at 12:00 PM UTC
-/// Location: New Delhi, India (28.6139°N, 77.2090°E)
+/// Location: New Delhi, India (28.6139N, 77.2090E)
 void main() async {
-  print('🔮 Jyotish - Vedic Chart Calculation Example\n');
+  print(' Jyotish - Vedic Chart Calculation Example\n');
 
   // Get the ephemeris path
   final currentDir = Directory.current.path;
@@ -16,7 +16,7 @@ void main() async {
     // Initialize the library
     final jyotish = Jyotish();
     await jyotish.initialize(ephemerisPath: ephePath);
-    print('✅ Swiss Ephemeris initialized\n');
+    print(' Swiss Ephemeris initialized\n');
 
     // Set the date and location
     final dateTime = DateTime.utc(2000, 6, 19, 12, 0);
@@ -26,13 +26,13 @@ void main() async {
       altitude: 216.0, // meters above sea level
     );
 
-    print('📅 Date: ${dateTime.toLocal()}');
-    print('📍 Location: New Delhi, India');
+    print(' Date: ${dateTime.toLocal()}');
+    print(' Location: New Delhi, India');
     print('   Latitude: ${location.latitudeDMS}');
     print('   Longitude: ${location.longitudeDMS}\n');
 
     // Calculate the Vedic chart
-    print('⏳ Calculating Vedic chart...\n');
+    print(' Calculating Vedic chart...\n');
     final chart = await jyotish.calculateVedicChart(
       dateTime: dateTime,
       location: location,
@@ -41,17 +41,17 @@ void main() async {
     );
 
     // Display chart information
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    print('');
     print('                    VEDIC BIRTH CHART                  ');
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    print('\n');
 
     // Ascendant (Lagna)
-    print('🌅 ASCENDANT (LAGNA)');
+    print(' ASCENDANT (LAGNA)');
     print('   Sign: ${chart.ascendantSign}');
-    print('   Degree: ${chart.houses.ascendant.toStringAsFixed(2)}°\n');
+    print('   Degree: ${chart.houses.ascendant.toStringAsFixed(2)}\n');
 
     // Display all planets
-    print('🌟 PLANETARY POSITIONS\n');
+    print(' PLANETARY POSITIONS\n');
 
     final planetOrder = [
       Planet.sun,
@@ -73,38 +73,38 @@ void main() async {
     // Rahu and Ketu
     print('   ${_formatPlanetName('Rahu')}');
     print(
-        '      Position: ${chart.rahu.position.zodiacSign} ${chart.rahu.position.longitude.toStringAsFixed(2)}°');
+        '      Position: ${chart.rahu.position.zodiacSign} ${chart.rahu.position.longitude.toStringAsFixed(2)}');
     print('      House: ${chart.rahu.house}');
     print('      Nakshatra: ${chart.rahu.nakshatra} (Pada ${chart.rahu.pada})');
     print(
-        '      Retrograde: ${chart.rahu.position.isRetrograde ? 'Yes ⟲' : 'No'}');
+        '      Retrograde: ${chart.rahu.position.isRetrograde ? 'Yes ' : 'No'}');
     print('      Dignity: ${chart.rahu.dignity.english}');
     print('');
 
     print('   ${_formatPlanetName('Ketu')}');
     print(
-        '      Position: ${chart.ketu.zodiacSign} ${chart.ketu.longitude.toStringAsFixed(2)}°');
+        '      Position: ${chart.ketu.zodiacSign} ${chart.ketu.longitude.toStringAsFixed(2)}');
     print(
         '      House: ${chart.houses.getHouseForLongitude(chart.ketu.longitude)}');
     print(
         '      Nakshatra: ${chart.ketu.nakshatra} (Pada ${chart.ketu.nakshatraPada})');
-    print('      Retrograde: ${chart.ketu.isRetrograde ? 'Yes ⟲' : 'No'}');
+    print('      Retrograde: ${chart.ketu.isRetrograde ? 'Yes ' : 'No'}');
 
     print('');
 
     // House cusps
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-    print('🏠 HOUSE CUSPS\n');
+    print('\n');
+    print(' HOUSE CUSPS\n');
     for (int i = 0; i < 12; i++) {
       final houseNum = i + 1;
       final cusp = chart.houses.cusps[i];
       final sign = _getZodiacSign(cusp);
-      print('   House $houseNum: ${cusp.toStringAsFixed(2)}° ($sign)');
+      print('   House $houseNum: ${cusp.toStringAsFixed(2)} ($sign)');
     }
 
     // Planetary strengths summary
-    print('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-    print('💪 PLANETARY DIGNITIES SUMMARY\n');
+    print('\n\n');
+    print(' PLANETARY DIGNITIES SUMMARY\n');
 
     final exaltedPlanets = chart.exaltedPlanets;
     final debilitatedPlanets = chart.debilitatedPlanets;
@@ -112,15 +112,15 @@ void main() async {
 
     if (exaltedPlanets.isNotEmpty) {
       print(
-          '   ⭐ Exalted: ${exaltedPlanets.map((p) => p.planet.name).join(', ')}');
+          '    Exalted: ${exaltedPlanets.map((p) => p.planet.name).join(', ')}');
     }
     if (debilitatedPlanets.isNotEmpty) {
       print(
-          '   ⬇️  Debilitated: ${debilitatedPlanets.map((p) => p.planet.name).join(', ')}');
+          '     Debilitated: ${debilitatedPlanets.map((p) => p.planet.name).join(', ')}');
     }
     if (combustPlanets.isNotEmpty) {
       print(
-          '   🔥 Combust: ${combustPlanets.map((p) => p.planet.name).join(', ')}');
+          '    Combust: ${combustPlanets.map((p) => p.planet.name).join(', ')}');
     }
     if (exaltedPlanets.isEmpty &&
         debilitatedPlanets.isEmpty &&
@@ -128,10 +128,10 @@ void main() async {
       print('   No planets in exaltation, debilitation, or combustion.');
     }
 
-    print('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-    print('✨ Chart calculation completed successfully!\n');
+    print('\n\n');
+    print(' Chart calculation completed successfully!\n');
   } catch (e) {
-    print('❌ Error: $e');
+    print(' Error: $e');
     exit(1);
   }
 }
@@ -139,14 +139,14 @@ void main() async {
 void _displayPlanetInfo(String name, VedicPlanetInfo info) {
   print('   ${_formatPlanetName(name)}');
   print(
-      '      Position: ${info.position.zodiacSign} ${info.position.longitude.toStringAsFixed(2)}°');
+      '      Position: ${info.position.zodiacSign} ${info.position.longitude.toStringAsFixed(2)}');
   print('      House: ${info.house}');
   print('      Nakshatra: ${info.nakshatra} (Pada ${info.pada})');
-  print('      Retrograde: ${info.position.isRetrograde ? 'Yes ⟲' : 'No'}');
+  print('      Retrograde: ${info.position.isRetrograde ? 'Yes ' : 'No'}');
   print('      Dignity: ${info.dignity.english}');
   if (info.isCombust) {
     print(
-        '      ⚠️  Combust (within ${_getCombustionDegrees(info.planet)}° of Sun)');
+        '        Combust (within ${_getCombustionDegrees(info.planet)} of Sun)');
   }
   print('');
 }
@@ -159,25 +159,25 @@ String _formatPlanetName(String name) {
 String _getPlanetEmoji(String name) {
   switch (name.toLowerCase()) {
     case 'sun':
-      return '☉';
+      return '';
     case 'moon':
-      return '☽';
+      return '';
     case 'mars':
-      return '♂';
+      return '';
     case 'mercury':
-      return '☿';
+      return '';
     case 'jupiter':
-      return '♃';
+      return '';
     case 'venus':
-      return '♀';
+      return '';
     case 'saturn':
-      return '♄';
+      return '';
     case 'rahu':
-      return '☊';
+      return '';
     case 'ketu':
-      return '☋';
+      return '';
     default:
-      return '🌟';
+      return '';
   }
 }
 

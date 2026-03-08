@@ -29,7 +29,7 @@ void main() async {
   );
 
   print('=' * 60);
-  print('  Lunar Eclipse – New Delhi – 03 March 2026');
+  print('  Lunar Eclipse  New Delhi  03 March 2026');
   print('=' * 60);
 
   final eclipse = await ephemService.getEclipseData(
@@ -50,19 +50,19 @@ void main() async {
 
     print('\n--- Global Phase Contact Times (IST) ---');
     print(
-        'P1 – Penumbral Starts  : ${_fmt(eclipse.penumbralStartTime)}  [Ref: 14:16]');
+        'P1  Penumbral Starts  : ${_fmt(eclipse.penumbralStartTime)}  [Ref: 14:16]');
     print(
-        'U1 – Umbral Starts     : ${_fmt(eclipse.partialStartTime)}    [Ref: 15:21]');
+        'U1  Umbral Starts     : ${_fmt(eclipse.partialStartTime)}    [Ref: 15:21]');
     print(
-        'U2 – Total Begins      : ${_fmt(eclipse.totalStartTime)}      [Ref: 16:35]');
+        'U2  Total Begins      : ${_fmt(eclipse.totalStartTime)}      [Ref: 16:35]');
     print(
         'Max Eclipse            : ${_fmt(eclipse.maxEclipseTime)}      [Ref: 17:04]');
     print(
-        'U3 – Total Ends        : ${_fmt(eclipse.totalEndTime)}        [Ref: 17:33]');
+        'U3  Total Ends        : ${_fmt(eclipse.totalEndTime)}        [Ref: 17:33]');
     print(
-        'U4 – Umbral Ends       : ${_fmt(eclipse.partialEndTime)}      [Ref: 18:46]');
+        'U4  Umbral Ends       : ${_fmt(eclipse.partialEndTime)}      [Ref: 18:46]');
     print(
-        'P4 – Penumbral Ends    : ${_fmt(eclipse.penumbralEndTime)}    [Ref: 19:52]');
+        'P4  Penumbral Ends    : ${_fmt(eclipse.penumbralEndTime)}    [Ref: 19:52]');
 
     print('\n--- Durations ---');
     final penumDur =

@@ -1,6 +1,6 @@
-import '../models/planet.dart';
-import '../models/planet_position.dart';
-import 'calculation_flags.dart';
+import 'package:jyotish/src/models/planet.dart';
+import 'package:jyotish/src/astronomy/planet_position.dart';
+import 'package:jyotish/src/models/calculation_flags.dart';
 
 /// Represents Vedic astrology house system information.
 ///
@@ -8,13 +8,13 @@ import 'calculation_flags.dart';
 ///
 /// Different house systems have varying precision at extreme latitudes:
 /// - **Whole Sign (W)**: Most reliable across all latitudes, recommended for Vedic astrology
-/// - **Placidus (P)**: May produce unreliable results above 65° latitude
-/// - **Koch (K)**: Limited accuracy above 60° latitude
+/// - **Placidus (P)**: May produce unreliable results above 65 latitude
+/// - **Koch (K)**: Limited accuracy above 60 latitude
 /// - **Porphyrius (O)**: Moderate reliability at high latitudes
 /// - **Regiomontanus (R)**: Similar limitations to Placidus
 /// - **Campanus (C)**: Good accuracy across most latitudes
 ///
-/// For locations above 65°N or below 65°S, Whole Sign houses are recommended.
+/// For locations above 65N or below 65S, Whole Sign houses are recommended.
 class HouseSystem {
   const HouseSystem({
     required this.system,
@@ -46,7 +46,7 @@ class HouseSystem {
           return i + 1;
         }
       } else {
-        // House crosses 0° Aries
+        // House crosses 0 Aries
         if (longitude >= currentCusp || longitude < nextCusp) {
           return i + 1;
         }
@@ -78,14 +78,14 @@ class HouseSystem {
 }
 
 /// Represents Ketu (South Node) position.
-/// Ketu is always 180° opposite to Rahu.
+/// Ketu is always 180 opposite to Rahu.
 class KetuPosition {
   const KetuPosition({required this.rahuPosition});
 
   /// The planet position of Rahu used to calculate Ketu
   final PlanetPosition rahuPosition;
 
-  /// Ketu's longitude (180° opposite to Rahu)
+  /// Ketu's longitude (180 opposite to Rahu)
   double get longitude => (rahuPosition.longitude + 180) % 360;
 
   /// Ketu's latitude (opposite to Rahu)
@@ -106,7 +106,7 @@ class KetuPosition {
     return _zodiacSigns[signIndex];
   }
 
-  /// Gets position within the sign (0-30°)
+  /// Gets position within the sign (0-30)
   double get positionInSign => longitude % 30;
 
   /// Gets the nakshatra index
@@ -124,7 +124,7 @@ class KetuPosition {
   /// Formatted position string
   String get formattedPosition {
     final dms = positionInSignDMS;
-    return '${dms['degrees']}° $zodiacSign ${dms['minutes']}\'';
+    return '${dms['degrees']} $zodiacSign ${dms['minutes']}\'';
   }
 
   /// Gets position in DMS within the sign

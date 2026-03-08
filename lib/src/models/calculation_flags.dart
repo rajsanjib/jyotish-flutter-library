@@ -1,5 +1,5 @@
 import '../constants/planet_constants.dart';
-import 'planet.dart';
+import 'package:jyotish/src/models/planet.dart';
 
 /// The high-level astrological paradigm (system) being used.
 ///
@@ -30,11 +30,11 @@ enum AstrologicalSystem {
   /// Krishnamurti Paddhati (KP) system.
   ///
   /// Ayanamsa : Krishnamurti VP291 (KP New ayanamsa).
-  /// House system : Placidus — **mandatory**.
-  /// Zodiac division : Sign → Star → Sub → Sub-Sub (249 divisions).
+  /// House system : Placidus  **mandatory**.
+  /// Zodiac division : Sign  Star  Sub  Sub-Sub (249 divisions).
   ///
   /// Services exclusive to this system:
-  ///   [KPService] — Sub-Lords, Significators, Ruling Planets.
+  ///   [KPService]  Sub-Lords, Significators, Ruling Planets.
   kp,
 }
 
@@ -116,9 +116,9 @@ class CalculationFlags {
   /// System : **[AstrologicalSystem.kp]**.
   ///
   /// This preset configures:
-  /// - Ayanamsa: Krishnamurti VP291 ("KP New Ayanamsa") — the correct
+  /// - Ayanamsa: Krishnamurti VP291 ("KP New Ayanamsa")  the correct
   ///   ayanamsa for all KP work, distinct from classical Lahiri.
-  /// - System tag: [AstrologicalSystem.kp] — enables KP-exclusive services
+  /// - System tag: [AstrologicalSystem.kp]  enables KP-exclusive services
   ///   ([KPService]) and guard-rail assertions.
   ///
   /// **Important**: pair this with `houseSystem: 'P'` (Placidus) when
@@ -128,7 +128,7 @@ class CalculationFlags {
   /// final chart = await jyotish.calculateVedicChart(
   ///   dateTime: birthDateTime,
   ///   location: location,
-  ///   houseSystem: 'P', // Placidus — mandatory for KP
+  ///   houseSystem: 'P', // Placidus  mandatory for KP
   ///   flags: CalculationFlags.kp(),
   /// );
   /// final kpData = await jyotish.calculateKPData(chart);

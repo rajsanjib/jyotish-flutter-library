@@ -1,15 +1,15 @@
-/// Validated Reference Chart Test Suite — India Independence Chart
+/// Validated Reference Chart Test Suite  India Independence Chart
 ///
 /// This is the canonical regression test for the Jyotish library.
 ///
 /// Reference chart: India Independence
-///   Date/Time: 15 August 1947, 00:00 IST (UTC+5:30 → UTC 18:30 on 14 Aug)
-///   Location: New Delhi (28.6139°N, 77.2090°E)
+///   Date/Time: 15 August 1947, 00:00 IST (UTC+5:30  UTC 18:30 on 14 Aug)
+///   Location: New Delhi (28.6139N, 77.2090E)
 ///   System: Lahiri ayanamsa, Whole Sign houses
 ///
 /// The expected values below come from standard Vedic astrology references
 /// and have been cross-checked against multiple professional software tools.
-/// Tolerances of ±0.5° on degree-in-sign account for minor SE version diffs.
+/// Tolerances of 0.5 on degree-in-sign account for minor SE version diffs.
 ///
 /// These tests require Swiss Ephemeris data files in the `ephe/` directory.
 /// See SETUP.md for installation instructions.
@@ -18,9 +18,9 @@ import 'package:jyotish/jyotish.dart';
 import 'package:test/test.dart';
 
 void main() {
-  // ── India Independence Chart ──────────────────────────────────────────────
+  //  India Independence Chart 
   // 15 Aug 1947 00:00 IST = 14 Aug 1947 18:30 UTC
-  // New Delhi: 28.6139°N, 77.2090°E
+  // New Delhi: 28.6139N, 77.2090E
   // Lahiri ayanamsa, Whole Sign
 
   final indiaLocation = GeographicLocation(
@@ -42,7 +42,7 @@ void main() {
     } catch (e) {
       // ignore: avoid_print
       print(
-          '⚠️  Swiss Ephemeris not found. Run: dart test -N reference_charts');
+          '  Swiss Ephemeris not found. Run: dart test -N reference_charts');
       rethrow;
     }
 
@@ -58,23 +58,23 @@ void main() {
     jyotish.dispose();
   });
 
-  // ── Ascendant ─────────────────────────────────────────────────────────────
+  //  Ascendant 
 
-  group('India Independence — Ascendant', () {
+  group('India Independence  Ascendant', () {
     test('Ascendant is in Taurus', () {
       expect(indiaChart.ascendantSign, equals('Taurus'));
     });
 
-    test('Ascendant degree is approximately 7–8° Taurus', () {
+    test('Ascendant degree is approximately 78 Taurus', () {
       final ascInSign = indiaChart.ascendant % 30;
       expect(ascInSign, greaterThan(7.0));
       expect(ascInSign, lessThan(8.0));
     });
   });
 
-  // ── Planetary Signs ───────────────────────────────────────────────────────
+  //  Planetary Signs 
 
-  group('India Independence — Planetary Signs (Lahiri sidereal)', () {
+  group('India Independence  Planetary Signs (Lahiri sidereal)', () {
     test('Sun is in Cancer', () {
       expect(indiaChart.planets[Planet.sun]?.zodiacSign, equals('Cancer'));
     });
@@ -108,9 +108,9 @@ void main() {
     });
   });
 
-  // ── Planetary Dignities ───────────────────────────────────────────────────
+  //  Planetary Dignities 
 
-  group('India Independence — Dignities', () {
+  group('India Independence  Dignities', () {
     test(
         'Saturn is in enemy sign (Cancer = Moon sign, Saturn-Moon are natural enemies)',
         () {
@@ -134,9 +134,9 @@ void main() {
     });
   });
 
-  // ── House Placements ────────────────────────────────────────────────────
+  //  House Placements 
 
-  group('India Independence — House Placements (Whole Sign from Taurus Asc)',
+  group('India Independence  House Placements (Whole Sign from Taurus Asc)',
       () {
     test('Sun is in the 3rd house (Cancer = 3rd from Taurus)', () {
       expect(indiaChart.planets[Planet.sun]?.house, equals(3));
@@ -167,9 +167,9 @@ void main() {
     });
   });
 
-  // ── Vimshottari Dasha ─────────────────────────────────────────────────────
+  //  Vimshottari Dasha 
 
-  group('India Independence — Vimshottari Dasha', () {
+  group('India Independence  Vimshottari Dasha', () {
     late DashaResult dasha;
 
     setUpAll(() async {
@@ -191,10 +191,10 @@ void main() {
     });
   });
 
-  // ── Ayanamsa Utility ──────────────────────────────────────────────────────
+  //  Ayanamsa Utility 
 
   group('Ayanamsa utility', () {
-    test('Lahiri ayanamsa for Aug 1947 is approximately 23°', () async {
+    test('Lahiri ayanamsa for Aug 1947 is approximately 23', () async {
       final ayanamsa = await jyotish.getAyanamsa(dateTime: indiaDateTime);
       expect(ayanamsa, greaterThan(22.0));
       expect(ayanamsa, lessThan(24.0));
@@ -209,7 +209,7 @@ void main() {
         dateTime: indiaDateTime,
         mode: SiderealMode.krishnamurtiVP291,
       );
-      // KP and Lahiri are within 1° of each other but not identical
+      // KP and Lahiri are within 1 of each other but not identical
       expect((kp - lahiri).abs(), lessThan(1.0));
       expect(kp, isNot(closeTo(lahiri, 0.0001)));
     });
@@ -220,9 +220,9 @@ void main() {
     });
   });
 
-  // ── Bhava Chalit ────────────────────────────────────────────────────────
+  //  Bhava Chalit 
 
-  group('Bhava Chalit — India Independence (Whole Sign)', () {
+  group('Bhava Chalit  India Independence (Whole Sign)', () {
     test('getBhavaChalit returns 12 bhavas', () {
       final chalit = jyotish.getBhavaChalit(indiaChart);
       expect(chalit.bhavas.length, equals(12));
@@ -255,7 +255,7 @@ void main() {
 
     test('For Whole Sign chart, most planets keep same house in Bhava Chalit',
         () {
-      // With Whole Sign houses, cusps are 30° apart, so mid-cusps should
+      // With Whole Sign houses, cusps are 30 apart, so mid-cusps should
       // mostly match sign boundaries and planets should stay in same house
       final chalit = jyotish.getBhavaChalit(indiaChart);
       final shifted = chalit.shiftedPlanets;
@@ -265,10 +265,10 @@ void main() {
     });
   });
 
-  // ── Pancha-Vargeeya Maitri ────────────────────────────────────────────────
+  //  Pancha-Vargeeya Maitri 
 
   group('Pancha-Vargeeya Maitri (5-fold friendship)', () {
-    test('getPlanetaryRelationships returns complete 7×7 matrix', () {
+    test('getPlanetaryRelationships returns complete 77 matrix', () {
       final rels = jyotish.getPlanetaryRelationshipsMatrix(indiaChart);
       // 7 traditional planets
       expect(rels.length, equals(7));

@@ -48,35 +48,35 @@ void main() {
       );
     }
 
-    test('D30 - Aries (Odd) at 3° (0-5 range) -> Aries', () {
+    test('D30 - Aries (Odd) at 3 (0-5 range) -> Aries', () {
       final chart = createMockChart(3.0, signIndex: 0); // Aries
       final d30 = jyotish.getDivisionalChart(
           rashiChart: chart, type: DivisionalChartType.d30);
       expect(d30.planets[Planet.sun]!.zodiacSign, 'Aries');
     });
 
-    test('D30 - Aries (Odd) at 8° (5-10 range) -> Aquarius', () {
+    test('D30 - Aries (Odd) at 8 (5-10 range) -> Aquarius', () {
       final chart = createMockChart(8.0, signIndex: 0); // Aries
       final d30 = jyotish.getDivisionalChart(
           rashiChart: chart, type: DivisionalChartType.d30);
       expect(d30.planets[Planet.sun]!.zodiacSign, 'Aquarius');
     });
 
-    test('D30 - Taurus (Even) at 3° (0-5 range) -> Taurus', () {
+    test('D30 - Taurus (Even) at 3 (0-5 range) -> Taurus', () {
       final chart = createMockChart(3.0, signIndex: 1); // Taurus
       final d30 = jyotish.getDivisionalChart(
           rashiChart: chart, type: DivisionalChartType.d30);
       expect(d30.planets[Planet.sun]!.zodiacSign, 'Taurus');
     });
 
-    test('D30 - Taurus (Even) at 8° (5-12 range) -> Virgo', () {
+    test('D30 - Taurus (Even) at 8 (5-12 range) -> Virgo', () {
       final chart = createMockChart(8.0, signIndex: 1); // Taurus
       final d30 = jyotish.getDivisionalChart(
           rashiChart: chart, type: DivisionalChartType.d30);
       expect(d30.planets[Planet.sun]!.zodiacSign, 'Virgo');
     });
 
-    test('D40 - Aries (Odd) at 0.5° (Part 0) -> Aries', () {
+    test('D40 - Aries (Odd) at 0.5 (Part 0) -> Aries', () {
       // 30/40 = 0.75 deg per part. 0.5 is in part 0.
       final chart = createMockChart(0.5, signIndex: 0); // Aries
       final d40 = jyotish.getDivisionalChart(
@@ -84,7 +84,7 @@ void main() {
       expect(d40.planets[Planet.sun]!.zodiacSign, 'Aries');
     });
 
-    test('D40 - Taurus (Even) at 0.5° (Part 0) -> Libra', () {
+    test('D40 - Taurus (Even) at 0.5 (Part 0) -> Libra', () {
       // 30/40 = 0.75 deg per part. 0.5 is in part 0.
       // Even starts from Libra (6). 6 + 0 = 6 (Libra).
       final chart = createMockChart(0.5, signIndex: 1); // Taurus

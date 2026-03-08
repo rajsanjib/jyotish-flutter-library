@@ -20,7 +20,7 @@ void main() {
       jyotish.dispose();
     });
 
-    test('Abhijit is within Capricorn 6°40\' to 10°40\'', () async {
+    test('Abhijit is within Capricorn 640\' to 1040\'', () async {
       expect(jyotish.isInAbhijitNakshatra(276.6666667), true);
       expect(jyotish.isInAbhijitNakshatra(280.0), true);
       // 287.0 is clearly past the end boundary of Abhijit (286.6666667)
@@ -158,9 +158,9 @@ void main() {
           LunarMonth.chaitra); // Aries => Chaitra
       expect(MasaInfo.getMonthFromSunLongitude(30),
           LunarMonth.vaishakha); // Taurus => Vaishakha
-      // Sun at 300° = Capricorn (sign index 10) => Magha
+      // Sun at 300 = Capricorn (sign index 10) => Magha
       expect(MasaInfo.getMonthFromSunLongitude(300), LunarMonth.magha);
-      // Sun at 330° = Pisces (sign index 11) => Phalguna
+      // Sun at 330 = Pisces (sign index 11) => Phalguna
       expect(MasaInfo.getMonthFromSunLongitude(330), LunarMonth.phalguna);
     });
 

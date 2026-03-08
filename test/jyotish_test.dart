@@ -251,7 +251,7 @@ void main() {
         Planet.jupiter: PlanetPosition(
           planet: Planet.jupiter,
           dateTime: DateTime.now(),
-          longitude: 210.0, // 210° from Mars = 8th aspect
+          longitude: 210.0, // 210 from Mars = 8th aspect
           latitude: 0,
           distance: 5.0,
           longitudeSpeed: 0.1,
@@ -310,7 +310,7 @@ void main() {
 
     test('DashaService calculates Vimshottari correctly', () {
       final service = DashaService();
-      // Moon at 6° Aries = clearly within Ashwini nakshatra (0-13.333°) = Ketu mahadasha
+      // Moon at 6 Aries = clearly within Ashwini nakshatra (0-13.333) = Ketu mahadasha
       final result = service.calculateVimshottariDasha(
         moonLongitude: 6.0,
         birthDateTime: DateTime(1990, 5, 15, 14, 30),
@@ -445,7 +445,7 @@ void main() {
         await jyotish.initialize(ephemerisPath: 'ephe');
       } catch (e) {
         // ignore: avoid_print
-        print('⚠️  Swiss Ephemeris not found. See SETUP.md for installation.');
+        print('  Swiss Ephemeris not found. See SETUP.md for installation.');
         rethrow;
       }
     });
@@ -531,20 +531,20 @@ void main() {
 
     test('throws PolarRegionException for Placidus at extreme latitudes',
         () async {
-      // Tromsø, Norway at 69.6492° N
+      // Troms, Norway at 69.6492 N
       final location = GeographicLocation(
         latitude: 69.6492,
         longitude: 18.9553,
       );
       final dateTime = DateTime.utc(1990, 5, 15, 14, 30);
 
-      // We expect calculation to fail with Placidus ('P') above Arctic Circle (66.5°)
+      // We expect calculation to fail with Placidus ('P') above Arctic Circle (66.5)
       // NOTE: The default houseSystem is Whole Sign ('W'), not Placidus, so we must be explicit.
       await expectLater(
         () => jyotish.calculateVedicChart(
           dateTime: dateTime,
           location: location,
-          houseSystem: 'P', // Placidus — undefined above Arctic Circle
+          houseSystem: 'P', // Placidus  undefined above Arctic Circle
         ),
         throwsA(isA<PolarRegionException>()),
       );

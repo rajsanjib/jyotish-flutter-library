@@ -1,4 +1,4 @@
-import 'calculation_flags.dart';
+import 'package:jyotish/src/models/calculation_flags.dart';
 
 /// Represents the different Divisional Charts (Varga) in Vedic Astrology.
 enum DivisionalChartType {

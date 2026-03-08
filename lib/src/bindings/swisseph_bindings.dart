@@ -188,7 +188,8 @@ class SwissEphBindings {
       try {
         return ffi.DynamicLibrary.open(customPath);
       } catch (e) {
-        // Silently fail if custom path is invalid
+        // Silently fail if custom path is invalid, will try next option
+        print('Custom library path $customPath failed to load: $e');
       }
     }
 
@@ -205,6 +206,7 @@ class SwissEphBindings {
           return ffi.DynamicLibrary.open(path);
         } catch (e) {
           // Try next path
+          print('Local library path $path failed to load: $e');
           continue;
         }
       }

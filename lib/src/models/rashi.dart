@@ -1,4 +1,4 @@
-import 'planet.dart';
+import 'package:jyotish/src/models/planet.dart';
 
 /// Enumeration of the 12 Rashi (Zodiac Signs).
 enum Rashi {
@@ -46,13 +46,13 @@ enum Rashi {
   /// Returns the traditional ruling planet (lord) of this sign.
   ///
   /// Traditional sign-lords per Parashara:
-  /// - Aries, Scorpio → Mars
-  /// - Taurus, Libra → Venus
-  /// - Gemini, Virgo → Mercury
-  /// - Cancer → Moon
-  /// - Leo → Sun
-  /// - Sagittarius, Pisces → Jupiter
-  /// - Capricorn, Aquarius → Saturn
+  /// - Aries, Scorpio  Mars
+  /// - Taurus, Libra  Venus
+  /// - Gemini, Virgo  Mercury
+  /// - Cancer  Moon
+  /// - Leo  Sun
+  /// - Sagittarius, Pisces  Jupiter
+  /// - Capricorn, Aquarius  Saturn
   Planet get lord => switch (this) {
         Rashi.aries || Rashi.scorpio => Planet.mars,
         Rashi.taurus || Rashi.libra => Planet.venus,

@@ -78,6 +78,5 @@ coverage/
 # Desloppify
 .desloppify/
 .desloppy/
-scorecard.png
 subjective_import.json
 test.json

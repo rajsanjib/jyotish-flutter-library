@@ -142,8 +142,8 @@ class GeographicLocation {
     final latDMS = latitudeDMS;
     final lonDMS = longitudeDMS;
     return 'GeographicLocation('
-        'lat: ${latDMS['degrees']}°${latDMS['minutes']}\'${latDMS['seconds'].toStringAsFixed(2)}"${latDMS['direction']}, '
-        'lon: ${lonDMS['degrees']}°${lonDMS['minutes']}\'${lonDMS['seconds'].toStringAsFixed(2)}"${lonDMS['direction']}, '
+        'lat: ${latDMS['degrees']}${latDMS['minutes']}\'${latDMS['seconds'].toStringAsFixed(2)}"${latDMS['direction']}, '
+        'lon: ${lonDMS['degrees']}${lonDMS['minutes']}\'${lonDMS['seconds'].toStringAsFixed(2)}"${lonDMS['direction']}, '
         'alt: ${altitude.toStringAsFixed(1)}m'
         '${timezone != null ? ', tz: $timezone' : ''})';
   }

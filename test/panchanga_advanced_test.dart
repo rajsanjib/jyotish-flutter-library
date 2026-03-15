@@ -9,7 +9,7 @@ void main() {
 
     setUpAll(() async {
       jyotish = Jyotish();
-      await jyotish.initialize();
+      await jyotish.initialize(ephemerisPath: 'ephe');
     });
 
     test('Vedic Vara respects Sunrise boundary', () async {

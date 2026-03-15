@@ -1,9 +1,9 @@
 import 'package:test/test.dart';
 import 'package:jyotish/src/models/planet.dart';
-import 'package:jyotish/src/models/sudarshan_chakra.dart';
-import 'package:jyotish/src/services/sudarshan_chakra_service.dart';
+import 'package:jyotish/src/analysis/sudarshan_chakra.dart';
+import 'package:jyotish/src/analysis/sudarshan_chakra_service.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
-import 'package:jyotish/src/models/planet_position.dart';
+import 'package:jyotish/src/astronomy/planet_position.dart';
 
 void main() {
   group('SudarshanChakraService', () {
@@ -159,7 +159,7 @@ VedicChart _createMockChart({
 
   return VedicChart(
     dateTime: DateTime(2024, 1, 1),
-    location: '0.0°N, 0.0°E',
+    location: '0.0N, 0.0E',
     latitude: 0.0,
     longitudeCoord: 0.0,
     houses: houses,

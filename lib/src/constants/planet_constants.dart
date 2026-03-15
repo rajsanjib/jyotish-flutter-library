@@ -19,7 +19,7 @@ class SwissEphConstants {
   static const int meanNode = 10;
   static const int trueNode = 11;
 
-  // Ketu (South Node) - computed as 180° from Rahu, uses custom ID
+  // Ketu (South Node) - computed as 180 from Rahu, uses custom ID
   static const int ketu = 100; // Custom ID for Ketu (not a Swiss Ephemeris constant)
   static const int meanApog = 12; // Mean Lunar Apogee (Black Moon Lilith)
   static const int oscuApog = 13; // Osculating Lunar Apogee

@@ -6,16 +6,16 @@ import 'package:jyotish/jyotish.dart';
 ///
 /// Run with: dart run scripts/calculate_1994.dart
 Future<void> main() async {
-  print('🌟 Calculating Planetary Positions');
-  print('📅 Date: July 28, 1994');
-  print('🔮 Ayanamsa: Lahiri (Sidereal/Vedic)');
+  print(' Calculating Planetary Positions');
+  print(' Date: July 28, 1994');
+  print(' Ayanamsa: Lahiri (Sidereal/Vedic)');
   print('=' * 70);
 
   // Set library path for macOS
   const dylibPath =
       '/Users/sanjibacharya/Developer/jyotish/native/swisseph/swisseph-master/libswisseph.dylib';
   if (!File(dylibPath).existsSync()) {
-    print('❌ Error: Swiss Ephemeris library not found at: $dylibPath');
+    print(' Error: Swiss Ephemeris library not found at: $dylibPath');
     print('Please run the installation steps first.');
     exit(1);
   }
@@ -25,14 +25,14 @@ Future<void> main() async {
   final jyotish = Jyotish();
 
   try {
-    print('\n📚 Initializing Swiss Ephemeris...');
+    print('\n Initializing Swiss Ephemeris...');
 
     // Set ephemeris path
     const ephePath =
         '/Users/sanjibacharya/Developer/jyotish/native/swisseph/swisseph-master/ephe';
     await jyotish.initialize(ephemerisPath: ephePath);
 
-    print('✅ Initialization successful!\n');
+    print(' Initialization successful!\n');
 
     // Date: July 28, 1994, 10:50 AM Kathmandu Time (NPT = UTC+5:45)
     // Converting to UTC: 10:50 - 5:45 = 5:05 AM UTC
@@ -62,7 +62,7 @@ Future<void> main() async {
     );
 
     print('Ascendant Sign:   ${chart.ascendantSign}');
-    print('Ascendant Degree: ${chart.ascendant.toStringAsFixed(6)}°');
+    print('Ascendant Degree: ${chart.ascendant.toStringAsFixed(6)}');
     print('');
     print('=' * 70);
     print('');
@@ -102,25 +102,25 @@ Future<void> main() async {
       final pos = entry.value;
 
       print('${planet.displayName}:');
-      print('  Longitude:        ${pos.longitude.toStringAsFixed(6)}°');
-      print('  Latitude:         ${pos.latitude.toStringAsFixed(6)}°');
+      print('  Longitude:        ${pos.longitude.toStringAsFixed(6)}');
+      print('  Latitude:         ${pos.latitude.toStringAsFixed(6)}');
       print('  Distance:         ${pos.distance.toStringAsFixed(6)} AU');
       print('  Zodiac Sign:      ${pos.zodiacSign}');
-      print('  Position in Sign: ${pos.positionInSign.toStringAsFixed(4)}°');
+      print('  Position in Sign: ${pos.positionInSign.toStringAsFixed(4)}');
       print('  Nakshatra:        ${pos.nakshatra} (Pada ${pos.nakshatraPada})');
       print(
-          '  Speed:            ${pos.longitudeSpeed.toStringAsFixed(4)}°/day');
+          '  Speed:            ${pos.longitudeSpeed.toStringAsFixed(4)}/day');
       print('  Retrograde:       ${pos.isRetrograde ? 'Yes' : 'No'}');
       print('');
     }
 
     print('=' * 70);
-    print('✅ Calculation completed successfully!');
+    print(' Calculation completed successfully!');
     print('=' * 70);
   } catch (e, stackTrace) {
-    print('\n❌ Error: $e');
+    print('\n Error: $e');
     print('Stack trace: $stackTrace');
-    print('\n⚠️  Make sure Swiss Ephemeris library is properly installed!');
+    print('\n  Make sure Swiss Ephemeris library is properly installed!');
     exit(1);
   } finally {
     jyotish.dispose();

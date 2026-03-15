@@ -368,6 +368,10 @@ try {
   print('Calculation failed: $e');
 } on ValidationException catch (e) {
   print('Invalid input: $e');
+} on PolarRegionException catch (e) {
+  print('Location too high for house system: $e');
+} on AyanamsaMismatchException catch (e) {
+  print('Incompatible Ayanamsa for chart: $e');
 } on JyotishException catch (e) {
   print('General error: $e');
 }

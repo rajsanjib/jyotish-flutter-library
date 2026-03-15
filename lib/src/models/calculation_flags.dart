@@ -1,5 +1,42 @@
 import '../constants/planet_constants.dart';
-import 'planet.dart';
+import 'package:jyotish/src/models/planet.dart';
+
+/// The high-level astrological paradigm (system) being used.
+///
+/// Every service and factory in this library operates under one of two
+/// mutually-exclusive paradigms.  Mixing paradigms (e.g. using Lahiri
+/// ayanamsa with KP Sub-Lord tables, or using Placidus houses in traditional
+/// Parashari analysis) produces numerically inconsistent results.
+///
+/// Use [AstrologicalSystem.traditional] for:
+///   - Parashari / KN Rao / BPHS-style calculations
+///   - Shadbala, Ashtakavarga, Jaimini, Dasha systems beyond Vimshottari
+///   - Graha Drishti (sign-based aspects)
+///   - Whole-Sign or Equal house systems
+///
+/// Use [AstrologicalSystem.kp] for:
+///   - Krishnamurti Paddhati (KP)
+///   - Sub-Lord, Sub-Sub-Lord, Significator (ABCD) calculations
+///   - Ruling Planets and cuspal-interlink analysis
+///   - KP VP291 ayanamsa + Placidus house system
+enum AstrologicalSystem {
+  /// Traditional Parashari / KN Rao Vedic astrology.
+  ///
+  /// Default ayanamsa : Lahiri.
+  /// Default house system : Whole-Sign (or Equal).
+  /// Rahu/Ketu : Mean Node (BPHS) or True Node (modern researchers).
+  traditional,
+
+  /// Krishnamurti Paddhati (KP) system.
+  ///
+  /// Ayanamsa : Krishnamurti VP291 (KP New ayanamsa).
+  /// House system : Placidus  **mandatory**.
+  /// Zodiac division : Sign  Star  Sub  Sub-Sub (249 divisions).
+  ///
+  /// Services exclusive to this system:
+  ///   [KPService]  Sub-Lords, Significators, Ruling Planets.
+  kp,
+}
 
 /// Calculation flags for Swiss Ephemeris.
 ///
@@ -8,13 +45,19 @@ import 'planet.dart';
 class CalculationFlags {
   /// Creates calculation flags for Vedic astrology (sidereal calculations).
   ///
-  /// [useSwissEphemeris] - Use Swiss Ephemeris (default: true)
-  /// [calculateSpeed] - Calculate planetary speed/velocity (default: true)
-  /// [siderealMode] - Ayanamsa for sidereal calculations (default: Lahiri)
-  /// [useTopocentric] - Use topocentric positions (default: false)
-  /// [useEquatorial] - Use equatorial coordinates (default: false)
-  /// [nodeType] - Type of lunar node for Rahu/Ketu (default: meanNode)
+  /// [system]          - Astrological paradigm (default: [AstrologicalSystem.traditional]).
+  /// [useSwissEphemeris] - Use Swiss Ephemeris (default: true).
+  /// [calculateSpeed] - Calculate planetary speed/velocity (default: true).
+  /// [siderealMode]   - Ayanamsa for sidereal calculations (default: Lahiri).
+  /// [useTopocentric] - Use topocentric positions (default: false).
+  /// [useEquatorial]  - Use equatorial coordinates (default: false).
+  /// [nodeType]       - Type of lunar node for Rahu/Ketu (default: meanNode).
+  ///
+  /// Prefer the named factory constructors:
+  ///   - [CalculationFlags.traditionalist()] for Traditional / KN Rao Parashari.
+  ///   - [CalculationFlags.kp()] for Krishnamurti Paddhati.
   const CalculationFlags({
+    this.system = AstrologicalSystem.traditional,
     this.useSwissEphemeris = true,
     this.calculateSpeed = true,
     this.siderealMode = SiderealMode.lahiri,
@@ -23,45 +66,107 @@ class CalculationFlags {
     this.nodeType = NodeType.meanNode,
   });
 
-  /// Creates default calculation flags (Lahiri sidereal, geocentric, with speed).
+  /// Creates default calculation flags (Lahiri sidereal, geocentric, with speed, mean node).
+  ///
+  /// **Deprecated**: Use `CalculationFlags.traditionalist()` or `CalculationFlags.modernPrecision()`
+  /// to explicitly declare node type choice.
+  @Deprecated(
+      'Use CalculationFlags.traditionalist() for Mean Node or CalculationFlags.modernPrecision() for True Node')
   factory CalculationFlags.defaultFlags() => const CalculationFlags();
 
-  /// Creates flags for sidereal calculations with custom ayanamsa.
+  /// Strong default for traditional Indian astrology.
+  ///
+  /// System : **[AstrologicalSystem.traditional]**.
+  /// Ayanamsa : Lahiri | House system : Whole-Sign | Node : Mean Node.
+  /// Covers: Parashari, KN Rao, BPHS, Jaimini, Shadbala, all Dasha systems.
+  factory CalculationFlags.traditionalist() => const CalculationFlags(
+        system: AstrologicalSystem.traditional,
+      );
+
+  /// Precision-focused modern Vedic astrology.
+  ///
+  /// System : **[AstrologicalSystem.traditional]**.
+  /// Uses Lahiri ayanamsa and True Node (preferred by contemporary researchers).
+  factory CalculationFlags.modernPrecision() => const CalculationFlags(
+        system: AstrologicalSystem.traditional,
+        nodeType: NodeType.trueNode,
+      );
+
+  /// Creates flags for sidereal calculations with a custom ayanamsa.
+  /// Defaults to the [AstrologicalSystem.traditional] paradigm.
   factory CalculationFlags.sidereal(SiderealMode mode) => CalculationFlags(
+        system: AstrologicalSystem.traditional,
         siderealMode: mode,
       );
 
   /// Creates flags for sidereal calculations with Lahiri ayanamsa.
   factory CalculationFlags.siderealLahiri() => const CalculationFlags(
+        system: AstrologicalSystem.traditional,
         siderealMode: SiderealMode.lahiri,
       );
 
-  /// Creates flags for topocentric calculations.
+  /// Creates flags for topocentric calculations (traditional system).
   factory CalculationFlags.topocentric() => const CalculationFlags(
+        system: AstrologicalSystem.traditional,
         useTopocentric: true,
       );
 
-  /// Creates flags with specified node type.
+  /// Creates flags for the **KP (Krishnamurti Paddhati)** system.
   ///
-  /// [nodeType] - Type of lunar node (meanNode or trueNode)
+  /// System : **[AstrologicalSystem.kp]**.
+  ///
+  /// This preset configures:
+  /// - Ayanamsa: Krishnamurti VP291 ("KP New Ayanamsa")  the correct
+  ///   ayanamsa for all KP work, distinct from classical Lahiri.
+  /// - System tag: [AstrologicalSystem.kp]  enables KP-exclusive services
+  ///   ([KPService]) and guard-rail assertions.
+  ///
+  /// **Important**: pair this with `houseSystem: 'P'` (Placidus) when
+  /// calling [calculateVedicChart], as Placidus is mandatory in KP.
+  ///
+  /// ```dart
+  /// final chart = await jyotish.calculateVedicChart(
+  ///   dateTime: birthDateTime,
+  ///   location: location,
+  ///   houseSystem: 'P', // Placidus  mandatory for KP
+  ///   flags: CalculationFlags.kp(),
+  /// );
+  /// final kpData = await jyotish.calculateKPData(chart);
+  /// ```
+  factory CalculationFlags.kp() => const CalculationFlags(
+        system: AstrologicalSystem.kp,
+        siderealMode: SiderealMode.krishnamurtiVP291,
+      );
+
+  /// Creates flags with specified node type (traditional system).
+  ///
+  /// [nodeType] - Type of lunar node (meanNode or trueNode).
   factory CalculationFlags.withNodeType(NodeType nodeType) => CalculationFlags(
+        system: AstrologicalSystem.traditional,
         nodeType: nodeType,
       );
 
-  /// Use Swiss Ephemeris (high precision)
+  /// The high-level astrological system/paradigm.
+  ///
+  /// Drives which services are valid to use and which ayanamsa / house
+  /// system combination is expected.  Use [AstrologicalSystem.traditional]
+  /// for Parashari / KN Rao work and [AstrologicalSystem.kp] for KP.
+  final AstrologicalSystem system;
+
+  /// Use Swiss Ephemeris (high precision).
   final bool useSwissEphemeris;
 
-  /// Calculate speed (velocity)
+  /// Calculate speed (velocity).
   final bool calculateSpeed;
 
-  /// Sidereal ayanamsa mode (Lahiri by default for Vedic astrology)
+  /// Sidereal ayanamsa mode (Lahiri by default for Vedic astrology).
   final SiderealMode siderealMode;
 
   /// Use topocentric positions (observed from surface of Earth)
-  /// instead of geocentric (from Earth's center)
+  /// instead of geocentric (from Earth's center).
   final bool useTopocentric;
 
-  /// Use equatorial coordinates instead of ecliptic
+  /// Use equatorial coordinates instead of ecliptic.
   final bool useEquatorial;
 
   /// Type of lunar node to use for Rahu/Ketu calculations.
@@ -71,6 +176,12 @@ class CalculationFlags {
   /// - [NodeType.meanNode]: Uses Mean Node (average position of Moon's orbit crossing)
   /// - [NodeType.trueNode]: Uses True Node (actual position at exact moment)
   final NodeType nodeType;
+
+  /// Returns `true` when these flags describe the KP paradigm.
+  bool get isKP => system == AstrologicalSystem.kp;
+
+  /// Returns `true` when these flags describe the Traditional paradigm.
+  bool get isTraditional => system == AstrologicalSystem.traditional;
 
   /// Converts flags to Swiss Ephemeris integer flag value.
   /// Note: We always calculate tropical and subtract ayanamsa manually
@@ -103,6 +214,7 @@ class CalculationFlags {
   @override
   String toString() {
     return 'CalculationFlags('
+        'system: ${system.name}, '
         'swissEph: $useSwissEphemeris, '
         'speed: $calculateSpeed, '
         'ayanamsa: ${siderealMode.name}, '
@@ -113,6 +225,7 @@ class CalculationFlags {
 
   /// Creates a copy with optional parameter overrides.
   CalculationFlags copyWith({
+    AstrologicalSystem? system,
     bool? useSwissEphemeris,
     bool? calculateSpeed,
     SiderealMode? siderealMode,
@@ -121,6 +234,7 @@ class CalculationFlags {
     NodeType? nodeType,
   }) {
     return CalculationFlags(
+      system: system ?? this.system,
       useSwissEphemeris: useSwissEphemeris ?? this.useSwissEphemeris,
       calculateSpeed: calculateSpeed ?? this.calculateSpeed,
       siderealMode: siderealMode ?? this.siderealMode,

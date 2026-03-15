@@ -1,0 +1,13 @@
+include: package:flutter_lints/recommended.yaml
+
+analyzer:
+  errors:
+    unused_import: warning
+    empty_catches: warning
+
+linter:
+  rules:
+    - avoid_empty_else
+    - avoid_print
+    - prefer_relative_imports: false
+    - always_use_package_imports: true

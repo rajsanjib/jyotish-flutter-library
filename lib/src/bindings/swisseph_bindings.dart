@@ -110,6 +110,76 @@ class SwissEphBindings {
         ffi.Pointer<ffi.Char>,
       )>('swe_rise_trans');
 
+  late final _sweLunEclipseHow = _lib.lookupFunction<
+      ffi.Int32 Function(
+        ffi.Double,
+        ffi.Int32,
+        ffi.Pointer<ffi.Double>,
+        ffi.Pointer<ffi.Double>,
+        ffi.Pointer<ffi.Char>,
+      ),
+      int Function(
+        double,
+        int,
+        ffi.Pointer<ffi.Double>,
+        ffi.Pointer<ffi.Double>,
+        ffi.Pointer<ffi.Char>,
+      )>('swe_lun_eclipse_how');
+
+  late final _sweLunEclipseWhen = _lib.lookupFunction<
+      ffi.Int32 Function(
+        ffi.Double,
+        ffi.Int32,
+        ffi.Int32,
+        ffi.Pointer<ffi.Double>,
+        ffi.Int32,
+        ffi.Pointer<ffi.Char>,
+      ),
+      int Function(
+        double,
+        int,
+        int,
+        ffi.Pointer<ffi.Double>,
+        int,
+        ffi.Pointer<ffi.Char>,
+      )>('swe_lun_eclipse_when');
+
+  late final _sweSolEclipseHow = _lib.lookupFunction<
+      ffi.Int32 Function(
+        ffi.Double,
+        ffi.Int32,
+        ffi.Pointer<ffi.Double>,
+        ffi.Pointer<ffi.Double>,
+        ffi.Pointer<ffi.Char>,
+      ),
+      int Function(
+        double,
+        int,
+        ffi.Pointer<ffi.Double>,
+        ffi.Pointer<ffi.Double>,
+        ffi.Pointer<ffi.Char>,
+      )>('swe_sol_eclipse_how');
+
+  late final _sweSolEclipseWhenLoc = _lib.lookupFunction<
+      ffi.Int32 Function(
+        ffi.Double,
+        ffi.Int32,
+        ffi.Pointer<ffi.Double>,
+        ffi.Pointer<ffi.Double>,
+        ffi.Pointer<ffi.Double>,
+        ffi.Int32,
+        ffi.Pointer<ffi.Char>,
+      ),
+      int Function(
+        double,
+        int,
+        ffi.Pointer<ffi.Double>,
+        ffi.Pointer<ffi.Double>,
+        ffi.Pointer<ffi.Double>,
+        int,
+        ffi.Pointer<ffi.Char>,
+      )>('swe_sol_eclipse_when_loc');
+
   /// Loads the appropriate Swiss Ephemeris library for the platform.
   ffi.DynamicLibrary _loadLibrary() {
     // Try custom path first (from environment or development location)
@@ -118,7 +188,8 @@ class SwissEphBindings {
       try {
         return ffi.DynamicLibrary.open(customPath);
       } catch (e) {
-        // Silently fail if custom path is invalid
+        // Silently fail if custom path is invalid, will try next option
+        print('Custom library path $customPath failed to load: $e');
       }
     }
 
@@ -135,6 +206,7 @@ class SwissEphBindings {
           return ffi.DynamicLibrary.open(path);
         } catch (e) {
           // Try next path
+          print('Local library path $path failed to load: $e');
           continue;
         }
       }
@@ -177,6 +249,10 @@ class SwissEphBindings {
     required ffi.Pointer<ffi.Char> errorBuffer,
   }) {
     final resultPtr = malloc<ffi.Double>(6);
+    for (var i = 0; i < 6; i++) {
+      resultPtr[i] = 0.0;
+    }
+
     try {
       final returnCode = _sweCalcUt(
         julianDay,
@@ -187,7 +263,15 @@ class SwissEphBindings {
       );
 
       if (returnCode < 0) {
-        return null;
+        return null; // The exact error is in errorBuffer
+      }
+
+      // If it falls back to Moshier (4) instead of Swiss (2), or has warnings
+      if (returnCode != flags && returnCode != 2) {
+        final msg = errorBuffer.cast<Utf8>().toDartString();
+        if (msg.isNotEmpty) {
+          print('SwissEph Warning (Planet $planetId): $msg');
+        }
       }
 
       return List.generate(6, (i) => resultPtr[i]);
@@ -343,6 +427,157 @@ class SwissEphBindings {
     } finally {
       malloc.free(geoposPtr);
       malloc.free(resultPtr);
+    }
+  }
+
+  /// Calculates details for a lunar eclipse at a given time.
+  List<double>? calculateLunarEclipseHow({
+    required double julianDay,
+    required int flags,
+    required ffi.Pointer<ffi.Char> errorBuffer,
+  }) {
+    final attrPtr = malloc<ffi.Double>(20);
+    try {
+      final returnCode = _sweLunEclipseHow(
+        julianDay,
+        flags,
+        ffi.Pointer.fromAddress(
+            0), // geopos not used for lunar eclipse (global)
+        attrPtr,
+        errorBuffer,
+      );
+
+      if (returnCode < 0) {
+        return null;
+      }
+
+      final result = <double>[];
+      for (var i = 0; i < 20; i++) {
+        result.add(attrPtr[i]);
+      }
+      return result;
+    } finally {
+      malloc.free(attrPtr);
+    }
+  }
+
+  /// Finds the next or previous lunar eclipse.
+  List<double>? findLunarEclipseWhen({
+    required double julianDay,
+    required int flags,
+    required int eclipseTypeFlags,
+    required bool backward,
+    required ffi.Pointer<ffi.Char> errorBuffer,
+  }) {
+    final tretPtr = malloc<ffi.Double>(20);
+    try {
+      final returnCode = _sweLunEclipseWhen(
+        julianDay,
+        flags,
+        eclipseTypeFlags,
+        tretPtr,
+        backward ? 1 : 0,
+        errorBuffer,
+      );
+
+      if (returnCode < 0) {
+        return null;
+      }
+
+      final result = <double>[];
+      for (var i = 0; i < 20; i++) {
+        result.add(tretPtr[i]);
+      }
+      return result;
+    } finally {
+      malloc.free(tretPtr);
+    }
+  }
+
+  /// Calculates details for a solar eclipse at a given time and location.
+  List<double>? calculateSolarEclipseHow({
+    required double julianDay,
+    required double latitude,
+    required double longitude,
+    required double altitude,
+    required int flags,
+    required ffi.Pointer<ffi.Char> errorBuffer,
+  }) {
+    final geoposPtr = malloc<ffi.Double>(3);
+    final attrPtr = malloc<ffi.Double>(20);
+    try {
+      geoposPtr[0] = longitude;
+      geoposPtr[1] = latitude;
+      geoposPtr[2] = altitude;
+
+      final returnCode = _sweSolEclipseHow(
+        julianDay,
+        flags,
+        geoposPtr,
+        attrPtr,
+        errorBuffer,
+      );
+
+      if (returnCode < 0) {
+        return null;
+      }
+
+      final result = <double>[];
+      for (var i = 0; i < 20; i++) {
+        result.add(attrPtr[i]);
+      }
+      return result;
+    } finally {
+      malloc.free(geoposPtr);
+      malloc.free(attrPtr);
+    }
+  }
+
+  /// Finds the next or previous solar eclipse for a given geographic location.
+  List<double>? findSolarEclipseWhenLoc({
+    required double julianDay,
+    required double latitude,
+    required double longitude,
+    required double altitude,
+    required int flags,
+    required bool backward,
+    required ffi.Pointer<ffi.Char> errorBuffer,
+  }) {
+    final geoposPtr = calloc<ffi.Double>(10); // zero-initialized array
+    final tretPtr = calloc<ffi.Double>(30); // zero-initialized
+    final attrPtr = calloc<ffi.Double>(30); // zero-initialized
+    try {
+      geoposPtr[0] = longitude;
+      geoposPtr[1] = latitude;
+      geoposPtr[2] = altitude;
+
+      final returnCode = _sweSolEclipseWhenLoc(
+        julianDay,
+        flags,
+        geoposPtr,
+        tretPtr,
+        attrPtr,
+        backward ? 1 : 0,
+        errorBuffer,
+      );
+
+      if (returnCode < 0) {
+        return null; // Eclipse not found or error
+      }
+
+      // Return both tret (10) and attr (20) concatenated for easy parsing
+      final result = <double>[];
+      for (var i = 0; i < 10; i++) {
+        result.add(tretPtr[i]);
+      }
+      for (var i = 0; i < 20; i++) {
+        result.add(attrPtr[i]);
+      }
+      return result;
+    } finally {
+      calloc.free(geoposPtr);
+      calloc.free(tretPtr);
+      calloc.free(attrPtr);
     }
   }
 }

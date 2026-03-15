@@ -7,7 +7,7 @@ void main() {
 
     setUpAll(() async {
       jyotish = Jyotish();
-      await jyotish.initialize();
+      await jyotish.initialize(ephemerisPath: 'ephe');
     });
 
     test('1980 India (IST stable +5:30)', () async {

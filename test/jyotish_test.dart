@@ -251,7 +251,7 @@ void main() {
         Planet.jupiter: PlanetPosition(
           planet: Planet.jupiter,
           dateTime: DateTime.now(),
-          longitude: 210.0, // 210° from Mars = 8th aspect
+          longitude: 210.0, // 210 from Mars = 8th aspect
           latitude: 0,
           distance: 5.0,
           longitudeSpeed: 0.1,
@@ -310,9 +310,9 @@ void main() {
 
     test('DashaService calculates Vimshottari correctly', () {
       final service = DashaService();
-      // Moon at 15° Aries = Ashwini nakshatra = Ketu mahadasha
+      // Moon at 6 Aries = clearly within Ashwini nakshatra (0-13.333) = Ketu mahadasha
       final result = service.calculateVimshottariDasha(
-        moonLongitude: 15.0,
+        moonLongitude: 6.0,
         birthDateTime: DateTime(1990, 5, 15, 14, 30),
         levels: 2,
       );
@@ -442,10 +442,10 @@ void main() {
     setUpAll(() async {
       jyotish = Jyotish();
       try {
-        await jyotish.initialize();
+        await jyotish.initialize(ephemerisPath: 'ephe');
       } catch (e) {
         // ignore: avoid_print
-        print('⚠️  Swiss Ephemeris not found. See SETUP.md for installation.');
+        print('  Swiss Ephemeris not found. See SETUP.md for installation.');
         rethrow;
       }
     });
@@ -527,6 +527,35 @@ void main() {
       expect(dasha.type, DashaType.vimshottari);
       expect(dasha.birthNakshatra, isNotEmpty);
       expect(dasha.allMahadashas.length, greaterThan(9));
+    });
+
+    test('throws PolarRegionException for Placidus at extreme latitudes',
+        () async {
+      // Troms, Norway at 69.6492 N
+      final location = GeographicLocation(
+        latitude: 69.6492,
+        longitude: 18.9553,
+      );
+      final dateTime = DateTime.utc(1990, 5, 15, 14, 30);
+
+      // We expect calculation to fail with Placidus ('P') above Arctic Circle (66.5)
+      // NOTE: The default houseSystem is Whole Sign ('W'), not Placidus, so we must be explicit.
+      await expectLater(
+        () => jyotish.calculateVedicChart(
+          dateTime: dateTime,
+          location: location,
+          houseSystem: 'P', // Placidus  undefined above Arctic Circle
+        ),
+        throwsA(isA<PolarRegionException>()),
+      );
+
+      // But Whole Sign should succeed
+      final chart = await jyotish.calculateVedicChart(
+        dateTime: dateTime,
+        location: location,
+        houseSystem: 'W',
+      );
+      expect(chart.houses.cusps, isNotEmpty);
     });
   });
 }

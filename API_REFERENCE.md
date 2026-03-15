@@ -11,6 +11,22 @@ A comprehensive API reference for the Jyotish Flutter library - production-ready
   - [Jyotish](#jyotish)
   - [GeographicLocation](#geographiclocation)
   - [CalculationFlags](#calculationflags)
+- [New in v2.6.0 — High-Precision Eclipse Reporting](#new-in-v260--high-precision-eclipse-reporting)
+- [New in v2.5.0 — AstrologicalSystem](#new-in-v250--astrologicalsystem)
+- [New in v2.4.0](#new-in-v240)
+  - [Bhava Chalit (Cuspal Chart)](#bhava-chalit-cuspal-chart)
+  - [Pancha-Vargeeya Maitri (5-fold Friendship)](#pancha-vargeeya-maitri)
+  - [Ayanamsa Utility](#ayanamsa-utility)
+  - [Reference Chart Test Suite](#reference-chart-test-suite)
+- [New in v2.5.0](#new-in-v250)
+  - [Ashtakavarga Shodhana (Reductions)](#ashtakavarga-shodhana-reductions)
+  - [BPHS Dasha Applicability](#bphs-dasha-applicability)
+  - [Shadbala Minimum Requirements](#shadbala-minimum-requirements)
+- [New in v2.3.0](#new-in-v230)
+  - [Professional Features Suite](#professional-features-suite)
+  - [Graha Avastha & Strength Reports](#graha-avastha--strength-reports)
+  - [Event Timing Engine](#event-timing-engine)
+  - [Sarvatobhadra Chakra](#sarvatobhadra-chakra)
 - [Services](#services)
   - [EphemerisService](#ephemerisservice)
   - [VedicChartService](#vedicchartservice)
@@ -89,17 +105,8 @@ A comprehensive API reference for the Jyotish Flutter library - production-ready
   - [GunaScores](#gunascores)
   - [CompatibilityLevel](#compatibilitylevel)
 - [Enums](#enums)
-  - [Planet](#planet)
-  - [SiderealMode](#siderealmode)
-  - [DivisionalChartType](#divisionalcharttype)
-  - [PlanetaryDignity](#planetarydignity)
-  - [NodeType](#nodetype)
-  - [MasaType](#masatype)
-  - [LunarMonth](#lunarmonth)
-  - [Ritu](#ritu)
-  - [VisibilityType](#visibilitytype)
-  - [VarshapalPeriodType](#varshapaperiodtype)
-  - [EclipseType](#eclipsetype)
+- [Professional Features (v2.3.0)](#professional-features-v230)
+- [New in v2.6.0 — High-Precision Eclipse Reporting](#new-in-v260--high-precision-eclipse-reporting)
 - [Error Handling](#error-handling)
 - [Best Practices](#best-practices)
 
@@ -155,6 +162,10 @@ await jyotish.initialize({String? ephemerisPath});
 |-----------|------|----------|-------------|
 | `ephemerisPath` | `String?` | No | Custom path to Swiss Ephemeris data files |
 
+| Property | Type | Description |
+|----------|------|-------------|
+| `isInitialized` | `bool` | Whether the library has been initialized |
+
 #### Planetary Position Methods
 
 | Method | Returns | Description |
@@ -177,6 +188,7 @@ await jyotish.initialize({String? ephemerisPath});
 | `getAspects({dateTime, location, config?})` | `Future<List<AspectInfo>>` | All planetary aspects |
 | `getAspectsForPlanet({planet, dateTime, location})` | `Future<List<AspectInfo>>` | Aspects for specific planet |
 | `getChartAspects(chart, {config?})` | `List<AspectInfo>` | Aspects within a chart |
+| `getRashiAspects(chart, {activeOnly?})` | `List<RashiDrishtiInfo>` | Jaimini Sign Aspects (Movable/Fixed/Dual) |
 
 #### Dasha Methods
 
@@ -186,9 +198,22 @@ await jyotish.initialize({String? ephemerisPath});
 | `getYoginiDasha({natalChart, levels?})` | `Future<DashaResult>` | Yogini Dasha (36-year) |
 | `getCharaDasha({natalChart, levels?})` | `Future<CharaDashaResult>` | Chara Dasha (Jaimini) |
 | `getNarayanaDasha({chart, levels?})` | `Future<NarayanaDashaResult>` | Narayana Dasha (Jaimini) |
-| `getAshtottariDasha({natalChart, scheme?})` | `Future<AshtottariDashaResult>` | Ashtottari Dasha (108-year) |
-| `getKalachakraDasha({natalChart})` | `Future<KalachakraDashaResult>` | Kalachakra Dasha |
+| `getAshtottariDasha({natalChart, scheme?, forceCalculation?, levels?})` | `Future<DashaResult>` | Ashtottari Dasha (108-year) |
+| `getKalachakraDasha({natalChart, levels?})` | `Future<DashaResult>` | Kalachakra Dasha (levels 1=MD, 2=AD) |
 | `getCurrentDasha({natalChart, targetDate, type?})` | `DashaPeriod` | Current active period |
+
+#### Professional Analysis Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getStrengthReport(chart)` | `Future<StrengthReport>` | Combined planetary strength summary |
+| `getGrahaAvastha(planet, chart)` | `GrahaAvastha` | Baladi & Jagratadi states |
+| `findEventTimingWindows(request)` | `Future<List<EventTimingWindow>>` | Search for dates matching Dasha+Transit criteria |
+| `getD10CareerAnalysis(natalChart)` | `Future<D10CareerAnalysis>` | Career specialization from Dashamsha |
+| `getKPDivisionTable()` | `List<KPDivisionEntry>` | Full 249 sub-lord boundary table |
+| `analyzeSarvatobhadra({natalChart, transitPositions})` | `SarvatobhadraAnalysis` | Transit Vedha analysis on star grid |
+| `getTajakaEnhancements({natalChart, annualChart, age})` | `TajakaEnhancement` | Muntha, Sahams, and Tajaka Yogas |
+
 
 #### Varshapal (Annual Chart) Methods
 
@@ -204,6 +229,14 @@ await jyotish.initialize({String? ephemerisPath});
 | `getTransitPositions({natalChart, transitDateTime?, location})` | `Future<Map<Planet, TransitInfo>>` | Transit positions vs natal |
 | `getTransitEvents({natalChart, startDate, endDate, location, planets?})` | `Future<List<TransitEvent>>` | Transit events in date range |
 | `calculateSpecialTransits({natalChart, checkDate?, location})` | `Future<SpecialTransits>` | Sade Sati, Dhaiya, Panchak |
+| `predictSadeSatiPeriods(natalChart, {yearsBefore?, yearsAfter?})` | `List<Map<String, dynamic>>` | Past/future Sade Sati periods |
+
+#### Sunrise/Sunset & Rise/Set Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getSunriseSunset({date, location, atpress?, attemp?})` | `Future<(DateTime?, DateTime?)>` | High-precision sunrise/sunset |
+| `getRiseSet({planet, date, location, rsmi, atpress?, attemp?, searchFromExactTime?})` | `Future<DateTime?>` | Rise/set time. `searchFromExactTime` (default false): when true, uses full DateTime for search start rather than truncating to midnight. |
 
 #### Panchanga Methods
 
@@ -211,28 +244,45 @@ await jyotish.initialize({String? ephemerisPath});
 |--------|---------|-------------|
 | `calculatePanchanga({dateTime, location})` | `Future<Panchanga>` | Complete Panchanga (5 limbs) |
 | `getTithi({dateTime, location})` | `Future<TithiInfo>` | Lunar day |
+| `getTithiJunction({targetTithiNumber, startDate, location})` | `Future<DateTime>` | Exact time a Tithi begins/ends |
 | `getTithiEndTime({dateTime, location, accuracyThreshold?})` | `Future<DateTime>` | Precise Tithi end time |
 | `getYoga({dateTime, location})` | `Future<YogaInfo>` | Sun-Moon combination |
 | `getKarana({dateTime, location})` | `Future<KaranaInfo>` | Half-Tithi |
 | `getVara({dateTime, location})` | `Future<VaraInfo>` | Weekday/planetary lord |
 | `getNakshatra({dateTime, location})` | `Future<NakshatraInfo>` | Moon's nakshatra |
 | `getNakshatraWithAbhijit({dateTime, location})` | `Future<NakshatraInfo>` | With 28th nakshatra |
+| `calculateAbhijitMuhurta({date, location})` | `Future<AbhijitMuhurta>` | Auspicious midday period |
+| `calculateBrahmaMuhurta({date, location})` | `Future<BrahmaMuhurta>` | Auspicious pre-dawn period |
+| `calculateNighttimeInauspicious({date, location})` | `Future<NighttimeInauspiciousPeriods>` | Nighttime inauspicious times |
+| `getMoonPhaseDetails({dateTime, location})` | `Future<MoonPhaseDetails>` | Illumination, age, velocity |
 
 #### Ashtakavarga Methods
 
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `calculateAshtakavarga(natalChart)` | `Ashtakavarga` | Complete Ashtakavarga |
+| `calculateAshtakavargaWithShodhana(natalChart)` | `AshtakavargaWithShodhana` | Raw + Shodhana Reductions |
 | `analyzeAshtakavargaTransit({ashtakavarga, transitPlanet, transitSign})` | `TransitAnalysis` | Transit strength analysis |
 | `getAshtakavargaReductions(ashtakavarga, {trikonaReduction?, ekadhipatiReduction?})` | `Ashtakavarga` | Reduced Ashtakavarga |
+| `calculatePinda(ashtakavarga)` | `Map<Planet, PindaResult>` | Rashi + Graha Pinda strength |
+| `calculateYogaPinda(ashtakavarga)` | `Map<Planet, YogaPindaResult>` | Auspicious Yoga Pinda |
+| `calculateShodhyaPinda(ashtakavarga)` | `ShodhyaPindaResult` | Reduced Shodhya Pinda |
+| `calculateHousePinda(ashtakavarga, houseNumber)` | `double` | Pinda for specific house |
+| `calculateAllHousesPinda(ashtakavarga)` | `Map<int, double>` | Pinda for all 12 houses |
 
 #### KP System Methods
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `calculateKPData(natalChart, {useNewAyanamsa?})` | `KPCalculations` | Complete KP data |
+| `calculateKPData(natalChart, {useNewAyanamsa?})` | `Future<KPCalculations>` | Complete KP data (ayanamsa-adjusted Sub-Lords, cusp-based significators) |
 | `getSubLord(longitude)` | `Planet` | Sub-Lord for longitude |
 | `getSubSubLord(longitude)` | `Planet` | Sub-Sub-Lord |
+| `getHouseGroupSignificators(significators)` | `KPHouseGroupSignificators` | House group significators |
+| `calculateTransitKPDivisions(transitPositions)` | `Map<Planet, KPDivision>` | Transit KP divisions |
+| `compareKPTransitToNatal({natalChart, natalKP?, transitDateTime?, location, useNewAyanamsa?})` | `Future<List<KPTransitComparison>>` | Transit vs natal Sub-Lord comparison, sorted by match strength |
+| `getKPRulingPlanets({chart, useNewAyanamsa?})` | `Future<KPRulingPlanets>` | Seven KP Ruling Planets for a Prashna query moment |
+
+> **Accuracy note (v2.2.0)**: C and D significators now use the chart's actual Placidus house cusps (`getOwnedHousesFromChart`) instead of the fixed natural Aries Lagna sign map. This ensures Mars correctly shows houses 5 & 12 for a chart where Aries falls on the 5th cusp, rather than always returning houses 1 & 8.
 
 #### Muhurta Methods
 
@@ -267,18 +317,38 @@ await jyotish.initialize({String? ephemerisPath});
 | `getMasa({dateTime, location, type?})` | `Future<MasaInfo>` | Lunar month |
 | `getAmantaMasa({dateTime, location})` | `Future<MasaInfo>` | Amanta system |
 | `getPurnimantaMasa({dateTime, location})` | `Future<MasaInfo>` | Purnimanta system |
-vatsara({dateTime, location| `getSam})` | `Future<String>` | 60-year cycle name |
+| `getSamvatsara({dateTime, location})` | `Future<String>` | 60-year cycle name |
+| `getSamvatInfo({dateTime, location})` | `Future<SamvatInfo>` | Vikram/Shaka/Gujarati Samvat |
+| `getAyana({dateTime, location})` | `Future<Ayana>` | Uttarayana or Dakshinayana |
+| `getPravishte({dateTime, location})` | `Future<PravishteInfo>` | Solar Day/Month |
 | `getMasaListForYear({year, location, type?})` | `Future<List<MasaInfo>>` | All months in year |
 | `getRitu(masaInfo)` | `Ritu` | Hindu season |
+| `getRituDetails({dateTime, location})` | `Future<RituInfo>` | Detailed season info |
+
+#### Ephemeris Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `calculateHouses({dateTime, location, houseSystem?})` | `Future<Map<String, List<double>>>` | House cusps and ascendant/MC |
 
 #### Shadbala & Strength Methods
 
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `getShadbala(chart)` | `Future<Map<Planet, ShadbalaResult>>` | Six-fold planetary strength |
-| `getVimshopakBala(planet, chart)` | `double` | 20-fold planetary strength |
+| `getVimshopakBala(planet, chart)` | `double` | 20-fold planetary strength for one planet |
+| `getAllPlanetsVimshopakBala(chart)` | `Map<Planet, VimshopakBala>` | 20-fold strength for all planets |
 | `getIshtaphala(planet, chart, shadbala)` | `double` | Auspicious potential (0-60) |
 | `getKashtaphala(planet, chart, shadbala)` | `double` | Inauspicious potential (0-60) |
+
+#### Astrological Strength & Rituals (Panchang)
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `calculateChandrabalam({currentMoonNakshatra})` | `ChandrabalamInfo` | Moon strength for all 12 Rashis |
+| `calculateTarabalam({birthNakshatraIndex, currentNakshatra})` | `TarabalamInfo` | Star strength (Janma, Sampat, etc.) |
+| `calculateUdayaLagnas({date, location, sunrise})` | `Future<List<UdayaLagnaPeriod>>` | 12 Daily Ascendant periods |
+| `calculateRitualElements({panchanga})` | `RitualElements` | Homahuti, Agnivasa, Shivavasa, Kumbha Chakra |
 
 #### Sudarshan Chakra & Bhava Bala
 
@@ -286,7 +356,8 @@ vatsara({dateTime, location| `getSam})` | `Future<String>` | 60-year cycle name 
 |--------|---------|-------------|
 | `calculateSudarshanChakra(chart)` | `SudarshanChakraResult` | Triple-perspective strength analysis |
 | `getSudarshanChakra(chart)` | `SudarshanChakraResult` | Get Sudarshan Chakra (alias) |
-| `getBhavaBala(chart)` | `Future<Map<int, BhavaBalaResult>>` | House Strength (Bhava Bala) |
+| `getBhavaBala(chart)` | `Future<Map<int, BhavaBalaResult>>` | House Strength (Bhava Bala service) |
+| `getStrengthBhavaBala({chart, shadbalaResults})` | `Map<int, double>` | House Strength (Strength Analysis service) |
 
 #### Gochara Vedha (Transit Obstruction)
 
@@ -294,6 +365,9 @@ vatsara({dateTime, location| `getSam})` | `Future<String>` | 60-year cycle name 
 |--------|---------|-------------|
 | `calculateGocharaVedha({transitPlanet, houseFromMoon, moonNakshatra, otherTransits})` | `VedhaResult` | Check Vedha for single transit |
 | `calculateMultipleGocharaVedha({transits, moonNakshatra})` | `List<VedhaResult>` | Check Vedha for multiple transits |
+| `hasMutualVedha(planet1, house1, planet2, house2)` | `bool` | Check bidirectional obstruction |
+| `findFavorablePeriodsWithoutVedha(transitsOverTime)` | `List<FavorablePeriod>` | Find clear transit windows |
+| `getVedhaRemedies(vedhaResult)` | `List<String>` | Suggest remedies for obstruction |
 
 #### Extended Dasha Methods
 
@@ -339,11 +413,30 @@ vatsara({dateTime, location| `getSam})` | `Future<String>` | 60-year cycle name 
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `calculateCompatibility(boyChart, girlChart)` | `CompatibilityResult` | Full compatibility |
-| `calculateGunaMilan(boyChart, girlChart)` | `GunaScores` | Ashtakoota scores |
-| `checkManglikDosha(chart)` | `ManglikDoshaResult` | Mars placement |
-| `checkNadiDosha(boyChart, girlChart)` | `NadiDoshaResult` | Nadi compatibility |
-| `checkBhakootDosha(boyChart, girlChart)` | `BhakootDoshaResult` | Moon sign compatibility |
+| `calculateCompatibility(boyChart, girlChart)` | `CompatibilityResult` | Full compatibility + doshas |
+| `calculateGunaMilan(boyChart, girlChart)` | `GunaScores` | All 8 Ashtakoota scores |
+| `calculateVashya(boyChart, girlChart)` | `int` | **[CHANGED v2.1.0]** Rashi-based classification (0-2 pts) |
+| `calculateYoni(boyNakshatra, girlNakshatra)` | `int` | Uses correct 14x14 matrix scoring (0-4 pts) |
+| `checkManglikDosha(chart)` | `ManglikDoshaResult` | Mars in 1/2/4/7/8/12 houses |
+| `checkNadiDosha(boyChart, girlChart)` | `NadiDoshaResult` | Nadi match with cancellation rules |
+| `checkBhakootDosha(boyChart, girlChart)` | `BhakootDoshaResult` | 2/12, 5/9, 6/8 pairs with cancellation rules |
+| `checkDoshas(boyChart, girlChart)` | `DoshaCheck` | All dosha checks combined |
+| `calculateDashaCompatibility(boyChart, girlChart)` | `DashaCompatibility` | Dasha timing compatibility |
+
+> **API Change (v2.1.0)**: `calculateVashya` signature has changed from `(String boyNakshatra, String girlNakshatra)` to `(VedicChart boyChart, VedicChart girlChart)` to implement correct Rashi-based Vashya Koota classification according to traditional texts.
+>
+> **Calculation Updates (v2.1.0)**:
+> - **Bhakoot & Nadi Dosha**: Now implements extensive cancellation rules based on sign lords, mutual friendship, Nakshatra Padas, and Rashi/Nakshatra combinations.
+> - **Yoni Koota**: Replaced simple friend/enemy array pairs with the standard precision 14x14 Yoni points matrix to correctly return intermediate scores.
+> - **Samvatsara (Varsha Bala)**: The 60-year cycle calculation inside `ShadbalaService` now correctly computes the elapsed Jovian Years since the Kali Yuga epoch using Mean Jupiter motion (Ahargana) rather than simply reading Jupiter's spatial position.
+> - **Maasa Bala**: Month-lord mapping updated to align correctly with the Drik Siddhanta.
+>
+> **Accuracy Fixes (v2.3.0)**:
+> - **Vashya Dual Signs (Issue 10)**: Sagittarius and Capricorn are now split at the 15┬░ boundary: Sagittarius 0┬░ΓÇô15┬░ = Chatushpada, 15┬░ΓÇô30┬░ = Manava; Capricorn 0┬░ΓÇô15┬░ = Chatushpada, 15┬░ΓÇô30┬░ = Jalachara. A `longitude` parameter is now passed to the internal `_getRashiVashya` method.
+> - **Manglik Dosha Cancellations (Issue 11)**: Added 3 additional BPHS/Phaladeepika Parihara rules:
+>   1. Mars in Leo or Aquarius
+>   2. Mars aspected (whole-sign 7th) by Jupiter or Venus
+>   3. Mars is the Lagna Lord (Aries or Scorpio Ascendant)
 
 #### Service Accessors
 
@@ -363,6 +456,7 @@ vatsara({dateTime, location| `getSam})` | `Future<String>` | 60-year cycle name 
 | `getArudhaLagna(chart)` | `Rashi` | Arudha Lagna (AL) |
 | `getUpapada(chart)` | `Rashi` | Upapada Lagna (UL) |
 | `getAllArgalas(chart)` | `Map<int, List<ArgalaInfo>>` | Argalas for all houses |
+| `getArgalaForHouse(chart, house)` | `List<ArgalaInfo>` | Argala for specific house |
 
 #### Prashna (Horary) Methods
 
@@ -376,7 +470,10 @@ vatsara({dateTime, location| `getSam})` | `Future<String>` | 60-year cycle name 
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `getPlanetaryRelationships({natalChart})` | `Map<Planet, Map<Planet, RelationshipInfo>>` | Panchadha Maitri |
+| `getPlanetaryRelationships({natalChart})` | `List<PlanetaryRelationship>` | Panchadha Maitri (flat list) |
+| `getPlanetaryRelationshipsMatrix(chart)` | `Map<Planet, Map<Planet, PlanetaryRelationship>>` | 5-fold friendship matrix (O(1) lookup) |
+| `getBhavaChalit(chart)` | `BhavaChalit` | Cuspal chart with mid-cusp boundaries |
+| `getAyanamsa({dateTime, mode?, location?})` | `Future<double>` | Ayanamsa offset for a date/mode |
 
 #### Cleanup
 
@@ -385,6 +482,144 @@ jyotish.dispose();
 ```
 
 ---
+
+## New in v2.4.0
+
+### Bhava Chalit (Cuspal Chart)
+
+Bhava Chalit redistributes planets to houses based on **mid-cusp boundaries** (midpoint between
+adjacent house cusps) rather than fixed 30┬░ sign edges. This distinction is most significant with
+non-Whole-Sign house systems (Placidus, KochΓÇª) and is key for transit/dasha timing.
+
+```dart
+// Get the Rashi chart first
+final rashiChart = await jyotish.calculateVedicChart(
+  dateTime: birthDate,
+  location: location,
+  houseSystem: 'P', // Placidus ΓÇö most meaningful for Chalit
+);
+
+// Compute Bhava Chalit
+final chalit = jyotish.getBhavaChalit(rashiChart);
+
+// See which planets shifted
+for (final s in chalit.shiftedPlanets) {
+  print('${s.planet.displayName}: Rashi H${s.rashiHouse} ΓåÆ Chalit H${s.bhavaHouse}');
+}
+
+// Query a specific planet
+final jupBhava = chalit.getBhavaForPlanet(Planet.jupiter);
+
+// Query by longitude
+final bhavaNum = chalit.getBhavaForLongitude(56.7);
+```
+
+**BhavaChalit properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `bhavas` | `List<BhavaInfo>` | 12 bhavas with mid-cusp boundaries |
+| `chart` | `VedicChart` | Source Rashi chart |
+| `shiftedPlanets` | `List<({planet, rashiHouse, bhavaHouse})>` | Planets that changed house |
+
+**BhavaInfo properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `houseNumber` | `int` | 1ΓÇô12 |
+| `midCuspStart` | `double` | Entry longitude (┬░) |
+| `midCuspEnd` | `double` | Exit longitude (┬░) |
+| `cusp` | `double` | Actual house cusp (┬░) |
+| `planets` | `List<Planet>` | Planets in this bhava |
+
+---
+
+### Pancha-Vargeeya Maitri
+
+The 5-fold friendship table combines Naisargika (natural) + Tatkalika (temporal) relationships
+into the Panchadha Maitri compound result.
+
+```dart
+// Flat list ΓÇö one entry per ordered pair (7├ù6 = 42 items)
+final rels = jyotish.getPlanetaryRelationships(natalChart: chart);
+for (final r in rels) {
+  print('${r.planet.displayName}ΓåÆ${r.otherPlanet.displayName}: ${r.compound.displayName}');
+}
+
+// Matrix ΓÇö nested map for O(1) pair lookups
+final matrix = jyotish.getPlanetaryRelationshipsMatrix(chart);
+final sunJupiter = matrix[Planet.sun]![Planet.jupiter]!;
+print('Natural: ${sunJupiter.natural}')    // friend
+print('Temporal: ${sunJupiter.temporary}') // depends on chart
+print('Compound: ${sunJupiter.compound}')  // Panchadha result
+```
+
+**PlanetaryRelationship fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `natural` | `RelationshipType` | Naisargika Maitri |
+| `temporary` | `RelationshipType` | Tatkalika Maitri (chart placement) |
+| `compound` | `RelationshipType` | Panchadha Maitri (combined) |
+
+**Panchadha Maitri combination rule:**
+
+| Natural | Temporal | Compound |
+|---------|----------|----------|
+| Friend | Friend | `greatFriend` |
+| Friend | Enemy | `neutral` |
+| Neutral | Friend | `friend` |
+| Neutral | Enemy | `enemy` |
+| Enemy | Friend | `neutral` |
+| Enemy | Enemy | `greatEnemy` |
+
+---
+
+### Ayanamsa Utility
+
+```dart
+// Get Lahiri ayanamsa for a date
+final lah = await jyotish.getAyanamsa(dateTime: date);
+print('Lahiri: ${lah.toStringAsFixed(4)}┬░');
+
+// Compare with KP ayanamsa
+final kp = await jyotish.getAyanamsa(
+  dateTime: date,
+  mode: SiderealMode.krishnamurtiVP291,
+);
+print('KP: ${kp.toStringAsFixed(4)}┬░');
+print('Difference: ${(kp - lah).abs().toStringAsFixed(4)}┬░');
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `dateTime` | `DateTime` | required | Date for calculation |
+| `mode` | `SiderealMode` | `lahiri` | Ayanamsa system |
+| `location` | `GeographicLocation?` | null | Optional for timezone |
+
+---
+
+### Reference Chart Test Suite
+
+A validated regression test suite is provided at `test/reference_charts_test.dart`.
+The primary reference chart is **India Independence (15 Aug 1947, 00:00 IST, New Delhi)**.
+
+Run with:
+```bash
+dart test test/reference_charts_test.dart
+```
+
+Requires Swiss Ephemeris data files in the `ephe/` directory (same as integration tests).
+
+Tests cover:
+- Planetary sign placements (all 7 planets + Rahu)
+- House placements (Whole Sign, Taurus Ascendant)
+- Planetary dignities
+- Vimshottari dasha starting lord
+- `getAyanamsa()` values and `CalculationFlags.kp()` mode
+- `getBhavaChalit()` output for Whole Sign chart
+- `getPlanetaryRelationshipsMatrix()` for known pairs
+
 
 ### GeographicLocation
 
@@ -446,26 +681,47 @@ Controls calculation behavior for planetary positions.
 #### Factory Constructors
 
 ```dart
-// Default flags
+// Default flags (Deprecated - use traditionalist/modernPrecision)
+@Deprecated('Use traditionalist() or modernPrecision()')
 CalculationFlags.defaultFlags();
 
-// Sidereal with Lahiri ayanamsa (default for Vedic)
+// Traditional Vedic standard (Mean Node, Lahiri) — system: traditional
+CalculationFlags.traditionalist();
+
+// Modern precision standard (True Node, Lahiri) — system: traditional
+CalculationFlags.modernPrecision();
+
+// KP system (Krishnamurti VP291 ayanamsa) — system: kp
+// Automatically selects Placidus ('P') house system in VedicChartService
+CalculationFlags.kp();
+
+// Sidereal with Lahiri ayanamsa — system: traditional
 CalculationFlags.siderealLahiri();
 
-// Custom sidereal mode
+// Custom sidereal mode — system: traditional
 CalculationFlags.sidereal(SiderealMode mode);
 
-// Topocentric calculations
+// Topocentric calculations — system: traditional
 CalculationFlags.topocentric();
 
-// Specify node type (Mean vs True Node)
+// Specify node type (Mean vs True Node) — system: traditional
 CalculationFlags.withNodeType(NodeType nodeType);
 ```
+
+> **v2.4.0**: `CalculationFlags.kp()` added — uses `SiderealMode.krishnamurtiVP291` (the
+> correct KP New Ayanamsa). Distinct from `SiderealMode.krishnamurti` (old Krishnamurti).
+> Always use `kp()` for Krishnamurti Paddhati charts.
+>
+> **v2.5.0**: All factory constructors now carry an explicit `AstrologicalSystem` tag.
+> `CalculationFlags.kp()` sets `system: AstrologicalSystem.kp`; all others set
+> `system: AstrologicalSystem.traditional`. Use `.isKP` / `.isTraditional` getters to
+> branch logic at runtime. See [New in v2.5.0](#new-in-v250--astrologicalsystem).
 
 #### Main Constructor
 
 ```dart
 CalculationFlags({
+  AstrologicalSystem system = AstrologicalSystem.traditional, // NEW v2.5.0
   SiderealMode? siderealMode,
   bool useTopocentric = false,
   bool calculateSpeed = true,
@@ -477,7 +733,10 @@ CalculationFlags({
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `siderealMode` | `SiderealMode?` | Ayanamsa mode |
+| `system` | `AstrologicalSystem` | **NEW v2.5.0** — Paradigm: `traditional` or `kp` |
+| `isKP` | `bool` | **NEW v2.5.0** — `true` when `system == kp` |
+| `isTraditional` | `bool` | **NEW v2.5.0** — `true` when `system == traditional` |
+| `siderealMode` | `SiderealMode` | Ayanamsa mode |
 | `useTopocentric` | `bool` | Use topocentric calculations |
 | `calculateSpeed` | `bool` | Calculate planetary speed |
 | `nodeType` | `NodeType` | Mean or True Node |
@@ -502,7 +761,7 @@ await service.initialize();
 | `calculatePlanetPosition({planet, dateTime, location, flags})` | `Future<PlanetPosition>` | Calculate planet position |
 | `getAyanamsa({dateTime, mode, timezoneId?})` | `Future<double>` | Get ayanamsa value |
 | `calculateHouses({dateTime, location, houseSystem?})` | `Future<HouseSystem>` | Calculate house cusps |
-| `getRiseSet({planet, date, location, rsmi, atpress?, attemp?})` | `Future<DateTime?>` | Rise/set time |
+| `getRiseSet({planet, date, location, rsmi, atpress?, attemp?, searchFromExactTime?})` | `Future<DateTime?>` | Rise/set time. `searchFromExactTime` (default false) allows finding the correct moonset after a specific moonrise time. |
 | `getSunriseSunset({date, location, atpress?, attemp?})` | `Future<(DateTime?, DateTime?)>` | Sunrise and sunset |
 | `getPlanetRiseSet({planet, date, location})` | `Future<(DateTime?, DateTime?)>` | Rise/set for any planet |
 | `getMeridianTransit({planet, date, location, upperCulmination})` | `Future<DateTime?>` | Upper/lower culmination |
@@ -525,6 +784,43 @@ final service = VedicChartService(ephemerisService);
 |--------|---------|-------------|
 | `calculateChart({dateTime, location, houseSystem?, includeOuterPlanets?, flags?})` | `Future<VedicChart>` | Complete Vedic chart |
 
+**Planetary Dignity Priority (BPHS order)**
+
+| Priority | Dignity | Rule |
+|----------|---------|------|
+| 1 | `exalted` | Planet in its exaltation sign |
+| 2 | `debilitated` | Planet in its debilitation sign |
+| 3 | `moolaTrikona` | Planet within BPHS MT degree range in MT sign |
+| 4 | `ownSign` | Planet in its own sign (outside MT range) |
+| 5 | `friendSign` / `enemySign` / `neutralSign` | Sign-lord friendship |
+
+**Moola Trikona Degree Ranges (BPHS)**
+
+| Planet | Sign | MT Range |
+|--------|------|----------|
+| Sun | Leo | 0┬░ΓÇô20┬░ |
+| Moon | Taurus | 4┬░ΓÇô20┬░ |
+| Mars | Aries | 0┬░ΓÇô12┬░ |
+| Mercury | Virgo | 16┬░ΓÇô20┬░ |
+| Jupiter | Sagittarius | 0┬░ΓÇô10┬░ |
+| Venus | Libra | 0┬░ΓÇô15┬░ |
+| Saturn | Aquarius | 0┬░ΓÇô20┬░ |
+
+**Debilitation Degree Corrections (v2.3.0)**
+
+| Planet | Old value | Correct value |
+|--------|-----------|---------------|
+| Venus | 165.0┬░ (15┬░ Virgo) | 177.0┬░ (27┬░ Virgo) |
+
+**Rahu/Ketu Dignity (v2.3.0)**
+- Both `Planet.meanNode` and `Planet.trueNode` are supported for exaltation and debilitation
+- **Rahu**: Exalted in Gemini, Debilitated in Sagittarius
+- **Ketu**: Exalted in Sagittarius, Debilitated in Gemini (opposite Rahu)
+
+**Planetary Relationships (v2.2.0)**
+- MoonΓåÆVenus: corrected to **neutral** (0) per BPHS (was incorrectly set to enemy)
+- Rahu/Ketu: full natural relationship sets added for Panchadha Maitri support.
+
 ---
 
 ### DashaService
@@ -538,11 +834,52 @@ final service = DashaService();
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `calculateVimshottariDasha({moonLongitude, birthDateTime, levels?, birthTimeUncertainty?})` | `DashaResult` | Vimshottari (120-year) dasha |
-| `calculateYoginiDasha({moonLongitude, birthDateTime, levels?, birthTimeUncertainty?})` | `DashaResult` | Yogini (36-year) dasha with sub-periods |
+| `calculateYoginiDasha({moonLongitude, birthDateTime, levels?, birthTimeUncertainty?})` | `DashaResult` | Yogini (36-year) dasha ΓÇö durations computed in **milliseconds** for precision |
 | `calculateCharaDasha(rashiChart, {levels?})` | `CharaDashaResult` | Chara (Jaimini) dasha |
-| `getNarayanaDasha(rashiChart, {levels?})` | `NarayanaDashaResult` | Jaimini sign-based dasha |
-| `getAshtottariDasha(chart, {scheme?})` | `AshtottariDashaResult` | 108-year cycle dasha |
-| `getKalachakraDasha(chart)` | `KalachakraDashaResult` | Nakshatra-based dasha |
+| `getNarayanaDasha(rashiChart, {levels?})` | `NarayanaDashaResult` | Jaimini sign-based dasha ΓÇö uses reverse count for even signs |
+| `getAshtottariDasha(chart, {scheme?, forceCalculation?, levels?})` | `DashaResult` | 108-year cycle dasha ΓÇö supports nested Antardashas |
+| `getKalachakraDasha(chart)` | `KalachakraDashaResult` | Nakshatra-based dasha ΓÇö `balanceOfFirstDasha` computed from Moon's actual pada position |
+
+> **Accuracy Fixes (v2.3.0)**:
+> - **Yogini Dasha (Issue 8)**: Antardasha and Pratyantardasha durations now accumulated in milliseconds to eliminate day-rounding drift across sub-period chains.
+> - **Kalachakra Dasha (Issue 12)**: `DashaResult.balanceOfFirstDasha` is now the actual remaining days calculated from the Moon's proportional position within its pada (was hardcoded to 0).
+> - **Narayana Dasha (Issue 13)**: The 12-sign sequence now follows consecutive zodiacal order (forward for odd starting signs, reverse for even) per the Jaimini rule, replacing the incorrect `i ├ù 6` modulo formula.
+
+---
+
+## New in v2.3.0
+
+### Professional Features Suite
+
+The "Professional Features" suite adds high-level analysis engines that aggregate core library data into predictive and strength-based reports.
+
+### Graha Avastha & Strength Reports
+
+Strength analysis now considers the **Avastha** (state) of the planet:
+- **Baladi Avastha**: 5 states (Bala, Kumara, Yuva, Vriddha, Mrita) based on longitude parity in signs.
+- **Jagratadi Avastha**: 3 states (Jagrat, Swapna, Sushupti) based on dignity.
+
+The `StrengthReport` aggregates Shadbala, Vimshopaka, Dignity, and Avastha into a single score.
+
+### Event Timing Engine
+
+The `EventTimingService` searches for optimal windows by scoring:
+1. **Dasha Favorability**: Active Dasha/Antardasha lords.
+2. **Transit Support**: Transit positions of Dasha lords.
+3. **Gochara Vedha**: Obstructions from other transiting planets.
+4. **House Activation**: Transits through houses relevant to the event category (e.g., 2nd/7th for Marriage).
+
+### Sarvatobhadra Chakra
+
+A comprehensive transit analysis grid. It maps the 27 Nakshatras onto a square lattice and identifies **Vedha** (aspects) cast by transiting planets onto natal points (Moon, Ascendant, Sun).
+
+### Tajaka Enhancements
+
+Expands the annual `Varshapal` chart with:
+- **Muntha**: The progressed Ascendant sign for the year.
+- **Sahams**: Arabic Parts (Punya, Vidya, etc.) calculated from Sun/Moon/Ascendant.
+- **Tajaka Yogas**: Specific annual aspects like *Itthasala* (applying) and *Ishrafa* (separating).
+
 
 ---
 
@@ -575,14 +912,26 @@ final service = PanchangaService(ephemerisService);
 | `getTithi({dateTime, location})` | `Future<TithiInfo>` | Tithi (lunar day) |
 | `getYoga({dateTime, location})` | `Future<YogaInfo>` | Yoga (Sun+Moon combination) |
 | `getKarana({dateTime, location})` | `Future<KaranaInfo>` | Karana (half-Tithi) |
-| `getVara(dateTime, location)` | `Future<VaraInfo>` | Vara (weekday lord) |
+| `getVara({dateTime, location})` | `Future<VaraInfo>` | Vara (weekday lord) |
 | `getNakshatra({dateTime, location})` | `Future<NakshatraInfo>` | Moon's nakshatra |
 | `getTithiEndTime({dateTime, location, accuracyThreshold?})` | `Future<DateTime>` | Precise Tithi end |
 | `calculateAbhijitMuhurta({date, location})` | `Future<AbhijitMuhurta>` | 8th Muhurta (1/15th of daytime) |
-| `calculateBrahmaMuhurta({date, location})` | `Future<BrahmaMuhurta>` | 14th Muhurta of night (1/15th of nighttime) |
+| `calculateBrahmaMuhurta({date, location})` | `Future<BrahmaMuhurta>` | 14th Muhurta of night (uses previous sunset ΓåÆ today sunrise) |
 | `calculateNighttimeInauspicious({date, location})` | `Future<NighttimeInauspiciousPeriods>` | Night Rahu/Gulika/Yamagandam |
 | `getTithiJunction({targetTithiNumber, startDate, location})` | `Future<DateTime>` | Microsecond-precision Tithi change |
 | `getMoonPhaseDetails({dateTime, location})` | `Future<MoonPhaseDetails>` | Comprehensive lunar data |
+
+> **API Change (v2.1.0)**: `TithiInfo.tithiNames` has been replaced.
+> Use `TithiInfo.nameFromNumber(int tithiNumber)` to get the correct name for
+> any Tithi (1ΓÇô30). This correctly returns **"Purnima"** for Shukla Tithi 15
+> and **"Amavasya"** for Krishna Tithi 15. Direct access via `shuklaTithiNames`
+> and `krishnaTithiNames` lists is also available.
+>
+> **API Change (v2.1.0)**: `MoonPhaseDetails.illumination` now uses the correct
+> cosine formula. New Moon (elongation=0┬░) = **0%**, Full Moon (180┬░) = **100%**.
+> The old formula was inverted.
+
+
 
 ---
 
@@ -620,11 +969,47 @@ final service = AspectService();
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `calculateAspects(positions, {config?})` | `List<AspectInfo>` | All aspects |
+| `calculateAspects(positions, {config?})` | `List<AspectInfo>` | All aspects (whole-sign by default) |
 | `getAspectsForPlanet(planet, positions, {config?})` | `List<AspectInfo>` | Aspects involving planet |
 | `getAspectsCastBy(planet, positions, {config?})` | `List<AspectInfo>` | Aspects cast by planet |
 | `getAspectsReceivedBy(planet, positions, {config?})` | `List<AspectInfo>` | Aspects received by planet |
-| `getPlanetsAspectingSign(houseSignIndex, positions)` | `List<Planet>` | Planets aspecting sign |
+| `getPlanetsAspectingSign(houseSignIndex, positions, {useWholeSign?})` | `List<Planet>` | Planets aspecting sign (whole-sign default) |
+| `getRashiAspects(chart, {activeOnly?})` | `List<RashiDrishtiInfo>` | Jaimini sign-based aspects (Movable/Fixed/Dual rules) |
+
+**AspectConfig**
+
+| Preset | `useWholeSignAspects` | Description |
+|--------|-----------------------|-------------|
+| `AspectConfig.vedic` *(default)* | `true` | Sign-to-sign Parashari aspects ΓÇö planets aspect the entire sign, strength = 1.0 |
+| `AspectConfig.western` | `false` | Degree + orb system for Western / KP use |
+
+```dart
+// Vedic (whole-sign) ΓÇö default
+final aspects = service.calculateAspects(positions);
+
+// Western/KP (degree-based)
+final aspects = service.calculateAspects(
+  positions,
+  config: AspectConfig.western,
+);
+
+// Custom: whole-sign with special aspects disabled
+final config = AspectConfig(
+  useWholeSignAspects: true,
+  includeSpecialAspects: false,
+);
+```
+
+**Vedic Special Aspects (whole-sign)**
+
+| Planet | Houses Aspected |
+|--------|----------------|
+| All planets | 7th (opposition) |
+| Mars | 4th, 7th, 8th |
+| Jupiter | 5th, 7th, 9th |
+| Saturn | 3rd, 7th, 10th |
+
+> **Accuracy Fix (v2.3.0)**: Aspects are now calculated sign-to-sign (Parashari whole-sign model) rather than degree+orb. A planet in sign X aspects every planet in the target sign regardless of exact degree separation. Strength is always `1.0`. Use `AspectConfig.western` to retain degree-based orb calculations for KP or Western use.
 
 ---
 
@@ -685,8 +1070,9 @@ final service = ShadbalaService(ephemerisService);
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `calculateShadbala(chart)` | `Map<Planet, ShadbalaResult>` | Complete Shadbala |
+| `getUchchaBalaOnly(planet, longitude)` | `double` | Uchcha Bala (exaltation strength) for a planet |
 | `calculateHoraLordsForDay({date, location})` | `Future<List<Planet>>` | 24 Hora lords |
-| `checkCombustion({planet, planetLongitude, sunLongitude, planetSpeed?})` | `CombustionInfo` | Detailed combustion status. planetSpeed enables retrograde-aware orbs for Mercury/Venus |
+| `checkCombustion({planet, planetLongitude, sunLongitude, planetSpeed?})` | `CombustionInfo` | Detailed combustion status. Refined orbs (v2.2.0) + retrograde logic |
 
 **Shadbala Components**:
 1. **Sthana Bala** - Positional strength (Uchcha, Saptavargaja, Ojayugma, Drekkana, Kendra)
@@ -696,11 +1082,20 @@ final service = ShadbalaService(ephemerisService);
 5. **Naisargika Bala** - Natural strength
 6. **Drik Bala** - Aspectual strength (linear interpolation, partial aspects)
 
+> **Accuracy Fix (v2.3.0) ΓÇö Paksha Bala (Issue 9)**:
+> Paksha Bala now correctly peaks for **benefics** (Jupiter, Venus) at Full Moon (elongation = 180┬░) and for **malefics** (Sun, Mars, Saturn) at New Moon (elongation = 0┬░), per BPHS. The previous formula was using a simple linear elongation ratio which gave malefics maximum strength at Full Moon ΓÇö the opposite of classical texts. Moon's own Paksha Bala still peaks at Full Moon irrespective of paksha type.
+
 ---
 
 ### KPService
 
 Krishnamurti Paddhati (KP) system calculations.
+
+> **v2.5.0 — System Guard-Rail**: `calculateKPData()` and `calculateRulingPlanets()` now
+> assert that the supplied chart was created with `CalculationFlags.kp()`. A descriptive
+> `StateError` is thrown if a traditional-system chart is passed by mistake. This prevents
+> the silent bug of KP Sub-Lord tables being calculated against Lahiri ayanamsa.
+> See [New in v2.5.0](#new-in-v250--astrologicalsystem) for the migration guide.
 
 ```dart
 final service = KPService(ephemerisService);
@@ -708,11 +1103,29 @@ final service = KPService(ephemerisService);
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `calculateKPData(natalChart, {useNewAyanamsa?})` | `KPCalculations` | Complete KP data |
+| `calculateKPData(natalChart, {useNewAyanamsa?})` | `Future<KPCalculations>` | Complete KP data with cusp-based ABCD significators. **Requires KP flags (v2.5.0).** |
 | `getSubLord(longitude)` | `Planet` | Sub-Lord for longitude |
 | `getSubSubLord(longitude)` | `Planet` | Sub-Sub-Lord |
-| `getHouseGroupSignificators(significators)` | `Map<int, Set<Planet>>` | House significators |
-| `calculateTransitKPDivisions(transitPositions)` | `Map<Planet, KPDivision>` | Transit KP data |
+| `getHouseGroupSignificators(significators)` | `KPHouseGroupSignificators` | House group significators |
+| `calculateTransitKPDivisions(transitPositions)` | `Map<Planet, KPDivision>` | Transit KP divisions |
+| `compareTransitToNatal({natalKP, transitDivisions})` | `List<KPTransitComparison>` | Sync transit Sub-Lords against natal; sorted by match strength |
+| `calculateRulingPlanets(chart, {useNewAyanamsa?})` | `Future<KPRulingPlanets>` | Seven KP Ruling Planets (Day, Asc Sign/Star/Sub, Moon Sign/Star/Sub). **Requires KP flags (v2.5.0).** |
+
+**ABCD Significator Grades**:
+- **A**: Houses *occupied* by the planet's Sign Lord  
+- **B**: Houses *occupied* by the planet's Star Lord  
+- **C**: Houses *owned* by the planet (based on actual chart cusps ΓÇö v2.2.0 fix)  
+- **D**: Houses *owned* by the planet's Sign Lord (based on actual chart cusps ΓÇö v2.2.0 fix)  
+
+**Transit Comparison** (`compareTransitToNatal`):
+- Checks Star-Lord match, Sub-Lord match, and common house significators
+- Returns list sorted by `matchStrength` (0ΓÇô3)
+- `isActive` is true when any of the three triggers fire
+
+**Ruling Planets** (`calculateRulingPlanets` / `getKPRulingPlanets`):
+- Computes Sign, Star, and Sub lords of the Ascendant and Moon
+- Adds the weekday Day Lord
+- Deduplicates by priority order; returns `KPRulingPlanets.rulingPlanets`
 
 ---
 
@@ -1027,6 +1440,8 @@ Complete Vedic astrology chart data.
 | `houses` | `HouseSystem` | House cusps |
 | `rahu` | `VedicPlanetInfo` | Rahu position |
 | `ketu` | `KetuPosition` | Ketu position |
+| `calculationFlags` | `CalculationFlags?` | Stored flags (nullable, legacy) |
+| `flags` | `CalculationFlags` | **NEW v2.5.0** — Non-nullable; defaults to `traditionalist()` for old charts |
 
 | Method | Returns | Description |
 |--------|---------|-------------|
@@ -1042,7 +1457,7 @@ Calculated position of a celestial body.
 | Property | Type | Description |
 |----------|------|-------------|
 | `planet` | `Planet` | The planet |
-| `longitude` | `double` | Ecliptic longitude (0-360°) |
+| `longitude` | `double` | Ecliptic longitude (0-360┬░) |
 | `latitude` | `double` | Ecliptic latitude |
 | `distance` | `double` | Distance from Earth (AU) |
 | `longitudeSpeed` | `double` | Speed (degrees/day) |
@@ -1256,9 +1671,24 @@ Solar or lunar eclipse information.
 |----------|------|-------------|
 | `date` | `DateTime` | Date of maximum eclipse |
 | `eclipseType` | `EclipseType` | Solar or Lunar |
-| `magnitude` | `double` | Eclipse magnitude |
+| `magnitude` | `double` | Umbral eclipse magnitude |
+| `penumbralMagnitude` | `double?` | Fraction of Moon diameter in penumbra |
 | `isVisible` | `bool` | Visible at location |
 | `isTotal` | `bool` | Is total eclipse |
+| `penumbralStartTime` | `DateTime?` | P1 – Penumbral start |
+| `partialStartTime` | `DateTime?` | U1 – Partial start |
+| `totalStartTime` | `DateTime?` | U2 – Total begins |
+| `totalEndTime` | `DateTime?` | U3 – Total ends |
+| `partialEndTime` | `DateTime?` | U4 – Partial ends |
+| `penumbralEndTime` | `DateTime?` | P4 – Penumbral ends |
+| `moonrise` | `DateTime?` | Observer's moonrise (UTC) |
+| `moonset` | `DateTime?` | Observer's moonset (UTC) |
+| `localStartTime` | `DateTime?` | Visible eclipse start (local window) |
+| `localEndTime` | `DateTime?` | Visible eclipse end (local window) |
+| `localDuration` | `Duration?` | Total duration visible at location |
+| `sutakStartTime` | `DateTime?` | Sutak begin (anchored to local visibility) |
+| `sutakEndTime` | `DateTime?` | Sutak end (matches U4) |
+| `sutakForSensitive` | `DateTime?` | 3-hour Sutak for vulnerable groups |
 | `description` | `String` | Eclipse description |
 
 ---
@@ -1367,14 +1797,14 @@ Enum for the 8 Gowri periods.
 
 | Value | Sanskrit | Auspicious | Description |
 |-------|----------|------------|-------------|
-| `amrit` | அமிர்தம் | Yes | Nectar, success in all endeavors |
-| `rogam` | ரோகம் | No | Disease, suffering |
-| `uthi` | உதி | Yes | Progress, upliftment |
-| `labhamu` | லாபம் | Yes | Gain, profit |
-| `dhana` | தhana | Yes | Wealth, prosperity |
-| `nirkku` | நிர்க்கு | No | Obstacles, impediments |
-| `visham` | விஷம் | No | Poison, danger |
-| `soolai` | சூலை | No | Distress, pain |
+| `amrit` | α«àα««α«┐α«░α»ìα«ñα««α»ì | Yes | Nectar, success in all endeavors |
+| `rogam` | α«░α»ïα«òα««α»ì | No | Disease, suffering |
+| `uthi` | α«ëα«ñα«┐ | Yes | Progress, upliftment |
+| `labhamu` | α«▓α«╛α«¬α««α»ì | Yes | Gain, profit |
+| `dhana` | α«ñhana | Yes | Wealth, prosperity |
+| `nirkku` | α«¿α«┐α«░α»ìα«òα»ìα«òα»ü | No | Obstacles, impediments |
+| `visham` | α«╡α«┐α«╖α««α»ì | No | Poison, danger |
+| `soolai` | α«Üα»éα«▓α»ê | No | Distress, pain |
 
 ---
 
@@ -1671,18 +2101,25 @@ Marriage compatibility result.
 
 ### GunaScores
 
-Ashtakoota (36 Guna) scoring.
+Ashtakoota (36 Guna) scoring. All 8 Kootas are calculated per BPHS and
+standard Vedic texts. Scores are added to produce the total out of 36.
 
-| Koota | Max Points |
-|-------|------------|
-| `varna` | 1 |
-| `vashya` | 2 |
-| `tara` | 3 |
-| `yoni` | 4 |
-| `grahaMaitri` | 5 |
-| `gana` | 6 |
-| `bhakoot` | 7 |
-| `nadi` | 8 |
+| Koota | Max Points | Classification Basis |
+|-------|------------|---------------------|
+| `varna` | 1 | BPHS 4-tier: Brahmin / Kshatriya / Vaishya / Shudra per nakshatra |
+| `vashya` | 2 | 5-category: Manava / Vanachara / Chatushpada / Jalajiva / Keeta per nakshatra |
+| `tara` | 3 | Count from boy's nakshatra to girl's; groups of 9 (birth, sampat, vipatΓÇª) |
+| `yoni` | 4 | Animal pair per nakshatra (all 27 correctly mapped); friend/enemy pairs scored |
+| `grahaMaitri` | 5 | Natural friendship between Moon sign lords per BPHS friendship table |
+| `gana` | 6 | BPHS: Deva / Manushya / Rakshasa ΓÇö same=6, Deva+Manushya=3, Rakshasa=0 |
+| `bhakoot` | 7 | No dosha = 7; Dosha (2/12, 5/9, or 6/8 moon-sign relationship) = 0 |
+| `nadi` | 8 | Cyclic modulo-3 grouping: 0% same Nadi (Dosha) = 0, different = 8 |
+
+**Bhakoot Dosha** is checked for three problematic inter-sign relationships:
+2/12 (financial stress), 5/9 (progeny issues), and 6/8 (health/longevity).
+
+**Nadi** is determined by `nakshatraIndex % 3` (cyclic): 0=Adi, 1=Madhya, 2=Antya.
+This differs from the old sequential block-of-9 approach which was incorrect.
 
 ### CompatibilityLevel
 
@@ -1693,6 +2130,79 @@ Ashtakoota (36 Guna) scoring.
 | `good` | 18-24 |
 | `average` | 12-17 |
 | `poor` | 0-11 |
+
+---
+
+---
+
+## New in v2.5.0 — AstrologicalSystem
+
+This release formalises the split between the **Traditional Parashari / KN Rao** paradigm
+and the **Krishnamurti Paddhati (KP)** system at the API level.
+
+### `AstrologicalSystem` enum
+
+```dart
+enum AstrologicalSystem { traditional, kp }
+```
+
+| Value | Ayanamsa | House System | Node | Exclusive services |
+|---|---|---|---|---|
+| `traditional` | Lahiri | Whole-Sign / Equal | Mean Node (BPHS) | All except `KPService` |
+| `kp` | KP VP291 | **Placidus** (auto-selected) | True Node | `KPService` |
+
+### What changed in `CalculationFlags`
+
+| New member | Type | Description |
+|---|---|---|
+| `system` | `AstrologicalSystem` | The paradigm this flag set describes |
+| `isKP` | `bool` | Shorthand: `system == kp` |
+| `isTraditional` | `bool` | Shorthand: `system == traditional` |
+
+All factory constructors now declare their system explicitly.  
+`CalculationFlags.kp()` → `AstrologicalSystem.kp`  
+All other factories → `AstrologicalSystem.traditional`
+
+`copyWith` and `toString` are updated accordingly.
+
+### What changed in `VedicChart`
+
+- New **`flags`** getter (`CalculationFlags`, non-nullable). Returns `calculationFlags`
+  or `CalculationFlags.traditionalist()` for backwards-compatible charts.
+
+### KPService guard-rails
+
+`calculateKPData()` and `calculateRulingPlanets()` now throw `StateError` if the chart
+was not created with `CalculationFlags.kp()`. Error message includes the received
+system and ayanamsa to guide the fix.
+
+### Migration guide
+
+```dart
+// ❌ Before — silently wrong (Lahiri ayanamsa with KP Sub-Lord tables)
+final chart = await jyotish.calculateVedicChart(dateTime: dt, location: loc);
+final kp = await jyotish.calculateKPData(chart); // no guard-rail
+
+// ✅ After — fails fast, clear error if wrong
+final chart = await jyotish.calculateVedicChart(
+  dateTime: dt,
+  location: loc,
+  houseSystem: 'P',              // Placidus — mandatory for KP
+  flags: CalculationFlags.kp(),  // KP VP291 ayanamsa + system tag
+);
+final kp = await jyotish.calculateKPData(chart); // guard-rail passes
+```
+
+### Checking the system at runtime
+
+```dart
+if (chart.flags.isKP) {
+  // safe to call any KPService method
+}
+if (chart.flags.isTraditional) {
+  // safe to call Parashari / Jaimini / Shadbala methods
+}
+```
 
 ---
 
@@ -1800,18 +2310,18 @@ The 12 lunar months.
 
 | Value | Sanskrit | Period |
 |-------|----------|--------|
-| `chaitra` | चैत्र | March-April |
-| `vaishakha` | वैशाख | April-May |
-| `jyeshtha` | ज्येष्ठ | May-June |
-| `ashadha` | आषाढ़ | June-July |
-| `shravana` | श्रावण | July-August |
-| `bhadrapada` | भाद्रपद | August-September |
-| `ashwina` | अश्विन | September-October |
-| `kartika` | कार्तिक | October-November |
-| `margashirsha` | मार्गशीर्ष | November-December |
-| `pausha` | पौष | December-January |
-| `magha` | माघ | January-February |
-| `phalguna` | फाल्गुन | February-March |
+| `chaitra` | αñÜαÑêαññαÑìαñ░ | March-April |
+| `vaishakha` | αñ╡αÑêαñ╢αñ╛αñû | April-May |
+| `jyeshtha` | αñ£αÑìαñ»αÑçαñ╖αÑìαñá | May-June |
+| `ashadha` | αñåαñ╖αñ╛αñóαñ╝ | June-July |
+| `shravana` | αñ╢αÑìαñ░αñ╛αñ╡αñú | July-August |
+| `bhadrapada` | αñ¡αñ╛αñªαÑìαñ░αñ¬αñª | August-September |
+| `ashwina` | αñàαñ╢αÑìαñ╡αñ┐αñ¿ | September-October |
+| `kartika` | αñòαñ╛αñ░αÑìαññαñ┐αñò | October-November |
+| `margashirsha` | αñ«αñ╛αñ░αÑìαñùαñ╢αÑÇαñ░αÑìαñ╖ | November-December |
+| `pausha` | αñ¬αÑîαñ╖ | December-January |
+| `magha` | αñ«αñ╛αñÿ | January-February |
+| `phalguna` | αñ½αñ╛αñ▓αÑìαñùαÑüαñ¿ | February-March |
 
 ---
 
@@ -1869,6 +2379,39 @@ Type of eclipse.
 
 ---
 
+## New in v2.6.0 — High-Precision Eclipse Reporting
+
+This release introduces professional-grade eclipse reporting using Swiss Ephemeris' native FFI bindings, providing all 7 major contact times and local observer visibility details.
+
+### Expanded `EclipseData`
+
+The `EclipseData` model now provides granular phase transitions for lunar eclipses:
+
+- **P1**: Penumbral Start
+- **U1**: Umbral Start (Partial begin)
+- **U2**: Total Start
+- **U3**: Total End
+- **U4**: Umbral End (Partial end)
+- **P4**: Penumbral End
+
+### Local Visibility Window
+
+Observers often want to know if an eclipse is visible from their specific location. The library now automatically calculates:
+- `moonrise` / `moonset`: Calculated for the eclipse search date.
+- `localStartTime`: The later of U1 and moonrise.
+- `localEndTime`: The earlier of U4 and moonset.
+- `localDuration`: The actual visible duration for the observer.
+
+### Location-Aware Sutak
+
+Traditional religious timings (Sutak) are now anchored to `localStartTime` instead of the global astronomical U1. This ensures that if the Moon rises *after* the eclipse has already begun globally, the Sutak period correctly shifts relative to the visibility at the observer's location.
+
+### `getRiseSet` precision
+
+The `getRiseSet` method now includes `searchFromExactTime`. Setting this to `true` allows finding the sequence of events (e.g., finding the moonset that occurs *after* a specific moonrise), which is crucial for across-midnight events.
+
+---
+
 ## Error Handling
 
 The library throws `JyotishException` for errors:
@@ -1880,6 +2423,12 @@ try {
   // Library not initialized
 } on CalculationException catch (e) {
   // Calculation failed
+} on PolarRegionException catch (e) {
+  // Latitude too high for Placidus/Koch house systems
+} on AyanamsaMismatchException catch (e) {
+  // Base chart Ayanamsa incompatible with requested divisional chart
+} on ValidationException catch (e) {
+  // Invalid inputs
 } on JyotishException catch (e) {
   // General error
 }

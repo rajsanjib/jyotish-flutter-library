@@ -6,12 +6,12 @@ import 'package:test/test.dart';
 void main() {
   group('Panchanga Module', () {
     test('Tithi calculates correctly from Sun-Moon distance', () {
-      // Test case: Moon 45° ahead of Sun = Tritiya (3rd tithi)
+      // Test case: Moon 45 ahead of Sun = Tritiya (3rd tithi)
       final testCases = [
-        (0.0, 1, 'Pratipada'), // 0-12° = Pratipada
-        (15.0, 2, 'Dwitiya'), // 12-24° = Dwitiya
-        (30.0, 3, 'Tritiya'), // 24-36° = Tritiya
-        (180.0, 16, 'Pratipada'), // 180° = Full Moon, Krishna Pratipada
+        (0.0, 1, 'Pratipada'), // 0-12 = Pratipada
+        (15.0, 2, 'Dwitiya'), // 12-24 = Dwitiya
+        (30.0, 3, 'Tritiya'), // 24-36 = Tritiya
+        (180.0, 16, 'Pratipada'), // 180 = Full Moon, Krishna Pratipada
         (350.0, 30, 'Chaturdashi'), // Near end
       ];
 
@@ -33,11 +33,11 @@ void main() {
     });
 
     test('Yoga calculates correctly from Sun+Moon longitudes', () {
-      // Yoga = (Sun + Moon) / 13.333°
+      // Yoga = (Sun + Moon) / 13.333
       final testCases = [
-        (0.0, 0.0, 1), // Both at 0° = Vishkumbha
-        (10.0, 10.0, 2), // Sum 20° = Priti
-        (180.0, 180.0, 1), // Sum 360° = 0° = Vishkumbha
+        (0.0, 0.0, 1), // Both at 0 = Vishkumbha
+        (10.0, 10.0, 2), // Sum 20 = Priti
+        (180.0, 180.0, 1), // Sum 360 = 0 = Vishkumbha
       ];
 
       for (final (sunLong, moonLong, expectedYoga) in testCases) {
@@ -295,19 +295,19 @@ void main() {
     });
 
     test('Panchak starts at 300 degrees (middle of Dhanishta)', () {
-      // Panchak should start at 300° (middle of Dhanishta: 293°20' to 306°40')
+      // Panchak should start at 300 (middle of Dhanishta: 29320' to 30640')
       expect(SaturnTransitConstants.panchakStartLongitude, 300.0);
       expect(SaturnTransitConstants.panchakEndLongitude, 360.0);
 
-      // Moon at 295° should NOT be in Panchak (before 300°)
+      // Moon at 295 should NOT be in Panchak (before 300)
       const beforePanchak = 295.0;
       expect(beforePanchak >= 300.0, false);
 
-      // Moon at 300° should be in Panchak
+      // Moon at 300 should be in Panchak
       const atPanchakStart = 300.0;
       expect(atPanchakStart >= 300.0, true);
 
-      // Moon at 350° should be in Panchak
+      // Moon at 350 should be in Panchak
       const inPanchak = 350.0;
       expect(inPanchak >= 300.0, true);
     });

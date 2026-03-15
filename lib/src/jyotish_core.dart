@@ -1,66 +1,82 @@
-import 'exceptions/jyotish_exception.dart';
+import 'package:jyotish/src/exceptions/jyotish_exception.dart';
 
-import 'models/aspect.dart';
-import 'models/ashtakavarga.dart';
-import 'models/calculation_flags.dart';
-import 'models/dasha.dart';
-import 'models/divisional_chart_type.dart';
-import 'models/geographic_location.dart';
-import 'models/kp_calculations.dart';
-import 'models/masa.dart';
-import 'models/muhurta.dart';
-import 'models/panchanga.dart';
-import 'models/nakshatra.dart';
-import 'models/arudha_pada.dart';
-import 'models/argala.dart';
-import 'models/bhava_bala.dart';
-import 'models/jaimini.dart';
-import 'models/prashna.dart';
-import 'models/rashi.dart';
-import 'models/gowri_panchangam.dart';
-import 'models/planet.dart';
-import 'models/planet_position.dart';
-import 'models/relationship.dart';
-import 'models/special_transits.dart';
-import 'models/transit.dart';
-import 'models/sudarshan_chakra.dart';
-import 'models/vedic_chart.dart';
-import 'models/varshapal.dart';
-import 'models/house_strength.dart';
-import 'models/nadi.dart';
-import 'models/progeny.dart';
-import 'models/compatibility.dart';
+import 'package:jyotish/src/models/aspect.dart';
+import 'package:jyotish/src/systems/ashtakavarga.dart';
+import 'package:jyotish/src/models/calculation_flags.dart';
+import 'package:jyotish/src/systems/dasha.dart';
+import 'package:jyotish/src/models/divisional_chart_type.dart';
+import 'package:jyotish/src/models/geographic_location.dart';
+import 'package:jyotish/src/systems/kp_calculations.dart';
+import 'package:jyotish/src/panchanga/masa.dart';
+import 'package:jyotish/src/muhurta/muhurta.dart';
+import 'package:jyotish/src/panchanga/panchanga.dart';
+import 'package:jyotish/src/panchanga/nakshatra.dart';
+import 'package:jyotish/src/systems/arudha_pada.dart';
+import 'package:jyotish/src/systems/argala.dart';
+import 'package:jyotish/src/strength/bhava_bala.dart';
+import 'package:jyotish/src/systems/jaimini.dart';
+import 'package:jyotish/src/systems/prashna.dart';
+import 'package:jyotish/src/models/rashi.dart';
+import 'package:jyotish/src/muhurta/gowri_panchangam.dart';
+import 'package:jyotish/src/models/planet.dart';
+import 'package:jyotish/src/astronomy/planet_position.dart';
+import 'package:jyotish/src/strength/relationship.dart';
+import 'package:jyotish/src/transit/special_transits.dart';
+import 'package:jyotish/src/transit/transit.dart';
+import 'package:jyotish/src/analysis/sudarshan_chakra.dart';
+import 'package:jyotish/src/models/vedic_chart.dart';
+import 'package:jyotish/src/systems/varshapal.dart';
+import 'package:jyotish/src/strength/house_strength.dart';
+import 'package:jyotish/src/nadi/nadi.dart';
+import 'package:jyotish/src/analysis/progeny.dart';
+import 'package:jyotish/src/analysis/compatibility.dart';
+import 'package:jyotish/src/strength/graha_avastha.dart';
+import 'package:jyotish/src/strength/strength_report.dart';
+import 'package:jyotish/src/analysis/event_timing.dart';
+import 'package:jyotish/src/analysis/career_analysis.dart';
 
-import 'services/aspect_service.dart';
-import 'services/ashtakavarga_service.dart';
-import 'services/astrology_time_service.dart';
-import 'services/dasha_service.dart';
-import 'services/divisional_chart_service.dart';
-import 'services/ephemeris_service.dart';
-import 'services/kp_service.dart';
-import 'services/masa_service.dart';
-import 'services/muhurta_service.dart';
-import 'services/panchanga_service.dart';
-import 'services/hora_service.dart';
-import 'services/choghadiya_service.dart';
-import 'services/gowri_panchangam_service.dart';
-import 'services/arudha_pada_service.dart';
-import 'services/argala_service.dart';
-import 'services/bhava_bala_service.dart';
-import 'services/jaimini_service.dart';
-import 'services/prashna_service.dart';
-import 'services/shadbala_service.dart';
-import 'services/special_transit_service.dart';
-import 'services/transit_service.dart';
-import 'services/house_strength_service.dart';
-import 'services/nadi_service.dart';
-import 'services/progeny_service.dart';
-import 'services/compatibility_service.dart';
-import 'services/sudarshan_chakra_service.dart';
-import 'services/vedic_chart_service.dart';
-import 'services/gochara_vedha_service.dart';
-import 'services/strength_analysis_service.dart';
-import 'services/varshapal_service.dart';
+import 'package:jyotish/src/transit/sarvatobhadra.dart';
+import 'package:jyotish/src/systems/tajaka.dart';
+
+import 'package:jyotish/src/analysis/aspect_service.dart';
+import 'package:jyotish/src/systems/ashtakavarga_service.dart';
+import 'package:jyotish/src/astronomy/astrology_time_service.dart';
+import 'package:jyotish/src/systems/dasha_service.dart';
+import 'package:jyotish/src/analysis/divisional_chart_service.dart';
+import 'package:jyotish/src/astronomy/ephemeris_service.dart';
+import 'package:jyotish/src/systems/kp_service.dart';
+import 'package:jyotish/src/panchanga/masa_service.dart';
+import 'package:jyotish/src/muhurta/muhurta_service.dart';
+import 'package:jyotish/src/panchanga/panchanga_service.dart';
+import 'package:jyotish/src/muhurta/hora_service.dart';
+import 'package:jyotish/src/muhurta/choghadiya_service.dart';
+import 'package:jyotish/src/muhurta/gowri_panchangam_service.dart';
+import 'package:jyotish/src/systems/arudha_pada_service.dart';
+import 'package:jyotish/src/systems/argala_service.dart';
+import 'package:jyotish/src/strength/bhava_bala_service.dart';
+import 'package:jyotish/src/systems/jaimini_service.dart';
+import 'package:jyotish/src/systems/prashna_service.dart';
+import 'package:jyotish/src/systems/shadbala_service.dart';
+import 'package:jyotish/src/transit/special_transit_service.dart';
+import 'package:jyotish/src/transit/transit_service.dart';
+import 'package:jyotish/src/strength/house_strength_service.dart';
+import 'package:jyotish/src/nadi/nadi_service.dart';
+import 'package:jyotish/src/analysis/progeny_service.dart';
+import 'package:jyotish/src/strength/bhava_chalit_service.dart';
+import 'package:jyotish/src/analysis/compatibility_service.dart';
+import 'package:jyotish/src/strength/planetary_relationship_service.dart';
+import 'package:jyotish/src/analysis/sudarshan_chakra_service.dart';
+import 'package:jyotish/src/analysis/vedic_chart_service.dart';
+import 'package:jyotish/src/transit/gochara_vedha_service.dart';
+import 'package:jyotish/src/strength/strength_analysis_service.dart';
+import 'package:jyotish/src/systems/varshapal_service.dart';
+import 'package:jyotish/src/strength/bhava_chalit.dart';
+import 'package:jyotish/src/strength/graha_avastha_service.dart';
+import 'package:jyotish/src/strength/strength_report_service.dart';
+import 'package:jyotish/src/analysis/event_timing_service.dart';
+import 'package:jyotish/src/analysis/career_analysis_service.dart';
+import 'package:jyotish/src/transit/sarvatobhadra_service.dart';
+import 'package:jyotish/src/systems/tajaka_service.dart';
 
 /// The main entry point for the Jyotish library.
 ///
@@ -125,6 +141,14 @@ class Jyotish {
   NadiService? _nadiService;
   ProgenyService? _progenyService;
   CompatibilityService? _compatibilityService;
+  BhavaChalitService? _bhavaChalitService;
+  PlanetaryRelationshipService? _planetaryRelationshipService;
+  GrahaAvasthaService? _grahaAvasthaService;
+  StrengthReportService? _strengthReportService;
+  EventTimingService? _eventTimingService;
+  CareerAnalysisService? _careerAnalysisService;
+  SarvatobhadraService? _sarvatobhadraService;
+  TajakaService? _tajakaService;
   bool _isInitialized = false;
 
   /// Initializes the Swiss Ephemeris library.
@@ -171,6 +195,24 @@ class Jyotish {
       _nadiService = NadiService();
       _progenyService = ProgenyService();
       _compatibilityService = CompatibilityService();
+      _bhavaChalitService = BhavaChalitService();
+      _planetaryRelationshipService = PlanetaryRelationshipService();
+      _grahaAvasthaService = GrahaAvasthaService();
+      _strengthReportService = StrengthReportService(
+        shadbalaService: _shadbalaService!,
+        houseStrengthService: _houseStrengthService!,
+        grahaAvasthaService: _grahaAvasthaService!,
+        strengthAnalysisService: _strengthAnalysisService!,
+      );
+      _eventTimingService = EventTimingService(
+        dashaService: _dashaService!,
+        gocharaVedhaService: _gocharaVedhaService!,
+        ephemerisService: _ephemerisService!,
+      );
+      _careerAnalysisService = CareerAnalysisService();
+      _kpService = KPService(_ephemerisService!);
+      _sarvatobhadraService = SarvatobhadraService();
+      _tajakaService = TajakaService();
       _isInitialized = true;
     } catch (e) {
       throw JyotishException(
@@ -321,6 +363,9 @@ class Jyotish {
         flags: flags,
       );
     } catch (e) {
+      // Re-throw JyotishException subclasses (e.g. PolarRegionException) without wrapping
+      // so callers can catch the specific type.
+      if (e is JyotishException) rethrow;
       throw JyotishException(
         'Failed to calculate Vedic chart: ${e.toString()}',
         originalError: e,
@@ -571,7 +616,7 @@ class Jyotish {
   /// print('Current dasha: ${dasha.getCurrentPeriodString(DateTime.now())}');
   /// print('Birth nakshatra: ${dasha.birthNakshatra}');
   /// ```
-  /// 
+  ///
   /// [yearLength] - Optional year length in days. Default is 365.25 (sidereal).
   /// Use 360.0 for traditional Savana year calculations.
   Future<DashaResult> getVimshottariDasha({
@@ -694,9 +739,14 @@ class Jyotish {
   Future<DashaResult> getAshtottariDasha({
     required VedicChart natalChart,
     AshtottariScheme scheme = AshtottariScheme.ardraAdi,
+    bool forceCalculation = false,
   }) async {
     _ensureInitialized();
-    return _dashaService!.getAshtottariDasha(natalChart, scheme: scheme);
+    return _dashaService!.getAshtottariDasha(
+      natalChart,
+      scheme: scheme,
+      forceCalculation: forceCalculation,
+    );
   }
 
   /// Calculates Kalachakra Dasha.
@@ -708,9 +758,88 @@ class Jyotish {
   /// Returns [DashaResult] with Kalachakra periods.
   Future<DashaResult> getKalachakraDasha({
     required VedicChart natalChart,
+    int levels = 1,
   }) async {
     _ensureInitialized();
-    return _dashaService!.getKalachakraDasha(natalChart);
+    return _dashaService!.getKalachakraDasha(natalChart, levels: levels);
+  }
+
+  // ============================================================
+  // ASHTAKAVARGA CALCULATIONS
+  // ============================================================
+
+  /// Calculates Ashtakavarga and automatically applies all Shodhana reductions.
+  ///
+  /// This is a convenience method that performs the standard sequence:
+  /// 1. Trikona Shodhana (Trine reduction)
+  /// 2. Ekadhipati Shodhana (Reduction for same lordship)
+  /// 3. Shodhya Pinda calculation
+  AshtakavargaWithShodhana calculateAshtakavargaWithShodhana(
+      VedicChart natalChart) {
+    _ensureInitialized();
+    final raw = _ashtakavargaService!.calculateAshtakavarga(natalChart);
+    final trikona = _ashtakavargaService!.applyTrikonaShodhana(raw);
+    final ekadhipati = _ashtakavargaService!.applyEkadhipatiShodhana(trikona);
+    final shodhya = _ashtakavargaService!.calculateShodhyaPinda(raw);
+
+    return AshtakavargaWithShodhana(
+      raw: raw,
+      trikonaReduced: shodhya.trikonaReducedAshtakavarga,
+      ekadhipatiReduced: ekadhipati,
+      shodhyaPinda: shodhya,
+    );
+  }
+
+  /// Calculates the complete Ashtakavarga for a birth chart.
+  ///
+  /// Contains Bhinnashtakavarga for each planet and Sarvashtakavarga totals.
+  Ashtakavarga calculateAshtakavarga(VedicChart natalChart) {
+    _ensureInitialized();
+    return _ashtakavargaService!.calculateAshtakavarga(natalChart);
+  }
+
+  /// Applies Trikona Shodhana (Trine Reduction) to Ashtakavarga.
+  ///
+  /// Trikona Shodhana reduces the bindus in trinal houses according to Parashari rules.
+  Ashtakavarga applyTrikonaShodhana(Ashtakavarga ashtakavarga) {
+    _ensureInitialized();
+    return _ashtakavargaService!.applyTrikonaShodhana(ashtakavarga);
+  }
+
+  /// Applies Ekadhipati Shodhana (Reduction for Same Lordship).
+  Ashtakavarga applyEkadhipatiShodhana(Ashtakavarga ashtakavarga) {
+    _ensureInitialized();
+    return _ashtakavargaService!.applyEkadhipatiShodhana(ashtakavarga);
+  }
+
+  /// Scores all transiting planets against the natal Ashtakavarga.
+  ///
+  /// Evaluates the current state of transits and returns a map of all planets
+  /// mapped to their transit score, allowing easy identification of the most
+  /// favorable and unfavorable transiting planets.
+  Map<Planet, AshtakavargaTransit> scoreTransits({
+    required Ashtakavarga natalAshtakavarga,
+    required VedicChart transitChart,
+    DateTime? transitDate,
+  }) {
+    _ensureInitialized();
+    final results = <Planet, AshtakavargaTransit>{};
+
+    for (final entry in transitChart.planets.entries) {
+      if (Planet.lunarNodes.contains(entry.key)) continue;
+
+      final planet = entry.key;
+      final sign = entry.value.house - 1; // 0-indexed sign
+
+      results[planet] = _ashtakavargaService!.analyzeTransit(
+        ashtakavarga: natalAshtakavarga,
+        transitPlanet: planet,
+        transitSign: sign,
+        transitDate: transitDate ?? transitChart.dateTime,
+      );
+    }
+
+    return results;
   }
 
   // ============================================================
@@ -752,6 +881,7 @@ class Jyotish {
     required DateTime varshaDateTime,
     required GeographicLocation location,
     String houseSystem = 'W',
+    CalculationFlags? flags,
     DateTime? checkDate,
   }) async {
     _ensureInitialized();
@@ -762,6 +892,7 @@ class Jyotish {
         varshaDateTime: varshaDateTime,
         location: location,
         houseSystem: houseSystem,
+        flags: flags,
         checkDate: checkDate,
       );
     } catch (e) {
@@ -798,6 +929,7 @@ class Jyotish {
     required DateTime birthDateTime,
     required GeographicLocation location,
     String houseSystem = 'W',
+    CalculationFlags? flags,
     DateTime? checkDate,
   }) async {
     _ensureInitialized();
@@ -807,6 +939,7 @@ class Jyotish {
         birthDateTime: birthDateTime,
         location: location,
         houseSystem: houseSystem,
+        flags: flags,
         checkDate: checkDate,
       );
     } catch (e) {
@@ -997,13 +1130,22 @@ class Jyotish {
         .getCurrentHora(dateTime: dateTime, location: location);
   }
 
-  /// Gets all 24 Horas for a complete day.
+  /// Gets Horas for a complete day.
   Future<List<HoraPeriod>> getHorasForDay({
     required DateTime date,
     required GeographicLocation location,
   }) async {
     _ensureInitialized();
     return await _horaService!.getHorasForDay(date: date, location: location);
+  }
+
+  /// Gets the Hora lord for a specific hour of the day.
+  ///
+  /// [dateTime] - The specific time to check
+  /// [sunrise] - Sunrise for the day
+  Planet getHoraLordForHour(DateTime dateTime, DateTime sunrise) {
+    _ensureInitialized();
+    return _muhurtaService!.getHoraLordForHour(dateTime, sunrise);
   }
 
   /// Gets the current Choghadiya.
@@ -1084,6 +1226,23 @@ class Jyotish {
     return _argalaService!.calculateArgalaForHouse(chart, house);
   }
 
+  /// Returns Rashi Drishti (sign aspects) for the chart.
+  ///
+  /// Delegates to JaiminiService which implements the Jaimini sign-aspect rules:
+  /// - Movable signs aspect all Fixed signs (except adjacent)
+  /// - Fixed signs aspect all Movable signs (except adjacent)
+  /// - Dual signs aspect all other Dual signs
+  ///
+  /// [chart] - The Vedic chart
+  /// [activeOnly] - If true, only returns aspects originated from occupied signs
+  List<RashiDrishtiInfo> getRashiAspects(
+    VedicChart chart, {
+    bool activeOnly = true,
+  }) {
+    _ensureInitialized();
+    return _aspectService!.getRashiAspects(chart, activeOnly: activeOnly);
+  }
+
   /// Calculates only active Rashi Drishti (from occupied signs).
   List<RashiDrishtiInfo> getActiveRashiDrishti(VedicChart chart) {
     _ensureInitialized();
@@ -1132,6 +1291,96 @@ class Jyotish {
     } catch (e) {
       throw JyotishException(
         'Failed to calculate sunrise/sunset: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
+  /// Determines planet visibility (heliacal rise/set) at a location.
+  ///
+  /// Heliacal rise: First visible appearance of a planet before sunrise
+  /// Heliacal set: Last visible appearance of a planet after sunset
+  ///
+  /// [planet] - The planet to check
+  /// [date] - The date to check
+  /// [location] - Geographic location
+  ///
+  /// Returns visibility information including whether visible, magnitude, etc.
+  Future<PlanetVisibility> getPlanetVisibility({
+    required Planet planet,
+    required DateTime date,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+    try {
+      return await _ephemerisService!.getPlanetVisibility(
+        planet: planet,
+        date: date,
+        location: location,
+      );
+    } catch (e) {
+      throw JyotishException(
+        'Failed to get planet visibility: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
+  /// Gets high-precision eclipse data for solar and lunar eclipses.
+  ///
+  /// [date] - The date to search for eclipses
+  /// [location] - Geographic location (for solar eclipse visibility)
+  /// [eclipseType] - Type of eclipse to search for (defaults to EclipseType.any)
+  ///
+  /// Returns detailed eclipse information or null if no eclipse.
+  Future<EclipseData?> getEclipseData({
+    required DateTime date,
+    required GeographicLocation location,
+    EclipseType? eclipseType,
+  }) async {
+    _ensureInitialized();
+    try {
+      return await _ephemerisService!.getEclipseData(
+        date: date,
+        location: location,
+        eclipseType: eclipseType ?? EclipseType.any,
+      );
+    } catch (e) {
+      throw JyotishException(
+        'Failed to get eclipse data: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
+  /// Calculates meridian transit (culmination) times for a planet.
+  ///
+  /// Meridian transit occurs when a planet reaches its highest (upper culmination)
+  /// or lowest (lower culmination) point in the sky.
+  ///
+  /// [planet] - The planet to calculate for
+  /// [date] - The date to calculate for
+  /// [location] - Geographic location
+  /// [upperCulmination] - If true, calculates upper culmination; if false, lower culmination
+  ///
+  /// Returns the DateTime of the transit, or null if it doesn't occur.
+  Future<DateTime?> getMeridianTransit({
+    required Planet planet,
+    required DateTime date,
+    required GeographicLocation location,
+    bool upperCulmination = true,
+  }) async {
+    _ensureInitialized();
+    try {
+      return await _ephemerisService!.getMeridianTransit(
+        planet: planet,
+        date: date,
+        location: location,
+        upperCulmination: upperCulmination,
+      );
+    } catch (e) {
+      throw JyotishException(
+        'Failed to calculate meridian transit: ${e.toString()}',
         originalError: e,
       );
     }
@@ -1197,18 +1446,6 @@ class Jyotish {
   /// final ashtakavarga = jyotish.calculateAshtakavarga(natalChart);
   /// print('1st House Points: ${ashtakavarga.getTotalBindusForHouse(1)}');
   /// ```
-  Ashtakavarga calculateAshtakavarga(VedicChart natalChart) {
-    _ensureInitialized();
-
-    try {
-      return _ashtakavargaService!.calculateAshtakavarga(natalChart);
-    } catch (e) {
-      throw JyotishException(
-        'Failed to calculate Ashtakavarga: ${e.toString()}',
-        originalError: e,
-      );
-    }
-  }
 
   /// Analyzes transit favorability using Ashtakavarga scores.
   ///
@@ -1248,6 +1485,68 @@ class Jyotish {
   ) {
     _ensureInitialized();
     return _ashtakavargaService!.getFavorableTransitSigns(ashtakavarga, planet);
+  }
+
+  /// Calculates Pinda (Rashi + Graha planetary strength) from Ashtakavarga.
+  ///
+  /// [ashtakavarga] - The Ashtakavarga to calculate from
+  ///
+  /// Returns Pinda values for each planet.
+  Map<Planet, PindaResult> calculatePinda(Ashtakavarga ashtakavarga) {
+    _ensureInitialized();
+    _ashtakavargaService ??= AshtakavargaService();
+    return _ashtakavargaService!.calculatePinda(ashtakavarga);
+  }
+
+  /// Calculates Yoga Pinda (auspicious strength) from Ashtakavarga.
+  ///
+  /// [ashtakavarga] - The Ashtakavarga (after reductions)
+  ///
+  /// Returns Yoga Pinda values for each planet.
+  Map<Planet, YogaPindaResult> calculateYogaPinda(Ashtakavarga ashtakavarga) {
+    _ensureInitialized();
+    _ashtakavargaService ??= AshtakavargaService();
+    return _ashtakavargaService!.calculateYogaPinda(ashtakavarga);
+  }
+
+  /// Calculates Shodhya Pinda (reduced strength) from Ashtakavarga.
+  ///
+  /// Applies Trikona and Ekadhipati Shodhana, then calculates Pinda.
+  ///
+  /// [ashtakavarga] - The Ashtakavarga to calculate from
+  ///
+  /// Returns complete Shodhya Pinda analysis.
+  ShodhyaPindaResult calculateShodhyaPinda(Ashtakavarga ashtakavarga) {
+    _ensureInitialized();
+    _ashtakavargaService ??= AshtakavargaService();
+    return _ashtakavargaService!.calculateShodhyaPinda(ashtakavarga);
+  }
+
+  /// Calculates Ashtakavarga Pinda for a specific house.
+  ///
+  /// [ashtakavarga] - The Ashtakavarga
+  /// [houseNumber] - House number (1-12)
+  ///
+  /// Returns the house Pinda value.
+  double calculateHousePinda(Ashtakavarga ashtakavarga, int houseNumber) {
+    _ensureInitialized();
+    _ashtakavargaService ??= AshtakavargaService();
+    return _ashtakavargaService!.calculateHousePinda(ashtakavarga, houseNumber);
+  }
+
+  /// Calculates Ashtakavarga Pinda for all 12 houses.
+  ///
+  /// [ashtakavarga] - The Ashtakavarga
+  ///
+  /// Returns map of house number (1-12) to Pinda value.
+  Map<int, double> calculateAllHousesPinda(Ashtakavarga ashtakavarga) {
+    _ensureInitialized();
+    _ashtakavargaService ??= AshtakavargaService();
+    final result = <int, double>{};
+    for (var i = 1; i <= 12; i++) {
+      result[i] = _ashtakavargaService!.calculateHousePinda(ashtakavarga, i);
+    }
+    return result;
   }
 
   // ============================================================
@@ -1299,6 +1598,156 @@ class Jyotish {
   Planet? getSubSubLord(double longitude) {
     _ensureInitialized();
     return _kpService!.getSubSubLord(longitude);
+  }
+
+  /// Gets house group significators for a chart.
+  ///
+  /// Groups planets by their house significators for life areas:
+  /// Self, Wealth, Career, Marriage, Children, Health.
+  ///
+  /// [significators] - KP significators from calculateKPData
+  ///
+  /// Returns grouped significators.
+  KPHouseGroupSignificators getHouseGroupSignificators(
+    Map<Planet, KPSignificators> significators,
+  ) {
+    _ensureInitialized();
+    return _kpService!.getHouseGroupSignificators(significators);
+  }
+
+  /// Calculates transit KP divisions for planet positions.
+  ///
+  /// [transitPositions] - Map of planet to their transit positions
+  ///
+  /// Returns KP division data for each transit planet.
+  Map<Planet, KPDivision> calculateTransitKPDivisions(
+    Map<Planet, PlanetPosition> transitPositions,
+  ) {
+    _ensureInitialized();
+    return _kpService!.calculateTransitKPDivisions(transitPositions);
+  }
+
+  // ============================================================
+  // KP TRANSIT VS NATAL COMPARISON
+  // ============================================================
+
+  /// Compares transit KP Sub-Lords against natal Sub-Lords for every planet.
+  ///
+  /// Calculates transit positions at [transitDateTime] (default: now), converts
+  /// them to KP divisions with the same ayanamsa as the natal chart, then
+  /// checks each planet's Star-Lord and Sub-Lord against the natal chart.
+  ///
+  /// **The primary KP rule**: an event is activated when the transiting planet's
+  /// Sub-Lord matches, or signifies the same houses as, the natal Sub-Lord.
+  ///
+  /// [natalChart] - The birth chart used to build [natalKP].
+  /// [natalKP]    - Pre-computed natal KP data (from [calculateKPData]).
+  ///                If omitted, it is computed internally.
+  /// [transitDateTime] - Moment to check (default: current time).
+  /// [location]   - Geographic location for transit house calculation.
+  /// [useNewAyanamsa] - Use KP New VP291 (default) or old KP ayanamsa.
+  ///
+  /// Returns a list of [KPTransitComparison], sorted strongest-match first.
+  ///
+  /// Example:
+  /// ```dart
+  /// final comparisons = await jyotish.compareKPTransitToNatal(
+  ///   natalChart: birthChart,
+  ///   location: location,
+  /// );
+  /// for (final c in comparisons.where((c) => c.subLordMatches)) {
+  ///   print('${c.planet}: transit sub-lord matches natal!');
+  /// }
+  /// ```
+  Future<List<KPTransitComparison>> compareKPTransitToNatal({
+    required VedicChart natalChart,
+    KPCalculations? natalKP,
+    DateTime? transitDateTime,
+    required GeographicLocation location,
+    bool useNewAyanamsa = true,
+  }) async {
+    _ensureInitialized();
+
+    try {
+      final queryTime = transitDateTime ?? DateTime.now();
+
+      // Build natal KP if not provided
+      final resolvedNatalKP =
+          natalKP ?? await _kpService!.calculateKPData(natalChart);
+
+      // Get transit planet positions using the Jyotish public method
+      final transitRawPositions = await getAllPlanetPositions(
+        dateTime: queryTime,
+        location: location,
+      );
+
+      // Convert to KP divisions (ayanamsa-adjusted)
+      final transitDivisions =
+          _kpService!.calculateTransitKPDivisions(transitRawPositions);
+
+      return _kpService!.compareTransitToNatal(
+        natalKP: resolvedNatalKP,
+        transitDivisions: transitDivisions,
+      );
+    } catch (e) {
+      if (e is JyotishException) rethrow;
+      throw JyotishException(
+        'Failed to compare KP transit to natal: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
+  // ============================================================
+  // KP RULING PLANETS (PRASHNA)
+  // ============================================================
+
+  /// Calculates the seven KP Ruling Planets at a Prashna (horary) query moment.
+  ///
+  /// The Ruling Planets are the Sign, Star, and Sub lords of:
+  /// - **Day Lord** (weekday planetary ruler)
+  /// - **Ascendant** (lagna at the query time)
+  /// - **Moon** (position at the query time)
+  ///
+  /// This is the mandatory first step in any KP Prashna reading.
+  /// The resulting [KPRulingPlanets.rulingPlanets] list (deduplicated, priority-ordered)
+  /// is used to narrow down which significators are currently "empowered."
+  ///
+  /// [chart] - The Prashna chart at the exact query moment.
+  ///           Compute with `calculateVedicChart(houseSystem: 'P')` for Placidus.
+  /// [useNewAyanamsa] - Use KP New VP291 (default) or old KP ayanamsa.
+  ///
+  /// Returns [KPRulingPlanets] with all seven lords and their full KP divisions.
+  ///
+  /// Example:
+  /// ```dart
+  /// final prashnaChart = await jyotish.calculateVedicChart(
+  ///   dateTime: DateTime.now(),
+  ///   location: location,
+  ///   houseSystem: 'P', // Placidus — required for KP
+  /// );
+  /// final rp = await jyotish.getKPRulingPlanets(chart: prashnaChart);
+  /// print('Ruling Planets: ${rp.rulingPlanets}');
+  /// print('Day Lord: ${rp.dayLord}');
+  /// ```
+  Future<KPRulingPlanets> getKPRulingPlanets({
+    required VedicChart chart,
+    bool useNewAyanamsa = true,
+  }) async {
+    _ensureInitialized();
+
+    try {
+      return await _kpService!.calculateRulingPlanets(
+        chart,
+        useNewAyanamsa: useNewAyanamsa,
+      );
+    } catch (e) {
+      if (e is JyotishException) rethrow;
+      throw JyotishException(
+        'Failed to calculate KP Ruling Planets: ${e.toString()}',
+        originalError: e,
+      );
+    }
   }
 
   // ============================================================
@@ -1588,6 +2037,32 @@ class Jyotish {
     return await _shadbalaService!.calculateShadbala(chart);
   }
 
+  /// Calculates all 24 Hora lords for a complete day.
+  ///
+  /// Returns a list of 24 planetary hour lords starting from sunrise.
+  /// Index 0 = first Hora after sunrise (daytime Horas 1-12)
+  /// Index 12 = first Hora after sunset (nighttime Horas 13-24)
+  ///
+  /// [date] - The date for which to calculate Horas
+  /// [location] - Geographic location for accurate sunrise/sunset
+  Future<List<Planet>> calculateHoraLordsForDay({
+    required DateTime date,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+    try {
+      return await _shadbalaService!.calculateHoraLordsForDay(
+        date: date,
+        location: location,
+      );
+    } catch (e) {
+      throw JyotishException(
+        'Failed to calculate Hora Lords for day: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
   // ============================================================
   // LUNAR MONTH (MASA) CALCULATIONS
   // ============================================================
@@ -1754,6 +2229,33 @@ class Jyotish {
     );
   }
 
+  /// Calculates an alternate Bhava Bala (House Strength).
+  ///
+  /// [chart] - The Vedic birth chart
+  /// [shadbalaResults] - Pre-calculated Shadbala results
+  ///
+  /// Returns map of house number (1-12) to double strength score.
+  Map<int, double> getStrengthBhavaBala({
+    required VedicChart chart,
+    required Map<Planet, double> shadbalaResults,
+  }) {
+    _ensureInitialized();
+    return _strengthAnalysisService!.getBhavaBala(
+      chart: chart,
+      shadbalaResults: shadbalaResults,
+    );
+  }
+
+  /// Calculates Vimshopak Bala for all planets.
+  ///
+  /// [chart] - The Vedic chart
+  ///
+  /// Returns a map of all traditional planets to their Vimshopak Bala
+  Map<Planet, VimshopakBala> getAllPlanetsVimshopakBala(VedicChart chart) {
+    _ensureInitialized();
+    return _strengthAnalysisService!.getAllPlanetsVimshopakBala(chart);
+  }
+
   // ============================================================
   // GOCHARA VEDHA (TRANSIT OBSTRUCTION)
   // ============================================================
@@ -1796,6 +2298,56 @@ class Jyotish {
       transits: transits,
       moonNakshatra: moonNakshatra,
     );
+  }
+
+  /// Checks if there's mutual Vedha between two planets.
+  ///
+  /// Mutual Vedha occurs when two planets obstruct each other,
+  /// effectively canceling out both results.
+  ///
+  /// [planet1] - First planet
+  /// [house1] - First planet's house from Moon
+  /// [planet2] - Second planet
+  /// [house2] - Second planet's house from Moon
+  ///
+  /// Returns true if there's mutual obstruction
+  bool hasMutualVedha(
+    Planet planet1,
+    int house1,
+    Planet planet2,
+    int house2,
+  ) {
+    _ensureInitialized();
+    return _gocharaVedhaService!.hasMutualVedha(
+      planet1,
+      house1,
+      planet2,
+      house2,
+    );
+  }
+
+  /// Finds the best transit periods without Vedha.
+  ///
+  /// [transitsOverTime] - List of transit snapshots with dates
+  ///
+  /// Returns list of favorable periods without obstruction
+  List<FavorablePeriod> findFavorablePeriodsWithoutVedha(
+    List<TransitSnapshot> transitsOverTime,
+  ) {
+    _ensureInitialized();
+    return _gocharaVedhaService!.findFavorablePeriodsWithoutVedha(
+      transitsOverTime,
+    );
+  }
+
+  /// Gets remedial measures for Vedha.
+  ///
+  /// [vedhaResult] - The Vedha result to get remedies for
+  ///
+  /// Returns list of remedial suggestions
+  List<String> getVedhaRemedies(VedhaResult vedhaResult) {
+    _ensureInitialized();
+    return _gocharaVedhaService!.getVedhaRemedies(vedhaResult);
   }
 
   /// Gets the Samvatsara (60-year Jupiter cycle) name for a given year.
@@ -1849,6 +2401,69 @@ class Jyotish {
     } catch (e) {
       throw JyotishException(
         'Failed to get Masa list: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
+  /// Gets the Hindu season (Ritu) based on the lunar month.
+  ///
+  /// [masaInfo] - The MasaInfo containing the lunar month
+  ///
+  /// Returns the corresponding Ritu.
+  Ritu getRitu(MasaInfo masaInfo) {
+    _ensureInitialized();
+    return _masaService!.getRitu(masaInfo);
+  }
+
+  /// Gets detailed Ritu (season) information for a specific date.
+  ///
+  /// [dateTime] - The date to check
+  /// [location] - Geographic location
+  ///
+  /// Returns detailed Ritu information including description and characteristics.
+  Future<RituInfo> getRituDetails({
+    required DateTime dateTime,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+
+    try {
+      return await _masaService!.getRituDetails(
+        dateTime: dateTime,
+        location: location,
+      );
+    } catch (e) {
+      throw JyotishException(
+        'Failed to get Ritu details: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
+  /// Calculates house cusps and ascendant/midheaven.
+  ///
+  /// [dateTime] - The date and time for calculation
+  /// [location] - Geographic location
+  /// [houseSystem] - House system ('P' = Placidus, 'K' = Koch, 'W' = Whole Sign, etc.)
+  ///
+  /// Returns a map with 'cusps' and 'ascmc' arrays.
+  Future<Map<String, List<double>>> calculateHouses({
+    required DateTime dateTime,
+    required GeographicLocation location,
+    String houseSystem = 'P',
+  }) async {
+    _ensureInitialized();
+
+    try {
+      return await _ephemerisService!.calculateHouses(
+        dateTime: dateTime,
+        location: location,
+        houseSystem: houseSystem,
+      );
+    } catch (e) {
+      throw JyotishException(
+        'Failed to calculate houses: ${e.toString()}',
         originalError: e,
       );
     }
@@ -1976,25 +2591,88 @@ class Jyotish {
   /// Gets whether library has been initialized.
   bool get isInitialized => _isInitialized;
 
+  /// Calculates Abhijit Muhurta (the victorious midday period).
+  ///
+  /// [date] - Date to calculate for
+  /// [location] - Geographic location
+  Future<AbhijitMuhurta> calculateAbhijitMuhurta({
+    required DateTime date,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+    return _panchangaService!.calculateAbhijitMuhurta(
+      date: date,
+      location: location,
+    );
+  }
+
+  /// Calculates Brahma Muhurta (the auspicious pre-dawn period).
+  ///
+  /// [date] - Date to calculate for
+  /// [location] - Geographic location
+  Future<BrahmaMuhurta> calculateBrahmaMuhurta({
+    required DateTime date,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+    return _panchangaService!.calculateBrahmaMuhurta(
+      date: date,
+      location: location,
+    );
+  }
+
+  /// Calculates nighttime inauspicious periods (Nighttime Rahu Kaal equivalent).
+  ///
+  /// [date] - Date to calculate for
+  /// [location] - Geographic location
+  Future<NighttimeInauspiciousPeriods> calculateNighttimeInauspicious({
+    required DateTime date,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+    return _panchangaService!.calculateNighttimeInauspicious(
+      date: date,
+      location: location,
+    );
+  }
+
+  /// Gets the exact junction (change point) of a specific Tithi.
+  ///
+  /// [targetTithiNumber] - The Tithi number (1-30)
+  /// [startDate] - Start date to search from
+  /// [location] - Geographic location
+  Future<DateTime> getTithiJunction({
+    required int targetTithiNumber,
+    required DateTime startDate,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+    return _panchangaService!.getTithiJunction(
+      targetTithiNumber: targetTithiNumber,
+      startDate: startDate,
+      location: location,
+    );
+  }
+
+  /// Gets detailed Moon phase information.
+  ///
+  /// [dateTime] - Date and time for the calculation
+  /// [location] - Geographic location
+  Future<MoonPhaseDetails> getMoonPhaseDetails({
+    required DateTime dateTime,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+    return _panchangaService!.getMoonPhaseDetails(
+      dateTime: dateTime,
+      location: location,
+    );
+  }
+
   /// Gets the PanchangaService for advanced Panchanga calculations.
   ///
-  /// Use this to access advanced Panchanga methods like:
-  /// - calculateAbhijitMuhurta()
-  /// - calculateBrahmaMuhurta()
-  /// - calculateNighttimeInauspicious()
-  /// - getTithiJunction()
-  /// - getMoonPhaseDetails()
-  ///
-  /// Example:
-  /// ```dart
-  /// final jyotish = Jyotish();
-  /// await jyotish.initialize();
-  ///
-  /// final abhijit = await jyotish.panchangaService.calculateAbhijitMuhurta(
-  ///   date: DateTime.now(),
-  ///   location: location,
-  /// );
-  /// ```
+  /// Most methods are available directly on the [Jyotish] class.
+  /// Access this service only for specialized operations.
   PanchangaService get panchangaService {
     _ensureInitialized();
     return _panchangaService!;
@@ -2038,34 +2716,14 @@ class Jyotish {
     _ensureInitialized();
     return _sudarshanChakraService!.calculateSudarshanChakra(chart);
   }
-  // ============================================================
-  // PRASHNA (HORARY) ASTROLOGY
-  // ============================================================
-
-  /// Calculates Arudha Lagna for Prashna based on seed.
-  Rashi calculatePrashnaArudha(int seed) {
-    _ensureInitialized();
-    return _prashnaService!.calculatePrashnaArudha(seed);
-  }
-
-  /// Calculates special Prashna Sphutas (Trisphuta, etc.).
-  Future<PrashnaSphutas> calculatePrashnaSphutas(VedicChart chart) async {
-    _ensureInitialized();
-    return await _prashnaService!.calculateSphutas(chart);
-  }
-
-  /// Calculates Gulika Sphuta for Prashna.
-  Future<double> calculateGulikaSphuta(VedicChart chart) async {
-    _ensureInitialized();
-    return await _prashnaService!.calculateGulikaSphuta(chart);
-  }
 
   // ============================================================
   // HOUSE STRENGTH (VIMSOPAKA BALA)
   // ============================================================
 
   /// Calculates enhanced Bhava Bala with Vimsopaka integration.
-  Future<Map<int, EnhancedBhavaBalaResult>> getEnhancedBhavaBala(VedicChart chart) async {
+  Future<Map<int, EnhancedBhavaBalaResult>> getEnhancedBhavaBala(
+      VedicChart chart) async {
     _ensureInitialized();
     return await _houseStrengthService!.calculateEnhancedBhavaBala(chart);
   }
@@ -2074,6 +2732,13 @@ class Jyotish {
   Map<Planet, VimsopakaBalaResult> getVimsopakaBala(VedicChart chart) {
     _ensureInitialized();
     return _houseStrengthService!.calculateVimsopakaBala(chart);
+  }
+
+  /// Extracts the house strength summary from Bhava Bala results.
+  HouseStrengthSummary getHouseStrengthSummary(
+      Map<int, EnhancedBhavaBalaResult> results) {
+    _ensureInitialized();
+    return _houseStrengthService!.getHouseStrengthSummary(results);
   }
 
   // ============================================================
@@ -2114,6 +2779,12 @@ class Jyotish {
     return _progenyService!.analyzeProgeny(chart);
   }
 
+  /// Analyzes the D7 (Saptamsa) chart for progeny.
+  D7Analysis analyzeD7Chart(VedicChart chart) {
+    _ensureInitialized();
+    return _progenyService!.analyzeD7Chart(chart);
+  }
+
   /// Analyzes the strength of the 5th house for children.
   FifthHouseStrength analyzeFifthHouse(VedicChart chart) {
     _ensureInitialized();
@@ -2137,9 +2808,16 @@ class Jyotish {
   // ============================================================
 
   /// Calculates compatibility between two charts.
-  CompatibilityResult calculateCompatibility(VedicChart boyChart, VedicChart girlChart) {
+  CompatibilityResult calculateCompatibility(
+      VedicChart boyChart, VedicChart girlChart) {
     _ensureInitialized();
     return _compatibilityService!.calculateCompatibility(boyChart, girlChart);
+  }
+
+  /// Calculates Vashya compatibility score (0-2 pts).
+  int calculateVashya(VedicChart boyChart, VedicChart girlChart) {
+    _ensureInitialized();
+    return _compatibilityService!.calculateVashya(boyChart, girlChart);
   }
 
   /// Calculates Guna Milan (Ashtakoota) scores.
@@ -2161,8 +2839,311 @@ class Jyotish {
   }
 
   /// Checks for Bhakoot Dosha between two charts.
-  BhakootDoshaResult checkBhakootDosha(VedicChart boyChart, VedicChart girlChart) {
+  BhakootDoshaResult checkBhakootDosha(
+      VedicChart boyChart, VedicChart girlChart) {
     _ensureInitialized();
     return _compatibilityService!.checkBhakootDosha(boyChart, girlChart);
+  }
+
+  // ============================================================
+  // BHAVA CHALIT (CUSPAL CHART)
+  // ============================================================
+
+  /// Computes the Bhava Chalit (Cuspal) chart from an existing Vedic chart.
+  ///
+  /// In Bhava Chalit each house boundary is the midpoint between adjacent
+  /// cusps rather than a fixed 30° sign boundary. This redistribution is
+  /// most significant with non-Whole-Sign house systems (Placidus, Koch…)
+  /// and is crucial for transit and dasha result timing.
+  ///
+  /// [chart] — A previously calculated [VedicChart]. Any house system is
+  /// supported; for Whole Sign the result will differ only for planets
+  /// very close to cusp boundaries.
+  ///
+  /// Returns a [BhavaChalit] with 12 bhavas and their planet lists.
+  /// Check [BhavaChalit.shiftedPlanets] to quickly see which planets
+  /// moved house compared to the Rashi chart.
+  ///
+  /// Example:
+  /// ```dart
+  /// final rashiChart = await jyotish.calculateVedicChart(
+  ///   dateTime: birthDateTime,
+  ///   location: location,
+  ///   houseSystem: 'P', // Placidus — differences are most visible
+  /// );
+  /// final chalit = jyotish.getBhavaChalit(rashiChart);
+  ///
+  /// for (final s in chalit.shiftedPlanets) {
+  ///   print('${s.planet.displayName}: Rashi H${s.rashiHouse} → Chalit H${s.bhavaHouse}');
+  /// }
+  /// ```
+  BhavaChalit getBhavaChalit(VedicChart chart) {
+    _ensureInitialized();
+    return _bhavaChalitService!.calculateBhavaChalit(chart);
+  }
+
+  // ============================================================
+  // PANCHA-VARGEEYA MAITRI (5-FOLD PLANETARY FRIENDSHIP)
+  // ============================================================
+
+  /// Returns the complete 7×7 relationship matrix for all traditional
+  /// planets in the given chart, including:
+  ///
+  /// - **Naisargika Maitri** (natural / permanent friendship)
+  /// - **Tatkalika Maitri** (temporal / placement-based friendship)
+  /// - **Panchadha Maitri** (5-fold compound = the combination of both)
+  ///
+  /// The result is a nested map: `planet → otherPlanet → PlanetaryRelationship`.
+  /// This is the **matrix form** of the 5-fold friendship — use this when
+  /// you want to query any pair in O(1) time. For a flat list form,
+  /// see [getPlanetaryRelationships].
+  ///
+  /// Only the seven traditional planets (Sun–Saturn) are included;
+  /// Rahu and Ketu do not participate in this system.
+  ///
+  /// Example:
+  /// ```dart
+  /// final matrix = jyotish.getPlanetaryRelationshipsMatrix(chart);
+  /// final sunSaturn = matrix[Planet.sun]![Planet.saturn]!;
+  /// print(sunSaturn.natural);   // enemy
+  /// print(sunSaturn.temporary); // friend or enemy depending on chart
+  /// print(sunSaturn.compound);  // great enemy / neutral
+  /// ```
+  Map<Planet, Map<Planet, PlanetaryRelationship>>
+      getPlanetaryRelationshipsMatrix(
+    VedicChart chart,
+  ) {
+    _ensureInitialized();
+    return _planetaryRelationshipService!.getAllRelationships(chart);
+  }
+
+  /// Returns the [PlanetaryRelationship] between two specific planets
+  /// in the context of [chart].
+  ///
+  /// [planet] — The reference planet (viewpoint).
+  /// [otherPlanet] — The other planet.
+  /// [chart] — The chart providing actual house placements.
+  ///
+  /// Example:
+  /// ```dart
+  /// final rel = jyotish.getPlanetaryRelationship(
+  ///   Planet.jupiter, Planet.mercury, chart,
+  /// );
+  /// print(rel.compound); // great enemy
+  /// ```
+  PlanetaryRelationship getPlanetaryRelationship(
+    Planet planet,
+    Planet otherPlanet,
+    VedicChart chart,
+  ) {
+    _ensureInitialized();
+    return _planetaryRelationshipService!
+        .getRelationship(planet, otherPlanet, chart);
+  }
+
+  // ============================================================
+  // GRAHA AVASTHA (PLANETARY STATES)
+  // ============================================================
+
+  /// Calculates the Avastha (state) of a specific planet.
+  ///
+  /// Evaluates both Baladi (age) and Jagratadi (consciousness) states.
+  GrahaAvastha getGrahaAvastha(Planet planet, VedicChart chart) {
+    _ensureInitialized();
+    final planetInfo = chart.planets[planet];
+    if (planetInfo == null) {
+      throw JyotishException('Planet $planet not found in chart.');
+    }
+    return _grahaAvasthaService!.calculateAvastha(planetInfo);
+  }
+
+  /// Calculates Avasthas for all valid planets in a chart.
+  Map<Planet, GrahaAvastha> getAllGrahaAvasthas(VedicChart chart) {
+    _ensureInitialized();
+    return _grahaAvasthaService!.calculateAllAvasthas(chart);
+  }
+
+  // ============================================================
+  // STRENGTH SUMMARY REPORT
+  // ============================================================
+
+  /// Generates a comprehensive ChartStrengthReport for a given chart.
+  Future<ChartStrengthReport> getChartStrengthReport(VedicChart chart) async {
+    _ensureInitialized();
+    return await _strengthReportService!.generateChartReport(chart);
+  }
+
+  /// Generates a comprehensive ChartStrengthReport for a given chart.
+  /// (Alias for getChartStrengthReport)
+  Future<ChartStrengthReport> getStrengthReport(VedicChart chart) async {
+    return getChartStrengthReport(chart);
+  }
+
+  /// Extracts a detailed PlanetStrengthReport for a specific planet.
+  Future<PlanetStrengthReport> getPlanetStrengthReport(
+      Planet planet, VedicChart chart) async {
+    _ensureInitialized();
+    return await _strengthReportService!.getPlanetReport(planet, chart);
+  }
+
+  // ============================================================
+  // EVENT TIMING (DASHA + TRANSIT)
+  // ============================================================
+
+  /// Analyzes a time range to find favorable windows for specific events.
+  Future<List<EventTimingWindow>> findEventTimingWindows(
+      EventTimingRequest request) async {
+    _ensureInitialized();
+    return await _eventTimingService!.findEventTimingWindows(request);
+  }
+
+  // ============================================================
+  // CAREER ANALYSIS (D-10)
+  // ============================================================
+
+  /// Performs a career analysis based on the Dashamsha (D-10) chart.
+  D10CareerAnalysis getD10CareerAnalysis({
+    required VedicChart natalChart,
+  }) {
+    _ensureInitialized();
+    final d10 = getDivisionalChart(
+        rashiChart: natalChart, type: DivisionalChartType.d10);
+    return _careerAnalysisService!.analyzeCareer(d10);
+  }
+
+  // ============================================================
+  // KP ASTROLOGY
+  // ============================================================
+
+  /// Generates the complete KP 249-Division Sub-Lord table.
+  ///
+  /// Returns a statically or dynamically generated table of all 249 Sub-Lords.
+  List<KPDivisionEntry> getKPDivisionTable() {
+    _ensureInitialized();
+    return _kpService!.generateKPDivisionTable();
+  }
+
+  /// Calculates complete KP data for a birth chart.
+  Future<KPCalculations> getKPCalculations(VedicChart natalChart,
+      {bool useNewAyanamsa = true}) async {
+    _ensureInitialized();
+    return await _kpService!
+        .calculateKPData(natalChart, useNewAyanamsa: useNewAyanamsa);
+  }
+
+  // ============================================================
+  // SARVATOBHADRA CHAKRA (TRANSIT VEDHA)
+  // ============================================================
+
+  /// Analyzes transits against a natal chart using Sarvatobhadra principles.
+  SarvatobhadraAnalysis analyzeSarvatobhadra({
+    required VedicChart natalChart,
+    required Map<Planet, double> transitPositions,
+  }) {
+    _ensureInitialized();
+    return _sarvatobhadraService!.analyzeTransits(
+      natalChart: natalChart,
+      transitPositions: transitPositions,
+    );
+  }
+
+  // ============================================================
+  // TAJAKA (ANNUAL CHART ENHANCEMENTS)
+  // ============================================================
+
+  /// Calculates Tajaka enhancements (Muntha, Sahams, Yogas) for a Varshapal chart.
+  TajakaEnhancement getTajakaEnhancements({
+    required VedicChart natalChart,
+    required VedicChart annualChart,
+    required int age,
+  }) {
+    _ensureInitialized();
+    return _tajakaService!.calculateTajakaEnhancements(
+      natalChart: natalChart,
+      annualChart: annualChart,
+      age: age,
+    );
+  }
+
+  // ============================================================
+  // PRASHNA (HORARY) CALCULATIONS
+  // ============================================================
+
+  /// Calculates the Arudha Lagna for a Prashna chart from a seed number.
+  ///
+  /// [seed] - A number (1–108 or 1–249) representing the moment of the query.
+  ///
+  /// Returns the [Rashi] corresponding to the Arudha Lagna.
+  Rashi calculatePrashnaArudha(int seed) {
+    _ensureInitialized();
+    return _prashnaService!.calculatePrashnaArudha(seed);
+  }
+
+  /// Calculates Trisphuta, Chatursphuta, and Panchasphuta for a Prashna chart.
+  ///
+  /// [chart] - A [VedicChart] calculated for the moment of the query.
+  ///
+  /// Returns [PrashnaSphutas] with all three special points.
+  Future<PrashnaSphutas> calculatePrashnaSphutas(VedicChart chart) async {
+    _ensureInitialized();
+    return await _prashnaService!.calculateSphutas(chart);
+  }
+
+  /// Calculates the Gulika Sphuta (Ascendant at Saturn's segment start).
+  ///
+  /// [chart] - A [VedicChart] calculated for the moment of the query.
+  ///
+  /// Returns the Gulika longitude in degrees (0–360).
+  Future<double> calculateGulikaSphuta(VedicChart chart) async {
+    _ensureInitialized();
+    return await _prashnaService!.calculateGulikaSphuta(chart);
+  }
+
+  // ============================================================
+  // AYANAMSA UTILITIES
+  // ============================================================
+
+  /// Returns the ayanamsa (sidereal offset) in degrees for a given date
+  /// and ayanamsa mode.
+  ///
+  /// This is useful for:
+  /// - Inspecting the offset applied to a chart.
+  /// - Comparing different ayanamsa systems at the same date.
+  /// - Verifying that a chart was calculated with the expected offset.
+  ///
+  /// [dateTime] — The date and time for the calculation (UTC or local).
+  /// [mode] — The ayanamsa system to use (default: [SiderealMode.lahiri]).
+  /// [location] — Optional location; only used if [dateTime] needs
+  ///              timezone-aware conversion.
+  ///
+  /// Returns the ayanamsa in degrees (e.g. ~24.1° for Lahiri in 2025).
+  ///
+  /// Example:
+  /// ```dart
+  /// final lahiri   = await jyotish.getAyanamsa(dateTime: now);
+  /// final kpOffset = await jyotish.getAyanamsa(
+  ///   dateTime: now,
+  ///   mode: SiderealMode.krishnamurtiVP291,
+  /// );
+  /// print('Lahiri: $lahiri°, KP: $kpOffset°');
+  /// ```
+  Future<double> getAyanamsa({
+    required DateTime dateTime,
+    SiderealMode mode = SiderealMode.lahiri,
+    GeographicLocation? location,
+  }) async {
+    _ensureInitialized();
+    try {
+      return await _ephemerisService!.getAyanamsa(
+        dateTime: dateTime,
+        mode: mode,
+        timezoneId: location?.timezone,
+      );
+    } catch (e) {
+      throw JyotishException(
+        'Failed to calculate ayanamsa: ${e.toString()}',
+        originalError: e,
+      );
+    }
   }
 }

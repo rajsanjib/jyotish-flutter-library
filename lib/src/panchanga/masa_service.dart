@@ -320,7 +320,7 @@ class MasaService {
   }) async {
     final masa = await calculateMasa(dateTime: dateTime, location: location);
 
-    int gregorianYear = dateTime.year;
+    final int gregorianYear = dateTime.year;
     bool beforeChaitra = false;
 
     if (dateTime.month < 3) {
@@ -338,8 +338,8 @@ class MasaService {
       }
     }
 
-    int vikramSamvat = gregorianYear + (beforeChaitra ? 56 : 57);
-    int shakaSamvat = gregorianYear - (beforeChaitra ? 79 : 78);
+    final int vikramSamvat = gregorianYear + (beforeChaitra ? 56 : 57);
+    final int shakaSamvat = gregorianYear - (beforeChaitra ? 79 : 78);
     int gujaratiSamvat = vikramSamvat;
 
     bool beforeKartika = false;

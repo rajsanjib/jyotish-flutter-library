@@ -3,13 +3,13 @@ import 'package:test/test.dart';
 
 void main() {
   late Jyotish jyotish;
-  late NatalChart natalChart;
+  late VedicChart natalChart;
 
   setUpAll(() async {
     jyotish = Jyotish();
     try {
       await jyotish.initialize(ephemerisPath: 'ephe');
-      natalChart = await jyotish.calculateNatalChart(
+      natalChart = await jyotish.calculateVedicChart(
         dateTime: DateTime(1990, 5, 15, 10, 30),
         location: GeographicLocation(latitude: 28.6139, longitude: 77.2090),
       );
@@ -103,7 +103,7 @@ void main() {
 
     test('analysis reflects natal chart differences', () async {
       try {
-        final natalChart2 = await jyotish.calculateNatalChart(
+        final natalChart2 = await jyotish.calculateVedicChart(
           dateTime: DateTime(1985, 8, 20, 14, 0),
           location: GeographicLocation(latitude: 19.0760, longitude: 72.8777),
         );

@@ -341,7 +341,7 @@ class PanchangaService {
     final julianCentury = (jd - 2451545.0) / 36525.0;
 
     // Geometric Mean Longitude Sun (deg)
-    var geomMeanLongSun = (280.46646 +
+    final geomMeanLongSun = (280.46646 +
             julianCentury * (36000.76983 + julianCentury * 0.0003032)) %
         360;
 
@@ -414,8 +414,8 @@ class PanchangaService {
     // Check for polar day/night
     if (haArg > 1.0 || haArg < -1.0) {
       // Fallback to coarse approximation if NOAA calc fails (extreme latitudes)
-      var sunriseHour = 6.0;
-      var sunsetHour = 18.0;
+      final sunriseHour = 6.0;
+      final sunsetHour = 18.0;
 
       final sunrise = baseDate.add(Duration(hours: sunriseHour.toInt()));
       final sunset = baseDate.add(Duration(hours: sunsetHour.toInt()));

@@ -9,7 +9,7 @@ class RitualService {
   }) {
     // Use 1-30 numbering for rituals (Shukla 1-15, Krishna 16-30)
     // tithiNumber in Panchanga is already 1-30.
-    int tithiNumber = panchanga.tithi.number;
+    final int tithiNumber = panchanga.tithi.number;
 
     final nakshatraNumber = panchanga.nakshatra.number; // 1-27
     final weekday = panchanga.vara.weekday; // 0-6

@@ -1,6 +1,4 @@
 import 'package:jyotish/jyotish.dart';
-import 'package:jyotish/src/muhurta/ritual_elements.dart';
-import 'package:jyotish/src/muhurta/ritual_service.dart';
 import 'package:test/test.dart';
 
 void main() {

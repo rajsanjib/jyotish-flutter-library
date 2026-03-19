@@ -100,7 +100,7 @@ void main() {
         expect(
             horas[i].endTime.isAtSameMomentAs(horas[i + 1].startTime) ||
                 horas[i].endTime
-                    .isBefore(horas[i + 1].startTime.add(Duration(seconds: 2))),
+                    .isBefore(horas[i + 1].startTime.add(const Duration(seconds: 2))),
             isTrue,
             reason: 'Gap between hora ${i + 1} and ${i + 2}');
       }

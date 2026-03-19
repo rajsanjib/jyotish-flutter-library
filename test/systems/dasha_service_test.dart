@@ -3,8 +3,8 @@ import 'package:test/test.dart';
 
 void main() {
   late Jyotish jyotish;
-  late NatalChart natalChart;
-  late NatalChart alternativeChart;
+  late VedicChart natalChart;
+  late VedicChart alternativeChart;
 
   setUpAll(() async {
     jyotish = Jyotish();
@@ -16,41 +16,32 @@ void main() {
     final location = GeographicLocation(latitude: 28.6139, longitude: 77.2090);
 
     try {
-      natalChart = await jyotish.calculateNatalChart(
+      natalChart = await jyotish.calculateVedicChart(
         dateTime: birthDate,
         location: location,
       );
     } catch (_) {
-      natalChart = NatalChart(
-        dateTime: birthDate,
-        location: location,
-        planetaryPositions: {},
-        ascendantLongitude: 0,
-      );
+      // Fallback with minimal chart if initialization failed
+      natalChart = _createMinimalChart(birthDate, location);
     }
 
     final altDate = DateTime.utc(1947, 8, 14, 18, 30);
     try {
-      alternativeChart = await jyotish.calculateNatalChart(
+      alternativeChart = await jyotish.calculateVedicChart(
         dateTime: altDate,
         location: location,
       );
     } catch (_) {
-      alternativeChart = NatalChart(
-        dateTime: altDate,
-        location: location,
-        planetaryPositions: {},
-        ascendantLongitude: 0,
-      );
+      alternativeChart = _createMinimalChart(altDate, location);
     }
   });
 
   group('Vimshottari Dasha', () {
     late DashaResult result;
 
-    setUpAll(() {
+    setUpAll(() async {
       try {
-        result = jyotish.getVimshottariDasha(
+        result = await jyotish.getVimshottariDasha(
           natalChart: natalChart,
           levels: 1,
         );
@@ -86,7 +77,7 @@ void main() {
         'Venus',
       ];
       final actualLords = result.allMahadashas
-          .map((p) => p.lord)
+          .map((p) => p.lordDisplayName)
           .toList();
       expect(actualLords, equals(expectedLords));
     });

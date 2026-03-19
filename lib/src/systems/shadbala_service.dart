@@ -665,7 +665,7 @@ class ShadbalaService {
     final approxDaysSinceIngress = travelledDegrees / 0.9856;
 
     // Set a search window for the exact ingress time
-    var searchTime = currentDateTime
+    final searchTime = currentDateTime
         .subtract(Duration(hours: (approxDaysSinceIngress * 24).toInt()));
 
     // Binary search to find the exact moment the Sun crossed the sign boundary
@@ -690,7 +690,7 @@ class ShadbalaService {
 
       // We must handle the 360 wrap-around if checking Aries (0)
       var midLong = midSunPos.longitude;
-      var targetLong = signStartLongitude;
+      final targetLong = signStartLongitude;
 
       if (targetLong == 0 && midLong > 340) {
         midLong -= 360;

@@ -24,11 +24,21 @@ void main() {
         );
       } catch (_) {
         panchanga = Panchanga(
-          tithi: TithiInfo(number: 5, name: 'Panchami', paksha: Paksha.shukla, elapsed: 0.5),
-          nakshatra: NakshatraInfo(number: 1, name: 'Ashwini', rulingPlanet: 'Ketu', pada: 1),
-          yoga: YogaInfo(number: 1, name: 'Vishkambha'),
-          karana: KaranaInfo(number: 1, name: 'Bava'),
-          vara: VaraInfo(weekday: 1, name: 'Sunday', lord: 'Sun'),
+          dateTime: dateTime,
+          location: location.toString(),
+          tithi: const TithiInfo(number: 5, name: 'Panchami', paksha: Paksha.shukla, elapsed: 0.5),
+          nakshatra: const NakshatraInfo(
+            number: 1, 
+            name: 'Ashwini', 
+            rulingPlanet: Planet.ketu, 
+            longitude: 0.0,
+            pada: 1,
+            isAbhijit: false,
+            abhijitPortion: 0.0,
+          ),
+          yoga: const YogaInfo(number: 1, name: 'Vishkambha', elapsed: 0.5),
+          karana: const KaranaInfo(number: 1, name: 'Bava', isFixed: true, elapsed: 0.5),
+          vara: const VaraInfo(weekday: 1, name: 'Monday', rulingPlanet: Planet.moon),
           sunrise: DateTime(2024, 1, 15, 7, 10),
           sunset: DateTime(2024, 1, 15, 17, 45),
         );
@@ -126,8 +136,8 @@ void main() {
       expect(panchanga.nakshatra.pada, lessThanOrEqualTo(4));
     });
 
-    test('nakshatra rulingPlanet is not empty', () {
-      expect(panchanga.nakshatra.rulingPlanet, isNotEmpty);
+    test('nakshatra rulingPlanet is not null', () {
+      expect(panchanga.nakshatra.rulingPlanet, isNotNull);
     });
 
     test('yoga number is between 1 and 27', () {
@@ -151,27 +161,29 @@ void main() {
         'Kaulava',
         'Taitila',
         'Gara',
+        'Garaja',
         'Vanija',
         'Vishti',
         'Shakuni',
         'Chatushpada',
         'Nagava',
+        'Naga',
         'Kimstughna',
       ];
       expect(validKaranaNames, contains(panchanga.karana.name));
     });
 
-    test('vara weekday is between 1 and 7', () {
-      expect(panchanga.vara.weekday, greaterThanOrEqualTo(1));
-      expect(panchanga.vara.weekday, lessThanOrEqualTo(7));
+    test('vara weekday is between 0 and 6', () {
+      expect(panchanga.vara.weekday, greaterThanOrEqualTo(0));
+      expect(panchanga.vara.weekday, lessThanOrEqualTo(6));
     });
 
     test('vara name is not empty', () {
       expect(panchanga.vara.name, isNotEmpty);
     });
 
-    test('vara lord is not empty', () {
-      expect(panchanga.vara.lord, isNotEmpty);
+    test('vara rulingPlanet is not null', () {
+      expect(panchanga.vara.rulingPlanet, isNotNull);
     });
 
     test('sunrise is before sunset', () {
@@ -186,34 +198,34 @@ void main() {
   });
 
   group('getVara', () {
-    test('returns VaraInfo for a given date', () {
+    test('returns VaraInfo for a given date', () async {
       final dateTime = DateTime(2024, 1, 15, 12, 0);
       try {
-        final vara = jyotish.getVara(dateTime: dateTime, location: location);
+        final vara = await jyotish.getVara(dateTime: dateTime, location: location);
         expect(vara, isNotNull);
-        expect(vara.weekday, greaterThanOrEqualTo(1));
-        expect(vara.weekday, lessThanOrEqualTo(7));
+        expect(vara.weekday, greaterThanOrEqualTo(0));
+        expect(vara.weekday, lessThanOrEqualTo(6));
         expect(vara.name, isNotEmpty);
-        expect(vara.lord, isNotEmpty);
+        expect(vara.rulingPlanet, isNotNull);
       } catch (_) {}
     });
 
-    test('respects sunrise boundary for births before sunrise', () {
+    test('respects sunrise boundary for births before sunrise', () async {
       final dateTime = DateTime(2024, 1, 15, 4, 0);
       try {
-        final vara = jyotish.getVara(dateTime: dateTime, location: location);
+        final vara = await jyotish.getVara(dateTime: dateTime, location: location);
         expect(vara, isNotNull);
-        expect(vara.weekday, greaterThanOrEqualTo(1));
-        expect(vara.weekday, lessThanOrEqualTo(7));
+        expect(vara.weekday, greaterThanOrEqualTo(0));
+        expect(vara.weekday, lessThanOrEqualTo(6));
       } catch (_) {}
     });
   });
 
   group('getTithi', () {
-    test('returns TithiInfo for a given date', () {
+    test('returns TithiInfo for a given date', () async {
       final dateTime = DateTime(2024, 1, 15, 12, 0);
       try {
-        final tithi = jyotish.getTithi(dateTime: dateTime, location: location);
+        final tithi = await jyotish.getTithi(dateTime: dateTime, location: location);
         expect(tithi, isNotNull);
         expect(tithi.number, greaterThanOrEqualTo(1));
         expect(tithi.number, lessThanOrEqualTo(30));
@@ -224,10 +236,10 @@ void main() {
   });
 
   group('getNakshatra', () {
-    test('returns NakshatraInfo for a given date', () {
+    test('returns NakshatraInfo for a given date', () async {
       final dateTime = DateTime(2024, 1, 15, 12, 0);
       try {
-        final nakshatra = jyotish.getNakshatra(
+        final nakshatra = await jyotish.getNakshatra(
           dateTime: dateTime,
           location: location,
         );
@@ -242,10 +254,10 @@ void main() {
   });
 
   group('getYoga', () {
-    test('returns YogaInfo for a given date', () {
+    test('returns YogaInfo for a given date', () async {
       final dateTime = DateTime(2024, 1, 15, 12, 0);
       try {
-        final yoga = jyotish.getYoga(dateTime: dateTime, location: location);
+        final yoga = await jyotish.getYoga(dateTime: dateTime, location: location);
         expect(yoga, isNotNull);
         expect(yoga.number, greaterThanOrEqualTo(1));
         expect(yoga.number, lessThanOrEqualTo(27));
@@ -255,10 +267,10 @@ void main() {
   });
 
   group('getKarana', () {
-    test('returns KaranaInfo for a given date', () {
+    test('returns KaranaInfo for a given date', () async {
       final dateTime = DateTime(2024, 1, 15, 12, 0);
       try {
-        final karana = jyotish.getKarana(
+        final karana = await jyotish.getKarana(
           dateTime: dateTime,
           location: location,
         );
@@ -271,10 +283,10 @@ void main() {
   });
 
   group('getTithiEndTime', () {
-    test('returns a future DateTime after the given time', () {
+    test('returns a future DateTime after the given time', () async {
       final dateTime = DateTime(2024, 1, 15, 12, 0);
       try {
-        final endTime = jyotish.getTithiEndTime(
+        final endTime = await jyotish.getTithiEndTime(
           dateTime: dateTime,
           location: location,
         );
@@ -283,10 +295,10 @@ void main() {
       } catch (_) {}
     });
 
-    test('returns DateTime within the same day or next day', () {
+    test('returns DateTime within the same day or next day', () async {
       final dateTime = DateTime(2024, 1, 15, 12, 0);
       try {
-        final endTime = jyotish.getTithiEndTime(
+        final endTime = await jyotish.getTithiEndTime(
           dateTime: dateTime,
           location: location,
         );

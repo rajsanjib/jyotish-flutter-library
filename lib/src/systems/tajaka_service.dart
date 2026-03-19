@@ -56,8 +56,8 @@ class TajakaService {
 
     // Daytime chart check
     // If Sun - Ascendant mod 360 is between 180 and 360, it's daytime.
-    double diff = (sunLon - ascLon + 360) % 360;
-    bool isDay = diff >= 180 && diff <= 360;
+    final double diff = (sunLon - ascLon + 360) % 360;
+    final bool isDay = diff >= 180 && diff <= 360;
 
     double calc(double a, double b, double c, bool reverseForNight) {
       if (reverseForNight && !isDay) {

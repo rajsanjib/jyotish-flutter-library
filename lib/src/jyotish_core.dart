@@ -151,6 +151,9 @@ class Jyotish {
   TajakaService? _tajakaService;
   bool _isInitialized = false;
 
+  /// Access point for specialized systems like Argala, Arudha Pada, etc.
+  JyotishSystems get systems => JyotishSystems(this);
+
   /// Initializes the Swiss Ephemeris library.
   ///
   /// [ephemerisPath] - Optional custom path to Swiss Ephemeris data files.
@@ -372,6 +375,22 @@ class Jyotish {
       );
     }
   }
+
+  /// Alias for [calculateVedicChart] to support legacy code.
+  Future<VedicChart> calculateNatalChart({
+    required DateTime dateTime,
+    required GeographicLocation location,
+    String houseSystem = 'W',
+    bool includeOuterPlanets = false,
+    CalculationFlags? flags,
+  }) async =>
+      calculateVedicChart(
+        dateTime: dateTime,
+        location: location,
+        houseSystem: houseSystem,
+        includeOuterPlanets: includeOuterPlanets,
+        flags: flags,
+      );
 
   // ============================================================
   // DIVISIONAL CHART CALCULATIONS
@@ -2262,41 +2281,79 @@ class Jyotish {
 
   /// Calculates Gochara Vedha for a specific transit planet.
   ///
-  /// [transitPlanet] - The planet in transit
+  /// [transitPlanet] - The planet in transit (Planet object or name)
   /// [houseFromMoon] - House position from natal Moon (1-12)
-  /// [moonNakshatra] - Current Moon's nakshatra (1-27)
+  /// [moonNakshatra] - Current Moon's nakshatra (number 1-27 or name)
   /// [otherTransits] - Map of other planets to their house from Moon
   ///
   /// Returns [VedhaResult] with obstruction details.
-  VedhaResult calculateGocharaVedha({
-    required Planet transitPlanet,
+  Future<VedhaResult> calculateGocharaVedha({
+    required dynamic transitPlanet,
     required int houseFromMoon,
-    required int moonNakshatra,
-    required Map<Planet, int> otherTransits,
-  }) {
+    dynamic moonNakshatra,
+    Map<dynamic, int> otherTransits = const {},
+  }) async {
     _ensureInitialized();
+
+    final Planet planet = transitPlanet is Planet
+        ? transitPlanet
+        : Planet.fromName(transitPlanet.toString()) ?? Planet.sun;
+
+    final int nakNumber = moonNakshatra is int
+        ? moonNakshatra
+        : (moonNakshatra != null ? _getNakshatraNumber(moonNakshatra.toString()) : 1);
+
+    final Map<Planet, int> resolvedOtherTransits = {};
+    otherTransits.forEach((key, value) {
+      final p = key is Planet ? key : Planet.fromName(key.toString());
+      if (p != null) resolvedOtherTransits[p] = value;
+    });
+
     return _gocharaVedhaService!.calculateVedha(
-      transitPlanet: transitPlanet,
+      transitPlanet: planet,
       houseFromMoon: houseFromMoon,
-      moonNakshatra: moonNakshatra,
-      otherTransits: otherTransits,
+      moonNakshatra: nakNumber,
+      otherTransits: resolvedOtherTransits,
     );
+  }
+
+  int _getNakshatraNumber(String name) {
+    const names = [
+      'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra',
+      'Punarvasu', 'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni',
+      'Uttara Phalguni', 'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha',
+      'Jyeshtha', 'Mula', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana',
+      'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'
+    ];
+    final idx = names.indexWhere((n) => n.toLowerCase() == name.toLowerCase());
+    return idx == -1 ? 1 : idx + 1;
   }
 
   /// Calculates Gochara Vedha for multiple planets needed for a chart.
   ///
   /// [transits] - Map of planets to their house positions from Moon
-  /// [moonNakshatra] - Current Moon's nakshatra
+  /// [moonNakshatra] - Current Moon's nakshatra (number or name)
   ///
   /// Returns list of [VedhaResult].
-  List<VedhaResult> calculateMultipleGocharaVedha({
-    required Map<Planet, int> transits,
-    required int moonNakshatra,
-  }) {
+  Future<List<VedhaResult>> calculateMultipleGocharaVedha({
+    required Map<dynamic, int> transits,
+    required dynamic moonNakshatra,
+  }) async {
     _ensureInitialized();
+
+    final int nakNumber = moonNakshatra is int
+        ? moonNakshatra
+        : _getNakshatraNumber(moonNakshatra.toString());
+
+    final Map<Planet, int> resolvedTransits = {};
+    transits.forEach((key, value) {
+      final p = key is Planet ? key : Planet.fromName(key.toString());
+      if (p != null) resolvedTransits[p] = value;
+    });
+
     return _gocharaVedhaService!.calculateMultipleVedha(
-      transits: transits,
-      moonNakshatra: moonNakshatra,
+      transits: resolvedTransits,
+      moonNakshatra: nakNumber,
     );
   }
 
@@ -2305,23 +2362,28 @@ class Jyotish {
   /// Mutual Vedha occurs when two planets obstruct each other,
   /// effectively canceling out both results.
   ///
-  /// [planet1] - First planet
+  /// [planet1] - First planet (Planet or name)
   /// [house1] - First planet's house from Moon
-  /// [planet2] - Second planet
+  /// [planet2] - Second planet (Planet or name)
   /// [house2] - Second planet's house from Moon
   ///
   /// Returns true if there's mutual obstruction
   bool hasMutualVedha(
-    Planet planet1,
+    dynamic planet1,
     int house1,
-    Planet planet2,
+    dynamic planet2,
     int house2,
   ) {
     _ensureInitialized();
+    final p1 = planet1 is Planet ? planet1 : Planet.fromName(planet1.toString());
+    final p2 = planet2 is Planet ? planet2 : Planet.fromName(planet2.toString());
+
+    if (p1 == null || p2 == null) return false;
+
     return _gocharaVedhaService!.hasMutualVedha(
-      planet1,
+      p1,
       house1,
-      planet2,
+      p2,
       house2,
     );
   }
@@ -3036,14 +3098,31 @@ class Jyotish {
   // ============================================================
 
   /// Analyzes transits against a natal chart using Sarvatobhadra principles.
-  SarvatobhadraAnalysis analyzeSarvatobhadra({
+  Future<SarvatobhadraAnalysis> analyzeSarvatobhadra({
     required VedicChart natalChart,
-    required Map<Planet, double> transitPositions,
-  }) {
+    required dynamic transitPositions,
+  }) async {
     _ensureInitialized();
+    final Map<Planet, double> resolvedPositions = {};
+
+    if (transitPositions is Map) {
+      transitPositions.forEach((key, value) {
+        final planet = key is Planet ? key : Planet.fromName(key.toString());
+        if (planet != null) {
+          if (value is double) {
+            resolvedPositions[planet] = value;
+          } else if (value is TransitInfo) {
+            resolvedPositions[planet] = value.transitPosition.longitude;
+          } else if (value is num) {
+            resolvedPositions[planet] = value.toDouble();
+          }
+        }
+      });
+    }
+
     return _sarvatobhadraService!.analyzeTransits(
       natalChart: natalChart,
-      transitPositions: transitPositions,
+      transitPositions: resolvedPositions,
     );
   }
 
@@ -3146,4 +3225,18 @@ class Jyotish {
       );
     }
   }
+}
+
+/// A facade for specialized jyotish systems.
+class JyotishSystems {
+  final Jyotish _jyotish;
+  JyotishSystems(this._jyotish);
+
+  ArgalaService get argala => _jyotish._argalaService!;
+  ArudhaPadaService get arudhaPada => _jyotish._arudhaPadaService!;
+  AshtakavargaService get ashtakavarga => _jyotish._ashtakavargaService!;
+  DashaService get dasha => _jyotish._dashaService!;
+  JaiminiService get jaimini => _jyotish._jaiminiService!;
+  PrashnaService get prashna => _jyotish._prashnaService!;
+  VarshapalService get varshapal => _jyotish._varshapalService!;
 }

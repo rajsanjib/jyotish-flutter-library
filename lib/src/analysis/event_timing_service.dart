@@ -97,7 +97,7 @@ class EventTimingService {
           score -= 0.2;
           final obstructors = vedhaResult.obstructingPlanets
               .map((p) => p.displayName)
-              .join(", ");
+              .join(', ');
           reasons.add(
               'But favorable effects are obstructed (Vedha) by $obstructors.');
         } else {
@@ -112,7 +112,7 @@ class EventTimingService {
           score += 0.1;
           final obstructors = vedhaResult.obstructingPlanets
               .map((p) => p.displayName)
-              .join(", ");
+              .join(', ');
           reasons.add(
               'Harmful effects are mitigated (Vama Vedha) by $obstructors.');
         }

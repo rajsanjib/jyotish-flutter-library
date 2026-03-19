@@ -372,7 +372,7 @@ class DashaService {
       for (var i = 0; i < 8; i++) {
         final idx = (startingYoginiIndex + i) % 8;
         final yogini = Yogini.values[idx];
-        double durationDays =
+        final double durationDays =
             (cycle == 0 && i == 0) ? balanceDays : yogini.years * 365.25;
         // Use millisecond precision to avoid day-rounding drift (Issue 8)
         final durationMs = (durationDays * 86400000).round();
@@ -540,7 +540,7 @@ class DashaService {
     if (lordPos == null) return 0;
     final lordSign = Rashi.fromLongitude(lordPos.longitude);
 
-    int diff = sign.isOdd
+    final int diff = sign.isOdd
         ? (lordSign.number - sign.number + 12) % 12
         : (sign.number - lordSign.number + 12) % 12;
     return diff == 0 ? 12 : diff;

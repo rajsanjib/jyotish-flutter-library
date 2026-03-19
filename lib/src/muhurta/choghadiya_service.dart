@@ -149,8 +149,8 @@ class ChoghadiyaService {
       location: location,
     );
     // Logic similar to HoraService for "previous day" night handling
-    var sunrise = sunriseSunset.$1;
-    var sunset = sunriseSunset.$2;
+    final sunrise = sunriseSunset.$1;
+    final sunset = sunriseSunset.$2;
 
     if (sunrise == null || sunset == null) throw Exception('No sunrise data');
 

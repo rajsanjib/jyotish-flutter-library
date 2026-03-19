@@ -142,7 +142,7 @@ class BhavaBalaService {
   double _calculateAspectStrength(
       Planet planet, double planetLong, double objectLong) {
     // Angle between planet and object (house cusp)
-    var angle = (objectLong - planetLong + 360) % 360;
+    final angle = (objectLong - planetLong + 360) % 360;
 
     // Standard Drig Bala (Aspect Strength) Formulas (Parashara/Raman):
     // 1. Special Aspects happen check first?

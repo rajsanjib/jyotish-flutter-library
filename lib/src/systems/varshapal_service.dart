@@ -139,6 +139,24 @@ class VarshapalService {
     );
   }
 
+  /// Alias for [calculateVarshapal] to support legacy tests.
+  Future<Varshapal> getVarshapal({
+    required DateTime birthDateTime,
+    required DateTime varshaDateTime,
+    required GeographicLocation location,
+    String houseSystem = 'W',
+    CalculationFlags? flags,
+    DateTime? checkDate,
+  }) =>
+      calculateVarshapal(
+        birthDateTime: birthDateTime,
+        varshaDateTime: varshaDateTime,
+        location: location,
+        houseSystem: houseSystem,
+        flags: flags,
+        checkDate: checkDate,
+      );
+
   /// Calculates Varshapal for the current year (from birthday to next birthday).
   Future<Varshapal> calculateCurrentVarshapal({
     required DateTime birthDateTime,
@@ -178,6 +196,22 @@ class VarshapalService {
       checkDate: checkDate,
     );
   }
+
+  /// Alias for [calculateCurrentVarshapal] to support legacy tests.
+  Future<Varshapal> getCurrentVarshapal({
+    required DateTime birthDateTime,
+    required GeographicLocation location,
+    String houseSystem = 'W',
+    CalculationFlags? flags,
+    DateTime? checkDate,
+  }) =>
+      calculateCurrentVarshapal(
+        birthDateTime: birthDateTime,
+        location: location,
+        houseSystem: houseSystem,
+        flags: flags,
+        checkDate: checkDate,
+      );
 
   /// Calculates the varsha number (1-60) based on Jupiter's longitude.
   int _calculateVarshaNumber(double jupiterLongitude) {

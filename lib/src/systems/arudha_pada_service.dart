@@ -21,15 +21,26 @@ class ArudhaPadaService {
     );
   }
 
+  /// Alias for [calculateArudhaPadas] to support legacy tests.
+  ArudhaPadaResult getArudhaPadas(VedicChart chart) =>
+      calculateArudhaPadas(chart);
+
   /// Calculates Arudha Lagna (AL).
   ArudhaPadaInfo calculateArudhaLagna(VedicChart chart) {
     return _calculateArudhaForHouse(chart, 1);
   }
 
+  /// Alias for [calculateArudhaLagna] to support legacy tests.
+  ArudhaPadaInfo getArudhaLagna(VedicChart chart) =>
+      calculateArudhaLagna(chart);
+
   /// Calculates Upapada (UL).
   ArudhaPadaInfo calculateUpapada(VedicChart chart) {
     return _calculateArudhaForHouse(chart, 12);
   }
+
+  /// Alias for [calculateUpapada] to support legacy tests.
+  ArudhaPadaInfo getUpapada(VedicChart chart) => calculateUpapada(chart);
 
   ArudhaPadaInfo _calculateArudhaForHouse(VedicChart chart, int houseNumber) {
     // 1. Identify Sign of the House
@@ -97,7 +108,7 @@ class ArudhaPadaService {
 
     // Check distance between Original House and Calculated Arudha
     // (Arudha - House + 12) % 12 + 1
-    int distFromHouse = (arudhaIndex - houseSignIdx + 12) % 12 + 1;
+    final int distFromHouse = (arudhaIndex - houseSignIdx + 12) % 12 + 1;
 
     // Exception 1: Arudha falls in the House itself (Dist 1)
     if (distFromHouse == 1) {

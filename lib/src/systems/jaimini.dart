@@ -31,8 +31,14 @@ class RashiDrishtiInfo {
   /// The sign casting the aspect.
   final Rashi aspectingSign;
 
+  /// Alias for [aspectingSign] for legacy tests.
+  Rashi get sourceSign => aspectingSign;
+
   /// The sign receiving the aspect.
   final Rashi aspectedSign;
+
+  /// Alias for [aspectedSign] for legacy tests.
+  Rashi get targetSign => aspectedSign;
 
   /// Planets in the aspecting sign.
   final List<Planet> planetsInAspectingSign;

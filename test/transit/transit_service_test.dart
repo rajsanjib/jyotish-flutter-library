@@ -3,13 +3,13 @@ import 'package:test/test.dart';
 
 void main() {
   late Jyotish jyotish;
-  late NatalChart natalChart;
+  late VedicChart natalChart;
 
   setUpAll(() async {
     jyotish = Jyotish();
     try {
       await jyotish.initialize(ephemerisPath: 'ephe');
-      natalChart = await jyotish.calculateNatalChart(
+      natalChart = await jyotish.calculateVedicChart(
         dateTime: DateTime(1990, 5, 15, 10, 30),
         location: GeographicLocation(latitude: 28.6139, longitude: 77.2090),
       );
@@ -27,13 +27,14 @@ void main() {
           location: GeographicLocation(latitude: 28.6139, longitude: 77.2090),
         );
 
-        expect(result, isA<Map<String, TransitInfo>>());
+        expect(result, isA<Map<Planet, TransitInfo>>());
         expect(result.isNotEmpty, isTrue);
 
         final expectedPlanets = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
-        for (final planet in expectedPlanets) {
+        for (final planetName in expectedPlanets) {
+          final planet = Planet.fromName(planetName);
           expect(result.containsKey(planet), isTrue,
-              reason: 'Transit positions should contain $planet');
+              reason: 'Transit positions should contain $planetName');
         }
       } catch (e) {
         // Verify structure even if calculation fails
@@ -55,7 +56,7 @@ void main() {
               reason: '${entry.key} house should be >= 1');
           expect(info.transitHouse, lessThanOrEqualTo(12),
               reason: '${entry.key} house should be <= 12');
-          expect(info.planet, isNotEmpty);
+          expect(info.planet, isNotNull);
           expect(info.transitLongitude, isA<double>());
           expect(info.transitLongitude, greaterThanOrEqualTo(0));
           expect(info.transitLongitude, lessThan(360));
@@ -81,7 +82,7 @@ void main() {
         expect(events, isA<List<TransitEvent>>());
 
         for (final event in events) {
-          expect(event.planet, isNotEmpty);
+          expect(event.planet, isNotNull);
           expect(event.eventDate.isAfter(startDate) ||
               event.eventDate.isAtSameMomentAs(startDate), isTrue);
           expect(event.eventDate.isBefore(endDate) ||

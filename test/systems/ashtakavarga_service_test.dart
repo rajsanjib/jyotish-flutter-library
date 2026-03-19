@@ -29,7 +29,7 @@ void main() {
     test('Ashtakavarga has entries for all 7 traditional planets', () async {
       if (!ephemerisAvailable) {
         final j = Jyotish();
-        expect(() => j.systems.ashtakavarga.calculateAshtakavarga(null),
+        expect(() => j.systems.ashtakavarga.calculateAshtakavarga(null as dynamic),
             throwsA(isA<Exception>()));
         return;
       }

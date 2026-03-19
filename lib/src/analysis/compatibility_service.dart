@@ -636,7 +636,7 @@ class CompatibilityService {
 
     final mars = chart.getPlanet(Planet.mars);
     if (mars == null) {
-      return ManglikDoshaResult(
+      return const ManglikDoshaResult(
         isManglik: false,
         housesAffected: [],
         severity: 'None',

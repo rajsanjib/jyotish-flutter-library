@@ -44,7 +44,7 @@ void main() {
         expect(vimshopak, greaterThanOrEqualTo(0));
 
         // Mock Shadbala for Ishta/Kashta
-        final shadbala = ShadbalaResult(
+        final shadbala = const ShadbalaResult(
           planet: Planet.sun,
           sthanaBala: 100,
           digBala: 50,
@@ -73,14 +73,14 @@ void main() {
       }
     });
 
-    test('Gochara Vedha methods are exposed', () {
+    test('Gochara Vedha methods are exposed', () async {
       try {
         final otherTransits = {
           Planet.jupiter: 1, // House 1 from Moon
           Planet.saturn: 12, // House 12 from Moon
         };
 
-        final vedha = jyotish.calculateGocharaVedha(
+        final vedha = await jyotish.calculateGocharaVedha(
           transitPlanet: Planet.sun,
           houseFromMoon: 3, // Favorable for Sun
           moonNakshatra: 1, // Ashwini
@@ -90,7 +90,7 @@ void main() {
         expect(vedha, isNotNull);
         expect(vedha.transitPlanet, Planet.sun);
 
-        final multiple = jyotish.calculateMultipleGocharaVedha(
+        final multiple = await jyotish.calculateMultipleGocharaVedha(
           transits: otherTransits,
           moonNakshatra: 1,
         );
@@ -262,7 +262,7 @@ void main() {
     test('HouseStrengthService newly exposed methods are accessible', () {
       try {
         final dummyResults = {
-          1: EnhancedBhavaBalaResult(
+          1: const EnhancedBhavaBalaResult(
             houseNumber: 1,
             totalStrength: 450,
             category: EnhancedBhavaStrengthCategory.atiShadbalapurna,
@@ -271,7 +271,7 @@ void main() {
             drishtiStrength: 100,
             vimsopakaStrength: 200,
           ),
-          2: EnhancedBhavaBalaResult(
+          2: const EnhancedBhavaBalaResult(
             houseNumber: 2,
             totalStrength: 250,
             category: EnhancedBhavaStrengthCategory.krishna,

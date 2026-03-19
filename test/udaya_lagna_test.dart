@@ -30,7 +30,7 @@ void main() {
       expect(periods.length, 12);
       expect(periods.first.startTime, sunrise);
       // The last one should end at exactly next sunrise
-      expect(periods.last.endTime, sunrise.add(Duration(days: 1)));
+      expect(periods.last.endTime, sunrise.add(const Duration(days: 1)));
     });
   });
 }

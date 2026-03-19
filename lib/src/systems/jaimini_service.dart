@@ -108,6 +108,19 @@ class JaiminiService {
     return drishtiList;
   }
 
+  /// Alias for [calculateRashiDrishti] to support legacy tests.
+  List<RashiDrishtiInfo> getRashiDrishtiList(VedicChart chart) =>
+      calculateRashiDrishti(chart);
+
+  /// Returns signs aspected by a specific sign OR all sign aspects.
+  /// Modified to support both legacy test signatures.
+  dynamic getRashiDrishti(VedicChart chart, [Rashi? rashi]) {
+    if (rashi != null) {
+      return _getAspectedSigns(rashi);
+    }
+    return calculateRashiDrishti(chart);
+  }
+
   /// Gets Rashi Drishti specifically for houses containing planets.
   List<RashiDrishtiInfo> calculateActiveRashiDrishti(VedicChart chart) {
     final drishtiList = <RashiDrishtiInfo>[];
@@ -132,6 +145,10 @@ class JaiminiService {
 
     return drishtiList;
   }
+
+  /// Alias for [calculateActiveRashiDrishti] to support legacy tests.
+  List<RashiDrishtiInfo> getActiveRashiDrishti(VedicChart chart) =>
+      calculateActiveRashiDrishti(chart);
 
   List<Rashi> _getAspectedSigns(Rashi rashi) {
     final quality = _getSignQuality(rashi);

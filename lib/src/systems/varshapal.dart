@@ -119,6 +119,12 @@ class Varshapal {
   /// Current active Hora period at the given date
   final VarshapalPeriod? currentHoraPeriod;
 
+  /// Alias for [currentMaasaPeriod?.lord] for legacy tests.
+  Planet? get maasLord => currentMaasaPeriod?.lord;
+
+  /// Alias for [varshaLord] for legacy tests.
+  Planet get varshesha => varshaLord;
+
   /// Gets the current period at all levels for a given date
   VarshapalCurrentPeriods getCurrentPeriods(DateTime date) {
     return VarshapalCurrentPeriods(

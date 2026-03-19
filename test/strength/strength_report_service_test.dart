@@ -23,7 +23,7 @@ void main() {
       try {
         chartReport = await jyotish.getChartStrengthReport(chart);
       } catch (_) {
-        chartReport = ChartStrengthReport(
+        chartReport = const ChartStrengthReport(
           byPlanet: {},
           strongestPlanet: Planet.sun,
           weakestPlanet: Planet.saturn,

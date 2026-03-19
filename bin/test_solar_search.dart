@@ -53,7 +53,7 @@ void main() async {
       found++;
     }
 
-    current = current.add(Duration(days: 1));
+    current = current.add(const Duration(days: 1));
   }
 
   print('\nSearch complete. Found $found visible solar eclipses.');

@@ -31,7 +31,7 @@ void main() {
     });
 
     test('Rahu Vasa for Ashwini', () {
-      final ashwini = NakshatraInfo(
+      final ashwini = const NakshatraInfo(
         number: 1,
         name: 'Ashwini',
         rulingPlanet: Planet.ketu,
@@ -45,7 +45,7 @@ void main() {
     });
 
     test('Varjyam calculation for Ashwini', () {
-      final ashwini = NakshatraInfo(
+      final ashwini = const NakshatraInfo(
         number: 1,
         name: 'Ashwini',
         rulingPlanet: Planet.ketu,
@@ -66,7 +66,7 @@ void main() {
 
       expect(varjyam, isNotNull);
       // Offset is 50/60 for Ashwini = 20 hours in
-      expect(varjyam!.start, start.add(Duration(hours: 20)));
+      expect(varjyam!.start, start.add(const Duration(hours: 20)));
     });
   });
 }

@@ -126,7 +126,7 @@ class HoraService {
     final dayLord = _getDayLord(weekday);
 
     // Find index of day lord in chaldean sequence
-    int startIndex = chaldeanOrder.indexOf(dayLord);
+    final int startIndex = chaldeanOrder.indexOf(dayLord);
 
     if (isDaytime) {
       final dayDuration = sunset.difference(sunrise);
@@ -193,8 +193,8 @@ class HoraService {
       location: location,
     );
 
-    var sunrise = sunriseSunset.$1;
-    var sunset = sunriseSunset.$2;
+    final sunrise = sunriseSunset.$1;
+    final sunset = sunriseSunset.$2;
 
     if (sunrise == null || sunset == null) return [];
 

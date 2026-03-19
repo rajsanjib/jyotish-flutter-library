@@ -53,7 +53,7 @@ void main() {
         (r) =>
             (r.planet == Planet.sun && r.otherPlanet == Planet.saturn) ||
             (r.planet == Planet.saturn && r.otherPlanet == Planet.sun),
-        orElse: () => PlanetaryRelationship(
+        orElse: () => const PlanetaryRelationship(
           planet: Planet.sun,
           otherPlanet: Planet.saturn,
           natural: RelationshipType.enemy,

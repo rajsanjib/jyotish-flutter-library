@@ -56,6 +56,12 @@ class TransitInfo {
       natalPosition != null &&
       transitPosition.zodiacSignIndex == natalPosition!.zodiacSignIndex;
 
+  /// Legacy alias for transitPosition.longitude
+  double get transitLongitude => transitPosition.longitude;
+
+  /// Simple alias for longitude
+  double get longitude => transitPosition.longitude;
+
   /// Gets description of transit
   String get description {
     final retro = isRetrograde ? ' (R)' : '';
@@ -99,6 +105,9 @@ class TransitEvent {
   /// The transiting planet
   final Planet transitPlanet;
 
+  /// Legacy alias for transitPlanet
+  Planet get planet => transitPlanet;
+
   /// The natal planet being aspected (null if aspecting a point like Ascendant)
   final Planet? natalPlanet;
 
@@ -108,8 +117,14 @@ class TransitEvent {
   /// Type of aspect formed
   final AspectType aspectType;
 
+  /// Legacy alias for aspectType
+  String get transitType => aspectType.english;
+
   /// Date when aspect becomes exact
   final DateTime exactDate;
+
+  /// Legacy alias for exactDate
+  DateTime get eventDate => exactDate;
 
   /// Date when aspect enters orb (begins to be effective)
   final DateTime startDate;

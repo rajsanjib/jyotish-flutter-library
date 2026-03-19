@@ -30,7 +30,7 @@ void main() {
     test('getVarshapal returns valid Varshapal', () async {
       if (!ephemerisAvailable) return;
 
-      final varshapal = jyotish.systems.varshapal.getVarshapal(
+      final varshapal = await jyotish.systems.varshapal.getVarshapal(
         birthDateTime: birthDateTime,
         varshaDateTime: DateTime(2025, 5, 15, 14, 30),
         location: location,
@@ -42,7 +42,7 @@ void main() {
     test('varshapal chart has planets', () async {
       if (!ephemerisAvailable) return;
 
-      final varshapal = jyotish.systems.varshapal.getVarshapal(
+      final varshapal = await jyotish.systems.varshapal.getVarshapal(
         birthDateTime: birthDateTime,
         varshaDateTime: DateTime(2025, 5, 15, 14, 30),
         location: location,
@@ -56,7 +56,7 @@ void main() {
     test('getCurrentVarshapal works', () async {
       if (!ephemerisAvailable) return;
 
-      final varshapal = jyotish.systems.varshapal.getCurrentVarshapal(
+      final varshapal = await jyotish.systems.varshapal.getCurrentVarshapal(
         birthDateTime: birthDateTime,
         location: location,
       );

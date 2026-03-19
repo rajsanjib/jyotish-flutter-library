@@ -13,6 +13,10 @@ class ArgalaService {
     return result;
   }
 
+  /// Alias for [calculateAllArgalas] to support legacy tests.
+  Map<int, List<ArgalaInfo>> getAllArgalas(VedicChart chart) =>
+      calculateAllArgalas(chart);
+
   /// Calculates Argalas affecting a specific house.
   List<ArgalaInfo> calculateArgalaForHouse(VedicChart chart, int targetHouse) {
     final argalas = <ArgalaInfo>[];
@@ -60,6 +64,10 @@ class ArgalaService {
 
     return argalas;
   }
+
+  /// Alias for [calculateArgalaForHouse] to support legacy tests.
+  List<ArgalaInfo> getArgalaForHouse(VedicChart chart, int targetHouse) =>
+      calculateArgalaForHouse(chart, targetHouse);
 
   /// Calculates Argalas caused by a specific planet.
   List<ArgalaInfo> calculateArgalaForPlanet(VedicChart chart, Planet planet) {

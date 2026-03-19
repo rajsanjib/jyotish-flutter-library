@@ -120,7 +120,7 @@ class ProgenyService {
     var score = 20;
     final jupiterInfo = chart.getPlanet(Planet.jupiter);
     if (jupiterInfo == null) {
-      return JupiterCondition(
+      return const JupiterCondition(
         score: 0,
         isStrong: false,
         isExalted: false,
@@ -224,7 +224,7 @@ class ProgenyService {
       isPresent: planetsInFifth.any((p) => p.planet == Planet.venus),
     ));
 
-    yogas.add(ChildYoga(
+    yogas.add(const ChildYoga(
       name: 'Putra Karaka',
       description: 'Jupiter as Atmakaraka in 5th house or Navamsa',
       isPresent: false,

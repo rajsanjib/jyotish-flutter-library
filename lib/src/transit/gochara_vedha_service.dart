@@ -205,7 +205,7 @@ class GocharaVedhaService {
       // Find planets with favorable results and no Vedha
       final unobstructedPlanets = vedhaResults
           .where((v) => v.isFavorablePosition && !v.isObstructed)
-          .map((v) => v.transitPlanet)
+          .map((v) => v._transitPlanet)
           .toList();
 
       if (unobstructedPlanets.isNotEmpty) {
@@ -231,8 +231,8 @@ class GocharaVedhaService {
     if (!vedhaResult.isObstructed) return remedies;
 
     // General remedies
-    remedies.add('Perform mantra japa for ${vedhaResult.transitPlanet.displayName}');
-    remedies.add('Donate items related to ${vedhaResult.transitPlanet.displayName}');
+    remedies.add('Perform mantra japa for ${vedhaResult._transitPlanet.displayName}');
+    remedies.add('Donate items related to ${vedhaResult._transitPlanet.displayName}');
 
     // Specific remedies based on obstructing planets
     for (final obstructingPlanet in vedhaResult.obstructingPlanets) {
@@ -342,7 +342,7 @@ class GocharaVedhaService {
 /// Represents a Vedha (obstruction) analysis result.
 class VedhaResult {
   const VedhaResult({
-    required this.transitPlanet,
+    required Planet transitPlanet,
     required this.houseFromMoon,
     required this.isFavorablePosition,
     required this.isObstructed,
@@ -351,10 +351,13 @@ class VedhaResult {
     required this.vedhaStrength,
     required this.resultEffectiveness,
     required this.interpretation,
-  });
+  }) : _transitPlanet = transitPlanet;
 
   /// The planet in transit
-  final Planet transitPlanet;
+  final Planet _transitPlanet;
+
+  /// Legacy alias to get the planet name as a string
+  String get transitPlanet => _transitPlanet.displayName;
 
   /// House position from natal Moon (1-12)
   final int houseFromMoon;
@@ -380,6 +383,13 @@ class VedhaResult {
   /// Text interpretation
   final String interpretation;
 
+  /// Legacy alias for isObstructed
+  bool get isVedhaActive => isObstructed;
+
+  /// Legacy helper to get the name of the first obstructing planet
+  String? get vedhaPlanet =>
+      obstructingPlanets.isNotEmpty ? obstructingPlanets.first.displayName : null;
+
   /// Whether the transit is fully favorable
   bool get isFullyFavorable => isFavorablePosition && !isObstructed;
 
@@ -393,7 +403,7 @@ class VedhaResult {
 
   @override
   String toString() {
-    return '${transitPlanet.displayName} in house $houseFromMoon: '
+    return '${_transitPlanet.displayName} in house $houseFromMoon: '
         '${isObstructed ? "Obstructed by ${obstructingPlanets.map((p) => p.displayName).join(", ")}" : "No Vedha"}';
   }
 }

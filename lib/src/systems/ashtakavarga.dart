@@ -132,6 +132,12 @@ class Sarvashtakavarga {
   /// Total bindus in each sign (0-11)
   final List<int> bindus;
 
+  /// Alias for [bindus.length] for legacy tests.
+  int get length => bindus.length;
+
+  /// Alias for [bindus[index]] for legacy tests.
+  int operator [](int index) => bindus[index];
+
   /// Total bindus across all signs (should be between 0-337)
   int get total => bindus.fold(0, (sum, b) => sum + b);
 

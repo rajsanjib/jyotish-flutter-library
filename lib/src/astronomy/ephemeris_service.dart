@@ -655,7 +655,7 @@ class EphemerisService {
       DateTime date, GeographicLocation location) async {
     // Check start and end of day
     final start = DateTime(date.year, date.month, date.day);
-    final end = start.add(Duration(days: 1));
+    final end = start.add(const Duration(days: 1));
 
     final posStartSun = await calculatePlanetPosition(
         planet: Planet.sun,
@@ -679,9 +679,9 @@ class EphemerisService {
         location: location,
         flags: CalculationFlags.defaultFlags());
 
-    double diffStart =
+    final double diffStart =
         (posStartMoon.longitude - posStartSun.longitude + 360) % 360;
-    double diffEnd = (posEndMoon.longitude - posEndSun.longitude + 360) % 360;
+    final double diffEnd = (posEndMoon.longitude - posEndSun.longitude + 360) % 360;
 
     // Check for New Moon (crossing 0/360)
     // If diff goes from ~350 to ~10, or 355 to 5.
@@ -726,7 +726,7 @@ class EphemerisService {
           location: loc,
           flags: CalculationFlags.defaultFlags());
 
-      double diff = (moon.longitude - sun.longitude + 360) % 360;
+      final double diff = (moon.longitude - sun.longitude + 360) % 360;
 
       if (targetDiff == 0) {
         // New Moon

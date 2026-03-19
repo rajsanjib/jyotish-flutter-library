@@ -83,8 +83,8 @@ void main() {
 
       for (final info in drishti) {
         expect(info, isNotNull);
-        expect(info.sourceSign, isNotNull);
-        expect(info.targetSign, isNotNull);
+        expect((info as dynamic).sourceSign, isNotNull);
+        expect((info as dynamic).targetSign, isNotNull);
       }
     });
 
@@ -96,8 +96,8 @@ void main() {
       expect(activeDrishti, isNotNull);
       expect(activeDrishti, isA<List>());
       for (final info in activeDrishti) {
-        expect(info.sourceSign, isNotNull);
-        expect(info.targetSign, isNotNull);
+        expect((info as dynamic).sourceSign, isNotNull);
+        expect((info as dynamic).targetSign, isNotNull);
       }
     });
   });

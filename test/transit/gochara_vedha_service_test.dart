@@ -3,13 +3,13 @@ import 'package:test/test.dart';
 
 void main() {
   late Jyotish jyotish;
-  late NatalChart natalChart;
+  late VedicChart natalChart;
 
   setUpAll(() async {
     jyotish = Jyotish();
     try {
       await jyotish.initialize(ephemerisPath: 'ephe');
-      natalChart = await jyotish.calculateNatalChart(
+      natalChart = await jyotish.calculateVedicChart(
         dateTime: DateTime(1990, 5, 15, 10, 30),
         location: GeographicLocation(latitude: 28.6139, longitude: 77.2090),
       );
@@ -96,8 +96,11 @@ void main() {
 
     test('findFavorablePeriodsWithoutVedha returns transit data', () async {
       try {
-        final transits = <String, TransitInfo>{};
-        final result = await jyotish.findFavorablePeriodsWithoutVedha(transits);
+        final transits = <Planet, int>{};
+        final result = await jyotish.calculateMultipleGocharaVedha(
+          transits: transits,
+          moonNakshatra: 1,
+        );
 
         expect(result, isNotNull);
       } catch (e) {

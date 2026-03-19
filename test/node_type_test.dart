@@ -36,7 +36,7 @@ void main() {
     });
 
     test('Can create CalculationFlags with custom node type', () {
-      final flags = CalculationFlags(
+      final flags = const CalculationFlags(
         nodeType: NodeType.trueNode,
       );
 
@@ -66,7 +66,7 @@ void main() {
 
     test('CalculationFlags preserves other settings when changing nodeType',
         () {
-      final originalFlags = CalculationFlags(
+      final originalFlags = const CalculationFlags(
         siderealMode: SiderealMode.krishnamurti,
         useTopocentric: true,
         nodeType: NodeType.meanNode,

@@ -97,10 +97,10 @@ class GowriPanchangamService {
     };
 
     final dayStartGowri = dayStarts[weekday];
-    int dayStartIndex = standardList.indexOf(dayStartGowri!);
+    final int dayStartIndex = standardList.indexOf(dayStartGowri!);
 
     // Night starts at (DayStart + 5) % 8  (6th item)
-    int nightStartIndex = (dayStartIndex + 5) % 8;
+    final int nightStartIndex = (dayStartIndex + 5) % 8;
 
     // Construct the sequence
     return List.generate(8, (i) => standardList[(nightStartIndex + i) % 8]);
@@ -116,8 +116,8 @@ class GowriPanchangamService {
       location: location,
     );
 
-    var sunrise = sunriseSunset.$1;
-    var sunset = sunriseSunset.$2;
+    final sunrise = sunriseSunset.$1;
+    final sunset = sunriseSunset.$2;
     if (sunrise == null || sunset == null) throw Exception('No sunrise data');
 
     DateTime effectiveSunrise = sunrise;

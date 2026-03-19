@@ -88,7 +88,7 @@ void main() {
         results = await jyotish.getEnhancedBhavaBala(chart);
         summary = jyotish.getHouseStrengthSummary(results);
       } catch (_) {
-        summary = HouseStrengthSummary(
+        summary = const HouseStrengthSummary(
           houseResults: {},
           averageStrength: 0,
           strongestHouse: 1,

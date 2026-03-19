@@ -11,3 +11,20 @@ linter:
     - avoid_print
     - prefer_relative_imports: false
     - always_use_package_imports: true
+    - prefer_const_constructors
+    - prefer_final_locals
+    - avoid_dynamic_calls
+    - prefer_single_quotes
+    - unawaited_futures
+    - always_declare_return_types
+    - cancel_subscriptions
+    - close_sinks
+    - comment_references
+    - control_flow_in_finally
+    - empty_statements
+    - implementation_imports
+    - package_api_docs
+    - test_types_in_equals
+    - throw_in_finally
+    - untyped_parameter_on_method_invocation
+    - valid_regexps

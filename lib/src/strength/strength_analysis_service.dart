@@ -90,20 +90,35 @@ class StrengthAnalysisService {
     } else {
       // Check proximity to Sun using dynamic planet-specific orb
       final sunInfo = chart.planets[Planet.sun];
-      if (sunInfo != null && planet != Planet.sun && !Planet.lunarNodes.contains(planet)) {
+      if (sunInfo != null &&
+          planet != Planet.sun &&
+          !Planet.lunarNodes.contains(planet)) {
         var distance = (planetInfo.longitude - sunInfo.longitude).abs() % 360;
         if (distance > 180) distance = 360 - distance;
 
         final isRetrograde = planetInfo.position.longitudeSpeed < 0;
         var orb = 10.0;
         switch (planet) {
-          case Planet.moon: orb = 12.0; break;
-          case Planet.mars: orb = 17.0; break;
-          case Planet.mercury: orb = isRetrograde ? 12.0 : 14.0; break;
-          case Planet.jupiter: orb = 11.0; break;
-          case Planet.venus: orb = isRetrograde ? 8.0 : 10.0; break;
-          case Planet.saturn: orb = 15.0; break;
-          default: orb = 10.0;
+          case Planet.moon:
+            orb = 12.0;
+            break;
+          case Planet.mars:
+            orb = 17.0;
+            break;
+          case Planet.mercury:
+            orb = isRetrograde ? 12.0 : 14.0;
+            break;
+          case Planet.jupiter:
+            orb = 11.0;
+            break;
+          case Planet.venus:
+            orb = isRetrograde ? 8.0 : 10.0;
+            break;
+          case Planet.saturn:
+            orb = 15.0;
+            break;
+          default:
+            orb = 10.0;
         }
 
         if (distance < orb + 5.0) {

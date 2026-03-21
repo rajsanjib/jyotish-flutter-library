@@ -19,7 +19,7 @@ import 'package:jyotish/jyotish.dart';
 import 'package:test/test.dart';
 
 void main() {
-  //  India Independence Chart 
+  //  India Independence Chart
   // 15 Aug 1947 00:00 IST = 14 Aug 1947 18:30 UTC
   // New Delhi: 28.6139N, 77.2090E
   // Lahiri ayanamsa, Whole Sign
@@ -42,8 +42,7 @@ void main() {
       await jyotish.initialize(ephemerisPath: 'ephe');
     } catch (e) {
       // ignore: avoid_print
-      print(
-          '  Swiss Ephemeris not found. Run: dart test -N reference_charts');
+      print('  Swiss Ephemeris not found. Run: dart test -N reference_charts');
       rethrow;
     }
 
@@ -59,7 +58,7 @@ void main() {
     jyotish.dispose();
   });
 
-  //  Ascendant 
+  //  Ascendant
 
   group('India Independence  Ascendant', () {
     test('Ascendant is in Taurus', () {
@@ -73,7 +72,7 @@ void main() {
     });
   });
 
-  //  Planetary Signs 
+  //  Planetary Signs
 
   group('India Independence  Planetary Signs (Lahiri sidereal)', () {
     test('Sun is in Cancer', () {
@@ -109,7 +108,7 @@ void main() {
     });
   });
 
-  //  Planetary Dignities 
+  //  Planetary Dignities
 
   group('India Independence  Dignities', () {
     test(
@@ -135,7 +134,7 @@ void main() {
     });
   });
 
-  //  House Placements 
+  //  House Placements
 
   group('India Independence  House Placements (Whole Sign from Taurus Asc)',
       () {
@@ -168,7 +167,7 @@ void main() {
     });
   });
 
-  //  Vimshottari Dasha 
+  //  Vimshottari Dasha
 
   group('India Independence  Vimshottari Dasha', () {
     late DashaResult dasha;
@@ -192,7 +191,7 @@ void main() {
     });
   });
 
-  //  Ayanamsa Utility 
+  //  Ayanamsa Utility
 
   group('Ayanamsa utility', () {
     test('Lahiri ayanamsa for Aug 1947 is approximately 23', () async {
@@ -221,7 +220,7 @@ void main() {
     });
   });
 
-  //  Bhava Chalit 
+  //  Bhava Chalit
 
   group('Bhava Chalit  India Independence (Whole Sign)', () {
     test('getBhavaChalit returns 12 bhavas', () {
@@ -266,7 +265,7 @@ void main() {
     });
   });
 
-  //  Pancha-Vargeeya Maitri 
+  //  Pancha-Vargeeya Maitri
 
   group('Pancha-Vargeeya Maitri (5-fold friendship)', () {
     test('getPlanetaryRelationships returns complete 77 matrix', () {

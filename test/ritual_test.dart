@@ -29,8 +29,8 @@ void main() {
         tithi: tithi,
         nakshatra: nakshatra,
         yoga: const YogaInfo(number: 1, name: 'Vishkumbha', elapsed: 0.0),
-        karana:
-            const KaranaInfo(number: 1, name: 'Bava', isFixed: false, elapsed: 0.0),
+        karana: const KaranaInfo(
+            number: 1, name: 'Bava', isFixed: false, elapsed: 0.0),
         vara: vara,
         sunrise: DateTime(2026, 3, 4, 6),
         sunset: DateTime(2026, 3, 4, 18),

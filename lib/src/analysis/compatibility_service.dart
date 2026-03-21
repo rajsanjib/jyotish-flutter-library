@@ -65,7 +65,7 @@ class CompatibilityService {
     );
   }
 
-  //  Varna Koota (max 1 point) 
+  //  Varna Koota (max 1 point)
   // Per standard Vedic texts (Muhurta Chintamani / Jataka Parijata):
   // Brahmin > Kshatriya > Vaishya > Shudra
   // Score 1 if boy's varna >= girl's varna, 0 otherwise.
@@ -131,7 +131,7 @@ class CompatibilityService {
     return 'Shudra';
   }
 
-  //  Vashya Koota (max 2 points) 
+  //  Vashya Koota (max 2 points)
   // Traditional 5-category Vashya: Manava (human), Vanachara (wild),
   // Chatushpada (quadruped), Jalachara (aquatic), Keeta (insect).
   // Score 2 = same category, 1 = compatible, 0 = incompatible.
@@ -186,7 +186,7 @@ class CompatibilityService {
     }
   }
 
-  //  Tara Koota (max 3 points) 
+  //  Tara Koota (max 3 points)
   // Calculated in both directions (Boy -> Girl and Girl -> Boy).
   // Each direction yields 1.5 (auspicious) or 0 (inauspicious). Maximum score 3.
 
@@ -255,7 +255,7 @@ class CompatibilityService {
     return index >= 0 ? index + 1 : 1;
   }
 
-  //  Yoni Koota (max 4 points) 
+  //  Yoni Koota (max 4 points)
   // Per BPHS / standard texts: each nakshatra has an animal symbol (male/female).
   // Scoring: same animal = 4, friendly = 2, neutral = 1, enemy = 0.
 
@@ -352,7 +352,7 @@ class CompatibilityService {
     return yoniScoreMatrix[boyIdx][girlIdx];
   }
 
-  //  Graha Maitri / Rashyadhipati Maitri Koota (max 5 points) 
+  //  Graha Maitri / Rashyadhipati Maitri Koota (max 5 points)
   // Based on friendship between Moon sign lords of bride and groom.
   // Planet friendship table from Brihat Parashara Hora Shastra.
 
@@ -427,7 +427,7 @@ class CompatibilityService {
     return 1; // neutral
   }
 
-  //  Gana Koota (max 6 points) 
+  //  Gana Koota (max 6 points)
   // Per BPHS / standard Jyotish:
   // Deva (divine), Manushya (human), Rakshasa (demon)
   // Scoring: same Gana = 6, compatible pairs = 3, incompatible = 0.
@@ -490,7 +490,7 @@ class CompatibilityService {
     return 'Manushya'; // default
   }
 
-  //  Bhakoot Koota (max 7 points) 
+  //  Bhakoot Koota (max 7 points)
   // Score 7 if Moon signs have no problematic inter-sign relationship.
   // Bhakoot Dosha occurs for sign differences of 2/12, 5/9, or 6/8.
   // Score 0 if dosha, 7 otherwise.
@@ -545,7 +545,7 @@ class CompatibilityService {
     return false;
   }
 
-  //  Nadi Koota (max 8 points) 
+  //  Nadi Koota (max 8 points)
   // Nadi is determined by CYCLIC grouping of nakshatras (1,4,7,10... = Adi;
   // 2,5,8,11... = Madhya; 3,6,9,12... = Antya).
   // NOT sequential blocks of 9.
@@ -681,7 +681,7 @@ class CompatibilityService {
           (manglikFromVenus ? 1 : 0);
       severity = doshaCount >= 2 ? 'High' : 'Moderate';
 
-      //  Cancellation checks (Parihara) 
+      //  Cancellation checks (Parihara)
       bool isCancelled = false;
 
       // Rule 1: Mars in own sign (Aries, Scorpio) or exalted (Capricorn)

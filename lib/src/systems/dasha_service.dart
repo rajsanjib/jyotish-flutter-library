@@ -876,7 +876,8 @@ class DashaService {
     final portionRemaining = 1.0 - (posInPada / padaWidth);
     final firstDashaYears = _getKalachakraYears(sequence.first);
     final balanceDays = firstDashaYears * 365.25 * portionRemaining;
-    final totalCycleYears = sequence.map(_getKalachakraYears).reduce((a, b) => a + b);
+    final totalCycleYears =
+        sequence.map(_getKalachakraYears).reduce((a, b) => a + b);
 
     for (var idx = 0; idx < sequence.length; idx++) {
       final sign = sequence[idx];
@@ -884,7 +885,7 @@ class DashaService {
       // First sign uses balance, rest use full duration
       final durationDays = (idx == 0) ? balanceDays : years * 365.25;
       final endDate = currentDate.add(Duration(days: durationDays.round()));
-      
+
       List<DashaPeriod> antardashas = [];
       if (levels >= 2) {
         antardashas = _calculateKalachakraAntardashas(
@@ -897,12 +898,12 @@ class DashaService {
       }
 
       mahadashas.add(DashaPeriod(
-          rashi: sign,
-          startDate: currentDate,
-          endDate: endDate,
-          duration: Duration(days: durationDays.round()),
-          level: 0,
-          subPeriods: antardashas,
+        rashi: sign,
+        startDate: currentDate,
+        endDate: endDate,
+        duration: Duration(days: durationDays.round()),
+        level: 0,
+        subPeriods: antardashas,
       ));
       currentDate = endDate;
     }
@@ -927,7 +928,7 @@ class DashaService {
   }) {
     final periods = <DashaPeriod>[];
     var current = mahadashaStart;
-    
+
     // Antardashas follow the same 9-sign sequence starting from the Mahadasha sign
     final startIndex = sequence.indexOf(mahadashaSign);
     final startIndexToUse = startIndex == -1 ? 0 : startIndex;
@@ -935,13 +936,13 @@ class DashaService {
     for (var i = 0; i < sequence.length; i++) {
       final idx = (startIndexToUse + i) % sequence.length;
       final sign = sequence[idx];
-      
+
       final subLordYears = _getKalachakraYears(sign);
       final days = mahadashaDays * (subLordYears / totalCycleYears);
-      
+
       final ms = (days * 86400000).round();
       final end = current.add(Duration(milliseconds: ms));
-      
+
       periods.add(DashaPeriod(
         rashi: sign,
         startDate: current,
@@ -952,7 +953,7 @@ class DashaService {
       ));
       current = end;
     }
-    
+
     return periods;
   }
 

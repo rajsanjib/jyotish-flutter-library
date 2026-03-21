@@ -682,7 +682,8 @@ class EphemerisService {
 
     final double diffStart =
         (posStartMoon.longitude - posStartSun.longitude + 360) % 360;
-    final double diffEnd = (posEndMoon.longitude - posEndSun.longitude + 360) % 360;
+    final double diffEnd =
+        (posEndMoon.longitude - posEndSun.longitude + 360) % 360;
 
     // Check for New Moon (crossing 0/360)
     // If diff goes from ~350 to ~10, or 355 to 5.

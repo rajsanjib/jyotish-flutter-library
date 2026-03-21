@@ -132,9 +132,8 @@ void main() async {
   // We scan from 00:00 IST (18:30 UTC, 23 Feb) to 06:00 IST next day (00:30 UTC, 26 Feb)
   // Use a 30-hour IST window: 00:01 IST 24 Feb  06:30 IST 25 Feb
   const istOffset = Duration(hours: 5, minutes: 30);
-  final dayStart = DateTime(2026, 2, 24, 0, 1)
-      .toUtc()
-      .subtract(istOffset); // 00:01 IST  UTC
+  final dayStart =
+      DateTime(2026, 2, 24, 0, 1).toUtc().subtract(istOffset); // 00:01 IST  UTC
   final dayEnd = DateTime(2026, 2, 25, 6, 30)
       .toUtc()
       .subtract(istOffset); // 06:30 IST next day
@@ -202,7 +201,7 @@ void main() async {
       location: location,
     );
 
-    //  Output 
+    //  Output
     print('New Delhi, India');
     print('Tuesday, February 24, 2026');
     print('');

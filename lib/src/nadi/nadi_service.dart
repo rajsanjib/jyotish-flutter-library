@@ -99,7 +99,7 @@ class NadiService {
 
   NadiInfo _getNadiInfo(int nadiNumber) {
     final nadiIndex = (nadiNumber - 1) % 50;
-    final nadiName = _nadiNames[nadiIndex + 1] ?? 'Nadi ${nadiNumber}';
+    final nadiName = _nadiNames[nadiIndex + 1] ?? 'Nadi $nadiNumber';
     final signIndex = ((nadiNumber - 1) ~/ 150);
     final positionInSign = ((nadiNumber - 1) % 150);
     final startLongitude = signIndex * 30 + (positionInSign / 150) * 30;
@@ -253,7 +253,7 @@ class NadiService {
     final sign = Rashi.values[signIndex];
 
     final sb = StringBuffer();
-    sb.writeln('Nadi ${nadiNumber} - ${sign.name}');
+    sb.writeln('Nadi $nadiNumber - ${sign.name}');
     sb.writeln(
         'Position in sign: ${(positionInSign / 150 * 100).toStringAsFixed(1)}%');
     sb.writeln('');

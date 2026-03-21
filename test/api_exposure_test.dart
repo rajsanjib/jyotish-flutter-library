@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'package:jyotish/jyotish.dart';
 import 'package:test/test.dart';
 
@@ -44,7 +45,7 @@ void main() {
         expect(vimshopak, greaterThanOrEqualTo(0));
 
         // Mock Shadbala for Ishta/Kashta
-        final shadbala = const ShadbalaResult(
+        const shadbala = ShadbalaResult(
           planet: Planet.sun,
           sthanaBala: 100,
           digBala: 50,

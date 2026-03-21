@@ -1451,21 +1451,6 @@ class Jyotish {
   // ASHTAKAVARGA CALCULATIONS
   // ============================================================
 
-  /// Calculates the complete Ashtakavarga system for a birth chart.
-  ///
-  /// Ashtakavarga evaluates planetary strength by counting bindus
-  /// contributed by each planet in each sign.
-  ///
-  /// [natalChart] - The birth chart
-  ///
-  /// Returns [Ashtakavarga] with Bhinnashtakavarga and Sarvashtakavarga.
-  ///
-  /// Example:
-  /// ```dart
-  /// final ashtakavarga = jyotish.calculateAshtakavarga(natalChart);
-  /// print('1st House Points: ${ashtakavarga.getTotalBindusForHouse(1)}');
-  /// ```
-
   /// Analyzes transit favorability using Ashtakavarga scores.
   ///
   /// [ashtakavarga] - Pre-calculated Ashtakavarga

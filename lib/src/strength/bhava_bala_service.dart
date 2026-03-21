@@ -191,18 +191,21 @@ class BhavaBalaService {
       // B.V. Raman: "For Mars: add 15 to the ordinary values at 4th (90) and 8th (210)?"
       // Simpler Implementation:
       // If within range of special aspect, return 60 (Full).
-      if ((angle >= 80 && angle <= 100) || (angle >= 200 && angle <= 220))
+      if ((angle >= 80 && angle <= 100) || (angle >= 200 && angle <= 220)) {
         return 60.0;
+      }
     }
 
     if (planet == Planet.jupiter) {
-      if ((angle >= 110 && angle <= 130) || (angle >= 230 && angle <= 250))
+      if ((angle >= 110 && angle <= 130) || (angle >= 230 && angle <= 250)) {
         return 60.0;
+      }
     }
 
     if (planet == Planet.saturn) {
-      if ((angle >= 50 && angle <= 70) || (angle >= 260 && angle <= 280))
+      if ((angle >= 50 && angle <= 70) || (angle >= 260 && angle <= 280)) {
         return 60.0;
+      }
     }
 
     // Standard Aspect Formulas

@@ -31,7 +31,7 @@ void main() {
     });
 
     test('Rahu Vasa for Ashwini', () {
-      final ashwini = const NakshatraInfo(
+      const ashwini = NakshatraInfo(
         number: 1,
         name: 'Ashwini',
         rulingPlanet: Planet.ketu,
@@ -45,7 +45,7 @@ void main() {
     });
 
     test('Varjyam calculation for Ashwini', () {
-      final ashwini = const NakshatraInfo(
+      const ashwini = NakshatraInfo(
         number: 1,
         name: 'Ashwini',
         rulingPlanet: Planet.ketu,

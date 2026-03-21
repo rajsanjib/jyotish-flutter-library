@@ -1,4 +1,4 @@
-import 'dart:math' as Math;
+import 'dart:math' as math;
 import 'package:jyotish/src/models/calculation_flags.dart';
 import 'package:jyotish/src/models/geographic_location.dart';
 import 'package:jyotish/src/panchanga/nakshatra.dart';
@@ -354,11 +354,11 @@ class PanchangaService {
         julianCentury * (0.000042037 + 0.0000001267 * julianCentury);
 
     // Sun Equation of Center
-    final sunEqOfCtr = Math.sin(_degToRad(geomMeanAnomSun)) *
+    final sunEqOfCtr = math.sin(_degToRad(geomMeanAnomSun)) *
             (1.914602 - julianCentury * (0.004817 + 0.000014 * julianCentury)) +
-        Math.sin(_degToRad(2 * geomMeanAnomSun)) *
+        math.sin(_degToRad(2 * geomMeanAnomSun)) *
             (0.019993 - 0.000101 * julianCentury) +
-        Math.sin(_degToRad(3 * geomMeanAnomSun)) * 0.000289;
+        math.sin(_degToRad(3 * geomMeanAnomSun)) * 0.000289;
 
     // Sun True Longitude (deg)
     final sunTrueLong = geomMeanLongSun + sunEqOfCtr;
@@ -366,7 +366,7 @@ class PanchangaService {
     // Sun Apparent Longitude (deg)
     final sunAppLong = sunTrueLong -
         0.00569 -
-        0.00478 * Math.sin(_degToRad(125.04 - 1934.136 * julianCentury));
+        0.00478 * math.sin(_degToRad(125.04 - 1934.136 * julianCentury));
 
     // Mean Obliquity of Ecliptic (deg)
     final meanObliqEcliptic = 23 +
@@ -381,48 +381,48 @@ class PanchangaService {
 
     // Obliquity Correction (deg)
     final obliqCorr = meanObliqEcliptic +
-        0.00256 * Math.cos(_degToRad(125.04 - 1934.136 * julianCentury));
+        0.00256 * math.cos(_degToRad(125.04 - 1934.136 * julianCentury));
 
     // Sun Declination (deg)
-    final sunDeclin = _radToDeg(Math.asin(
-        Math.sin(_degToRad(obliqCorr)) * Math.sin(_degToRad(sunAppLong))));
+    final sunDeclin = _radToDeg(math.asin(
+        math.sin(_degToRad(obliqCorr)) * math.sin(_degToRad(sunAppLong))));
 
     // Equation of Time (minutes)
     final varY =
-        Math.tan(_degToRad(obliqCorr / 2)) * Math.tan(_degToRad(obliqCorr / 2));
+        math.tan(_degToRad(obliqCorr / 2)) * math.tan(_degToRad(obliqCorr / 2));
     final eqOfTime = 4 *
-        _radToDeg(varY * Math.sin(2 * _degToRad(geomMeanLongSun)) -
-            2 * eccentEarthOrbit * Math.sin(_degToRad(geomMeanAnomSun)) +
+        _radToDeg(varY * math.sin(2 * _degToRad(geomMeanLongSun)) -
+            2 * eccentEarthOrbit * math.sin(_degToRad(geomMeanAnomSun)) +
             4 *
                 eccentEarthOrbit *
                 varY *
-                Math.sin(_degToRad(geomMeanAnomSun)) *
-                Math.cos(2 * _degToRad(geomMeanLongSun)) -
-            0.5 * varY * varY * Math.sin(4 * _degToRad(geomMeanLongSun)) -
+                math.sin(_degToRad(geomMeanAnomSun)) *
+                math.cos(2 * _degToRad(geomMeanLongSun)) -
+            0.5 * varY * varY * math.sin(4 * _degToRad(geomMeanLongSun)) -
             1.25 *
                 eccentEarthOrbit *
                 eccentEarthOrbit *
-                Math.sin(2 * _degToRad(geomMeanAnomSun)));
+                math.sin(2 * _degToRad(geomMeanAnomSun)));
 
     // Hour Angle Calculation (deg)
     // Zenith for sunrise/sunset is 90.833 degrees (90 + 50' refraction/sun size)
     const zenith = 90.833;
-    final haArg = (Math.cos(_degToRad(zenith)) /
-            (Math.cos(_degToRad(latitude)) * Math.cos(_degToRad(sunDeclin)))) -
-        (Math.tan(_degToRad(latitude)) * Math.tan(_degToRad(sunDeclin)));
+    final haArg = (math.cos(_degToRad(zenith)) /
+            (math.cos(_degToRad(latitude)) * math.cos(_degToRad(sunDeclin)))) -
+        (math.tan(_degToRad(latitude)) * math.tan(_degToRad(sunDeclin)));
 
     // Check for polar day/night
     if (haArg > 1.0 || haArg < -1.0) {
       // Fallback to coarse approximation if NOAA calc fails (extreme latitudes)
-      final sunriseHour = 6.0;
-      final sunsetHour = 18.0;
+      const sunriseHour = 6.0;
+      const sunsetHour = 18.0;
 
       final sunrise = baseDate.add(Duration(hours: sunriseHour.toInt()));
       final sunset = baseDate.add(Duration(hours: sunsetHour.toInt()));
       return (sunrise, sunset);
     }
 
-    final ha = _radToDeg(Math.acos(haArg));
+    final ha = _radToDeg(math.acos(haArg));
 
     // Sunrise/Sunset Time (UTC minutes from midnight)
     final sunriseTimeUTC = 720 - 4 * (longitude + ha) - eqOfTime;
@@ -448,8 +448,8 @@ class PanchangaService {
         1524.5;
   }
 
-  double _degToRad(double deg) => deg * Math.pi / 180.0;
-  double _radToDeg(double rad) => rad * 180.0 / Math.pi;
+  double _degToRad(double deg) => deg * math.pi / 180.0;
+  double _radToDeg(double rad) => rad * 180.0 / math.pi;
 
   DateTime _minutesToDateTime(DateTime date, double minutesUtc) {
     var mins = minutesUtc;
@@ -952,7 +952,7 @@ class PanchangaService {
 
     // Calculate percent illumination using correct cosine formula:
     // New Moon (0) = 0%, Full Moon (180) = 100%
-    final illumination = ((1 - Math.cos(elongation * Math.pi / 180)) / 2) * 100;
+    final illumination = ((1 - math.cos(elongation * math.pi / 180)) / 2) * 100;
 
     // Waxing: elongation 0180 (Shukla Paksha), Waning: 180360 (Krishna Paksha)
     final isWaxing = elongation < 180;

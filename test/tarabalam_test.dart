@@ -12,7 +12,7 @@ void main() {
     test('Tarabalam from Ashwini to Krittika', () {
       // 1 = Ashwini (index 0)
       // 3 = Krittika (index 2)
-      final krittika = const NakshatraInfo(
+      const krittika = NakshatraInfo(
         number: 3,
         name: 'Krittika',
         rulingPlanet: Planet.sun,

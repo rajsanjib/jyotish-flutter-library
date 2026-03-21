@@ -3,7 +3,7 @@ import 'package:test/test.dart';
 
 void main() {
   late Jyotish jyotish;
-  late RashiChart natalChart;
+  late VedicChart natalChart;
   bool ephemerisAvailable = false;
 
   final birthDateTime = DateTime(1990, 5, 15, 14, 30);
@@ -16,11 +16,10 @@ void main() {
       await jyotish.initialize(ephemerisPath: 'ephe');
       ephemerisAvailable = true;
 
-      final calc = await jyotish.calculate(
-        birthDateTime: birthDateTime,
+      natalChart = await jyotish.calculateVedicChart(
+        dateTime: birthDateTime,
         location: location,
       );
-      natalChart = calc.rashiChart;
     } catch (e) {
       ephemerisAvailable = false;
     }
@@ -35,13 +34,12 @@ void main() {
       if (!ephemerisAvailable) return;
 
       final prashnaDateTime = DateTime(2025, 6, 15, 10, 30);
-      final result = await jyotish.calculate(
-        birthDateTime: prashnaDateTime,
+      final result = await jyotish.calculateVedicChart(
+        dateTime: prashnaDateTime,
         location: location,
       );
       expect(result, isNotNull);
-      expect(result.rashiChart, isNotNull);
-      expect(result.rashiChart.planets, isNotEmpty);
+      expect(result.planets, isNotEmpty);
     });
 
     test('Prashna with traditional birth data returns valid chart', () async {
@@ -51,22 +49,21 @@ void main() {
       expect(natalChart.planets, isNotNull);
       expect(natalChart.planets, isNotEmpty);
       expect(natalChart.houses, isNotNull);
-      expect(natalChart.houses.length, equals(12));
+      expect(natalChart.houses.cusps.length, equals(12));
     });
 
     test('Prashna houses calculation is valid', () async {
       if (!ephemerisAvailable) return;
 
       final prashnaDateTime = DateTime(2025, 6, 15, 10, 30);
-      final result = await jyotish.calculate(
-        birthDateTime: prashnaDateTime,
+      final result = await jyotish.calculateVedicChart(
+        dateTime: prashnaDateTime,
         location: location,
       );
 
-      for (int i = 0; i < result.rashiChart.houses.length; i++) {
-        final house = result.rashiChart.houses[i];
-        expect(house, isNotNull);
-        expect(house.sign, isNotNull);
+      for (int i = 0; i < 12; i++) {
+        final cusp = result.houses.cusps[i];
+        expect(cusp, isNotNull);
       }
     });
   });

@@ -126,7 +126,7 @@ VedicChart _createMockChart(Rashi sign, String nakshatra, int pada) {
 
   final nakIndex = nakshatrasList.indexOf(nakshatra);
   final nakshatraStart = nakIndex * (360.0 / 27.0);
-  final padaWidth = (360.0 / 27.0) / 4.0;
+  const padaWidth = (360.0 / 27.0) / 4.0;
   final padaStart = nakshatraStart + ((pada - 1) * padaWidth);
 
   // Position the moon perfectly in the middle of the requested Pada.

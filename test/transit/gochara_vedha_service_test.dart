@@ -3,13 +3,12 @@ import 'package:test/test.dart';
 
 void main() {
   late Jyotish jyotish;
-  late VedicChart natalChart;
 
   setUpAll(() async {
     jyotish = Jyotish();
     try {
       await jyotish.initialize(ephemerisPath: 'ephe');
-      natalChart = await jyotish.calculateVedicChart(
+      await jyotish.calculateVedicChart(
         dateTime: DateTime(1990, 5, 15, 10, 30),
         location: GeographicLocation(latitude: 28.6139, longitude: 77.2090),
       );
@@ -60,10 +59,10 @@ void main() {
     test('hasMutualVedha returns boolean', () async {
       try {
         final result = jyotish.hasMutualVedha(
-          planet1: 'Saturn',
-          house1: 1,
-          planet2: 'Mars',
-          house2: 4,
+          'Saturn',
+          1,
+          'Mars',
+          4,
         );
 
         expect(result, isA<bool>());
@@ -75,18 +74,18 @@ void main() {
     test('hasMutualVedha with different planet pairs', () async {
       try {
         final result1 = jyotish.hasMutualVedha(
-          planet1: 'Jupiter',
-          house1: 2,
-          planet2: 'Venus',
-          house2: 8,
+          'Jupiter',
+          2,
+          'Venus',
+          8,
         );
         expect(result1, isA<bool>());
 
         final result2 = jyotish.hasMutualVedha(
-          planet1: 'Sun',
-          house1: 1,
-          planet2: 'Moon',
-          house2: 7,
+          'Sun',
+          1,
+          'Moon',
+          7,
         );
         expect(result2, isA<bool>());
       } catch (e) {

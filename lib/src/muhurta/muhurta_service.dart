@@ -452,11 +452,13 @@ class MuhurtaService {
     // A simplified standard mapping logic for Rahu Vasa
     final n = nakshatra.number;
     String location = 'Earth';
-    if (n >= 1 && n <= 9)
+    if (n >= 1 && n <= 9) {
       location = 'Sky';
-    else if (n >= 10 && n <= 18)
+    } else if (n >= 10 && n <= 18) {
       location = 'Earth';
-    else if (n >= 19 && n <= 27) location = 'Underworld';
+    } else if (n >= 19 && n <= 27) {
+      location = 'Underworld';
+    }
 
     return RahuVasaInfo(location: location);
   }

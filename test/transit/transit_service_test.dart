@@ -97,12 +97,10 @@ void main() {
 
     test('transitDateTime defaults to now when not specified', () async {
       try {
-        final beforeCall = DateTime.now();
         final result = await jyotish.getTransitPositions(
           natalChart: natalChart,
           location: GeographicLocation(latitude: 28.6139, longitude: 77.2090),
         );
-        final afterCall = DateTime.now();
 
         expect(result, isA<Map<String, TransitInfo>>());
         expect(result.isNotEmpty, isTrue);

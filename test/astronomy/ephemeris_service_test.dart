@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'package:jyotish/jyotish.dart';
 import 'package:test/test.dart';
 

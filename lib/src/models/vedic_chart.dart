@@ -315,7 +315,7 @@ class VedicChart {
   /// The [CalculationFlags] used to calculate this chart.
   ///
   /// Defaults to [CalculationFlags.traditionalist()] for charts created
-  /// before the [system] field was introduced (backwards-compatible).
+  /// before the `system` field was introduced (backwards-compatible).
   CalculationFlags get flags =>
       calculationFlags ?? CalculationFlags.traditionalist();
 

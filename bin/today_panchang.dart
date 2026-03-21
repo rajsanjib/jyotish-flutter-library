@@ -131,7 +131,7 @@ void main() async {
   // Sunrise at 06:51 IST = 01:21 UTC
   // We scan from 00:00 IST (18:30 UTC, 23 Feb) to 06:00 IST next day (00:30 UTC, 26 Feb)
   // Use a 30-hour IST window: 00:01 IST 24 Feb  06:30 IST 25 Feb
-  final istOffset = const Duration(hours: 5, minutes: 30);
+  const istOffset = Duration(hours: 5, minutes: 30);
   final dayStart = DateTime(2026, 2, 24, 0, 1)
       .toUtc()
       .subtract(istOffset); // 00:01 IST  UTC

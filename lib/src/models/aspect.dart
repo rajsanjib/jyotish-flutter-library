@@ -203,11 +203,11 @@ class AspectConfig {
 
   /// Whether to use whole-sign (sign-to-sign) Vedic aspects.
   ///
-  /// When [true] (default), a planet aspects an entire sign regardless of
+  /// When `true` (default), a planet aspects an entire sign regardless of
   /// degree separation per the classical Parashari Graha Drishti model.
   /// Aspect strength is always 1.0 (binary).
   ///
-  /// When [false], degree-based orb calculations are used (suitable for
+  /// When `false`, degree-based orb calculations are used (suitable for
   /// Western astrology, KP, or custom research).
   final bool useWholeSignAspects;
 

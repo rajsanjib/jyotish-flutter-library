@@ -3,7 +3,7 @@ import 'package:test/test.dart';
 
 void main() {
   late Jyotish jyotish;
-  late RashiChart chart;
+  late VedicChart chart;
   bool ephemerisAvailable = false;
 
   final birthDateTime = DateTime(1990, 5, 15, 14, 30);
@@ -16,11 +16,10 @@ void main() {
       await jyotish.initialize(ephemerisPath: 'ephe');
       ephemerisAvailable = true;
 
-      final calc = await jyotish.calculate(
-        birthDateTime: birthDateTime,
+      chart = await jyotish.calculateVedicChart(
+        dateTime: birthDateTime,
         location: location,
       );
-      chart = calc.rashiChart;
     } catch (e) {
       ephemerisAvailable = false;
     }
@@ -68,7 +67,7 @@ void main() {
 
       final allArgalas = jyotish.systems.argala.getAllArgalas(chart);
 
-      final validTypes = ArgalaType.values;
+      const validTypes = ArgalaType.values;
 
       for (final entry in allArgalas.entries) {
         for (final argalaInfo in entry.value) {

@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'package:jyotish/jyotish.dart';
 import 'package:test/test.dart';
 
@@ -83,7 +84,7 @@ void main() {
     test('rashiNames are valid Sanskrit names', () async {
       if (!ephemerisInitialized) return;
 
-      final validRashiNames = UdayaLagnaService.rashiNames;
+      const validRashiNames = UdayaLagnaService.rashiNames;
 
       final date = DateTime(2024, 12, 21);
       final sunrise = DateTime(2024, 12, 21, 7, 0);

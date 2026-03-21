@@ -183,7 +183,7 @@ class PlanetPosition {
   /// Formats the position with full DMS notation.
   String get formattedPositionDMS {
     final dms = positionInSignDMS;
-    return '${dms['degrees']} ${dms['minutes']}\' ${dms['seconds'].toStringAsFixed(2)}" $zodiacSign';
+    return '${dms['degrees']} ${dms['minutes']}\' ${(dms['seconds'] as double).toStringAsFixed(2)}" $zodiacSign';
   }
 
   @override

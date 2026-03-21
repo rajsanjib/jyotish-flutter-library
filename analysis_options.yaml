@@ -1,4 +1,4 @@
-include: package:flutter_lints/recommended.yaml
+include: package:flutter_lints/flutter.yaml
 
 analyzer:
   errors:
@@ -26,5 +26,4 @@ linter:
     - package_api_docs
     - test_types_in_equals
     - throw_in_finally
-    - untyped_parameter_on_method_invocation
     - valid_regexps

@@ -80,8 +80,9 @@ class PrashnaService {
       // Daytime Gulika parts (1-indexed start point for Saturn)
       // Sun: 7, Mon: 6, Tue: 5, Wed: 4, Thu: 3, Fri: 2, Sat: 1
       saturnPart = (7 - weekday + 7) % 7;
-      if (saturnPart == 0)
+      if (saturnPart == 0) {
         saturnPart = 7; // Saturday is 1st part, Sunday is 7th
+      }
       if (weekday == 6) saturnPart = 1; // Explicit Saturday correction
 
       final dayDuration = sunset.difference(sunrise).inSeconds;

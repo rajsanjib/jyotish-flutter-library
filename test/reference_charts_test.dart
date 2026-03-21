@@ -13,6 +13,7 @@
 ///
 /// These tests require Swiss Ephemeris data files in the `ephe/` directory.
 /// See SETUP.md for installation instructions.
+library;
 
 import 'package:jyotish/jyotish.dart';
 import 'package:test/test.dart';

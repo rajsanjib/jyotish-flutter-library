@@ -10,9 +10,9 @@ void main() {
     });
 
     test('calculateRitualElements assigns valid ritual fields', () {
-      final tithi = const TithiInfo(
+      const tithi = TithiInfo(
           number: 1, name: 'Pratipada', paksha: Paksha.shukla, elapsed: 0.5);
-      final nakshatra = const NakshatraInfo(
+      const nakshatra = NakshatraInfo(
           number: 1,
           name: 'Ashwini',
           rulingPlanet: Planet.ketu,
@@ -20,8 +20,8 @@ void main() {
           pada: 1,
           isAbhijit: false,
           abhijitPortion: 0.0);
-      final vara =
-          const VaraInfo(name: 'Sunday', weekday: 0, rulingPlanet: Planet.sun);
+      const vara =
+          VaraInfo(name: 'Sunday', weekday: 0, rulingPlanet: Planet.sun);
 
       final panchanga = Panchanga(
         dateTime: DateTime(2026, 3, 4),

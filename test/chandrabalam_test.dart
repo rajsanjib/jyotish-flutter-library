@@ -11,7 +11,7 @@ void main() {
 
     test('Chandrabalam for Moon in Aries', () {
       // Aries is index 0. Longitude = 15.0
-      final ariesMoon = const NakshatraInfo(
+      const ariesMoon = NakshatraInfo(
         number: 1, // Ashwini
         name: 'Ashwini',
         rulingPlanet: Planet.ketu,

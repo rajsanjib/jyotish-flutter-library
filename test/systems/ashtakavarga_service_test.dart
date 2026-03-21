@@ -3,7 +3,7 @@ import 'package:test/test.dart';
 
 void main() {
   late Jyotish jyotish;
-  late RashiChart chart;
+  late VedicChart chart;
   bool ephemerisAvailable = false;
 
   setUpAll(() async {
@@ -15,11 +15,10 @@ void main() {
       final birthDateTime = DateTime(1990, 5, 15, 14, 30);
       final location =
           GeographicLocation(latitude: 28.6139, longitude: 77.2090);
-      final calc = await jyotish.calculate(
-        birthDateTime: birthDateTime,
+      chart = await jyotish.calculateVedicChart(
+        dateTime: birthDateTime,
         location: location,
       );
-      chart = calc.rashiChart;
     } catch (e) {
       ephemerisAvailable = false;
     }

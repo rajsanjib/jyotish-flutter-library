@@ -1,5 +1,6 @@
 import 'dart:ffi' as ffi;
 import 'dart:io';
+import 'dart:developer';
 import 'package:ffi/ffi.dart';
 
 /// FFI bindings for Swiss Ephemeris C library.
@@ -189,7 +190,7 @@ class SwissEphBindings {
         return ffi.DynamicLibrary.open(customPath);
       } catch (e) {
         // Silently fail if custom path is invalid, will try next option
-        print('Custom library path $customPath failed to load: $e');
+        log('Custom library path $customPath failed to load: $e');
       }
     }
 
@@ -206,7 +207,7 @@ class SwissEphBindings {
           return ffi.DynamicLibrary.open(path);
         } catch (e) {
           // Try next path
-          print('Local library path $path failed to load: $e');
+          log('Local library path $path failed to load: $e');
           continue;
         }
       }
@@ -270,7 +271,7 @@ class SwissEphBindings {
       if (returnCode != flags && returnCode != 2) {
         final msg = errorBuffer.cast<Utf8>().toDartString();
         if (msg.isNotEmpty) {
-          print('SwissEph Warning (Planet $planetId): $msg');
+          log('SwissEph Warning (Planet $planetId): $msg');
         }
       }
 

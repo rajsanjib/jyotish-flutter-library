@@ -163,8 +163,8 @@ void main() {
   });
 
   group('Vimshottari Dasha with levels parameter', () {
-    test('level 1 returns Mahadashas without sub-periods', () {
-      final result = jyotish.getVimshottariDasha(
+    test('level 1 returns Mahadashas without sub-periods', () async {
+      final result = await jyotish.getVimshottariDasha(
         natalChart: natalChart,
         levels: 1,
       );
@@ -174,17 +174,17 @@ void main() {
       }
     });
 
-    test('level 2 adds Antardasha sub-periods', () {
-      final result = jyotish.getVimshottariDasha(
+    test('level 2 adds Antardasha sub-periods', () async {
+      final result = await jyotish.getVimshottariDasha(
         natalChart: natalChart,
         levels: 2,
       );
       expect(result.allMahadashas, isNotEmpty);
       var foundSubPeriods = false;
       for (final maha in result.allMahadashas) {
-        if (maha.subPeriods != null && maha.subPeriods!.isNotEmpty) {
+        if (maha.subPeriods.isNotEmpty) {
           foundSubPeriods = true;
-          for (final antar in maha.subPeriods!) {
+          for (final antar in maha.subPeriods) {
             expect(antar.level, equals(2));
             expect(antar.lord, isNotEmpty);
             expect(antar.endDate.isAfter(antar.startDate), isTrue);
@@ -194,19 +194,19 @@ void main() {
       expect(foundSubPeriods, isTrue);
     });
 
-    test('level 3 adds Pratyantardasha sub-periods', () {
-      final result = jyotish.getVimshottariDasha(
+    test('level 3 adds Pratyantardasha sub-periods', () async {
+      final result = await jyotish.getVimshottariDasha(
         natalChart: natalChart,
         levels: 3,
       );
       expect(result.allMahadashas, isNotEmpty);
       var foundPratyantar = false;
       for (final maha in result.allMahadashas) {
-        if (maha.subPeriods != null) {
-          for (final antar in maha.subPeriods!) {
-            if (antar.subPeriods != null && antar.subPeriods!.isNotEmpty) {
+        if (maha.subPeriods.isNotEmpty) {
+          for (final antar in maha.subPeriods) {
+            if (antar.subPeriods.isNotEmpty) {
               foundPratyantar = true;
-              for (final prati in antar.subPeriods!) {
+              for (final prati in antar.subPeriods) {
                 expect(prati.level, equals(3));
               }
             }
@@ -220,9 +220,9 @@ void main() {
   group('Yogini Dasha', () {
     late DashaResult result;
 
-    setUpAll(() {
+    setUpAll(() async {
       try {
-        result = jyotish.getYoginiDasha(
+        result = await jyotish.getYoginiDasha(
           natalChart: natalChart,
           levels: 1,
         );
@@ -268,9 +268,9 @@ void main() {
   group('Chara Dasha', () {
     late DashaResult result;
 
-    setUpAll(() {
+    setUpAll(() async {
       try {
-        result = jyotish.getCharaDasha(
+        result = await jyotish.getCharaDasha(
           natalChart: natalChart,
           levels: 1,
         );
@@ -325,9 +325,9 @@ void main() {
   group('Narayana Dasha', () {
     late DashaResult result;
 
-    setUpAll(() {
+    setUpAll(() async {
       try {
-        result = jyotish.getNarayanaDasha(
+        result = await jyotish.getNarayanaDasha(
           chart: natalChart,
           levels: 1,
         );
@@ -367,9 +367,9 @@ void main() {
   group('Ashtottari Dasha', () {
     late DashaResult result;
 
-    setUpAll(() {
+    setUpAll(() async {
       try {
-        result = jyotish.getAshtottariDasha(natalChart: natalChart);
+        result = await jyotish.getAshtottariDasha(natalChart: natalChart);
       } catch (_) {}
     });
 
@@ -398,9 +398,9 @@ void main() {
   group('Kalachakra Dasha', () {
     late DashaResult result;
 
-    setUpAll(() {
+    setUpAll(() async {
       try {
-        result = jyotish.getKalachakraDasha(
+        result = await jyotish.getKalachakraDasha(
           natalChart: natalChart,
           levels: 1,
         );
@@ -430,21 +430,21 @@ void main() {
   });
 
   group('getCurrentDasha', () {
-    test('returns active Mahadasha and Antardasha for a given date', () {
+    test('returns active Mahadasha and Antardasha for a given date', () async {
       final targetDate = DateTime(2024, 6, 15);
       try {
-        final result = jyotish.getCurrentDasha(
+        final result = await jyotish.getCurrentDasha(
           natalChart: natalChart,
           targetDate: targetDate,
         );
         expect(result, isNotNull);
-        expect(result.allMahadashas, isNotEmpty);
+        expect(result, isNotEmpty);
 
-        final activePeriod = result.allMahadashas.firstWhere(
+        final activePeriod = result.firstWhere(
           (p) =>
               !p.startDate.isAfter(targetDate) &&
               p.endDate.isAfter(targetDate),
-          orElse: () => result.allMahadashas.first,
+          orElse: () => result.first,
         );
         expect(activePeriod.lord, isNotEmpty);
         expect(
@@ -456,17 +456,17 @@ void main() {
       } catch (_) {}
     });
 
-    test('returns periods with correct chronological bounds', () {
+    test('returns periods with correct chronological bounds', () async {
       final targetDate = DateTime(2025, 3, 1);
       try {
-        final result = jyotish.getCurrentDasha(
+        final result = await jyotish.getCurrentDasha(
           natalChart: natalChart,
           targetDate: targetDate,
         );
-        for (var i = 1; i < result.allMahadashas.length; i++) {
+        for (var i = 1; i < result.length; i++) {
           expect(
-            result.allMahadashas[i].startDate.isAfter(
-              result.allMahadashas[i - 1].startDate,
+            result[i].startDate.isAfter(
+              result[i - 1].startDate,
             ),
             isTrue,
           );
@@ -476,9 +476,9 @@ void main() {
   });
 
   group('Cross-chart Dasha consistency', () {
-    test('Vimshottari dasha for alternative chart returns valid result', () {
+    test('Vimshottari dasha for alternative chart returns valid result', () async {
       try {
-        final result = jyotish.getVimshottariDasha(
+        final result = await jyotish.getVimshottariDasha(
           natalChart: alternativeChart,
           levels: 1,
         );
@@ -491,4 +491,60 @@ void main() {
       } catch (_) {}
     });
   });
+}
+
+VedicChart _createMinimalChart(DateTime dateTime, GeographicLocation location) {
+  final moonPosition = PlanetPosition(
+    planet: Planet.moon,
+    dateTime: dateTime,
+    longitude: 45.0,
+    latitude: 0.0,
+    distance: 1.0,
+    longitudeSpeed: 13.0,
+    latitudeSpeed: 0.0,
+    distanceSpeed: 0.0,
+  );
+
+  final rahuPosition = PlanetPosition(
+    planet: Planet.meanNode,
+    dateTime: dateTime,
+    longitude: 180.0,
+    latitude: 0.0,
+    distance: 1.0,
+    longitudeSpeed: -0.05,
+    latitudeSpeed: 0.0,
+    distanceSpeed: 0.0,
+  );
+
+  final houses = HouseSystem(
+    system: 'W',
+    cusps: List.generate(12, (index) => index * 30.0),
+    ascendant: 0.0,
+    midheaven: 270.0,
+  );
+
+  final planets = {
+    Planet.moon: VedicPlanetInfo(
+      position: moonPosition,
+      house: 1,
+      dignity: PlanetaryDignity.neutralSign,
+    ),
+  };
+
+  final rahuInfo = VedicPlanetInfo(
+    position: rahuPosition,
+    house: 7,
+    dignity: PlanetaryDignity.neutralSign,
+  );
+
+  return VedicChart(
+    dateTime: dateTime,
+    location: '${location.latitude},${location.longitude}',
+    latitude: location.latitude,
+    longitudeCoord: location.longitude,
+    houses: houses,
+    planets: planets,
+    rahu: rahuInfo,
+    ketu: KetuPosition(rahuPosition: rahuPosition),
+  );
 }

@@ -45,7 +45,7 @@ class KPService {
   ///
   /// Returns [KPCalculations] with Sub-Lords and significators.
   ///
-  /// Throws [StateError] if [natalChart.flags] is not [AstrologicalSystem.kp].
+  /// Throws [StateError] if `natalChart.flags` is not [AstrologicalSystem.kp].
   Future<KPCalculations> calculateKPData(
     VedicChart natalChart, {
     bool useNewAyanamsa = true,
@@ -425,7 +425,7 @@ class KPService {
   ///
   /// [natalKP] - The birth chart's KP data from [calculateKPData].
   /// [transitDivisions] - Transit KP divisions from [calculateTransitKPDivisions].
-  /// [natalSignificators] - Optional: if omitted, A+B significators are used.
+  /// `natalSignificators` - Optional: if omitted, A+B significators are used.
   ///
   /// Returns a sorted list, strongest matches first.
   List<KPTransitComparison> compareTransitToNatal({
@@ -588,7 +588,7 @@ class KPService {
 
       final dashaPeriods = [7.0, 20.0, 6.0, 10.0, 7.0, 18.0, 16.0, 19.0, 17.0];
       const totalPeriods = 120.0;
-      final starSpan = 360.0 / 27;
+      const starSpan = 360.0 / 27;
 
       final starLord = KPPlanetOwnership.getStarLord(star);
       final planets = [

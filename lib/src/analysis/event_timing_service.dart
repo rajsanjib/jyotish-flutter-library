@@ -58,7 +58,9 @@ class EventTimingService {
       for (final planet in Planet.values) {
         if (planet == Planet.uranus ||
             planet == Planet.neptune ||
-            planet == Planet.pluto) continue;
+            planet == Planet.pluto) {
+          continue;
+        }
 
         final pos = await _ephemerisService.calculatePlanetPosition(
           planet: planet,

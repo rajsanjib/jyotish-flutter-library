@@ -133,12 +133,13 @@ class ArudhaPadaService {
 
     // Name
     String name;
-    if (houseNumber == 1)
+    if (houseNumber == 1) {
       name = 'AL';
-    else if (houseNumber == 12)
+    } else if (houseNumber == 12) {
       name = 'UL';
-    else
+    } else {
       name = 'A$houseNumber';
+    }
 
     return ArudhaPadaInfo(
       houseNumber: houseNumber,
@@ -159,8 +160,9 @@ class ArudhaPadaService {
     } else {
       final lord = _getSignLord(rashi);
       final lordInfo = chart.getPlanet(lord);
-      if (lordInfo == null)
+      if (lordInfo == null) {
         throw Exception('Lord position not found for $lord');
+      }
       return Rashi.fromLongitude(lordInfo.longitude);
     }
   }

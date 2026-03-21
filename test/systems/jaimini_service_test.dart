@@ -3,8 +3,8 @@ import 'package:test/test.dart';
 
 void main() {
   late Jyotish jyotish;
-  late RashiChart rashiChart;
-  late RashiChart navamsaChart;
+  late VedicChart rashiChart;
+  late VedicChart navamsaChart;
   bool ephemerisAvailable = false;
 
   final birthDateTime = DateTime(1990, 5, 15, 14, 30);
@@ -17,12 +17,14 @@ void main() {
       await jyotish.initialize(ephemerisPath: 'ephe');
       ephemerisAvailable = true;
 
-      final calc = await jyotish.calculate(
-        birthDateTime: birthDateTime,
+      rashiChart = await jyotish.calculateVedicChart(
+        dateTime: birthDateTime,
         location: location,
       );
-      rashiChart = calc.rashiChart;
-      navamsaChart = calc.navamsaChart;
+      navamsaChart = jyotish.getDivisionalChart(
+        rashiChart: rashiChart,
+        type: DivisionalChartType.d9,
+      );
     } catch (e) {
       ephemerisAvailable = false;
     }

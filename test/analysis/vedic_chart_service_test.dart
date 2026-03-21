@@ -129,7 +129,6 @@ void main() {
       expect(defaultChart, isNotNull);
 
       for (final entry in defaultChart!.planets.entries) {
-        final planetName = entry.key.name;
         final info = entry.value;
         expect(info.position, isNotNull);
         expect(info.house, isNotNull);

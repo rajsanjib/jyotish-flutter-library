@@ -72,7 +72,7 @@ void main() {
     });
 
     test('strengthCategory is valid enum value', () {
-      final validCategories = ShadbalaStrength.values;
+      const validCategories = ShadbalaStrength.values;
       for (final entry in shadbala.entries) {
         expect(validCategories, contains(entry.value.strengthCategory),
             reason: '${entry.key} strengthCategory should be valid enum');

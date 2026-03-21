@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'package:jyotish/jyotish.dart';
 
 String _fmt(DateTime? dt) {
@@ -100,5 +101,5 @@ void main() async {
   }
 
   ephemService.dispose();
-  print('\n' + '=' * 60);
+  print('\n${'=' * 60}');
 }

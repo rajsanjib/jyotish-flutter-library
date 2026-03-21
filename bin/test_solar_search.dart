@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'package:jyotish/jyotish.dart';
 
 void main() async {
@@ -30,7 +31,7 @@ void main() async {
     if (eclipse != null && eclipse.isVisible) {
       final localTime = eclipse.date.toLocal();
       print('\nVisible Solar Eclipse Found:');
-      print('Date (Max): ${localTime}');
+      print('Date (Max): $localTime');
       print('Magnitude:  ${eclipse.magnitude.toStringAsFixed(4)}');
       print('Description:${eclipse.description}');
 

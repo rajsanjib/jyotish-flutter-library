@@ -281,15 +281,18 @@ class AshtakavargaService {
         final minBindu = nonZeroBindus.reduce((a, b) => a < b ? a : b);
 
         // Subtract minimum from each sign (traditional method)
-        if (bindu1 > 0)
+        if (bindu1 > 0) {
           reducedBindus[trikona[0]] =
               (bindu1 - minBindu).clamp(0, bindu1).toInt();
-        if (bindu2 > 0)
+        }
+        if (bindu2 > 0) {
           reducedBindus[trikona[1]] =
               (bindu2 - minBindu).clamp(0, bindu2).toInt();
-        if (bindu3 > 0)
+        }
+        if (bindu3 > 0) {
           reducedBindus[trikona[2]] =
               (bindu3 - minBindu).clamp(0, bindu3).toInt();
+        }
       }
 
       reducedBhinnashtakavarga[planet] = Bhinnashtakavarga(

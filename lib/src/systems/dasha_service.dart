@@ -870,7 +870,7 @@ class DashaService {
     var currentDate = chart.dateTime;
 
     // Issue 12: Compute balance of first dasha from Moon's position in pada
-    final padaWidth = nakshatraWidth / 4;
+    const padaWidth = nakshatraWidth / 4;
     final posInNakshatra = moonLongitude % nakshatraWidth;
     final posInPada = posInNakshatra % padaWidth;
     final portionRemaining = 1.0 - (posInPada / padaWidth);
@@ -1078,8 +1078,9 @@ class DashaService {
     }
     final ak = _getAtmakaraka(chart);
     final akInfo = chart.getPlanet(ak);
-    if (akInfo != null && Rashi.fromLongitude(akInfo.longitude) == sign)
+    if (akInfo != null && Rashi.fromLongitude(akInfo.longitude) == sign) {
       strength += 50.0;
+    }
     return strength;
   }
 

@@ -148,9 +148,13 @@ class CompatibilityService {
     if (boyVashya == girlVashya) return 2;
     // Compatible pairs per tradition
     if ((boyVashya == 'Manava' && girlVashya == 'Vanachara') ||
-        (boyVashya == 'Vanachara' && girlVashya == 'Manava')) return 1;
+        (boyVashya == 'Vanachara' && girlVashya == 'Manava')) {
+      return 1;
+    }
     if ((boyVashya == 'Chatushpada' && girlVashya == 'Keeta') ||
-        (boyVashya == 'Keeta' && girlVashya == 'Chatushpada')) return 1;
+        (boyVashya == 'Keeta' && girlVashya == 'Chatushpada')) {
+      return 1;
+    }
     return 0;
   }
 
@@ -472,7 +476,9 @@ class CompatibilityService {
     if (boyGana == girlGana) return 6;
     // Deva+Manushya is compatible (3 pts), Manushya+Deva also 3 pts
     if ((boyGana == 'Deva' && girlGana == 'Manushya') ||
-        (boyGana == 'Manushya' && girlGana == 'Deva')) return 3;
+        (boyGana == 'Manushya' && girlGana == 'Deva')) {
+      return 3;
+    }
     // All combinations with Rakshasa score 0
     return 0;
   }

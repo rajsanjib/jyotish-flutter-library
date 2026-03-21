@@ -132,7 +132,7 @@ class Sarvashtakavarga {
   /// Total bindus in each sign (0-11)
   final List<int> bindus;
 
-  /// Alias for [bindus.length] for legacy tests.
+  /// Alias for `bindus.length` for legacy tests.
   int get length => bindus.length;
 
   /// Alias for [bindus[index]] for legacy tests.

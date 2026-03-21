@@ -460,7 +460,9 @@ class StrengthAnalysisService {
 
     // Rahu/Ketu: 5th, 9th
     if ((planet == Planet.meanNode || planet == Planet.ketu) &&
-        (diff == 4 || diff == 8)) return true;
+        (diff == 4 || diff == 8)) {
+      return true;
+    }
 
     return false;
   }

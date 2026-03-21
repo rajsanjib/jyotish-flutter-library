@@ -3,7 +3,6 @@ import 'package:test/test.dart';
 
 void main() {
   late Jyotish jyotish;
-  late RashiChart natalChart;
   bool ephemerisAvailable = false;
 
   final birthDateTime = DateTime(1990, 5, 15, 14, 30);
@@ -16,11 +15,10 @@ void main() {
       await jyotish.initialize(ephemerisPath: 'ephe');
       ephemerisAvailable = true;
 
-      final calc = await jyotish.calculate(
-        birthDateTime: birthDateTime,
+      await jyotish.calculateVedicChart(
+        dateTime: birthDateTime,
         location: location,
       );
-      natalChart = calc.rashiChart;
     } catch (e) {
       ephemerisAvailable = false;
     }
@@ -48,7 +46,7 @@ void main() {
         location: location,
       );
       expect(varshapal.chart, isNotNull);
-      expect(varshapal.chart, isA<RashiChart>());
+      expect(varshapal.chart, isA<VedicChart>());
       expect(varshapal.varshaLord, isNotNull);
       expect(varshapal.varshaLord, isA<Planet>());
     });

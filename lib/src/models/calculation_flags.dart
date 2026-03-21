@@ -126,7 +126,7 @@ class CalculationFlags {
   ///   ([KPService]) and guard-rail assertions.
   ///
   /// **Important**: pair this with `houseSystem: 'P'` (Placidus) when
-  /// calling [calculateVedicChart], as Placidus is mandatory in KP.
+  /// calling `calculateVedicChart`, as Placidus is mandatory in KP.
   ///
   /// ```dart
   /// final chart = await jyotish.calculateVedicChart(

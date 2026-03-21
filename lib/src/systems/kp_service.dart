@@ -18,7 +18,7 @@ class KPService {
 
   final EphemerisService _ephemerisService;
 
-  //  Guard-rail 
+  //  Guard-rail
 
   /// Throws [StateError] if [flags] do not declare [AstrologicalSystem.kp].
   ///

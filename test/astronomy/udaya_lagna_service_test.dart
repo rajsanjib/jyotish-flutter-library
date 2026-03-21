@@ -57,8 +57,7 @@ void main() {
         expect(
           periods[i].startTime.isBefore(periods[i + 1].startTime),
           isTrue,
-          reason:
-              'Period ${i + 1} start time should be before period ${i + 2}',
+          reason: 'Period ${i + 1} start time should be before period ${i + 2}',
         );
       }
     });

@@ -7,8 +7,7 @@ void main() {
   bool ephemerisAvailable = false;
 
   final birthDateTime = DateTime(1990, 5, 15, 14, 30);
-  final location =
-      GeographicLocation(latitude: 28.6139, longitude: 77.2090);
+  final location = GeographicLocation(latitude: 28.6139, longitude: 77.2090);
 
   setUpAll(() async {
     jyotish = Jyotish();

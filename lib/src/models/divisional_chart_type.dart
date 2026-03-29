@@ -36,7 +36,7 @@ enum DivisionalChartType {
   d10('D10', 'Dasamsa', 'Career', 10),
 
   /// D12 - Dwadasamsa (Parents)
-  d12('D12', 'Dwadasamsa', 'Parents', 12, vimsopakaWeight: 1.0),
+  d12('D12', 'Dwadasamsa', 'Parents', 12, vimsopakaWeight: 2.0),
 
   /// D16 - Shodasamsa (Vehicles/Happiness)
   d16('D16', 'Shodasamsa', 'Vehicles', 16),
@@ -51,7 +51,7 @@ enum DivisionalChartType {
   d27('D27', 'Saptavimsamsa', 'Strength', 27),
 
   /// D30 - Trimsamsa (Misfortunes/Evil effects)
-  d30('D30', 'Trimsamsa', 'Misfortunes', 30, vimsopakaWeight: 2.0),
+  d30('D30', 'Trimsamsa', 'Misfortunes', 30, vimsopakaWeight: 1.0),
 
   /// D40 - Khavedamsa (Auspicious/Inauspicious effects)
   d40('D40', 'Khavedamsa', 'Auspiciousness', 40),
@@ -60,7 +60,7 @@ enum DivisionalChartType {
   d45('D45', 'Akshavedamsa', 'Character', 45),
 
   /// D60 - Shashtiamsa (Past Life/Karma)
-  d60('D60', 'Shashtiamsa', 'Past Life', 60, vimsopakaWeight: 4.0),
+  d60('D60', 'Shashtiamsa', 'Past Life', 60),
 
   /// D150 - Nadi Amsa (Micro-level destiny/Past Life Karma)
   d150('D150', 'Nadi Amsa', 'Micro Destiny', 150),

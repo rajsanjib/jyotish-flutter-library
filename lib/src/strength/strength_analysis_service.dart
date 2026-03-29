@@ -250,7 +250,7 @@ class StrengthAnalysisService {
       DivisionalChartType.d9: 3.0, // Navamsa
       DivisionalChartType.d10: 0.5, // Dasamsa
       DivisionalChartType.d12: 0.5, // Dwadasamsa
-      DivisionalChartType.d16: 0.5, // Shodasamsa
+      DivisionalChartType.d16: 2.0, // Shodasamsa
       DivisionalChartType.d20: 0.5, // Vimsamsa
       DivisionalChartType.d24: 0.5, // Chaturvimshamsha
       DivisionalChartType.d27: 0.5, // Saptavimsamsa

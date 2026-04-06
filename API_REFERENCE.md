@@ -184,6 +184,7 @@ await jyotish.initialize({String? ephemerisPath});
 |--------|---------|-------------|
 | `calculateVedicChart({dateTime, location, houseSystem?, includeOuterPlanets?, flags?})` | `Future<VedicChart>` | Complete Vedic birth chart |
 | `getDivisionalChart({rashiChart, type})` | `VedicChart` | Calculate divisional chart (D1-D60, D249) |
+| `calculateNatalChart(...)` | `Future<VedicChart>` | Legacy alias for `calculateVedicChart` |
 
 #### Aspect Methods
 
@@ -273,6 +274,11 @@ await jyotish.initialize({String? ephemerisPath});
 | `calculateShodhyaPinda(ashtakavarga)` | `ShodhyaPindaResult` | Reduced Shodhya Pinda |
 | `calculateHousePinda(ashtakavarga, houseNumber)` | `double` | Pinda for specific house |
 | `calculateAllHousesPinda(ashtakavarga)` | `Map<int, double>` | Pinda for all 12 houses |
+| `calculateAshtakavargaWithShodhana(chart)` | `AshtakavargaWithShodhana` | Ashtakavarga + all Shodhana reductions |
+| `applyTrikonaShodhana(ashtakavarga)` | `Ashtakavarga` | Applies trine reduction |
+| `applyEkadhipatiShodhana(ashtakavarga)` | `Ashtakavarga` | Applies lordship reduction |
+| `scoreTransits(...)` | `Map<Planet, AshtakavargaTransit>` | Score transits against natal Ashtakavarga |
+| `getAshtakavargaReductions(...)` | `Ashtakavarga` | Apply reductions to an Ashtakavarga |
 
 #### KP System Methods
 
@@ -301,6 +307,7 @@ await jyotish.initialize({String? ephemerisPath});
 | `getInauspiciousPeriods({date, sunrise, sunset})` | `InauspiciousPeriods` | Rahukalam, Gulikalam, Yamagandam |
 | `findBestMuhurta({muhurta, activity})` | `List<MuhurtaPeriod>` | Best times for activity |
 | `getCurrentGowriPanchangam({dateTime, location})` | `Future<GowriPanchangamInfo>` | Current Gowri Panchangam |
+| `calculateHoraLordsForDay(...)` | `Future<List<Planet>>` | All 24 Hora lords for a day |
 
 #### Nakshatra Methods
 
@@ -344,6 +351,8 @@ await jyotish.initialize({String? ephemerisPath});
 | `getAllPlanetsVimshopakBala(chart)` | `Map<Planet, VimshopakBala>` | 20-fold strength for all planets |
 | `getIshtaphala(planet, chart, shadbala)` | `double` | Auspicious potential (0-60) |
 | `getKashtaphala(planet, chart, shadbala)` | `double` | Inauspicious potential (0-60) |
+| `getChartStrengthReport(chart)` | `Future<StrengthReport>` | Comprehensive strength report |
+| `getAllGrahaAvasthas(chart)` | `Map<Planet, GrahaAvastha>` | Avasthas for all planets |
 
 #### Astrological Strength & Rituals (Panchang)
 
@@ -362,6 +371,7 @@ await jyotish.initialize({String? ephemerisPath});
 | `getSudarshanChakra(chart)` | `SudarshanChakraResult` | Get Sudarshan Chakra (alias) |
 | `getBhavaBala(chart)` | `Future<Map<int, BhavaBalaResult>>` | House Strength (Bhava Bala service) |
 | `getStrengthBhavaBala({chart, shadbalaResults})` | `Map<int, double>` | House Strength (Strength Analysis service) |
+| `calculateSudarshanChakra(chart)` | `SudarshanChakraResult` | Alias for `getSudarshanChakra` |
 
 #### Gochara Vedha (Transit Obstruction)
 
@@ -412,6 +422,7 @@ await jyotish.initialize({String? ephemerisPath});
 | `analyzeFifthHouse(chart)` | `FifthHouseStrength` | 5th house analysis |
 | `analyzeJupiterCondition(chart)` | `JupiterCondition` | Jupiter as child karaka |
 | `detectChildYogas(chart)` | `List<ChildYoga>` | Favorable combinations |
+| `analyzeD7Chart(chart)` | `D7Analysis` | D7 chart analysis for progeny |
 
 #### Marriage Compatibility Methods
 
@@ -447,6 +458,7 @@ await jyotish.initialize({String? ephemerisPath});
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `panchangaService` | `PanchangaService` | Access advanced Panchanga methods |
+| `systems` | `JyotishSystems` | Access `JyotishSystems` |
 
 #### Jaimini Astrology Methods
 
@@ -478,6 +490,7 @@ await jyotish.initialize({String? ephemerisPath});
 | `getPlanetaryRelationshipsMatrix(chart)` | `Map<Planet, Map<Planet, PlanetaryRelationship>>` | 5-fold friendship matrix (O(1) lookup) |
 | `getBhavaChalit(chart)` | `BhavaChalit` | Cuspal chart with mid-cusp boundaries |
 | `getAyanamsa({dateTime, mode?, location?})` | `Future<double>` | Ayanamsa offset for a date/mode |
+| `getPlanetaryRelationship(planet, other, chart)` | `PlanetaryRelationship` | Relationship between two planets |
 
 #### Cleanup
 
@@ -2322,6 +2335,164 @@ if (chart.flags.isTraditional) {
 
 ---
 
+
+
+---
+
+### PindaResult
+
+Result of Pinda calculation in Ashtakavarga.
+
+| Property | Type | Description |
+|---|---|---|
+| `rashiPinda` | `double` | Rashi Pinda value |
+| `grahaPinda` | `double` | Graha Pinda value |
+| `shodhyaPinda` | `double` | Total Shodhya Pinda |
+
+---
+
+### YogaPindaResult
+
+Result of Yoga Pinda calculation in Ashtakavarga.
+
+| Property | Type | Description |
+|---|---|---|
+| `pinda` | `double` | Total Yoga Pinda |
+| `rating` | `YogaPindaRating` | Qualitative rating |
+
+---
+
+### ShodhyaPindaResult
+
+Complete Shodhya Pinda analysis.
+
+| Property | Type | Description |
+|---|---|---|
+| `trikonaReducedAshtakavarga` | `Ashtakavarga` | After Trikona Shodhana |
+| `ekadhipatiReducedAshtakavarga` | `Ashtakavarga` | After Ekadhipati Shodhana |
+| `pindas` | `Map<Planet, PindaResult>` | Pindas per planet |
+
+---
+
+### VimshopakBala
+
+20-fold strength result.
+
+| Property | Type | Description |
+|---|---|---|
+| `totalScore` | `double` | Total score out of 20 |
+| `strength` | `VimshopakStrength` | Qualitative classification |
+
+---
+
+### IshtaKashtaResult
+
+Ishtaphala-Kashtaphala analysis.
+
+| Property | Type | Description |
+|---|---|---|
+| `ishtaPhala` | `double` | Auspicious potential (0-60) |
+| `kashtaPhala` | `double` | Inauspicious potential (0-60) |
+
+---
+
+### VedhaResult
+
+Vedha obstruction analysis for transits.
+
+| Property | Type | Description |
+|---|---|---|
+| `isObstructed` | `bool` | Whether Vedha exists |
+| `severity` | `VedhaSeverity` | Degree of obstruction |
+
+---
+
+### TransitSnapshot
+
+Transit snapshot at a specific time.
+
+| Property | Type | Description |
+|---|---|---|
+| `time` | `DateTime` | Snapshot time |
+| `positions` | `Map<Planet, PlanetPosition>` | Transit positions |
+
+---
+
+### FavorablePeriod
+
+Favorable period without Vedha.
+
+| Property | Type | Description |
+|---|---|---|
+| `start` | `DateTime` | Start of favorable period |
+| `end` | `DateTime` | End of favorable period |
+
+---
+
+### AbhijitMuhurta
+
+Abhijit Muhurta timing.
+
+| Property | Type | Description |
+|---|---|---|
+| `startTime` | `DateTime` | Start time |
+| `endTime` | `DateTime` | End time |
+
+---
+
+### BrahmaMuhurta
+
+Brahma Muhurta timing.
+
+| Property | Type | Description |
+|---|---|---|
+| `startTime` | `DateTime` | Start time |
+| `endTime` | `DateTime` | End time |
+
+---
+
+### PanchangaTimePeriod
+
+Generic time period.
+
+| Property | Type | Description |
+|---|---|---|
+| `start` | `DateTime` | Start time |
+| `end` | `DateTime` | End time |
+
+---
+
+### NighttimeInauspiciousPeriods
+
+Nighttime inauspicious periods according to Muhurta rules.
+
+| Property | Type | Description |
+|---|---|---|
+| `periods` | `List<PanchangaTimePeriod>` | List of inauspicious periods |
+
+---
+
+### MoonPhaseDetails
+
+Detailed Moon phase info.
+
+| Property | Type | Description |
+|---|---|---|
+| `illumination` | `double` | Moon illumination percentage |
+| `isWaxing` | `bool` | Is Shukla Paksha |
+
+---
+
+### UdayaLagnaPeriod
+
+Daily ascendant period.
+
+| Property | Type | Description |
+|---|---|---|
+| `sign` | `Rashi` | The ascendant sign |
+| `startTime` | `DateTime` | Start time |
+| `endTime` | `DateTime` | End time |
+
 ## Enums
 
 ### Planet
@@ -2563,3 +2734,68 @@ try {
 ---
 
 *Generated for Jyotish Flutter Library (SV-stark Fork)*
+
+
+---
+
+
+
+### YogaPindaRating
+
+| Value | Description |
+|---|---|
+| `excellent` | Excellent |
+| `veryGood` | Very Good |
+| `good` | Good |
+| `moderate` | Moderate |
+| `weak` | Weak |
+| `veryWeak` | Very Weak |
+
+---
+
+### ShodhyaStrength
+
+| Value | Description |
+|---|---|
+| `veryStrong` | Very Strong |
+| `strong` | Strong |
+| `moderate` | Moderate |
+| `weak` | Weak |
+| `veryWeak` | Very Weak |
+
+---
+
+### VimshopakStrength
+
+| Value | Description |
+|---|---|
+| `excellent` | Excellent |
+| `good` | Good |
+| `moderate` | Moderate |
+| `weak` | Weak |
+| `veryWeak` | Very Weak |
+
+---
+
+### PlanetaryFriendship
+
+| Value | Description |
+|---|---|
+| `own` | Own |
+| `greatFriend` | Great Friend |
+| `friend` | Friend |
+| `neutral` | Neutral |
+| `enemy` | Enemy |
+| `greatEnemy` | Great Enemy |
+
+---
+
+### VedhaSeverity
+
+| Value | Description |
+|---|---|
+| `none` | None |
+| `mild` | Mild |
+| `moderate` | Moderate |
+| `severe` | Severe |
+

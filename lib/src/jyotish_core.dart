@@ -1937,7 +1937,7 @@ class Jyotish {
   ///   }
   /// }
   /// ```
-  Future<DashaResult> getCharaDasha({
+  Future<CharaDashaResult> getCharaDasha({
     required VedicChart natalChart,
     int levels = 3,
   }) async {
@@ -1949,7 +1949,7 @@ class Jyotish {
   ///
   /// [chart] - The Vedic chart
   /// [levels] - Number of dasha levels
-  Future<DashaResult> getNarayanaDasha({
+  Future<NarayanaDashaResult> getNarayanaDasha({
     required VedicChart chart,
     int levels = 3,
   }) async {

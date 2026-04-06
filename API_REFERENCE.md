@@ -58,6 +58,10 @@ A comprehensive API reference for the Jyotish Flutter library - production-ready
   - [NadiService](#nadiservice)
   - [ProgenyService](#progenyservice)
   - [CompatibilityService](#compatibilityservice)
+  - [PanchangStrengthService](#panchangstrengthservice)
+  - [UdayaLagnaService](#udayalagnaservice)
+  - [RitualService](#ritualservice)
+  - [AstrologyTimeService](#astrologytimeservice)
 - [Models](#models)
   - [VedicChart](#vedicchart)
   - [PlanetPosition](#planetposition)
@@ -769,6 +773,7 @@ await service.initialize();
 | `getEclipseData({date, location, eclipseType})` | `Future<EclipseData?>` | Solar/lunar eclipse info |
 | `getJulianDay(dateTime, {timezoneId?})` | `double` | DateTime to Julian Day |
 | `dispose()` | `void` | Release resources |
+| `isInitialized` | `bool` | Whether the service has been initialized |
 
 ---
 
@@ -839,6 +844,10 @@ final service = DashaService();
 | `getNarayanaDasha(rashiChart, {levels?})` | `NarayanaDashaResult` | Jaimini sign-based dasha ΓÇö uses reverse count for even signs |
 | `getAshtottariDasha(chart, {scheme?, forceCalculation?, levels?})` | `DashaResult` | 108-year cycle dasha ΓÇö supports nested Antardashas |
 | `getKalachakraDasha(chart)` | `KalachakraDashaResult` | Nakshatra-based dasha ΓÇö `balanceOfFirstDasha` computed from Moon's actual pada position |
+| `isAshtottariApplicable(chart)` | `bool` | Determines if Ashtottari Dasha is applicable per BPHS rules |
+| `defaultYearLength` | `static const double` | Default year length = 365.25 |
+| `savanaYearLength` | `static const double` | Savana year length = 360.0 |
+| `vimshottariSequence` | `static const List<Planet>` | Vimshottari planet order |
 
 > **Accuracy Fixes (v2.3.0)**:
 > - **Yogini Dasha (Issue 8)**: Antardasha and Pratyantardasha durations now accumulated in milliseconds to eliminate day-rounding drift across sub-period chains.
@@ -895,6 +904,10 @@ final service = VarshapalService(ephemerisService);
 |--------|---------|-------------|
 | `calculateVarshapal({birthDateTime, varshaDateTime, location, houseSystem?, checkDate?})` | `Future<Varshapal>` | Annual chart for a specific year |
 | `calculateCurrentVarshapal({birthDateTime, location, houseSystem?, checkDate?})` | `Future<Varshapal>` | Current year's annual chart |
+| `getVarshapal(...)` | `Future<Varshapal>` | Alias for `calculateVarshapal` |
+| `getCurrentVarshapal(...)` | `Future<Varshapal>` | Alias for `calculateCurrentVarshapal` |
+| `getSamvatsaraName(int)` | `static String` | Gets Samvatsara name from year number |
+| `getCurrentVarshaNumber(DateTime)` | `static int` | Gets current varsha number |
 
 ---
 
@@ -1073,6 +1086,8 @@ final service = ShadbalaService(ephemerisService);
 | `getUchchaBalaOnly(planet, longitude)` | `double` | Uchcha Bala (exaltation strength) for a planet |
 | `calculateHoraLordsForDay({date, location})` | `Future<List<Planet>>` | 24 Hora lords |
 | `checkCombustion({planet, planetLongitude, sunLongitude, planetSpeed?})` | `CombustionInfo` | Detailed combustion status. Refined orbs (v2.2.0) + retrograde logic |
+| `calculateVimshopakaBala(planet, chart)` | `double` | Calculates 20-fold strength |
+| `_minimumShadbala` | `static const Map<Planet, double>` | BPHS minimum required Shadbala values per planet |
 
 **Shadbala Components**:
 1. **Sthana Bala** - Positional strength (Uchcha, Saptavargaja, Ojayugma, Drekkana, Kendra)
@@ -1110,6 +1125,7 @@ final service = KPService(ephemerisService);
 | `calculateTransitKPDivisions(transitPositions)` | `Map<Planet, KPDivision>` | Transit KP divisions |
 | `compareTransitToNatal({natalKP, transitDivisions})` | `List<KPTransitComparison>` | Sync transit Sub-Lords against natal; sorted by match strength |
 | `calculateRulingPlanets(chart, {useNewAyanamsa?})` | `Future<KPRulingPlanets>` | Seven KP Ruling Planets (Day, Asc Sign/Star/Sub, Moon Sign/Star/Sub). **Requires KP flags (v2.5.0).** |
+| `generateKPDivisionTable()` | `List<KPDivisionEntry>` | Generates the complete KP 249 Sub-Lord table |
 
 **ABCD Significator Grades**:
 - **A**: Houses *occupied* by the planet's Sign Lord  
@@ -1145,6 +1161,12 @@ final service = MuhurtaService();
 | `getInauspiciousPeriods({date, sunrise, sunset})` | `InauspiciousPeriods` | Rahukalam/Gulikalam/Yamagandam |
 | `findBestMuhurta({muhurta, activity})` | `List<TimePeriod>` | Best times for activity |
 | `getHoraLordForHour(dateTime, sunrise)` | `Planet` | Hora lord at time |
+| `getHoraLordForHour(dateTime, sunrise)` | `Planet` | Gets Hora lord for a specific hour |
+| `calculateDurMuhurtam(...)` | `List<TimePeriod>` | Calculates inauspicious Dur Muhurtam periods (North & South Indian methods) |
+| `getDishashool(dateTime)` | `Direction` | Gets unfavorable travel direction for a date |
+| `getRahuVasa(nakshatra)` | `Direction` | Gets Rahu's residence based on current Nakshatra |
+| `getChandraVasa(longitude)` | `Direction` | Gets Moon's residence based on longitude |
+| `calculateVarjyam(...)` | `List<TimePeriod>` | Calculates Varjyam (Thyajya) inauspicious window |
 
 ---
 
@@ -1165,6 +1187,8 @@ final service = MasaService(ephemerisService);
 | `getMasaListForYear({year, location, type?})` | `Future<List<MasaInfo>>` | All months in year |
 | `getRitu(masaInfo)` | `Ritu` | Hindu season |
 | `getRituDetails({dateTime, location})` | `Future<RituDetails>` | Season details |
+| `getNakshatraWithAbhijit(dateTime, location)` | `Future<NakshatraInfo>` | Gets nakshatra including 28th Abhijit |
+| `calculateNakshatraFromLongitude(longitude)` | `NakshatraInfo` | Core nakshatra calculation from longitude |
 
 ---
 
@@ -1212,6 +1236,7 @@ final service = HoraService(ephemerisService);
 |--------|---------|-------------|
 | `getCurrentHora({dateTime, location})` | `Future<HoraPeriod>` | Current planetary hour |
 | `getHorasForDay({date, location})` | `Future<List<HoraPeriod>>` | All 24 horas for a day |
+| `chaldeanOrder` | `static const List<Planet>` | Chaldean planetary order list |
 
 **Chaldean Order**: Saturn -> Jupiter -> Mars -> Sun -> Venus -> Mercury -> Moon
 
@@ -1277,6 +1302,9 @@ final service = JaiminiService();
 | `getKarakamsa({rashiChart, navamsaChart})` | `KarakamsaInfo` | Soul planet in Navamsa |
 | `calculateRashiDrishti(chart)` | `List<RashiDrishtiInfo>` | Sign-based aspects |
 | `calculateActiveRashiDrishti(chart)` | `List<RashiDrishtiInfo>` | Aspects from occupied signs |
+| `getRashiDrishti(chart, [sign])` | `List<RashiDrishtiInfo>` | Legacy method, overloaded for single-sign and full-chart queries |
+| `getRashiDrishtiList(chart)` | `List<RashiDrishtiInfo>` | Alias for `calculateRashiDrishti` |
+| `getActiveRashiDrishti(chart)` | `List<RashiDrishtiInfo>` | Alias for `calculateActiveRashiDrishti` |
 
 ---
 
@@ -1293,6 +1321,9 @@ final service = ArudhaPadaService();
 | `calculateArudhaPadas(chart)` | `ArudhaPadaResult` | Arudha Padas for all houses |
 | `calculateArudhaLagna(chart)` | `ArudhaPadaInfo` | Arudha Lagna (AL) |
 | `calculateUpapada(chart)` | `ArudhaPadaInfo` | Upapada Lagna (UL) |
+| `getArudhaPadas(chart)` | `ArudhaPadaResult` | Alias for `calculateArudhaPadas` |
+| `getArudhaLagna(chart)` | `ArudhaPadaInfo` | Alias for `calculateArudhaLagna` |
+| `getUpapada(chart)` | `ArudhaPadaInfo` | Alias for `calculateUpapada` |
 
 ---
 
@@ -1308,6 +1339,9 @@ final service = ArgalaService();
 |--------|---------|-------------|
 | `calculateAllArargalas(chart)` | `Map<int, List<ArgalaInfo>>` | Argalas for all houses |
 | `calculateArgalaForHouse(chart, house)` | `List<ArgalaInfo>` | Argalas for specific house |
+| `getAllArgalas(chart)` | `Map<int, List<ArgalaInfo>>` | Alias for `calculateAllArgalas` |
+| `getArgalaForHouse(chart, house)` | `List<ArgalaInfo>` | Alias for `calculateArgalaForHouse` |
+| `calculateArgalaForPlanet(chart, planet)` | `List<ArgalaInfo>` | Calculates which houses a specific planet causes Argala on |
 
 ---
 
@@ -1381,6 +1415,20 @@ final service = NadiService();
 
 ---
 
+### PlanetaryRelationshipService
+
+Calculates the 5-fold planetary relationship (Panchadha Maitri).
+
+```dart
+final service = PlanetaryRelationshipService();
+```
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `describeRelationship(planet, otherPlanet, chart)` | `String` | Returns human-readable summary string |
+
+---
+
 ### ProgenyService
 
 Child prediction and progeny analysis.
@@ -1396,6 +1444,8 @@ final service = ProgenyService();
 | `analyzeJupiterCondition(chart)` | `JupiterCondition` | Jupiter as child karaka |
 | `analyzeD7Chart(chart)` | `D7Analysis` | Saptamsa analysis |
 | `detectChildYogas(chart)` | `List<ChildYoga>` | Favorable combinations |
+| `analyzeD7Chart(chart)` | `D7Analysis` | Analyzes the D7 (Saptamsa) chart for progeny |
+| `analyzeKalatrakaraka(chart)` | `KalatrakarakaInfo` | Analyzes Kalatrakaraka (spouse/child karaka) |
 
 ---
 
@@ -1415,11 +1465,77 @@ final service = CompatibilityService();
 | `checkNadiDosha(boyChart, girlChart)` | `NadiDoshaResult` | Nadi compatibility |
 | `checkBhakootDosha(boyChart, girlChart)` | `BhakootDoshaResult` | Moon sign compatibility |
 | `calculateDashaCompatibility(boyChart, girlChart)` | `DashaCompatibility` | Dasha period matching |
+| `calculateVarna(boyNak, girlNak)` | `int` | Varna Koota scoring (max 1 pt) |
+| `calculateTara(boyNak, girlNak, boyIdx, girlIdx)` | `double` | Tara Koota scoring (max 3 pts) |
+| `calculateGrahaMaitri(boyChart, girlChart)` | `double` | Graha Maitri scoring (max 5 pts) |
+| `calculateGana(boyNak, girlNak)` | `int` | Gana Koota scoring (max 6 pts) |
+| `calculateBhakoot(boyChart, girlChart)` | `int` | Bhakoot Koota scoring (max 7 pts) |
+| `calculateNadi(boyChart, girlChart)` | `int` | Nadi Koota scoring (max 8 pts) |
 
 **Ashtakoota (36 Guna) Points**:
 - Varna (1), Vashya (2), Tara (3), Yoni (4)
 - GrahaMaitri (5), Gana (6), Bhakoot (7), Nadi (8)
 
+
+---
+
+### PanchangStrengthService
+
+Astrological strength based on Panchang elements.
+
+```dart
+final service = PanchangStrengthService();
+```
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `calculateChandrabalam({currentMoonNakshatra})` | `ChandrabalamInfo` | Moon strength for all 12 Rashis |
+| `calculateTarabalam({birthNakshatraIndex, currentNakshatra})` | `TarabalamInfo` | Star strength (Janma, Sampat, etc.) |
+
+---
+
+### UdayaLagnaService
+
+Calculates the daily ascendant periods (Udaya Lagnas).
+
+```dart
+final service = UdayaLagnaService();
+```
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `calculateUdayaLagnas({date, location, sunrise})` | `Future<List<UdayaLagnaPeriod>>` | 12 Daily Ascendant periods |
+
+---
+
+### RitualService
+
+Calculates astrological elements required for rituals.
+
+```dart
+final service = RitualService();
+```
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `calculateRitualElements({panchanga})` | `RitualElements` | Homahuti, Agnivasa, Shivavasa, Kumbha Chakra |
+
+---
+
+### AstrologyTimeService
+
+Timezone and time conversion utilities.
+
+```dart
+final service = AstrologyTimeService();
+```
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `initialize()` | `void` | Initialize timezone data |
+| `localToUtc(localDateTime, timezoneId)` | `DateTime` | Convert local to UTC |
+| `getOffset(timezoneId, dateTime)` | `Duration` | Get timezone offset |
+| `availableTimezones` | `List<String>` | Available timezone IDs |
 
 ---
 

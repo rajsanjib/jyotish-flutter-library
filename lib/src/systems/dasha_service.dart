@@ -493,7 +493,7 @@ class DashaService {
   }
 
   /// Calculates Chara Dasha (Jaimini system).
-  DashaResult calculateCharaDasha(VedicChart chart, {int levels = 3}) {
+  CharaDashaResult calculateCharaDasha(VedicChart chart, {int levels = 3}) {
     final ascendantSign = Rashi.fromLongitude(chart.houses.ascendant);
     final isDirect = ascendantSign.isOdd;
     final sequence = <Rashi>[];
@@ -523,7 +523,7 @@ class DashaService {
       currentDate = endDate;
     }
 
-    return DashaResult(
+    return CharaDashaResult(
       type: DashaType.chara,
       birthDateTime: chart.dateTime,
       moonLongitude: chart.planets[Planet.moon]?.position.longitude ?? 0,
@@ -547,7 +547,7 @@ class DashaService {
   }
 
   /// Calculates Narayana Dasha (Jaimini-style sign dasha).
-  DashaResult getNarayanaDasha(VedicChart chart, {int levels = 3}) {
+  NarayanaDashaResult getNarayanaDasha(VedicChart chart, {int levels = 3}) {
     final lagnaSign = Rashi.fromLongitude(chart.houses.ascendant);
     final seventhSign = Rashi.fromIndex((lagnaSign.number + 6) % 12);
     final lagnaStrength = _calculateSignSourceStrength(lagnaSign, chart);
@@ -598,7 +598,7 @@ class DashaService {
       currentDate = endDate;
     }
 
-    return DashaResult(
+    return NarayanaDashaResult(
       type: DashaType.narayana,
       birthDateTime: chart.dateTime,
       moonLongitude: chart.planets[Planet.moon]?.position.longitude ?? 0,

@@ -370,3 +370,32 @@ enum Yogini {
   @override
   String toString() => name;
 }
+
+/// Specialized result for Chara Dasha (Jaimini system).
+class CharaDashaResult extends DashaResult {
+  const CharaDashaResult({
+    required super.type,
+    required super.birthDateTime,
+    required super.moonLongitude,
+    required super.birthNakshatra,
+    required super.birthPada,
+    required super.balanceOfFirstDasha,
+    required super.allMahadashas,
+    super.precisionWarning,
+  });
+}
+
+/// Specialized result for Narayana Dasha (Jaimini system).
+class NarayanaDashaResult extends DashaResult {
+  const NarayanaDashaResult({
+    required super.type,
+    required super.birthDateTime,
+    required super.moonLongitude,
+    required super.birthNakshatra,
+    required super.birthPada,
+    required super.balanceOfFirstDasha,
+    required super.allMahadashas,
+    super.precisionWarning,
+  });
+}
+

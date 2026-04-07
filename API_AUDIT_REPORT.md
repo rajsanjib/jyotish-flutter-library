@@ -23,26 +23,28 @@
 
 ### 1.1 Return Type Mismatches
 
-| Method | Documented Return Type | Actual Return Type | Location |
-|---|---|---|---|
-| `getCharaDasha` | `Future<CharaDashaResult>` | `Future<DashaResult>` | `jyotish_core.dart:1940` |
-| `getNarayanaDasha` | `Future<NarayanaDashaResult>` | `Future<DashaResult>` | `jyotish_core.dart:1952` |
+> **Correction (2026-04-07):** These are NOT mismatches. Both methods correctly return their specific types in both the facade and the service. The "Extended Dasha Methods" table in API_REFERENCE.md listed them as `DashaResult` — that documentation entry has been corrected.
+
+| Method | Correct Return Type | Location |
+|---|---|---|
+| `getCharaDasha` | `Future<CharaDashaResult>` | `jyotish_core.dart:1940` |
+| `getNarayanaDasha` | `Future<NarayanaDashaResult>` | `jyotish_core.dart:1952` |
 
 ### 1.2 Methods Listed on `Jyotish` But Actually on Separate Services
 
-These are documented as methods on the `Jyotish` class but are **NOT** actually exposed through it — they live on standalone services that users must instantiate themselves:
+> **Fixed (2026-04-07):** `calculateChandrabalam`, `calculateTarabalam`, `calculateUdayaLagnas`, and `calculateRitualElements` have been added as facade methods on `Jyotish` and wired into `initialize()`. `getTajakaEnhancements` remains on `TajakaService` only.
 
-| Method | Documented On | Actually On |
+| Method | Status | Notes |
 |---|---|---|
-| `calculateChandrabalam` | `Jyotish` class | `PanchangStrengthService` |
-| `calculateTarabalam` | `Jyotish` class | `PanchangStrengthService` |
-| `calculateUdayaLagnas` | `Jyotish` class | `UdayaLagnaService` |
-| `calculateRitualElements` | `Jyotish` class | `RitualService` |
-| `getTajakaEnhancements` | `Jyotish` class | `TajakaService` |
+| `calculateChandrabalam` | ✅ Fixed — now on `Jyotish` | Delegates to `PanchangStrengthService` |
+| `calculateTarabalam` | ✅ Fixed — now on `Jyotish` | Delegates to `PanchangStrengthService` |
+| `calculateUdayaLagnas` | ✅ Fixed — now on `Jyotish` | Delegates to `UdayaLagnaService` |
+| `calculateRitualElements` | ✅ Fixed — now on `Jyotish` | Delegates to `RitualService` |
+| `getTajakaEnhancements` | ✅ Fixed — on `Jyotish` (line 3166) | Delegates to `TajakaService.calculateTajakaEnhancements` |
 
 ### 1.3 `VedhaResult` Class Discrepancy
 
-The API docs document `VedhaResult` with a `transitPlanet` property as a `String`. In the actual code (`gochara_vedha_service.dart:354-358`), the transit planet is stored as a private `Planet _transitPlanet` field, with `transitPlanet` being a legacy getter that returns `String` (the display name). The property is `isObstructed` in code but the docs use `isVedhaActive` (which is a legacy alias getter).
+The API docs document `VedhaResult` with a `transitPlanet` property as a `String`. In the actual code (`gochara_vedha_service.dart:343`), the transit planet is stored as a private `Planet _transitPlanet` field, with `transitPlanet` being a getter that returns `String` (the display name). The primary property is `isObstructed`; `isVedhaActive` is a legacy alias getter for backwards compatibility.
 
 ---
 
@@ -61,7 +63,7 @@ These services exist in the codebase, are exported in `jyotish.dart`, but have *
 
 - **File**: `lib/src/astronomy/udaya_lagna_service.dart`
 - **Public Methods**:
-  - `calculateUdayaLagnas(date, location, sunrise)` → `List<UdayaLagnaPeriod>` — 12 Daily Ascendant periods
+  - `calculateUdayaLagnas(date, location, sunrise)` → `Future<List<UdayaLagnaPeriod>>` — 12 Daily Ascendant periods
 
 ### 2.3 RitualService
 
@@ -73,10 +75,12 @@ These services exist in the codebase, are exported in `jyotish.dart`, but have *
 
 - **File**: `lib/src/astronomy/astrology_time_service.dart`
 - **Public Methods**:
-  - `initialize()` — Initialize timezone data
-  - `localToUtc(localDateTime, timezoneId)` → `DateTime` — Convert local to UTC
-  - `getOffset(timezoneId, dateTime)` → `Duration` — Get timezone offset
+  - `initialize()` — Initialize timezone data (called automatically by `Jyotish.initialize()`)
+  - `localToUtc(DateTime localDt, String zoneId)` → `DateTime` — Convert local to UTC
+  - `getOffset(DateTime date, String zoneId)` → `Duration` — Get timezone offset (DateTime first, then zone ID)
   - `availableTimezones` → `List<String>` — Available timezone IDs
+
+> **Note:** `getOffset` parameter order is `(DateTime date, String zoneId)` — DateTime first. This was previously documented with reversed parameters.
 
 ---
 
@@ -89,7 +93,7 @@ These services exist in the codebase, are exported in `jyotish.dart`, but have *
 | `isAshtottariApplicable(chart)` | 662 | Determines if Ashtottari Dasha is applicable per BPHS rules |
 | `defaultYearLength` (static const) | 25 | Default year length = 365.25 |
 | `savanaYearLength` (static const) | 28 | Savana year length = 360.0 |
-| `vimshottariSequence` (static const) | 32 | Vimshottari planet order |
+| `vimshottariSequence` (static const) | 31 | Vimshottari planet order |
 
 ### 3.2 VarshapalService (`lib/src/systems/varshapal_service.dart`)
 
@@ -97,8 +101,8 @@ These services exist in the codebase, are exported in `jyotish.dart`, but have *
 |---|---|---|
 | `getVarshapal(...)` | 143 | Alias for `calculateVarshapal` |
 | `getCurrentVarshapal(...)` | 201 | Alias for `calculateCurrentVarshapal` |
-| `getSamvatsaraName(int)` (static) | 407 | Gets Samvatsara name from year number |
-| `getCurrentVarshaNumber(DateTime)` (static) | 412 | Gets current varsha number |
+| `getSamvatsaraName(int yearNumber)` (static) | 407 | Gets Samvatsara name from year number (1-60) |
+| `getCurrentVarshaNumber(DateTime date, {int? referenceYear})` (static) | 412 | Gets current varsha number (1-60); `referenceYear` defaults to current year; epoch: 1983 = Prabhava |
 
 ### 3.3 ShadbalaService (`lib/src/systems/shadbala_service.dart`)
 
@@ -252,7 +256,7 @@ These services exist in the codebase, are exported in `jyotish.dart`, but have *
 | `scoreTransits(...)` | 839 | Score transits against natal Ashtakavarga |
 | `getAshtakavargaReductions(...)` | 2009 | Apply reductions to an Ashtakavarga |
 | `calculateHoraLordsForDay(...)` | 2052 | All 24 Hora lords for a day |
-| `calculateSudarshanChakra(chart)` | 2762 | Alias for `getSudarshanChakra` |
+| `calculateSudarshanChakra(chart)` | 2762 | Primary method — delegates to `SudarshanChakraService` (no alias `getSudarshanChakra` exists) |
 | `getChartStrengthReport(chart)` | 3018 | Comprehensive strength report |
 | `getAllGrahaAvasthas(chart)` | 3008 | Avasthas for all planets |
 | `getPlanetaryRelationship(planet, other, chart)` | 2981 | Relationship between two planets |
@@ -263,14 +267,14 @@ These services exist in the codebase, are exported in `jyotish.dart`, but have *
 
 ## 6. Services Not Wired Into `Jyotish` Facade
 
-These services exist and are exported but are **not instantiated** in `Jyotish.initialize()` and have **no facade methods** on the `Jyotish` class. Users must instantiate them manually:
+> **Fixed (2026-04-07):** `PanchangStrengthService`, `UdayaLagnaService`, and `RitualService` are now wired into `Jyotish.initialize()` and exposed as facade methods. `AstrologyTimeService` static proxies (`localToUtc`, `getTimezoneOffset`, `availableTimezones`) are now accessible via `Jyotish` static methods.
 
-| Service | File | What's Missing |
+| Service | File | Status |
 |---|---|---|
-| `PanchangStrengthService` | `panchang_strength_service.dart` | Not instantiated; no facade methods |
-| `UdayaLagnaService` | `udaya_lagna_service.dart` | Not instantiated; no facade methods |
-| `RitualService` | `ritual_service.dart` | Not instantiated; no facade methods |
-| `AstrologyTimeService` | `astrology_time_service.dart` | Only `initialize()` called internally; `localToUtc`, `getOffset`, `availableTimezones` not exposed |
+| `PanchangStrengthService` | `panchang_strength_service.dart` | ✅ Fixed — wired into facade |
+| `UdayaLagnaService` | `udaya_lagna_service.dart` | ✅ Fixed — wired into facade |
+| `RitualService` | `ritual_service.dart` | ✅ Fixed — wired into facade |
+| `AstrologyTimeService` | `astrology_time_service.dart` | ✅ Fixed — static proxies on `Jyotish` |
 
 ---
 
@@ -283,7 +287,7 @@ These services exist and are exported but are **not instantiated** in `Jyotish.i
 | `_calculateSignLordAdvanced` | `DashaService` | `dasha_service.dart:1024` | Advanced sign lord logic handling Scorpio/Aquarius dual lordship |
 | `_calculateSignSourceStrength` | `DashaService` | `dasha_service.dart:1068` | Sign source strength for Narayana Dasha starting sign |
 | `_getDynamicMonthLord` | `ShadbalaService` | `shadbala_service.dart:648` | Binary search to find exact Sankranti moment for Maasa Bala |
-| `_getYearLordFromMeanJupiter` | `ShadbalaService` | `shadbala_service.dart:753` | Varsha Bala lord using Surya Siddhanta constants |
+| `_getYearLordFromMeanJupiter` | `ShadbalaService` | `shadbala_service.dart:763` | Varsha Bala lord using Surya Siddhanta constants |
 | `_calculateProfessionalAspectStrength` | `ShadbalaService` | `shadbala_service.dart:1292` | Professional 60-virupa aspect strength calculation |
 | `_calculateVargaScore` | `HouseStrengthService` | `house_strength_service.dart:190` | Varga score calculation for Vimsopaka Bala |
 | `_calculateSambandhaScore` | `HouseStrengthService` | `house_strength_service.dart:226` | Sambandha (relationship) score calculation |
@@ -307,7 +311,7 @@ These services exist and are exported but are **not instantiated** in `Jyotish.i
 | `totalNadisPerSign` | `NadiService` | `nadi_service.dart:7` | 150 Nadis per sign |
 | `totalNadis` | `NadiService` | `nadi_service.dart:8` | Total Nadis (1800) |
 | `samvatsaraNames` | `VarshapalService` | `varshapal_service.dart:18` | All 60 Samvatsara names |
-| `varshaDasaOrder` | `VarshapalService` | `varshapal_service.dart:30` | Varsha Dasa planet order |
+| `varshaDasaOrder` | `VarshapalService` | `varshapal_service.dart:34` | Varsha Dasa planet order |
 
 ---
 

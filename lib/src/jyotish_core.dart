@@ -77,6 +77,12 @@ import 'package:jyotish/src/analysis/event_timing_service.dart';
 import 'package:jyotish/src/analysis/career_analysis_service.dart';
 import 'package:jyotish/src/transit/sarvatobhadra_service.dart';
 import 'package:jyotish/src/systems/tajaka_service.dart';
+import 'package:jyotish/src/strength/panchang_strength_service.dart';
+import 'package:jyotish/src/astronomy/udaya_lagna_service.dart';
+import 'package:jyotish/src/muhurta/ritual_service.dart';
+import 'package:jyotish/src/muhurta/chandrabalam.dart';
+import 'package:jyotish/src/muhurta/tarabalam.dart';
+import 'package:jyotish/src/muhurta/ritual_elements.dart';
 
 /// The main entry point for the Jyotish library.
 ///
@@ -149,10 +155,48 @@ class Jyotish {
   CareerAnalysisService? _careerAnalysisService;
   SarvatobhadraService? _sarvatobhadraService;
   TajakaService? _tajakaService;
+  PanchangStrengthService? _panchangStrengthService;
+  UdayaLagnaService? _udayaLagnaService;
+  RitualService? _ritualService;
   bool _isInitialized = false;
 
   /// Access point for specialized systems like Argala, Arudha Pada, etc.
   JyotishSystems get systems => JyotishSystems(this);
+
+  // ============================================================
+  // ASTROLOGY TIME SERVICE — STATIC CONVENIENCE PROXIES
+  // ============================================================
+
+  /// Converts a local date/time to UTC using an IANA timezone ID.
+  ///
+  /// A convenience proxy for [AstrologyTimeService.localToUtc].
+  /// No initialization required — this is a static utility.
+  ///
+  /// [localDt] - The local date and time to convert.
+  /// [zoneId] - IANA timezone ID (e.g. `'Asia/Kolkata'`, `'America/New_York'`).
+  ///
+  /// Returns a [DateTime] in UTC.
+  static DateTime localToUtc(DateTime localDt, String zoneId) =>
+      AstrologyTimeService.localToUtc(localDt, zoneId);
+
+  /// Returns the UTC offset for a specific timezone at a given date.
+  ///
+  /// A convenience proxy for [AstrologyTimeService.getOffset].
+  /// No initialization required — this is a static utility.
+  ///
+  /// [date] - The date for which to determine the offset (accounts for DST).
+  /// [zoneId] - IANA timezone ID (e.g. `'Asia/Kolkata'`).
+  ///
+  /// Returns a [Duration] representing the offset from UTC.
+  static Duration getTimezoneOffset(DateTime date, String zoneId) =>
+      AstrologyTimeService.getOffset(date, zoneId);
+
+  /// All available IANA timezone IDs.
+  ///
+  /// A convenience proxy for [AstrologyTimeService.availableTimezones].
+  /// No initialization required — this is a static utility.
+  static List<String> get availableTimezones =>
+      AstrologyTimeService.availableTimezones;
 
   /// Initializes the Swiss Ephemeris library.
   ///
@@ -216,6 +260,9 @@ class Jyotish {
       _kpService = KPService(_ephemerisService!);
       _sarvatobhadraService = SarvatobhadraService();
       _tajakaService = TajakaService();
+      _panchangStrengthService = PanchangStrengthService();
+      _udayaLagnaService = UdayaLagnaService(_ephemerisService!);
+      _ritualService = RitualService();
       _isInitialized = true;
     } catch (e) {
       throw JyotishException(
@@ -3209,6 +3256,149 @@ class Jyotish {
         originalError: e,
       );
     }
+  }
+
+  // ============================================================
+  // PANCHANG STRENGTH (CHANDRABALAM & TARABALAM)
+  // ============================================================
+
+  /// Calculates Chandrabalam (Moon strength) for all 12 Rashis.
+  ///
+  /// Chandrabalam indicates how favourable the current Moon position is for
+  /// each Rashi (ascendant / natal Moon sign). Strong Chandrabalam supports
+  /// auspicious activities; weak Chandrabalam is inauspicious.
+  ///
+  /// [currentMoonNakshatra] - The Moon's current Nakshatra (from [getNakshatra]).
+  ///
+  /// Returns [ChandrabalamInfo] with a strength level for each of the 12 Rashis.
+  ///
+  /// Example:
+  /// ```dart
+  /// final nakshatra = await jyotish.getNakshatra(dateTime: now, location: loc);
+  /// final chandrabalam = jyotish.calculateChandrabalam(
+  ///   currentMoonNakshatra: nakshatra,
+  /// );
+  /// for (final entry in chandrabalam.entries) {
+  ///   print('Rashi ${entry.rashiIndex}: ${entry.level.description}');
+  /// }
+  /// ```
+  ChandrabalamInfo calculateChandrabalam({
+    required NakshatraInfo currentMoonNakshatra,
+  }) {
+    _ensureInitialized();
+    return _panchangStrengthService!.calculateChandrabalam(
+      currentMoonNakshatra: currentMoonNakshatra,
+    );
+  }
+
+  /// Calculates Tarabalam (Star strength) for a specific birth Nakshatra.
+  ///
+  /// Tarabalam classifies the current day's Nakshatra into one of 9 Tara types
+  /// (Janma, Sampat, Vipat, Kshema, Pratyak, Sadhana, Naidhana, Mitra,
+  /// Param Mitra) relative to the native's birth Nakshatra.
+  ///
+  /// [birthNakshatraIndex] - Birth Nakshatra index (0-26, where 0 = Ashwini).
+  /// [currentNakshatra] - Today's Moon Nakshatra (from [getNakshatra]).
+  ///
+  /// Returns [TarabalamInfo] with the Tara type and whether it is auspicious.
+  ///
+  /// Example:
+  /// ```dart
+  /// final nakshatra = await jyotish.getNakshatra(dateTime: now, location: loc);
+  /// final tarabalam = jyotish.calculateTarabalam(
+  ///   birthNakshatraIndex: 4, // Mrigashira = index 4
+  ///   currentNakshatra: nakshatra,
+  /// );
+  /// print('Tara: ${tarabalam.taraType.name}');
+  /// print('Auspicious: ${tarabalam.isAuspicious}');
+  /// ```
+  TarabalamInfo calculateTarabalam({
+    required int birthNakshatraIndex,
+    required NakshatraInfo currentNakshatra,
+  }) {
+    _ensureInitialized();
+    return _panchangStrengthService!.calculateTarabalam(
+      birthNakshatraIndex: birthNakshatraIndex,
+      currentNakshatra: currentNakshatra,
+    );
+  }
+
+  // ============================================================
+  // UDAYA LAGNA (DAILY ASCENDANT PERIODS)
+  // ============================================================
+
+  /// Calculates the 12 Udaya Lagna (rising sign) periods for a full day.
+  ///
+  /// Each of the 12 zodiac signs rises over the horizon for approximately
+  /// 2 hours during a 24-hour period starting from sunrise. These periods
+  /// are used in Muhurta (electional astrology) to determine the Lagna
+  /// that governs a given moment of the day.
+  ///
+  /// [date] - The date for which to calculate Udaya Lagnas.
+  /// [location] - Geographic location.
+  /// [sunrise] - The sunrise time for this date (from [getSunriseSunset]).
+  ///
+  /// Returns a list of [UdayaLagnaPeriod] objects, one per Lagna sign,
+  /// from sunrise to the next sunrise.
+  ///
+  /// Example:
+  /// ```dart
+  /// final (sunrise, _) = await jyotish.getSunriseSunset(
+  ///   date: today,
+  ///   location: location,
+  /// );
+  /// final lagnas = await jyotish.calculateUdayaLagnas(
+  ///   date: today,
+  ///   location: location,
+  ///   sunrise: sunrise!,
+  /// );
+  /// for (final lagna in lagnas) {
+  ///   print('${lagna.rashiName}: ${lagna.startTime} — ${lagna.endTime}');
+  /// }
+  /// ```
+  Future<List<UdayaLagnaPeriod>> calculateUdayaLagnas({
+    required DateTime date,
+    required GeographicLocation location,
+    required DateTime sunrise,
+  }) async {
+    _ensureInitialized();
+    return _udayaLagnaService!.calculateUdayaLagnas(
+      date: date,
+      location: location,
+      sunrise: sunrise,
+    );
+  }
+
+  // ============================================================
+  // RITUAL ELEMENTS (MUHURTA)
+  // ============================================================
+
+  /// Calculates the ceremonial ritual elements for a day from its Panchanga.
+  ///
+  /// Returns Homahuti (fire-offering suitability), Agnivasa (fire residence),
+  /// Shivavasa (Shiva's abode), and Kumbha Chakra — all derived from the
+  /// Tithi, Nakshatra, and Vara of the given Panchanga.
+  ///
+  /// [panchanga] - A pre-calculated Panchanga for the day
+  ///              (from [calculatePanchanga]).
+  ///
+  /// Returns [RitualElements] with all four ritual indicators.
+  ///
+  /// Example:
+  /// ```dart
+  /// final panchanga = await jyotish.calculatePanchanga(
+  ///   dateTime: now,
+  ///   location: location,
+  /// );
+  /// final rituals = jyotish.calculateRitualElements(panchanga: panchanga);
+  /// print('Homahuti: ${rituals.homahuti.name}');
+  /// print('Agnivasa: ${rituals.agnivasa}');
+  /// print('Shivavasa: ${rituals.shivavasa}');
+  /// print('Kumbha Chakra: ${rituals.kumbhaChakra.name}');
+  /// ```
+  RitualElements calculateRitualElements({required Panchanga panchanga}) {
+    _ensureInitialized();
+    return _ritualService!.calculateRitualElements(panchanga: panchanga);
   }
 }
 

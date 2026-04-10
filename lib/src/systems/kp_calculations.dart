@@ -157,7 +157,7 @@ class KPDivisionEntry {
   final Planet? subSubLord;
   final double startLongitude;
   final double endLongitude;
-  
+
   /// Formats longitude to DMS string
   String get startDms {
     final d = startLongitude.floor();
@@ -525,7 +525,7 @@ class KPRulingPlanets {
 
   /// All seven Ruling Planets in priority order, deduplicated.
   ///
-  /// Priority: Day Lord  Asc Sign Lord  Asc Star Lord  Asc Sub Lord 
+  /// Priority: Day Lord  Asc Sign Lord  Asc Star Lord  Asc Sub Lord
   ///           Moon Sign Lord  Moon Star Lord  Moon Sub Lord.
   List<Planet> get rulingPlanets {
     final seen = <Planet>{};

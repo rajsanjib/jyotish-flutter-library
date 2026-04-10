@@ -398,4 +398,3 @@ class NarayanaDashaResult extends DashaResult {
     super.precisionWarning,
   });
 }
-

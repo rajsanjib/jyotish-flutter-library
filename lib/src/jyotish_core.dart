@@ -2333,7 +2333,9 @@ class Jyotish {
 
     final int nakNumber = moonNakshatra is int
         ? moonNakshatra
-        : (moonNakshatra != null ? _getNakshatraNumber(moonNakshatra.toString()) : 1);
+        : (moonNakshatra != null
+            ? _getNakshatraNumber(moonNakshatra.toString())
+            : 1);
 
     final Map<Planet, int> resolvedOtherTransits = {};
     otherTransits.forEach((key, value) {
@@ -2351,11 +2353,33 @@ class Jyotish {
 
   int _getNakshatraNumber(String name) {
     const names = [
-      'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra',
-      'Punarvasu', 'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni',
-      'Uttara Phalguni', 'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha',
-      'Jyeshtha', 'Mula', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana',
-      'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'
+      'Ashwini',
+      'Bharani',
+      'Krittika',
+      'Rohini',
+      'Mrigashira',
+      'Ardra',
+      'Punarvasu',
+      'Pushya',
+      'Ashlesha',
+      'Magha',
+      'Purva Phalguni',
+      'Uttara Phalguni',
+      'Hasta',
+      'Chitra',
+      'Swati',
+      'Vishakha',
+      'Anuradha',
+      'Jyeshtha',
+      'Mula',
+      'Purva Ashadha',
+      'Uttara Ashadha',
+      'Shravana',
+      'Dhanishta',
+      'Shatabhisha',
+      'Purva Bhadrapada',
+      'Uttara Bhadrapada',
+      'Revati'
     ];
     final idx = names.indexWhere((n) => n.toLowerCase() == name.toLowerCase());
     return idx == -1 ? 1 : idx + 1;
@@ -2407,8 +2431,10 @@ class Jyotish {
     int house2,
   ) {
     _ensureInitialized();
-    final p1 = planet1 is Planet ? planet1 : Planet.fromName(planet1.toString());
-    final p2 = planet2 is Planet ? planet2 : Planet.fromName(planet2.toString());
+    final p1 =
+        planet1 is Planet ? planet1 : Planet.fromName(planet1.toString());
+    final p2 =
+        planet2 is Planet ? planet2 : Planet.fromName(planet2.toString());
 
     if (p1 == null || p2 == null) return false;
 

@@ -9,7 +9,8 @@ import 'package:jyotish/src/analysis/divisional_chart_service.dart';
 class HouseStrengthService {
   HouseStrengthService(this._shadbalaService);
   final ShadbalaService _shadbalaService;
-  final DivisionalChartService _divisionalChartService = DivisionalChartService();
+  final DivisionalChartService _divisionalChartService =
+      DivisionalChartService();
 
   static const Map<int, KendraType> _houseToKendraType = {
     1: KendraType.kendra,
@@ -43,9 +44,11 @@ class HouseStrengthService {
       final kendradiStrength = _kendraStrengthValues[kendraType]!;
       final lordStrength = _getHouseLordStrength(chart, house, shadbala);
       final drishtiStrength = _calculateBhavaDrishtiStrength(chart, house);
-      final vimsopakaStrength = _getHouseVimsopakaStrength(chart, house, vimsopakaBala);
+      final vimsopakaStrength =
+          _getHouseVimsopakaStrength(chart, house, vimsopakaBala);
 
-      final totalStrength = lordStrength + kendradiStrength + drishtiStrength + vimsopakaStrength;
+      final totalStrength =
+          lordStrength + kendradiStrength + drishtiStrength + vimsopakaStrength;
       final category = _getEnhancedCategory(totalStrength);
 
       results[house] = EnhancedBhavaBalaResult(
@@ -63,7 +66,8 @@ class HouseStrengthService {
     return results;
   }
 
-  double _getHouseLordStrength(VedicChart chart, int house, Map<Planet, ShadbalaResult> shadbala) {
+  double _getHouseLordStrength(
+      VedicChart chart, int house, Map<Planet, ShadbalaResult> shadbala) {
     final lord = _getHouseLord(chart, house);
     final lordBala = shadbala[lord];
     return lordBala?.totalBala ?? 0.0;
@@ -137,8 +141,8 @@ class HouseStrengthService {
         .contains(planet);
   }
 
-  double _getHouseVimsopakaStrength(
-      VedicChart chart, int house, Map<Planet, VimsopakaBalaResult> vimsopakaBala) {
+  double _getHouseVimsopakaStrength(VedicChart chart, int house,
+      Map<Planet, VimsopakaBalaResult> vimsopakaBala) {
     final lord = _getHouseLord(chart, house);
     final vimsopaka = vimsopakaBala[lord];
     if (vimsopaka == null) return 0.0;
@@ -171,7 +175,8 @@ class HouseStrengthService {
       if (Planet.lunarNodes.contains(planet)) continue;
 
       final vargaScore = _calculateVargaScore(planet, chart, relevantCharts);
-      final sambandhaScore = _calculateSambandhaScore(planet, chart, relevantCharts);
+      final sambandhaScore =
+          _calculateSambandhaScore(planet, chart, relevantCharts);
       final totalScore = (vargaScore * sambandhaScore / 20.0).clamp(5.0, 20.0);
       final category = _getVimsopakaCategory(totalScore);
 
@@ -196,7 +201,8 @@ class HouseStrengthService {
       final weight = chartType.vimsopakaWeight;
       if (weight <= 0) continue;
 
-      final vargaChart = _divisionalChartService.calculateDivisionalChart(chart, chartType);
+      final vargaChart =
+          _divisionalChartService.calculateDivisionalChart(chart, chartType);
 
       final planetInfo = vargaChart.getPlanet(planet);
       if (planetInfo == null) continue;
@@ -229,7 +235,8 @@ class HouseStrengthService {
     var count = 0;
 
     for (final chartType in charts) {
-      final vargaChart = _divisionalChartService.calculateDivisionalChart(chart, chartType);
+      final vargaChart =
+          _divisionalChartService.calculateDivisionalChart(chart, chartType);
 
       final planetInfo = vargaChart.getPlanet(planet);
       if (planetInfo == null) continue;
@@ -317,7 +324,8 @@ class HouseStrengthService {
     return VimsopakaCategory.sangatDurga;
   }
 
-  HouseStrengthSummary getHouseStrengthSummary(Map<int, EnhancedBhavaBalaResult> results) {
+  HouseStrengthSummary getHouseStrengthSummary(
+      Map<int, EnhancedBhavaBalaResult> results) {
     var totalStrength = 0.0;
     var strongest = 1;
     var weakest = 1;

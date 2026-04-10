@@ -37,7 +37,7 @@ class JaiminiService {
       // Degree within sign (0-30)
       var degreeInSign = info.longitude % 30;
 
-      // Special handling for Rahu (and Ketu): 
+      // Special handling for Rahu (and Ketu):
       // Since they move backwards, their effective degree is reversed
       // This gives them a chance to be Atmakaraka
       if (planet == Planet.meanNode || planet == Planet.ketu) {

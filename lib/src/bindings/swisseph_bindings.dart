@@ -60,8 +60,9 @@ class SwissEphBindings {
         int,
       )>('swe_julday');
 
-  late final _sweVersion = _lib.lookupFunction<ffi.Pointer<ffi.Char> Function(),
-      ffi.Pointer<ffi.Char> Function()>('swe_version');
+  late final _sweVersion = _lib.lookupFunction<
+      ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>),
+      ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>)>('swe_version');
 
   late final _sweGetAyanamsaUt = _lib.lookupFunction<
       ffi.Double Function(ffi.Double),
@@ -310,8 +311,13 @@ class SwissEphBindings {
 
   /// Gets Swiss Ephemeris version string.
   String getVersion() {
-    final versionPtr = _sweVersion();
-    return versionPtr.cast<Utf8>().toDartString();
+    final buffer = malloc<ffi.Char>(256);
+    try {
+      _sweVersion(buffer);
+      return buffer.cast<Utf8>().toDartString();
+    } finally {
+      malloc.free(buffer);
+    }
   }
 
   /// Gets ayanamsa (sidereal offset) for a given Julian day.

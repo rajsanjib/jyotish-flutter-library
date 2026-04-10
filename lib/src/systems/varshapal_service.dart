@@ -16,42 +16,110 @@ class VarshapalService {
 
   /// The 60-year Samvatsara cycle names (Vrihaspati Chakra).
   static const List<String> samvatsaraNames = [
-    'Prabhava', 'Vibhava', 'Shukla', 'Pramodoota', 'Prajothpatti',
-    'Aangirasa', 'Shreemukha', 'Bhaava', 'Yuva', 'Dhaatu',
-    'Eeshwara', 'Bahudhanya', 'Pramaadi', 'Vikrama', 'Vishu',
-    'Chitrabhanu', 'Svabhanu', 'Taarana', 'Paarthiva', 'Vyaya',
-    'Sarvajith', 'Sarvadhaari', 'Virodhi', 'Vikrita', 'Khara',
-    'Nandana', 'Vijaya', 'Jaya', 'Manmatha', 'Durmukhi',
-    'Hevilambi', 'Vilambi', 'Vikaari', 'Shaarvari', 'Plava',
-    'Shubhakruth', 'Shobhakruth', 'Krodhi', 'Vishvaavasu', 'Paraabhava',
-    'Plavanga', 'Keelaka', 'Saumya', 'Saadhaarana', 'Virodhikruth',
-    'Paridhawi', 'Pramaadeecha', 'Aananda', 'Raakshasa', 'Nala',
-    'Pingala', 'Kaalayukthi', 'Siddharthi', 'Raudra', 'Durmathi',
-    'Dundubhi', 'Rudhirodgaari', 'Ruktaakshi', 'Krodhana', 'Akshaya',
+    'Prabhava',
+    'Vibhava',
+    'Shukla',
+    'Pramodoota',
+    'Prajothpatti',
+    'Aangirasa',
+    'Shreemukha',
+    'Bhaava',
+    'Yuva',
+    'Dhaatu',
+    'Eeshwara',
+    'Bahudhanya',
+    'Pramaadi',
+    'Vikrama',
+    'Vishu',
+    'Chitrabhanu',
+    'Svabhanu',
+    'Taarana',
+    'Paarthiva',
+    'Vyaya',
+    'Sarvajith',
+    'Sarvadhaari',
+    'Virodhi',
+    'Vikrita',
+    'Khara',
+    'Nandana',
+    'Vijaya',
+    'Jaya',
+    'Manmatha',
+    'Durmukhi',
+    'Hevilambi',
+    'Vilambi',
+    'Vikaari',
+    'Shaarvari',
+    'Plava',
+    'Shubhakruth',
+    'Shobhakruth',
+    'Krodhi',
+    'Vishvaavasu',
+    'Paraabhava',
+    'Plavanga',
+    'Keelaka',
+    'Saumya',
+    'Saadhaarana',
+    'Virodhikruth',
+    'Paridhawi',
+    'Pramaadeecha',
+    'Aananda',
+    'Raakshasa',
+    'Nala',
+    'Pingala',
+    'Kaalayukthi',
+    'Siddharthi',
+    'Raudra',
+    'Durmathi',
+    'Dundubhi',
+    'Rudhirodgaari',
+    'Ruktaakshi',
+    'Krodhana',
+    'Akshaya',
   ];
 
   /// Varsha Dasa order (which planet rules each year in sequence).
   static const List<Planet> varshaDasaOrder = [
-    Planet.sun, Planet.moon, Planet.mars, Planet.mercury,
-    Planet.jupiter, Planet.venus, Planet.saturn,
+    Planet.sun,
+    Planet.moon,
+    Planet.mars,
+    Planet.mercury,
+    Planet.jupiter,
+    Planet.venus,
+    Planet.saturn,
   ];
 
   /// Maas Dasa order (month periods).
   static const List<Planet> maasaDasaOrder = [
-    Planet.sun, Planet.moon, Planet.mars, Planet.mercury,
-    Planet.jupiter, Planet.venus, Planet.saturn,
+    Planet.sun,
+    Planet.moon,
+    Planet.mars,
+    Planet.mercury,
+    Planet.jupiter,
+    Planet.venus,
+    Planet.saturn,
   ];
 
   /// Dina Dasa order (day periods).
   static const List<Planet> dinaDasaOrder = [
-    Planet.sun, Planet.moon, Planet.mars, Planet.mercury,
-    Planet.jupiter, Planet.venus, Planet.saturn,
+    Planet.sun,
+    Planet.moon,
+    Planet.mars,
+    Planet.mercury,
+    Planet.jupiter,
+    Planet.venus,
+    Planet.saturn,
   ];
 
   /// Hora Dasa order (hour periods).
   static const List<Planet> horaDasaOrder = [
-    Planet.sun, Planet.moon, Planet.mars, Planet.mercury,
-    Planet.jupiter, Planet.venus, Planet.saturn,
+    Planet.sun,
+    Planet.moon,
+    Planet.mars,
+    Planet.mercury,
+    Planet.jupiter,
+    Planet.venus,
+    Planet.saturn,
   ];
 
   /// Calculates the Varshapal (Annual Chart) for a given date.
@@ -250,7 +318,8 @@ class VarshapalService {
     for (var i = 0; i < 7; i++) {
       final lord = varshaDasaOrder[currentLordIndex % 7];
       final durationYears = _getVarshaDuration(lord);
-      final endDate = currentDate.add(Duration(days: (durationYears * 365.25).round()));
+      final endDate =
+          currentDate.add(Duration(days: (durationYears * 365.25).round()));
 
       periods.add(VarshapalPeriod(
         type: VarshapalPeriodType.varsha,

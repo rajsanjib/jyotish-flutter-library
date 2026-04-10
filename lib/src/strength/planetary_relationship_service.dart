@@ -28,7 +28,7 @@ class PlanetaryRelationshipService {
   /// Returns the full 77 relationship matrix for the seven traditional
   /// planets in the given [chart].
   ///
-  /// The return value is a map keyed by `planet`  `otherPlanet` 
+  /// The return value is a map keyed by `planet`  `otherPlanet`
   /// [PlanetaryRelationship].
   ///
   /// Example:

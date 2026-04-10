@@ -158,7 +158,7 @@ class AspectService {
     final aspects = <AspectInfo>[];
 
     if (config.useWholeSignAspects) {
-      //  WHOLE-SIGN VEDIC ASPECTS 
+      //  WHOLE-SIGN VEDIC ASPECTS
       // Convert both planets to their sign index (0-11)
       final sign1 = (pos1.longitude / 30).floor() % 12;
       final sign2 = (pos2.longitude / 30).floor() % 12;
@@ -214,7 +214,7 @@ class AspectService {
         }
       }
     } else {
-      //  DEGREE-BASED WESTERN ASPECTS (KP / Western tropical) 
+      //  DEGREE-BASED WESTERN ASPECTS (KP / Western tropical)
       final angularDiff =
           _calculateAngularDifference(pos1.longitude, pos2.longitude);
 

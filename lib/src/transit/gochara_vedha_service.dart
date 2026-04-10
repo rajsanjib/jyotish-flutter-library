@@ -82,7 +82,7 @@ class GocharaVedhaService {
     for (final obstructingPlanet in obstructingPlanets) {
       if (otherTransits.containsKey(obstructingPlanet)) {
         final otherHouse = otherTransits[obstructingPlanet]!;
-        
+
         // Check if the obstructing planet is also in a favorable house
         if (_isFavorablePosition(obstructingPlanet, otherHouse)) {
           vedhaPlanets.add(obstructingPlanet);
@@ -140,8 +140,7 @@ class GocharaVedhaService {
 
     for (final entry in transits.entries) {
       // Create map of other transits (excluding current planet)
-      final otherTransits = Map<Planet, int>.from(transits)
-        ..remove(entry.key);
+      final otherTransits = Map<Planet, int>.from(transits)..remove(entry.key);
 
       final vedha = calculateVedha(
         transitPlanet: entry.key,
@@ -180,8 +179,10 @@ class GocharaVedhaService {
     if (!p1Favorable || !p2Favorable) return false;
 
     // Check if they obstruct each other
-    final p1ObstructsP2 = vedhaRelationships[planet1]?.contains(planet2) ?? false;
-    final p2ObstructsP1 = vedhaRelationships[planet2]?.contains(planet1) ?? false;
+    final p1ObstructsP2 =
+        vedhaRelationships[planet1]?.contains(planet2) ?? false;
+    final p2ObstructsP1 =
+        vedhaRelationships[planet2]?.contains(planet1) ?? false;
 
     return p1ObstructsP2 && p2ObstructsP1;
   }
@@ -231,8 +232,10 @@ class GocharaVedhaService {
     if (!vedhaResult.isObstructed) return remedies;
 
     // General remedies
-    remedies.add('Perform mantra japa for ${vedhaResult._transitPlanet.displayName}');
-    remedies.add('Donate items related to ${vedhaResult._transitPlanet.displayName}');
+    remedies.add(
+        'Perform mantra japa for ${vedhaResult._transitPlanet.displayName}');
+    remedies.add(
+        'Donate items related to ${vedhaResult._transitPlanet.displayName}');
 
     // Specific remedies based on obstructing planets
     for (final obstructingPlanet in vedhaResult.obstructingPlanets) {
@@ -387,8 +390,9 @@ class VedhaResult {
   bool get isVedhaActive => isObstructed;
 
   /// Legacy helper to get the name of the first obstructing planet
-  String? get vedhaPlanet =>
-      obstructingPlanets.isNotEmpty ? obstructingPlanets.first.displayName : null;
+  String? get vedhaPlanet => obstructingPlanets.isNotEmpty
+      ? obstructingPlanets.first.displayName
+      : null;
 
   /// Whether the transit is fully favorable
   bool get isFullyFavorable => isFavorablePosition && !isObstructed;

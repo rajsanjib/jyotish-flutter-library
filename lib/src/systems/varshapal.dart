@@ -5,10 +5,13 @@ import 'package:jyotish/src/models/vedic_chart.dart';
 enum VarshapalPeriodType {
   /// Annual year period ruled by Varsha lord
   varsha,
+
   /// Monthly period ruled by Maas lord
   maasa,
+
   /// Daily period ruled by Dina lord
   dina,
+
   /// Hourly period ruled by Hora lord
   hora,
 }
@@ -57,7 +60,7 @@ class VarshapalPeriod {
 /// The Varshapal has its own system of periods (Dasa):
 /// - Varsha Dasa: Year-long periods ruled by planets
 /// - Maas Dasa: Monthly periods
-/// - Dina Dasa: Daily periods  
+/// - Dina Dasa: Daily periods
 /// - Hora Dasa: Hourly periods
 class Varshapal {
   const Varshapal({

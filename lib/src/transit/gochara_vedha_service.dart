@@ -359,8 +359,11 @@ class VedhaResult {
   /// The planet in transit
   final Planet _transitPlanet;
 
+  /// The planet enum value
+  Planet get planet => _transitPlanet;
+
   /// Legacy alias to get the planet name as a string
-  Planet get transitPlanet => _transitPlanet;
+  String get transitPlanet => _transitPlanet.displayName;
 
   /// House position from natal Moon (1-12)
   final int houseFromMoon;

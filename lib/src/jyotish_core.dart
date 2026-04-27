@@ -2293,6 +2293,13 @@ class Jyotish {
     return _strengthAnalysisService!.getAllPlanetsVimshopakBala(chart);
   }
 
+  /// Calculates 20-fold strength for all planets asynchronously.
+  Future<Map<Planet, VimshopakBala>> getAllPlanetsVimshopakBalaAsync(
+      VedicChart chart) async {
+    _ensureInitialized();
+    return await _strengthAnalysisService!.getAllPlanetsVimshopakBalaAsync(chart);
+  }
+
   // ============================================================
   // GOCHARA VEDHA (TRANSIT OBSTRUCTION)
   // ============================================================
@@ -2838,6 +2845,13 @@ class Jyotish {
   Map<Planet, VimsopakaBalaResult> getVimsopakaBala(VedicChart chart) {
     _ensureInitialized();
     return _houseStrengthService!.calculateVimsopakaBala(chart);
+  }
+
+  /// Calculates Vimsopaka Bala asynchronously using an isolate.
+  Future<Map<Planet, VimsopakaBalaResult>> getVimsopakaBalaAsync(
+      VedicChart chart) async {
+    _ensureInitialized();
+    return await _houseStrengthService!.calculateVimsopakaBalaAsync(chart);
   }
 
   /// Extracts the house strength summary from Bhava Bala results.

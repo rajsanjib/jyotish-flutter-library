@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:jyotish/src/models/divisional_chart_type.dart';
 import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
@@ -296,6 +297,18 @@ class StrengthAnalysisService {
     return Planet.traditionalPlanets.associateWith(
       (planet) => getVimshopakBala(chart: chart, planet: planet),
     );
+  }
+
+  /// Calculates Vimshopak Bala for all planets asynchronously.
+  Future<Map<Planet, VimshopakBala>> getAllPlanetsVimshopakBalaAsync(
+      VedicChart chart) async {
+    return compute(_calculateVimshopakBalaStatic, chart);
+  }
+
+  static Map<Planet, VimshopakBala> _calculateVimshopakBalaStatic(
+      VedicChart chart) {
+    final service = StrengthAnalysisService();
+    return service.getAllPlanetsVimshopakBala(chart);
   }
 
   // Helper methods

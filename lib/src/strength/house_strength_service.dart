@@ -177,6 +177,12 @@ class HouseStrengthService {
     return EnhancedBhavaStrengthCategory.atiKrishna;
   }
 
+  /// Calculates Vimsopaka Bala (Planetary Strength based on 6 Varga charts).
+  ///
+  /// Vimsopaka Bala is a system of assigning strength to planets based on their
+  /// dignity in the D1, D2, D3, D9, D12, and D30 charts.
+  ///
+  /// Returns a map of planets to their Vimsopaka results.
   Map<Planet, VimsopakaBalaResult> calculateVimsopakaBala(VedicChart chart) {
     final results = <Planet, VimsopakaBalaResult>{};
 

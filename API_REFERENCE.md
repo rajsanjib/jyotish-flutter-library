@@ -11,6 +11,7 @@ A comprehensive API reference for the Jyotish Flutter library - production-ready
   - [Jyotish](#jyotish)
   - [GeographicLocation](#geographiclocation)
   - [CalculationFlags](#calculationflags)
+- [New in v2.7.0 — Performance & Modernization](#new-in-v270--performance--modernization)
 - [New in v2.6.0 — High-Precision Eclipse Reporting](#new-in-v260--high-precision-eclipse-reporting)
 - [New in v2.5.0 — AstrologicalSystem](#new-in-v250--astrologicalsystem)
 - [New in v2.4.0](#new-in-v240)
@@ -37,7 +38,7 @@ A comprehensive API reference for the Jyotish Flutter library - production-ready
   - [AspectService](#aspectservice)
   - [TransitService](#transitservice)
   - [SpecialTransitService](#specialtransitservice)
-  - [DivisionalChartService](#divisionalchartservice)
+  - [DivisionalChartService](#divisionalchartservice) (Updated with Memoization)
   - [ShadbalaService](#shadbalaservice)
   - [KPService](#kpservice)
   - [MuhurtaService](#muhurtaservice)
@@ -119,6 +120,7 @@ A comprehensive API reference for the Jyotish Flutter library - production-ready
   - [EclipseData](#eclipsedata)
 - [Enums](#enums)
 - [Professional Features (v2.3.0)](#professional-features-v230)
+- [New in v2.7.0 — Performance & Modernization](#new-in-v270--performance--modernization)
 - [New in v2.6.0 — High-Precision Eclipse Reporting](#new-in-v260--high-precision-eclipse-reporting)
 - [Error Handling](#error-handling)
 - [Best Practices](#best-practices)
@@ -357,7 +359,8 @@ await jyotish.initialize({String? ephemerisPath});
 |--------|---------|-------------|
 | `getShadbala(chart)` | `Future<Map<Planet, ShadbalaResult>>` | Six-fold planetary strength |
 | `getVimshopakBala(planet, chart)` | `double` | 20-fold planetary strength for one planet |
-| `getAllPlanetsVimshopakBala(chart)` | `Map<Planet, VimshopakBala>` | 20-fold strength for all planets |
+| `getAllPlanetsVimshopakBala(chart)` | `Map<Planet, VimshopakBala>` | 20-fold strength for all planets (sync) |
+| `getAllPlanetsVimshopakBalaAsync(chart)` | `Future<Map<Planet, VimshopakBala>>` | 20-fold strength for all planets (background) |
 | `getIshtaphala(planet, chart, shadbala)` | `double` | Auspicious potential (0-60) |
 | `getKashtaphala(planet, chart, shadbala)` | `double` | Inauspicious potential (0-60) |
 | `getChartStrengthReport(chart)` | `Future<StrengthReport>` | Comprehensive strength report |
@@ -422,7 +425,8 @@ No initialization required — call directly on the class.
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `getEnhancedBhavaBala(chart)` | `Future<Map<int, EnhancedBhavaBalaResult>>` | Enhanced house strength |
-| `getVimsopakaBala(chart)` | `Map<Planet, VimsopakaBalaResult>` | Divisional chart strength |
+| `getVimsopakaBala(chart)` | `Map<Planet, VimsopakaBalaResult>` | Divisional chart strength (sync) |
+| `getVimsopakaBalaAsync(chart)` | `Future<Map<Planet, VimsopakaBalaResult>>` | Divisional chart strength (background isolate) |
 
 #### Nadi Astrology Methods
 
@@ -792,6 +796,9 @@ final service = EphemerisService();
 await service.initialize();
 ```
 
+> **Thread Safety (v2.7.0)**: All FFI-dependent methods are now serialized via an internal `Lock`. This ensures that concurrent asynchronous calls (e.g., from multiple UI components) do not corrupt the global state of the Swiss Ephemeris C-library.
+
+
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `calculatePlanetPosition({planet, dateTime, location, flags})` | `Future<PlanetPosition>` | Calculate planet position |
@@ -1091,6 +1098,8 @@ final service = SpecialTransitService(ephemerisService);
 ### DivisionalChartService
 
 Divisional charts (Varga) calculations.
+> **Performance (v2.7.0)**: This service now includes instance-level memoization. Repeated requests for the same divisional chart type from the same natal chart (identified by time, location, and ayanamsa) are served from a `HashMap` cache, providing O(1) performance for subsequent calls.
+
 
 ```dart
 final service = DivisionalChartService();
@@ -2812,6 +2821,30 @@ Type of eclipse.
 |-------|-------------|
 | `solar` | Solar eclipse |
 | `lunar` | Lunar eclipse |
+
+---
+
+## New in v2.7.0 — Performance & Modernization
+
+This update focuses on architectural improvements to support high-concurrency Flutter apps and computationally intensive astrology reports.
+
+### 1. Thread-Safe Swiss Ephemeris
+The Swiss Ephemeris C-library uses global state for certain calculations (like Ayanamsa). In previous versions, concurrent async calls could occasionally lead to race conditions.
+- **Solution**: `EphemerisService` now implements internal synchronization using `package:synchronized`.
+- **Benefit**: Consistent, reliable results even when multiple charts or transit windows are calculated simultaneously.
+
+### 2. Intelligent Memoization
+Calculating Divisional Charts (Vargas) is the most expensive operation in the library. Many systems (like Vimsopaka Bala) recalculate these repeatedly.
+- **Solution**: `DivisionalChartService` now features an instance-level `HashMap` cache.
+- **Smart Keys**: The cache key is automatically derived from the chart's identity (time, location, ayanamsa) and a hash of planetary longitudes, ensuring that manual chart modifications (e.g., in unit tests) are correctly handled.
+
+### 3. Background Isolate Support
+Calculation of `Vimsopaka Bala` involves deriving 6+ divisional charts per planet, which can cause UI frame drops if done on the main thread.
+- **New API**: `getVimsopakaBalaAsync(VedicChart)` offloads this entire workload to a background isolate via Flutter's `compute()`.
+
+### 4. Structured Logging
+The library now uses `package:logging` instead of direct `dart:developer` calls.
+- **Benefit**: Developers can now attach listeners to `Logger('jyotish')` to redirect logs to Sentry, Crashlytics, or custom local storage.
 
 ---
 

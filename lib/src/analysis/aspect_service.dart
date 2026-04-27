@@ -19,7 +19,7 @@ import 'package:dartx/dartx.dart';
 /// - Jupiter also aspects the 5th and 9th houses
 /// - Saturn also aspects the 3rd and 10th houses
 ///
-/// **Western (degree-based) mode** [AspectConfig with useWholeSignAspects=false]:
+/// **Western (degree-based) mode** (configured via `AspectConfig`):
 /// Standard degree+orb calculation, useful for KP or Western tropical use.
 class AspectService {
   /// Returns Rashi Drishti (sign aspects) for the chart.

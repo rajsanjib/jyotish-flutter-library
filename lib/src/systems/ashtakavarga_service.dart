@@ -1,6 +1,7 @@
 import 'package:jyotish/src/systems/ashtakavarga.dart';
 import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
+import 'package:dartx/dartx.dart';
 
 /// Service for calculating Ashtakavarga (eightfold division) system.
 ///
@@ -16,14 +17,12 @@ class AshtakavargaService {
   /// and Sarvashtakavarga totals.
   Ashtakavarga calculateAshtakavarga(VedicChart natalChart) {
     // Calculate Bhinnashtakavarga for each planet
-    final bhinnashtakavarga = <Planet, Bhinnashtakavarga>{};
-
-    for (final planet in Planet.traditionalPlanets) {
-      bhinnashtakavarga[planet] = _calculateBhinnashtakavarga(
+    final bhinnashtakavarga = Planet.traditionalPlanets.associateWith(
+      (planet) => _calculateBhinnashtakavarga(
         planet,
         natalChart,
-      );
-    }
+      ),
+    );
 
     // Calculate Sarvashtakavarga
     final sarvashtakavarga = _calculateSarvashtakavarga(bhinnashtakavarga);
@@ -147,13 +146,9 @@ class AshtakavargaService {
     Map<Planet, Bhinnashtakavarga> bhinnashtakavarga,
   ) {
     final totalBindus = List<int>.filled(12, 0);
-
-    for (final entry in bhinnashtakavarga.entries) {
-      for (var i = 0; i < 12; i++) {
-        totalBindus[i] += entry.value.bindus[i];
-      }
+    for (var i = 0; i < 12; i++) {
+      totalBindus[i] = bhinnashtakavarga.values.sumBy((bav) => bav.bindus[i]);
     }
-
     return Sarvashtakavarga(bindus: totalBindus);
   }
 
@@ -163,13 +158,9 @@ class AshtakavargaService {
   ) {
     // Samudaya is the same as Sarvashtakavarga total
     final totals = List<int>.filled(12, 0);
-
-    for (final entry in bhinnashtakavarga.entries) {
-      for (var i = 0; i < 12; i++) {
-        totals[i] += entry.value.bindus[i];
-      }
+    for (var i = 0; i < 12; i++) {
+      totals[i] = bhinnashtakavarga.values.sumBy((bav) => bav.bindus[i]);
     }
-
     return totals;
   }
 
@@ -253,11 +244,8 @@ class AshtakavargaService {
   /// sign with 0 bindus. This differs from some interpretations but strictly
   /// follows the standard BPHS method of subtraction.
   Ashtakavarga applyTrikonaShodhana(Ashtakavarga ashtakavarga) {
-    final reducedBhinnashtakavarga = <Planet, Bhinnashtakavarga>{};
-
-    for (final entry in ashtakavarga.bhinnashtakavarga.entries) {
-      final planet = entry.key;
-      final bav = entry.value;
+    final reducedBhinnashtakavarga = ashtakavarga.bhinnashtakavarga.keys.associateWith((planet) {
+      final bav = ashtakavarga.bhinnashtakavarga[planet]!;
       final reducedBindus = List<int>.from(bav.bindus);
 
       // Apply reduction to each trikona
@@ -270,37 +258,29 @@ class AshtakavargaService {
         final bindu3 = bav.bindus[trikona[2]];
 
         // Get non-zero bindus
-        final nonZeroBindus =
-            [bindu1, bindu2, bindu3].where((b) => b > 0).toList();
-
-        if (nonZeroBindus.isEmpty) {
-          continue; // All zero, nothing to reduce
-        }
-
         // Find minimum among non-zero
-        final minBindu = nonZeroBindus.reduce((a, b) => a < b ? a : b);
+        final minBindu = [bindu1, bindu2, bindu3].where((b) => b > 0).min();
+
+        if (minBindu == null) continue;
 
         // Subtract minimum from each sign (traditional method)
         if (bindu1 > 0) {
-          reducedBindus[trikona[0]] =
-              (bindu1 - minBindu).clamp(0, bindu1).toInt();
+          reducedBindus[trikona[0]] = (bindu1 - minBindu).clamp(0, bindu1).toInt();
         }
         if (bindu2 > 0) {
-          reducedBindus[trikona[1]] =
-              (bindu2 - minBindu).clamp(0, bindu2).toInt();
+          reducedBindus[trikona[1]] = (bindu2 - minBindu).clamp(0, bindu2).toInt();
         }
         if (bindu3 > 0) {
-          reducedBindus[trikona[2]] =
-              (bindu3 - minBindu).clamp(0, bindu3).toInt();
+          reducedBindus[trikona[2]] = (bindu3 - minBindu).clamp(0, bindu3).toInt();
         }
       }
 
-      reducedBhinnashtakavarga[planet] = Bhinnashtakavarga(
+      return Bhinnashtakavarga(
         planet: planet,
         bindus: reducedBindus,
         contributions: bav.contributions,
       );
-    }
+    });
 
     // Recalculate Sarvashtakavarga
     final sarvashtakavarga =
@@ -327,11 +307,8 @@ class AshtakavargaService {
   /// Note: This is a simplified version. Traditional method also considers
   /// whether planets are actually in the signs or lords are in own signs.
   Ashtakavarga applyEkadhipatiShodhana(Ashtakavarga ashtakavarga) {
-    final reducedBhinnashtakavarga = <Planet, Bhinnashtakavarga>{};
-
-    for (final entry in ashtakavarga.bhinnashtakavarga.entries) {
-      final planet = entry.key;
-      final bav = entry.value;
+    final reducedBhinnashtakavarga = ashtakavarga.bhinnashtakavarga.keys.associateWith((planet) {
+      final bav = ashtakavarga.bhinnashtakavarga[planet]!;
       final reducedBindus = List<int>.from(bav.bindus);
 
       // Apply reduction to each planet's dual signs
@@ -342,16 +319,13 @@ class AshtakavargaService {
         final bindu2 = bav.bindus[sign2];
 
         if (bindu1 > 0 && bindu2 > 0) {
-          // Check if signs are odd or even foot
           final isOddFoot = _oddFootSigns.contains(sign1);
+          final diff = (bindu1 - bindu2).abs();
 
           if (isOddFoot) {
-            // Odd foot: subtract smaller from larger (traditional)
-            final diff = (bindu1 - bindu2).abs();
-            reducedBindus[sign1] = diff;
-            reducedBindus[sign2] = diff;
+            reducedBindus[sign1] = bindu1 > bindu2 ? diff : 0;
+            reducedBindus[sign2] = bindu2 > bindu1 ? diff : 0;
           } else {
-            // Even foot: keep the smaller (traditional)
             final minBindu = bindu1 < bindu2 ? bindu1 : bindu2;
             reducedBindus[sign1] = minBindu;
             reducedBindus[sign2] = minBindu;
@@ -359,12 +333,12 @@ class AshtakavargaService {
         }
       }
 
-      reducedBhinnashtakavarga[planet] = Bhinnashtakavarga(
+      return Bhinnashtakavarga(
         planet: planet,
         bindus: reducedBindus,
         contributions: bav.contributions,
       );
-    }
+    });
 
     // Recalculate Sarvashtakavarga
     final sarvashtakavarga =
@@ -387,11 +361,8 @@ class AshtakavargaService {
   ///
   /// This implements the traditional Shodhya Pinda calculation.
   Map<Planet, PindaResult> calculatePinda(Ashtakavarga ashtakavarga) {
-    final pindaResults = <Planet, PindaResult>{};
-
-    for (final entry in ashtakavarga.bhinnashtakavarga.entries) {
-      final planet = entry.key;
-      final bav = entry.value;
+    final pindaResults = ashtakavarga.bhinnashtakavarga.keys.associateWith((planet) {
+      final bav = ashtakavarga.bhinnashtakavarga[planet]!;
 
       var totalRashiPinda = 0.0;
       var totalGrahaPinda = 0.0;
@@ -419,13 +390,13 @@ class AshtakavargaService {
       // Combined Pinda (Rashi + Graha)
       final totalPinda = totalRashiPinda + totalGrahaPinda;
 
-      pindaResults[planet] = PindaResult(
+      return PindaResult(
         planet: planet,
         totalPinda: totalPinda,
         signPindas: signPindas,
         averagePinda: totalPinda / 12,
       );
-    }
+    });
 
     return pindaResults;
   }
@@ -458,11 +429,8 @@ class AshtakavargaService {
   ///
   /// Returns the Yoga Pinda for each planet
   Map<Planet, YogaPindaResult> calculateYogaPinda(Ashtakavarga ashtakavarga) {
-    final yogaPindaResults = <Planet, YogaPindaResult>{};
-
-    for (final entry in ashtakavarga.bhinnashtakavarga.entries) {
-      final planet = entry.key;
-      final bav = entry.value;
+    final yogaPindaResults = ashtakavarga.bhinnashtakavarga.keys.associateWith((planet) {
+      final bav = ashtakavarga.bhinnashtakavarga[planet]!;
 
       var totalYogaPinda = 0.0;
       final signYogaPindas = <int, double>{};
@@ -484,14 +452,14 @@ class AshtakavargaService {
         }
       }
 
-      yogaPindaResults[planet] = YogaPindaResult(
+      return YogaPindaResult(
         planet: planet,
         totalYogaPinda: totalYogaPinda,
         signYogaPindas: signYogaPindas,
         averageYogaPinda: totalYogaPinda / 12,
         strengthRating: _getYogaPindaRating(totalYogaPinda),
       );
-    }
+    });
 
     return yogaPindaResults;
   }

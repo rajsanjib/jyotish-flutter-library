@@ -6,6 +6,7 @@ import 'package:jyotish/src/panchanga/panchanga.dart';
 import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/astronomy/planet_position.dart';
 import 'package:jyotish/src/astronomy/ephemeris_service.dart';
+import 'package:dartx/dartx.dart';
 
 /// Service for calculating Panchanga (five limbs) elements.
 ///
@@ -253,8 +254,8 @@ class PanchangaService {
   VaraInfo _calculateVara(DateTime dateTime, DateTime sunrise) {
     // If before sunrise, it belongs to the previous day lord
     var checkDate = dateTime;
-    if (dateTime.isBefore(sunrise)) {
-      checkDate = dateTime.subtract(const Duration(days: 1));
+    if (dateTime < sunrise) {
+      checkDate = dateTime - 1.days;
     }
 
     // Get weekday (0 = Sunday, 6 = Saturday)
@@ -615,7 +616,7 @@ class PanchangaService {
     // 2. Binary search for target elongation within the next 48 hours
     // Using 48 hours to account for variations in tithi length
     var start = dateTime;
-    var end = dateTime.add(const Duration(hours: 48));
+    var end = dateTime + 48.hours;
 
     // Continue searching until we meet the accuracy threshold
     var iteration = 0;
@@ -630,9 +631,7 @@ class PanchangaService {
       }
 
       // Adaptive mid point - use smaller steps near the target
-      final mid = start.add(Duration(
-        milliseconds: currentWindow.inMilliseconds ~/ 2,
-      ));
+      final mid = start + (currentWindow * 0.5);
 
       final midSun = await _ephemerisService.calculatePlanetPosition(
         planet: Planet.sun,
@@ -745,7 +744,7 @@ class PanchangaService {
     );
 
     // Get PREVIOUS day's sunset  night runs from yesterday-sunset to today-sunrise
-    final previousDay = date.subtract(const Duration(days: 1));
+    final previousDay = date - 1.days;
     final (_, previousSunset) = await _calculateSunriseSunset(
       dateTime: previousDay,
       location: location,
@@ -761,7 +760,7 @@ class PanchangaService {
       milliseconds: (nightDuration.inMilliseconds / 15).round(),
     );
 
-    final brahmaStart = sunrise.subtract(brahmaDuration);
+    final brahmaStart = sunrise - brahmaDuration;
     final brahmaEnd = sunrise;
 
     return BrahmaMuhurta(

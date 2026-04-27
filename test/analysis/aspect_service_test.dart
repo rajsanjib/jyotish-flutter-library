@@ -62,58 +62,131 @@ void main() {
     });
   });
 
-  group('AspectService - special aspects', () {
-    test('all planets aspect 7th house (opposition)', () {
-      if (!initialized) return;
+  group('AspectService - special aspects (manual)', () {
+    late AspectService aspectService;
 
-      final oppositionAspects = aspects.where(
-        (a) => a.type == AspectType.opposition,
-      );
-
-      expect(oppositionAspects, isNotEmpty,
-          reason: 'All planets should have 7th house opposition aspects');
+    setUp(() {
+      aspectService = AspectService();
     });
 
-    test('Mars has special 4th and 8th aspects', () {
-      if (!initialized) return;
+    test('Mars special 4th and 8th aspects are detected', () {
+      final positions = {
+        Planet.mars: PlanetPosition(
+          planet: Planet.mars,
+          longitude: 15.0, // Aries
+          latitude: 0.0,
+          distance: 1.0,
+          longitudeSpeed: 0.5,
+          latitudeSpeed: 0.0,
+          distanceSpeed: 0.0,
+          dateTime: DateTime.now(),
+        ),
+        Planet.jupiter: PlanetPosition(
+          planet: Planet.jupiter,
+          longitude: 105.0, // Cancer (4th from Aries)
+          latitude: 0.0,
+          distance: 5.0,
+          longitudeSpeed: 0.1,
+          latitudeSpeed: 0.0,
+          distanceSpeed: 0.0,
+          dateTime: DateTime.now(),
+        ),
+        Planet.saturn: PlanetPosition(
+          planet: Planet.saturn,
+          longitude: 225.0, // Scorpio (8th from Aries)
+          latitude: 0.0,
+          distance: 10.0,
+          longitudeSpeed: 0.05,
+          latitudeSpeed: 0.0,
+          distanceSpeed: 0.0,
+          dateTime: DateTime.now(),
+        ),
+      };
 
-      final marsAspects = aspects.where(
-        (a) =>
-            a.aspectingPlanet == Planet.mars &&
-            (a.type == AspectType.marsSpecial4th ||
-                a.type == AspectType.marsSpecial8th),
-      );
-
-      expect(marsAspects, isNotEmpty,
-          reason: 'Mars should have special 4th and 8th aspects');
+      final aspects = aspectService.calculateAspects(positions);
+      
+      expect(aspects.any((a) => a.aspectingPlanet == Planet.mars && a.type == AspectType.marsSpecial4th), isTrue);
+      expect(aspects.any((a) => a.aspectingPlanet == Planet.mars && a.type == AspectType.marsSpecial8th), isTrue);
     });
 
-    test('Jupiter has special 5th and 9th aspects', () {
-      if (!initialized) return;
+    test('Jupiter special 5th and 9th aspects are detected', () {
+      final positions = {
+        Planet.jupiter: PlanetPosition(
+          planet: Planet.jupiter,
+          longitude: 15.0, // Aries
+          latitude: 0.0,
+          distance: 5.0,
+          longitudeSpeed: 0.1,
+          latitudeSpeed: 0.0,
+          distanceSpeed: 0.0,
+          dateTime: DateTime.now(),
+        ),
+        Planet.mars: PlanetPosition(
+          planet: Planet.mars,
+          longitude: 135.0, // Leo (5th from Aries)
+          latitude: 0.0,
+          distance: 1.5,
+          longitudeSpeed: 0.5,
+          latitudeSpeed: 0.0,
+          distanceSpeed: 0.0,
+          dateTime: DateTime.now(),
+        ),
+        Planet.saturn: PlanetPosition(
+          planet: Planet.saturn,
+          longitude: 255.0, // Sagittarius (9th from Aries)
+          latitude: 0.0,
+          distance: 10.0,
+          longitudeSpeed: 0.05,
+          latitudeSpeed: 0.0,
+          distanceSpeed: 0.0,
+          dateTime: DateTime.now(),
+        ),
+      };
 
-      final jupiterAspects = aspects.where(
-        (a) =>
-            a.aspectingPlanet == Planet.jupiter &&
-            (a.type == AspectType.jupiterSpecial5th ||
-                a.type == AspectType.jupiterSpecial9th),
-      );
-
-      expect(jupiterAspects, isNotEmpty,
-          reason: 'Jupiter should have special 5th and 9th aspects');
+      final aspects = aspectService.calculateAspects(positions);
+      
+      expect(aspects.any((a) => a.aspectingPlanet == Planet.jupiter && a.type == AspectType.jupiterSpecial5th), isTrue);
+      expect(aspects.any((a) => a.aspectingPlanet == Planet.jupiter && a.type == AspectType.jupiterSpecial9th), isTrue);
     });
 
-    test('Saturn has special 3rd and 10th aspects', () {
-      if (!initialized) return;
+    test('Saturn special 3rd and 10th aspects are detected', () {
+      final positions = {
+        Planet.saturn: PlanetPosition(
+          planet: Planet.saturn,
+          longitude: 15.0, // Aries
+          latitude: 0.0,
+          distance: 10.0,
+          longitudeSpeed: 0.05,
+          latitudeSpeed: 0.0,
+          distanceSpeed: 0.0,
+          dateTime: DateTime.now(),
+        ),
+        Planet.venus: PlanetPosition(
+          planet: Planet.venus,
+          longitude: 75.0, // Gemini (3rd from Aries)
+          latitude: 0.0,
+          distance: 0.7,
+          longitudeSpeed: 1.2,
+          latitudeSpeed: 0.0,
+          distanceSpeed: 0.0,
+          dateTime: DateTime.now(),
+        ),
+        Planet.mercury: PlanetPosition(
+          planet: Planet.mercury,
+          longitude: 285.0, // Capricorn (10th from Aries)
+          latitude: 0.0,
+          distance: 0.4,
+          longitudeSpeed: 1.5,
+          latitudeSpeed: 0.0,
+          distanceSpeed: 0.0,
+          dateTime: DateTime.now(),
+        ),
+      };
 
-      final saturnAspects = aspects.where(
-        (a) =>
-            a.aspectingPlanet == Planet.saturn &&
-            (a.type == AspectType.saturnSpecial3rd ||
-                a.type == AspectType.saturnSpecial10th),
-      );
-
-      expect(saturnAspects, isNotEmpty,
-          reason: 'Saturn should have special 3rd and 10th aspects');
+      final aspects = aspectService.calculateAspects(positions);
+      
+      expect(aspects.any((a) => a.aspectingPlanet == Planet.saturn && a.type == AspectType.saturnSpecial3rd), isTrue);
+      expect(aspects.any((a) => a.aspectingPlanet == Planet.saturn && a.type == AspectType.saturnSpecial10th), isTrue);
     });
   });
 

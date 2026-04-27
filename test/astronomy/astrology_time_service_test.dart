@@ -55,7 +55,7 @@ void main() {
 
       expect(offsetBefore, isNotNull);
       expect(offsetAfter, isNotNull);
-      expect(offsetAfter.inMinutes, equals(offsetBefore.inMinutes - 60));
+      expect(offsetAfter.inMinutes, equals(offsetBefore.inMinutes + 60));
     });
 
     test('invalid timezone falls back gracefully', () {

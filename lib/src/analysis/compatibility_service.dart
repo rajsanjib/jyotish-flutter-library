@@ -2,6 +2,7 @@ import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/models/rashi.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
 import 'package:jyotish/src/analysis/compatibility.dart';
+import 'package:dartx/dartx.dart';
 
 class CompatibilityService {
   CompatibilityService();
@@ -484,10 +485,7 @@ class CompatibilityService {
   }
 
   String _getGanaType(String nakshatra, Map<String, List<String>> ganaTypes) {
-    for (final entry in ganaTypes.entries) {
-      if (entry.value.contains(nakshatra)) return entry.key;
-    }
-    return 'Manushya'; // default
+    return ganaTypes.entries.where((e) => e.value.contains(nakshatra)).firstOrNull?.key ?? 'Manushya';
   }
 
   //  Bhakoot Koota (max 7 points)
@@ -658,6 +656,7 @@ class CompatibilityService {
         Rashi.fromLongitude(chart.getPlanet(Planet.moon)?.longitude ?? 0);
     final venusSign =
         Rashi.fromLongitude(chart.getPlanet(Planet.venus)?.longitude ?? 0);
+
     final marsSign = Rashi.fromLongitude(mars.longitude);
 
     // Get houses of Mars from Ascendant, Moon, and Venus

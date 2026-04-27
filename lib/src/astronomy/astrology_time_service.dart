@@ -27,7 +27,15 @@ class AstrologyTimeService {
     _ensureInitialized();
     try {
       final location = tz.getLocation(zoneId);
-      final tzDt = tz.TZDateTime.from(localDt, location);
+      final tzDt = tz.TZDateTime(
+        location,
+        localDt.year,
+        localDt.month,
+        localDt.day,
+        localDt.hour,
+        localDt.minute,
+        localDt.second,
+      );
       return tzDt.toUtc();
     } catch (e) {
       // Fallback to UTC if zone is not found
@@ -42,7 +50,15 @@ class AstrologyTimeService {
     _ensureInitialized();
     try {
       final location = tz.getLocation(zoneId);
-      final tzDt = tz.TZDateTime.from(date, location);
+      final tzDt = tz.TZDateTime(
+        location,
+        date.year,
+        date.month,
+        date.day,
+        date.hour,
+        date.minute,
+        date.second,
+      );
       return Duration(milliseconds: tzDt.timeZoneOffset.inMilliseconds);
     } catch (e) {
       return Duration.zero;

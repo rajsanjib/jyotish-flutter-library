@@ -97,23 +97,24 @@ class NadiService {
     return _getNadiInfo(nadiNumber);
   }
 
-  NadiInfo _getNadiInfo(int nadiNumber) {
-    final nadiIndex = (nadiNumber - 1) % 50;
-    final nadiName = _nadiNames[nadiIndex + 1] ?? 'Nadi $nadiNumber';
-    final signIndex = ((nadiNumber - 1) ~/ 150);
-    final positionInSign = ((nadiNumber - 1) % 150);
+  NadiInfo _getNadiInfo(int absoluteNadiNumber) {
+    final relativeNadiNumber = ((absoluteNadiNumber - 1) % 150) + 1;
+    final nadiIndex = (relativeNadiNumber - 1) % 50;
+    final nadiName = _nadiNames[nadiIndex + 1] ?? 'Nadi $relativeNadiNumber';
+    final signIndex = ((absoluteNadiNumber - 1) ~/ 150);
+    final positionInSign = ((absoluteNadiNumber - 1) % 150);
     final startLongitude = signIndex * 30 + (positionInSign / 150) * 30;
     final endLongitude = startLongitude + (30 / 150);
 
     return NadiInfo(
-      nadiNumber: nadiNumber,
+      nadiNumber: relativeNadiNumber,
       nadiName: nadiName,
-      nadiType: _getNadiType(nadiNumber),
+      nadiType: _getNadiType(absoluteNadiNumber),
       startLongitude: startLongitude,
       endLongitude: endLongitude,
-      rulingPlanet: _getNadiRulingPlanet(nadiNumber),
-      element: _getNadiElement(nadiNumber),
-      characteristics: _getNadiCharacteristics(nadiNumber),
+      rulingPlanet: _getNadiRulingPlanet(absoluteNadiNumber),
+      element: _getNadiElement(absoluteNadiNumber),
+      characteristics: _getNadiCharacteristics(absoluteNadiNumber),
     );
   }
 
@@ -224,6 +225,13 @@ class NadiService {
   }
 
   NadiSeedResult identifyNadiSeed(int nakshatraNumber, int pada) {
+    if (nakshatraNumber < 1 || nakshatraNumber > 27) {
+      throw ArgumentError('Nakshatra number must be between 1 and 27');
+    }
+    if (pada < 1 || pada > 4) {
+      throw ArgumentError('Pada must be between 1 and 4');
+    }
+
     final seedNumber = ((nakshatraNumber - 1) * 4 + pada) % 150 + 1;
     final nadiType = _getNadiType(seedNumber);
     final primaryNadi = _getNadiInfo(seedNumber);

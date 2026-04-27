@@ -1,16 +1,32 @@
+import 'package:flutter/foundation.dart';
 import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/models/rashi.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
 import 'package:jyotish/src/models/divisional_chart_type.dart';
+import 'package:jyotish/src/astronomy/ephemeris_service.dart';
 import 'package:jyotish/src/strength/house_strength.dart';
 import 'package:jyotish/src/systems/shadbala_service.dart';
 import 'package:jyotish/src/analysis/divisional_chart_service.dart';
 
 class HouseStrengthService {
   HouseStrengthService(this._shadbalaService);
-  final ShadbalaService _shadbalaService;
+  final ShadbalaService? _shadbalaService;
   final DivisionalChartService _divisionalChartService =
       DivisionalChartService();
+
+  /// Calculates Vimsopaka Bala asynchronously using an isolate.
+  Future<Map<Planet, VimsopakaBalaResult>> calculateVimsopakaBalaAsync(
+      VedicChart chart) async {
+    return compute(_calculateVimsopakaBalaStatic, chart);
+  }
+
+  static Map<Planet, VimsopakaBalaResult> _calculateVimsopakaBalaStatic(
+      VedicChart chart) {
+    // Note: ShadbalaService(null) is fine because calculateVimsopakaBala 
+    // only uses divisional chart service.
+    final service = HouseStrengthService(ShadbalaService(EphemerisService()));
+    return service.calculateVimsopakaBala(chart);
+  }
 
   static const Map<int, KendraType> _houseToKendraType = {
     1: KendraType.kendra,
@@ -35,7 +51,10 @@ class HouseStrengthService {
 
   Future<Map<int, EnhancedBhavaBalaResult>> calculateEnhancedBhavaBala(
       VedicChart chart) async {
-    final shadbala = await _shadbalaService.calculateShadbala(chart);
+    if (_shadbalaService == null) {
+      throw StateError('ShadbalaService must be provided to calculate Bhava Bala');
+    }
+    final shadbala = await _shadbalaService!.calculateShadbala(chart);
     final vimsopakaBala = calculateVimsopakaBala(chart);
     final results = <int, EnhancedBhavaBalaResult>{};
 

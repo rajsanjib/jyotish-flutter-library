@@ -40,10 +40,10 @@ void main() {
           ritualService.calculateRitualElements(panchanga: panchanga);
 
       expect(elements.homahuti, HomahutiLevel.siddha); // Tithi 1 -> Siddha
-      // Day = Sun (0). Modified weekday = 1. (Tithi(1) + 1) % 4 = 2 -> Underworld
-      expect(elements.agnivasa, 'Underworld (Inauspicious)');
-      // Shiva vasa -> 1 % 6 = 1 = With Gauri
-      expect(elements.shivavasa, 'With Gauri (Auspicious)');
+      // agniVal = (1 + 1 + 1) % 4 = 3 -> Earth
+      expect(elements.agnivasa, 'Earth (Auspicious)');
+      // shivaVal = (1 - 1) % 7 = 0 -> Mount Kailash
+      expect(elements.shivavasa, 'Mount Kailash (Auspicious)');
       // Kumbha -> (Nakshatra(1) + Weekday(0)) % 4 = 1 -> Good
       expect(elements.kumbhaChakra, KumbhaChakraLevel.good);
     });

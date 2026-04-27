@@ -4,6 +4,7 @@ import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/astronomy/planet_position.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
 import 'package:jyotish/src/systems/jaimini_service.dart';
+import 'package:dartx/dartx.dart';
 
 /// Service for calculating Vedic planetary aspects (Graha Drishti).
 ///
@@ -90,23 +91,15 @@ class AspectService {
     }
 
     // Remove duplicate aspects and filter by minimum strength
-    final uniqueAspects = <AspectInfo>[];
-    for (final aspect in aspects) {
-      if (aspect.strength >= config.minimumStrength) {
-        final isDuplicate = uniqueAspects.any((a) =>
-            (a.aspectingPlanet == aspect.aspectingPlanet &&
-                a.aspectedPlanet == aspect.aspectedPlanet &&
-                a.type == aspect.type) ||
-            (a.aspectingPlanet == aspect.aspectedPlanet &&
-                a.aspectedPlanet == aspect.aspectingPlanet &&
-                a.type == aspect.type));
-        if (!isDuplicate) {
-          uniqueAspects.add(aspect);
-        }
-      }
-    }
-
-    return uniqueAspects;
+    return aspects
+        .filter((a) => a.strength >= config.minimumStrength)
+        .distinctBy((a) {
+      // Sort planets to handle bidirectional duplicates
+      final p1 = a.aspectingPlanet.index;
+      final p2 = a.aspectedPlanet.index;
+      final sortedPlanets = p1 < p2 ? '$p1-$p2' : '$p2-$p1';
+      return '$sortedPlanets-${a.type}';
+    }).toList();
   }
 
   /// Gets aspects for a specific planet.
@@ -418,73 +411,44 @@ class AspectService {
     Map<Planet, PlanetPosition> positions, {
     bool useWholeSign = true,
   }) {
-    final aspectingPlanets = <Planet>[];
-
-    for (final entry in positions.entries) {
+    return positions.entries.where((entry) {
       final planet = entry.key;
       final pos = entry.value;
 
       if (useWholeSign) {
-        // Whole-sign model: purely sign-index arithmetic
         final planetSign = (pos.longitude / 30).floor() % 12;
         final d = (houseSignIndex - planetSign + 12) % 12;
 
-        // 7th aspect (all planets)
-        if (d == 6) {
-          aspectingPlanets.add(planet);
-          continue;
-        }
-        // Conjunction (same sign)
-        if (d == 0) {
-          aspectingPlanets.add(planet);
-          continue;
-        }
-        // Mars special: 4th (d==3) and 8th (d==7)
-        if (planet == Planet.mars && (d == 3 || d == 7)) {
-          aspectingPlanets.add(planet);
-          continue;
-        }
-        // Jupiter special: 5th (d==4) and 9th (d==8)
-        if (planet == Planet.jupiter && (d == 4 || d == 8)) {
-          aspectingPlanets.add(planet);
-          continue;
-        }
-        // Saturn special: 3rd (d==2) and 10th (d==9)
-        if (planet == Planet.saturn && (d == 2 || d == 9)) {
-          aspectingPlanets.add(planet);
-          continue;
-        }
+        if (d == 6 || d == 0) return true;
+        if (planet == Planet.mars && (d == 3 || d == 7)) return true;
+        if (planet == Planet.jupiter && (d == 4 || d == 8)) return true;
+        if (planet == Planet.saturn && (d == 2 || d == 9)) return true;
+        return false;
       } else {
-        // Degree-based fallback ( 15 orb around sign midpoint)
         final targetMidpoint = (houseSignIndex * 30) + 15;
         final angularDiff = _calculateAngularDifference(
             pos.longitude, targetMidpoint.toDouble());
 
         if ((angularDiff - 180).abs() <= 15) {
-          aspectingPlanets.add(planet);
-          continue;
+          return true;
         }
         if (planet == Planet.mars &&
             ((angularDiff - 90).abs() <= 15 ||
                 (angularDiff - 210).abs() <= 15)) {
-          aspectingPlanets.add(planet);
-          continue;
+          return true;
         }
         if (planet == Planet.jupiter &&
             ((angularDiff - 120).abs() <= 15 ||
                 (angularDiff - 240).abs() <= 15)) {
-          aspectingPlanets.add(planet);
-          continue;
+          return true;
         }
         if (planet == Planet.saturn &&
             ((angularDiff - 60).abs() <= 15 ||
                 (angularDiff - 270).abs() <= 15)) {
-          aspectingPlanets.add(planet);
-          continue;
+          return true;
         }
+        return false;
       }
-    }
-
-    return aspectingPlanets;
+    }).map((e) => e.key).toList();
   }
 }

@@ -360,7 +360,7 @@ class VedhaResult {
   final Planet _transitPlanet;
 
   /// Legacy alias to get the planet name as a string
-  String get transitPlanet => _transitPlanet.displayName;
+  Planet get transitPlanet => _transitPlanet;
 
   /// House position from natal Moon (1-12)
   final int houseFromMoon;

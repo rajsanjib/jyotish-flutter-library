@@ -500,7 +500,7 @@ class Jyotish {
 
     try {
       final positions = await getMultiplePlanetPositions(
-        planets: [...Planet.traditionalPlanets, Planet.meanNode],
+        planets: [...Planet.traditionalPlanets, Planet.meanNode, Planet.ketu],
         dateTime: dateTime,
         location: location,
       );
@@ -530,7 +530,7 @@ class Jyotish {
 
     try {
       final positions = await getMultiplePlanetPositions(
-        planets: [...Planet.traditionalPlanets, Planet.meanNode],
+        planets: [...Planet.traditionalPlanets, Planet.meanNode, Planet.ketu],
         dateTime: dateTime,
         location: location,
       );
@@ -556,9 +556,22 @@ class Jyotish {
   }) {
     _ensureInitialized();
 
-    final positions = <Planet, PlanetPosition>{};
-    for (final entry in chart.planets.entries) {
-      positions[entry.key] = entry.value.position;
+    final positions = Map<Planet, PlanetPosition>.from(chart.planets.map((k, v) => MapEntry(k, v.position)));
+    
+    // Explicitly add nodes if they aren't in the main map
+    if (config.includeNodes) {
+      positions[Planet.meanNode] = chart.rahu.position;
+      // Ketu is always opposite to Rahu
+      positions[Planet.ketu] = PlanetPosition(
+        planet: Planet.ketu,
+        longitude: chart.ketu.longitude,
+        latitude: chart.ketu.latitude,
+        distance: chart.ketu.distance,
+        longitudeSpeed: chart.ketu.longitudeSpeed,
+        latitudeSpeed: -chart.rahu.position.latitudeSpeed,
+        distanceSpeed: chart.rahu.position.distanceSpeed,
+        dateTime: chart.dateTime,
+      );
     }
 
     return _aspectService!.calculateAspects(positions, config: config);
@@ -2013,37 +2026,10 @@ class Jyotish {
     required VedicChart natalChart,
   }) {
     _ensureInitialized();
+    final matrix = _planetaryRelationshipService!.getAllRelationships(natalChart);
     final results = <PlanetaryRelationship>[];
-    final traditional = Planet.traditionalPlanets;
-
-    for (var i = 0; i < traditional.length; i++) {
-      final p1 = traditional[i];
-      final info1 = natalChart.planets[p1];
-      if (info1 == null) continue;
-
-      for (var j = 0; j < traditional.length; j++) {
-        if (i == j) continue;
-        final p2 = traditional[j];
-        final info2 = natalChart.planets[p2];
-        if (info2 == null) continue;
-
-        final natural = RelationshipCalculator.naturalRelationships[p1]?[p2] ??
-            RelationshipType.neutral;
-
-        final temporary =
-            RelationshipCalculator.calculateTemporary(info1.house, info2.house);
-
-        final compound =
-            RelationshipCalculator.calculateCompound(natural, temporary);
-
-        results.add(PlanetaryRelationship(
-          planet: p1,
-          otherPlanet: p2,
-          natural: natural,
-          temporary: temporary,
-          compound: compound,
-        ));
-      }
+    for (final row in matrix.values) {
+      results.addAll(row.values);
     }
     return results;
   }

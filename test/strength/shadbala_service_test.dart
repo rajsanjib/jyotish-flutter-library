@@ -52,8 +52,8 @@ void main() {
             reason: '${entry.key} chestaBala should be non-negative');
         expect(result.naisargikaBala, greaterThanOrEqualTo(0),
             reason: '${entry.key} naisargikaBala should be non-negative');
-        expect(result.drikBala, greaterThanOrEqualTo(0),
-            reason: '${entry.key} drikBala should be non-negative');
+        expect(result.drikBala, inInclusiveRange(-60, 60),
+            reason: '${entry.key} drikBala should be within valid range [-60, 60]');
       }
     });
 

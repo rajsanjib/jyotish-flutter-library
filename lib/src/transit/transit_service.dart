@@ -6,6 +6,7 @@ import 'package:jyotish/src/astronomy/planet_position.dart';
 import 'package:jyotish/src/transit/transit.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
 import 'package:jyotish/src/astronomy/ephemeris_service.dart';
+import 'package:dartx/dartx.dart';
 
 /// Service for calculating planetary transits.
 ///
@@ -77,17 +78,17 @@ class TransitService {
     PlanetPosition transitPos,
     VedicChart natalChart,
   ) {
-    final aspects = <AspectInfo>[];
     const config = AspectConfig.vedic;
 
-    for (final entry in natalChart.planets.entries) {
+    return natalChart.planets.entries.map((entry) {
       final natalPlanet = entry.key;
-      final natalInfo = entry.value;
-      final natalPos = natalInfo.position;
+      final natalPos = entry.value.position;
 
       // Calculate angular difference
       var angularDiff = (natalPos.longitude - transitPos.longitude) % 360;
       if (angularDiff < 0) angularDiff += 360;
+
+      final aspects = <AspectInfo>[];
 
       // Check conjunction
       if (angularDiff.abs() <= 10 || (360 - angularDiff).abs() <= 10) {
@@ -128,9 +129,9 @@ class TransitService {
           angularDiff,
         ));
       }
-    }
 
-    return aspects;
+      return aspects;
+    }).expand((element) => element).toList();
   }
 
   /// Check special aspects for transit planets.
@@ -251,7 +252,6 @@ class TransitService {
         ];
 
     var currentDate = config.startDate;
-
     while (currentDate.isBefore(config.endDate)) {
       final transits = await calculateTransits(
         natalChart: natalChart,
@@ -272,9 +272,8 @@ class TransitService {
               natalPlanet: aspect.aspectedPlanet,
               aspectType: aspect.type,
               exactDate: currentDate,
-              startDate:
-                  currentDate.subtract(Duration(days: config.intervalDays * 3)),
-              endDate: currentDate.add(Duration(days: config.intervalDays * 3)),
+              startDate: currentDate.subtract(config.intervalDays.days * 3),
+              endDate: currentDate.add(config.intervalDays.days * 3),
               isRetrograde: transit.isRetrograde,
               description:
                   _generateTransitDescription(aspect, transit.isRetrograde),
@@ -285,7 +284,7 @@ class TransitService {
         }
       }
 
-      currentDate = currentDate.add(Duration(days: config.intervalDays));
+      currentDate += config.intervalDays.days;
     }
 
     // Sort by date and remove duplicates
@@ -294,18 +293,8 @@ class TransitService {
   }
 
   List<TransitEvent> _deduplicateEvents(List<TransitEvent> events) {
-    final unique = <TransitEvent>[];
-    for (final event in events) {
-      final isDuplicate = unique.any((e) =>
-          e.transitPlanet == event.transitPlanet &&
-          e.natalPlanet == event.natalPlanet &&
-          e.aspectType == event.aspectType &&
-          e.exactDate.difference(event.exactDate).inDays.abs() < 7);
-      if (!isDuplicate) {
-        unique.add(event);
-      }
-    }
-    return unique;
+    return events.distinctBy((e) =>
+        '${e.transitPlanet}-${e.natalPlanet}-${e.aspectType}-${(e.exactDate.millisecondsSinceEpoch / (1000 * 60 * 60 * 24 * 7)).floor()}').toList();
   }
 
   String _generateTransitDescription(AspectInfo aspect, bool isRetrograde) {

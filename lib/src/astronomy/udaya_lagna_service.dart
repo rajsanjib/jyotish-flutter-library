@@ -54,14 +54,14 @@ class UdayaLagnaService {
 
     var currentTime = sunrise;
 
-    while (currentTime.isBefore(nextSunrise)) {
+    while (periods.length < 12 && currentTime.isBefore(nextSunrise)) {
       final houses = await _ephemerisService.calculateHouses(
         dateTime: currentTime,
         location: location,
       );
 
       final ascendant = houses['ascmc']![0];
-      final currentRashiIndex = (ascendant / 30).floor();
+      final currentRashiIndex = (ascendant / 30).floor() % 12;
 
       // Estimate minutes until next sign (approx 4 mins per degree)
       // We aim slightly before the transition (using 3.8 mins for safety)
@@ -84,7 +84,7 @@ class UdayaLagnaService {
           location: location,
         );
         final nextAsc = checkHouses['ascmc']![0];
-        final nextRashiIndex = (nextAsc / 30).floor();
+        final nextRashiIndex = (nextAsc / 30).floor() % 12;
 
         if (nextRashiIndex != currentRashiIndex) {
           // We found the transition time
@@ -94,8 +94,8 @@ class UdayaLagnaService {
         nextTime = nextTime.add(const Duration(minutes: 1));
       }
 
-      if (nextTime.isAfter(nextSunrise)) {
-        // Cap the last period at next sunrise
+      // If this is the last period or we overshot, cap it
+      if (periods.length == 11 || nextTime.isAfter(nextSunrise)) {
         nextTime = nextSunrise;
       }
 

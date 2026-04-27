@@ -35,7 +35,7 @@ void main() {
       expect(defaultChart, isNotNull);
       expect(defaultChart!.planets, isNotNull);
 
-      final planetNames = defaultChart!.planets.keys.map((p) => p.name).toSet();
+      final planetNames = defaultChart!.planets.keys.map((p) => p.displayName).toSet();
       expect(planetNames, contains('Sun'));
       expect(planetNames, contains('Moon'));
       expect(planetNames, contains('Mercury'));

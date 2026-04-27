@@ -18,6 +18,28 @@ class MockEphemerisService extends EphemerisService {
   }
 
   @override
+  bool get isInitialized => true;
+
+  @override
+  Future<PlanetPosition> calculatePlanetPosition({
+    required Planet planet,
+    required DateTime dateTime,
+    required GeographicLocation location,
+    required CalculationFlags flags,
+  }) async {
+    return PlanetPosition(
+      planet: planet,
+      dateTime: dateTime,
+      longitude: 0.0,
+      latitude: 0.0,
+      distance: 1.0,
+      longitudeSpeed: 1.0,
+      latitudeSpeed: 0.0,
+      distanceSpeed: 0.0,
+    );
+  }
+
+  @override
   Future<void> initialize({String? ephemerisPath}) async {}
 }
 

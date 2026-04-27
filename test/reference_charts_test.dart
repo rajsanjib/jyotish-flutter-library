@@ -115,8 +115,10 @@ void main() {
         'Saturn is in enemy sign (Cancer = Moon sign, Saturn-Moon are natural enemies)',
         () {
       final satDignity = indiaChart.planets[Planet.saturn]?.dignity;
-      // Saturn in Cancer: sign lord is Moon, Saturn treats Moon as enemy
-      expect(satDignity, equals(PlanetaryDignity.enemySign));
+      // Saturn in Cancer: sign lord is Moon, Saturn treats Moon as enemy.
+      // Both are in the 3rd house, so temporal relationship is also enemy.
+      // Compound relationship is Great Enemy.
+      expect(satDignity, equals(PlanetaryDignity.greatEnemy));
     });
 
     test('Moon is in Own Sign (Cancer)', () {
@@ -270,11 +272,12 @@ void main() {
   group('Pancha-Vargeeya Maitri (5-fold friendship)', () {
     test('getPlanetaryRelationships returns complete 77 matrix', () {
       final rels = jyotish.getPlanetaryRelationshipsMatrix(indiaChart);
-      // 7 traditional planets
       expect(rels.length, equals(7));
       for (final entry in rels.entries) {
-        // Each planet should have 6 relationships (all others)
-        expect(entry.value.length, equals(6));
+        expect(entry.value.length, equals(7));
+        for (final other in Planet.traditionalPlanets) {
+          expect(entry.value.containsKey(other), isTrue);
+        }
       }
     });
 
@@ -305,8 +308,8 @@ void main() {
 
     test('getPlanetaryRelationships (flat list) returns all pairs', () {
       final rels = jyotish.getPlanetaryRelationships(natalChart: indiaChart);
-      // 7 * 6 = 42 ordered pairs
-      expect(rels.length, equals(42));
+      // 7 * 7 = 49 pairs (including self)
+      expect(rels.length, equals(49));
     });
   });
 }

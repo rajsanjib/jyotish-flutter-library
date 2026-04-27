@@ -1,3 +1,4 @@
+import 'dart:collection';
 import '../exceptions/jyotish_exception.dart';
 import 'package:jyotish/src/models/divisional_chart_type.dart';
 import 'package:jyotish/src/models/planet.dart';
@@ -7,8 +8,33 @@ import 'package:jyotish/src/models/vedic_chart.dart';
 
 /// Service for calculating Divisional Charts (Varga).
 class DivisionalChartService {
+  /// Cache for calculated divisional charts.
+  /// Key: composite of natal chart identity + divisional type.
+  final _cache = HashMap<String, VedicChart>();
+
   /// Calculates a specific divisional chart from a base Rashi chart.
   VedicChart calculateDivisionalChart(
+    VedicChart rashiChart,
+    DivisionalChartType type,
+  ) {
+    if (type == DivisionalChartType.d1) {
+      return rashiChart;
+    }
+
+    // Cache key includes natal chart time, location, ayanamsa mode and a checksum of planet positions
+    // to avoid collisions in tests or when manually manipulating charts.
+    final planetsHash = rashiChart.planets.values
+        .fold(0, (hash, p) => hash ^ p.longitude.hashCode);
+    final key = '${rashiChart.dateTime.millisecondsSinceEpoch}'
+        '_${rashiChart.latitude}_${rashiChart.longitudeCoord}'
+        '_${rashiChart.calculationFlags?.siderealMode.name ?? 'default'}'
+        '_${rashiChart.ascendant.hashCode}'
+        '_${planetsHash}_${type.name}';
+
+    return _cache.putIfAbsent(key, () => _computeDivisionalChart(rashiChart, type));
+  }
+
+  VedicChart _computeDivisionalChart(
     VedicChart rashiChart,
     DivisionalChartType type,
   ) {

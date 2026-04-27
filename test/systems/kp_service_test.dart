@@ -19,6 +19,8 @@ void main() {
       natalChart = await jyotish.calculateVedicChart(
         dateTime: birthDateTime,
         location: location,
+        flags: CalculationFlags.kp(),
+        houseSystem: 'P',
       );
     } catch (e) {
       ephemerisAvailable = false;

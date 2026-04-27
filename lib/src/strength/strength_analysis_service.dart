@@ -2,6 +2,7 @@ import 'package:jyotish/src/models/divisional_chart_type.dart';
 import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
 import 'package:jyotish/src/analysis/divisional_chart_service.dart';
+import 'package:dartx/dartx.dart';
 
 /// Service for advanced strength and analysis calculations.
 ///
@@ -158,9 +159,7 @@ class StrengthAnalysisService {
     required VedicChart chart,
     required Map<Planet, double> shadbalaResults,
   }) {
-    final bhavaBala = <int, double>{};
-
-    for (var houseNum = 1; houseNum <= 12; houseNum++) {
+    return IntRange(1, 12).associateWith((houseNum) {
       var strength = 0.0;
 
       // 1. House lord strength (40%)
@@ -211,10 +210,8 @@ class StrengthAnalysisService {
       }
       strength += aspectStrength.clamp(0.0, 10.0);
 
-      bhavaBala[houseNum] = strength.clamp(0.0, 100.0);
-    }
-
-    return bhavaBala;
+      return strength.clamp(0.0, 100.0);
+    });
   }
 
   /// Calculates Vimshopak Bala (20-fold strength).
@@ -296,13 +293,9 @@ class StrengthAnalysisService {
   ///
   /// Returns a map of all traditional planets to their Vimshopak Bala
   Map<Planet, VimshopakBala> getAllPlanetsVimshopakBala(VedicChart chart) {
-    final results = <Planet, VimshopakBala>{};
-
-    for (final planet in Planet.traditionalPlanets) {
-      results[planet] = getVimshopakBala(chart: chart, planet: planet);
-    }
-
-    return results;
+    return Planet.traditionalPlanets.associateWith(
+      (planet) => getVimshopakBala(chart: chart, planet: planet),
+    );
   }
 
   // Helper methods

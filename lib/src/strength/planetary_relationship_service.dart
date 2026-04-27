@@ -50,7 +50,6 @@ class PlanetaryRelationshipService {
     for (final a in planets) {
       result[a] = {};
       for (final b in planets) {
-        if (a == b) continue;
         result[a]![b] = getRelationship(a, b, chart);
       }
     }
@@ -72,8 +71,13 @@ class PlanetaryRelationshipService {
     VedicChart chart,
   ) {
     if (planet == otherPlanet) {
-      throw ArgumentError(
-          'Cannot compute relationship of a planet with itself.');
+      return PlanetaryRelationship(
+        planet: planet,
+        otherPlanet: otherPlanet,
+        natural: RelationshipType.friend,
+        temporary: RelationshipType.friend,
+        compound: RelationshipType.greatFriend,
+      );
     }
 
     // 1. Natural friendship

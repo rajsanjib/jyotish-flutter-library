@@ -15,6 +15,9 @@ dependencies:
   path: ^1.9.0
   intl: ^0.19.0
   timezone: ^0.9.4
+  dartx: ^1.2.0
+  synchronized: ^3.1.0
+  logging: ^1.2.0
 
 dev_dependencies:
   flutter_test:

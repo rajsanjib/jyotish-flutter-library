@@ -6,6 +6,7 @@ import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
 import 'package:jyotish/src/analysis/divisional_chart_service.dart';
 import 'package:jyotish/src/astronomy/ephemeris_service.dart';
+import 'package:dartx/dartx.dart';
 
 /// Service for calculating Shadbala (Six-fold Strength) of planets.
 ///
@@ -27,13 +28,10 @@ class ShadbalaService {
       VedicChart chart) async {
     final results = <Planet, ShadbalaResult>{};
 
-    for (final entry in chart.planets.entries) {
-      final planet = entry.key;
-      final planetInfo = entry.value;
-
+    for (final planet in chart.planets.keys) {
       results[planet] = await _calculatePlanetShadbala(
         planet: planet,
-        planetInfo: planetInfo,
+        planetInfo: chart.planets[planet]!,
         chart: chart,
       );
     }
@@ -1220,26 +1218,21 @@ class ShadbalaService {
   /// Total virupas range from -60 to +60.
   double _calculateDrikBala(
       Planet planet, VedicPlanetInfo planetInfo, VedicChart chart) {
-    var netVirupas = 0.0;
-
-    for (final otherPlanet in Planet.traditionalPlanets) {
-      if (otherPlanet == planet) continue;
+    final netVirupas = Planet.traditionalPlanets
+        .filter((otherPlanet) => otherPlanet != planet)
+        .map((otherPlanet) {
       final otherInfo = chart.getPlanet(otherPlanet);
-      if (otherInfo == null) continue;
+      if (otherInfo == null) return 0.0;
 
-      // Calculate full professional aspect strength (0-60 virupas)
       final aspectStrength = _calculateProfessionalAspectStrength(
         aspecting: otherPlanet,
         aspectingLong: otherInfo.longitude,
         aspectedLong: planetInfo.longitude,
       );
 
-      // Apply aspect based on benefic/malefic nature
-      final aspectValue = _applyAspectNature(otherPlanet, aspectStrength);
-      netVirupas += aspectValue;
-    }
+      return _applyAspectNature(otherPlanet, aspectStrength);
+    }).sum();
 
-    // Clamp to valid range (-60 to +60 virupas)
     return netVirupas.clamp(-60.0, 60.0);
   }
 

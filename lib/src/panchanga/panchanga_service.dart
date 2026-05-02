@@ -68,11 +68,14 @@ class PanchangaService {
     final vara = _calculateVara(dateTime, sunrise);
 
     // Calculate Moonrise and Moonset
-    final (moonrise, moonset) = await _ephemerisService.getPlanetRiseSet(
+    final (moonriseUtc, moonsetUtc) = await _ephemerisService.getPlanetRiseSet(
       planet: Planet.moon,
       date: dateTime,
       location: location,
     );
+
+    final moonrise = moonriseUtc?.toLocal();
+    final moonset = moonsetUtc?.toLocal();
 
     return Panchanga(
       dateTime: dateTime,

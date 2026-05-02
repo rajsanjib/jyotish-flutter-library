@@ -95,15 +95,18 @@ class MasaService {
   }
 
   LunarMonth _calculatePurnimantaMonth(double sunLongitude, TithiInfo tithi) {
-    final baseMonth = MasaInfo.getMonthFromSunLongitude(sunLongitude);
+    final amantaMonth = _calculateAmantaMonth(sunLongitude, tithi);
 
+    // In Purnimanta system, the month changes after Purnima (Full Moon).
+    // Therefore, during Krishna Paksha (Tithi 16-30), the Purnimanta month
+    // is the one following the Amanta month.
     if (tithi.number >= 16 && tithi.number <= 30) {
-      final currentIndex = MasaInfo.purnimantaMonthOrder.indexOf(baseMonth);
+      final currentIndex = MasaInfo.amantaMonthOrder.indexOf(amantaMonth);
       final nextIndex = (currentIndex + 1) % 12;
-      return MasaInfo.purnimantaMonthOrder[nextIndex];
+      return MasaInfo.amantaMonthOrder[nextIndex];
     }
 
-    return baseMonth;
+    return amantaMonth;
   }
 
   int _getAmantaMonthNumber(LunarMonth month) {

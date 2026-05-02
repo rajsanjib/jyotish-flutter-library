@@ -353,35 +353,35 @@ class MuhurtaConstants {
   /// Rahu Kalam periods by weekday (in 8ths of daytime)
   /// Format: (start 8th, end 8th)
   static const Map<int, (int, int)> rahuKalamByWeekday = {
-    0: (6, 8), // Sunday: 7th and 8th portion
-    1: (4, 6), // Monday: 5th and 6th portion
-    2: (2, 4), // Tuesday: 3rd and 4th portion
-    3: (1, 2), // Wednesday: 1st and 2nd portion
-    4: (5, 7), // Thursday: 6th and 7th portion
-    5: (3, 5), // Friday: 4th and 5th portion
-    6: (7, 1), // Saturday: 8th and 1st portion
+    0: (8, 1), // Sunday: 8th portion
+    1: (2, 3), // Monday: 2nd portion
+    2: (7, 8), // Tuesday: 7th portion
+    3: (5, 6), // Wednesday: 5th portion
+    4: (6, 7), // Thursday: 6th portion
+    5: (4, 5), // Friday: 4th portion
+    6: (3, 4), // Saturday: 3rd portion
   };
 
   /// Gulika Kalam periods by weekday
   static const Map<int, (int, int)> gulikaKalamByWeekday = {
-    0: (4, 6), // Sunday
-    1: (2, 4), // Monday
-    2: (6, 8), // Tuesday
-    3: (5, 7), // Wednesday
-    4: (3, 5), // Thursday
-    5: (7, 1), // Friday
+    0: (7, 8), // Sunday
+    1: (6, 7), // Monday
+    2: (5, 6), // Tuesday
+    3: (4, 5), // Wednesday
+    4: (3, 4), // Thursday
+    5: (2, 3), // Friday
     6: (1, 2), // Saturday
   };
 
   /// Yama Gandam periods by weekday
   static const Map<int, (int, int)> yamaGandamByWeekday = {
-    0: (3, 5), // Sunday
-    1: (6, 8), // Monday
-    2: (5, 7), // Tuesday
-    3: (4, 6), // Wednesday
-    4: (7, 1), // Thursday
-    5: (1, 2), // Friday
-    6: (2, 4), // Saturday
+    0: (5, 6), // Sunday
+    1: (4, 5), // Monday
+    2: (3, 4), // Tuesday
+    3: (2, 3), // Wednesday
+    4: (1, 2), // Thursday
+    5: (7, 8), // Friday
+    6: (6, 7), // Saturday
   };
 
   /// Hora lords sequence

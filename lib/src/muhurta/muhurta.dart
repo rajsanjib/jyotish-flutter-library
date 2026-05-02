@@ -12,6 +12,7 @@ class Muhurta {
     required this.choghadiya,
     required this.inauspiciousPeriods,
     required this.currentPeriods,
+    this.specialYogas = const [],
   });
 
   /// Date for which Muhurta is calculated
@@ -31,6 +32,10 @@ class Muhurta {
 
   /// Current active periods
   final List<MuhurtaPeriod> currentPeriods;
+
+  /// Special Yogas active on this day (e.g., Sarvartha Siddhi)
+  final List<SpecialYoga> specialYogas;
+
 
   /// Gets favorable periods for a specific activity
   List<MuhurtaPeriod> getFavorablePeriods(String activity) {
@@ -542,7 +547,36 @@ class MuhurtaConstants {
       ChoghadiyaType.labh
     ],
   };
+
+  /// Sarvartha Siddhi Yog mappings: Weekday (0=Sun) to Nakshatra numbers (1-27)
+  static const Map<int, List<int>> sarvarthaSiddhiWeekdayNakshatras = {
+    0: [1, 8, 13, 17, 12, 21, 26, 19, 4], // Sun: Ashwini, Pushya, Hasta, Anuradha(Wait, 17 is Anuradha?), Moola, U.Phalguni, U.Ashada, U.Bhadrapada, Rohini
+    1: [4, 5, 8, 17, 22],             // Mon: Rohini, Mrigashira, Pushya, Anuradha, Shravana
+    2: [1, 3, 5, 9, 21],              // Tue: Ashwini, Krittika, Mrigashira, Ashlesha, U.Ashada
+    3: [4, 5, 6, 17, 13],             // Wed: Rohini, Mrigashira, Ardra, Anuradha, Hasta
+    4: [1, 7, 8, 17, 27],             // Thu: Ashwini, Punarvasu, Pushya, Anuradha, Revati
+    5: [1, 2, 4, 7, 17, 22, 27],      // Fri: Ashwini, Bharani, Rohini, Punarvasu, Anuradha, Shravana, Revati
+    6: [4, 15, 22],                   // Sat: Rohini, Swati, Shravana
+  };
+
+  /// Amrit Siddhi Yog mappings: Weekday to Nakshatra number
+  static const Map<int, int> amritSiddhiWeekdayNakshatra = {
+    0: 13, // Sun + Hasta
+    1: 5,  // Mon + Mrigashira
+    2: 1,  // Tue + Ashwini
+    3: 17, // Wed + Anuradha
+    4: 8,  // Thu + Pushya
+    5: 27, // Fri + Revati
+    6: 4,  // Sat + Rohini
+  };
+
+  /// Dwi-pada Nakshatras for Dwi Pushkar Yog
+  static const List<int> dwiPushkarNakshatras = [5, 14, 23]; // Mrigashira, Chitra, Dhanishta
+
+  /// Tri-pada Nakshatras for Tri Pushkar Yog
+  static const List<int> triPushkarNakshatras = [3, 7, 12, 16, 21, 25]; // Krittika, Punarvasu, U.Phalguni, Vishakha, U.Ashada, P.Bhadrapada
 }
+
 
 /// Information about Disha Shool (Directional Flaw).
 class DishashoolInfo {
@@ -588,3 +622,57 @@ class ChandraVasaInfo {
   /// Where Chandra (Moon) is residing
   final String location;
 }
+
+/// Represents a special Muhurta Yoga (e.g., Sarvartha Siddhi Yog).
+class SpecialYoga implements MuhurtaPeriod {
+  const SpecialYoga({
+    required this.type,
+    required this.startTime,
+    required this.endTime,
+    this.description,
+  });
+
+  /// The type of special yoga
+  final SpecialYogaType type;
+
+  @override
+  final DateTime startTime;
+
+  @override
+  final DateTime endTime;
+
+  /// Optional description or effects
+  final String? description;
+
+  @override
+  String get name => type.displayName;
+
+  @override
+  bool get isAuspicious => type.isAuspicious;
+
+  @override
+  String get nature => isAuspicious ? 'Auspicious' : 'Repetitive';
+
+  @override
+  bool isFavorableFor(String activity) {
+    // Most special yogas are generally favorable,
+    // but some may have specific restrictions.
+    return isAuspicious;
+  }
+}
+
+/// Types of special Muhurta Yogas.
+enum SpecialYogaType {
+  sarvarthaSiddhi('Sarvartha Siddhi Yog', true),
+  amritSiddhi('Amrit Siddhi Yog', true),
+  guruPushya('Guru Pushya Yog', true),
+  raviPushya('Ravi Pushya Yog', true),
+  dwiPushkar('Dwi Pushkar Yog', false), // False because it's repetitive, can be good or bad
+  triPushkar('Tri Pushkar Yog', false); // False because it's repetitive
+
+  const SpecialYogaType(this.displayName, this.isAuspicious);
+
+  final String displayName;
+  final bool isAuspicious;
+}
+

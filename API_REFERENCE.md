@@ -2609,6 +2609,37 @@ Brahma Muhurta timing.
 
 ---
 
+### SpecialYoga
+
+Special auspicious or repetitive Vedic Yogas (e.g., Sarvartha Siddhi Yog).
+
+| Property | Type | Description |
+|---|---|---|
+| `type` | `SpecialYogaType` | The type of yoga |
+| `startTime` | `DateTime` | Start time |
+| `endTime` | `DateTime` | End time |
+| `description` | `String?` | Optional description |
+| `name` | `String` | Display name of the yoga |
+| `isAuspicious` | `bool` | Whether the yoga is considered auspicious |
+
+---
+
+### SpecialYogaType
+
+Supported special Yogas.
+
+| Value | Display Name | Nature |
+|---|---|---|
+| `sarvarthaSiddhi` | Sarvartha Siddhi Yog | Auspicious (General Success) |
+| `amritSiddhi` | Amrit Siddhi Yog | Highly Auspicious |
+| `guruPushya` | Guru Pushya Yog | Auspicious (Thursday + Pushya) |
+| `raviPushya` | Ravi Pushya Yog | Auspicious (Sunday + Pushya) |
+| `dwiPushkar` | Dwi Pushkar Yog | Repetitive (Good/Bad results doubled) |
+| `triPushkar` | Tri Pushkar Yog | Repetitive (Good/Bad results tripled) |
+
+---
+
+
 ### PanchangaTimePeriod
 
 Generic time period.

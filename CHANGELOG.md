@@ -5,7 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.0] - 2026-05-02
+
+### Added — Special Muhurta Yogas
+Implemented high-precision calculation of specialized Vedic auspicious and repetitive Yogas. These are automatically identified based on the overlap of Weekday, Tithi, and Nakshatra periods.
+
+- **Sarvartha Siddhi Yog**: Weekday + Nakshatra combinations for general success in all activities.
+- **Amrit Siddhi Yog**: Highly powerful Weekday + Nakshatra pairings for significant tasks.
+- **Guru Pushya Yog**: The "King of Yogas" occurring when Thursday coincides with Pushya Nakshatra.
+- **Ravi Pushya Yog**: Highly auspicious timing when Sunday coincides with Pushya Nakshatra.
+- **Dwi Pushkar Yog**: Repetitive Yoga (Sun/Tue/Sat + Bhadra Tithi + Dwi-pada Nakshatra) that doubles the result of an event (good or bad).
+- **Tri Pushkar Yog**: Repetitive Yoga (Sun/Tue/Sat + Bhadra Tithi + Tri-pada Nakshatra) that triples the result of an event.
+
+#### Updated API
+- **`Muhurta` model**: Added `specialYogas` field containing a list of `SpecialYoga` objects active for the day.
+- **`MuhurtaService`**: Updated `calculateMuhurta` to optionally accept `tithiPeriods` and `nakshatraPeriods` to enable these calculations.
+- **`SpecialYoga`**: New model representing a yoga period with `type`, `startTime`, `endTime`, and `isAuspicious` flag.
+
+---
+
 ## [2.6.0] - 2026-02-25
+
 
 ### [2.6.0] - High-Precision Eclipse & API Completeness
 ### **Major Eclipse Enhancements (Solar & Lunar)**

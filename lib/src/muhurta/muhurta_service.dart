@@ -14,11 +14,15 @@ class MuhurtaService {
   /// [sunrise] - Sunrise time
   /// [sunset] - Sunset time
   /// [location] - Geographic location
+  /// [tithiPeriods] - Optional list of Tithi numbers and their start/end times
+  /// [nakshatraPeriods] - Optional list of Nakshatra numbers and their start/end times
   Muhurta calculateMuhurta({
     required DateTime date,
     required DateTime sunrise,
     required DateTime sunset,
     required GeographicLocation location,
+    List<(int tithiNumber, DateTime start, DateTime end)>? tithiPeriods,
+    List<(int nakshatraNumber, DateTime start, DateTime end)>? nakshatraPeriods,
   }) {
     // Calculate Hora periods
     final horaPeriods = _calculateHoraPeriods(
@@ -41,10 +45,22 @@ class MuhurtaService {
       sunset: sunset,
     );
 
+    // Calculate special yogas if periods are provided
+    final specialYogas = <SpecialYoga>[];
+    if (tithiPeriods != null && nakshatraPeriods != null) {
+      specialYogas.addAll(calculateSpecialYogas(
+        date: date,
+        sunrise: sunrise,
+        tithiPeriods: tithiPeriods,
+        nakshatraPeriods: nakshatraPeriods,
+      ));
+    }
+
     // Get current active periods
     final currentPeriods = <MuhurtaPeriod>[
       ...horaPeriods.where((h) => h.contains(DateTime.now())),
       ...choghadiya.allPeriods.where((c) => c.contains(DateTime.now())),
+      ...specialYogas.where((y) => DateTime.now().isAfter(y.startTime) && DateTime.now().isBefore(y.endTime)),
     ];
 
     return Muhurta(
@@ -54,8 +70,120 @@ class MuhurtaService {
       choghadiya: choghadiya,
       inauspiciousPeriods: inauspiciousPeriods,
       currentPeriods: currentPeriods,
+      specialYogas: specialYogas,
     );
   }
+
+  /// Calculates special Muhurta Yogas (Sarvartha Siddhi, Guru Pushya, etc.)
+  /// based on weekday, tithi, and nakshatra combinations.
+  List<SpecialYoga> calculateSpecialYogas({
+    required DateTime date,
+    required DateTime sunrise,
+    required List<(int tithiNumber, DateTime start, DateTime end)> tithiPeriods,
+    required List<(int nakshatraNumber, DateTime start, DateTime end)>
+        nakshatraPeriods,
+  }) {
+    final yogas = <SpecialYoga>[];
+    final weekday = date.weekday % 7;
+    final nextSunrise = sunrise.add(const Duration(days: 1));
+
+    // 1. Sarvartha Siddhi & Amrit Siddhi (Weekday + Nakshatra)
+    final allowedNakshatras =
+        MuhurtaConstants.sarvarthaSiddhiWeekdayNakshatras[weekday] ?? [];
+    final amritNakshatra =
+        MuhurtaConstants.amritSiddhiWeekdayNakshatra[weekday];
+
+    for (final nak in nakshatraPeriods) {
+      // Find intersection with the Vedic day (sunrise to sunrise)
+      final start = nak.$2.isAfter(sunrise) ? nak.$2 : sunrise;
+      final end = nak.$3.isBefore(nextSunrise) ? nak.$3 : nextSunrise;
+
+      if (start.isBefore(end)) {
+        // Sarvartha Siddhi
+        if (allowedNakshatras.contains(nak.$1)) {
+          yogas.add(SpecialYoga(
+            type: SpecialYogaType.sarvarthaSiddhi,
+            startTime: start,
+            endTime: end,
+          ));
+        }
+
+        // Amrit Siddhi
+        if (nak.$1 == amritNakshatra) {
+          yogas.add(SpecialYoga(
+            type: SpecialYogaType.amritSiddhi,
+            startTime: start,
+            endTime: end,
+          ));
+
+          // Guru Pushya special case
+          if (weekday == 4 && nak.$1 == 8) {
+            yogas.add(SpecialYoga(
+              type: SpecialYogaType.guruPushya,
+              startTime: start,
+              endTime: end,
+            ));
+          }
+          // Ravi Pushya special case
+          else if (weekday == 0 && nak.$1 == 8) {
+            yogas.add(SpecialYoga(
+              type: SpecialYogaType.raviPushya,
+              startTime: start,
+              endTime: end,
+            ));
+          }
+        }
+      }
+    }
+
+    // 2. Dwi Pushkar & Tri Pushkar (Weekday + Tithi + Nakshatra)
+    // Only on Sunday, Tuesday, Saturday
+    if (weekday == 0 || weekday == 2 || weekday == 6) {
+      for (final tithi in tithiPeriods) {
+        // Bhadra Tithis: 2, 7, 12 of either Paksha
+        final tNum = tithi.$1;
+        final isBhadraTithi = (tNum == 2 || tNum == 7 || tNum == 12 || 
+                               tNum == 17 || tNum == 22 || tNum == 27);
+
+        if (isBhadraTithi) {
+          for (final nak in nakshatraPeriods) {
+            // Find intersection of Weekday (sunrise-sunrise), Tithi, and Nakshatra
+            var start = tithi.$2.isAfter(nak.$2) ? tithi.$2 : nak.$2;
+            start = start.isAfter(sunrise) ? start : sunrise;
+
+            var end = tithi.$3.isBefore(nak.$3) ? tithi.$3 : nak.$3;
+            end = end.isBefore(nextSunrise) ? end : nextSunrise;
+
+            if (start.isBefore(end)) {
+              // Dwi Pushkar
+              if (MuhurtaConstants.dwiPushkarNakshatras
+                  .contains(nak.$1)) {
+                yogas.add(SpecialYoga(
+                  type: SpecialYogaType.dwiPushkar,
+                  startTime: start,
+                  endTime: end,
+                ));
+              }
+
+              // Tri Pushkar
+              if (MuhurtaConstants.triPushkarNakshatras
+                  .contains(nak.$1)) {
+                yogas.add(SpecialYoga(
+                  type: SpecialYogaType.triPushkar,
+                  startTime: start,
+                  endTime: end,
+                ));
+              }
+            }
+          }
+        }
+      }
+    }
+
+
+    return yogas;
+  }
+
 
   /// Calculates Hora (planetary hour) periods.
   List<HoraPeriod> _calculateHoraPeriods({

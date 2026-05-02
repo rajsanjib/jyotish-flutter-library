@@ -1,6 +1,6 @@
+// ignore_for_file: avoid_print
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jyotish/jyotish.dart';
-import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:intl/intl.dart';
 
@@ -82,7 +82,7 @@ void main() {
     print('Gulikai Kalam: ${timeFormat.format(muhurta.inauspiciousPeriods.gulikalam!.start)} to ${timeFormat.format(muhurta.inauspiciousPeriods.gulikalam!.end)} (Expected: 05:40 AM to 07:19 AM)');
     print('Yamaganda:    ${timeFormat.format(muhurta.inauspiciousPeriods.yamagandam!.start)} to ${timeFormat.format(muhurta.inauspiciousPeriods.yamagandam!.end)} (Expected: 01:58 PM to 03:38 PM)');
     
-    for (var dm in (muhurta.inauspiciousPeriods.durMuhurtam ?? [])) {
+    for (final dm in (muhurta.inauspiciousPeriods.durMuhurtam ?? <TimePeriod>[])) {
        print('Dur Muhurtam: ${timeFormat.format(dm.start)} to ${timeFormat.format(dm.end)} (Expected: 05:40 AM to 06:33 AM, 06:33 AM to 07:26 AM)');
     }
 

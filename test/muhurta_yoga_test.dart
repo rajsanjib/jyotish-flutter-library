@@ -5,14 +5,15 @@ import 'package:jyotish/src/models/geographic_location.dart';
 
 void main() {
   final service = MuhurtaService();
-  final location = GeographicLocation(latitude: 28.6139, longitude: 77.2090); // Delhi
+  final location =
+      GeographicLocation(latitude: 28.6139, longitude: 77.2090); // Delhi
 
   group('Special Yoga Calculations', () {
     test('Sarvartha Siddhi & Amrit Siddhi - Sunday + Hasta', () {
       final date = DateTime(2024, 10, 6); // Sunday
       final sunrise = DateTime(2024, 10, 6, 6, 15);
       final sunset = DateTime(2024, 10, 6, 18, 5);
-      
+
       // Hasta is Nakshatra 13
       final nakshatraPeriods = [
         (13, DateTime(2024, 10, 6, 0, 0), DateTime(2024, 10, 6, 23, 59)),
@@ -31,7 +32,8 @@ void main() {
       );
 
       final yogas = muhurta.specialYogas;
-      expect(yogas.any((y) => y.type == SpecialYogaType.sarvarthaSiddhi), isTrue);
+      expect(
+          yogas.any((y) => y.type == SpecialYogaType.sarvarthaSiddhi), isTrue);
       expect(yogas.any((y) => y.type == SpecialYogaType.amritSiddhi), isTrue);
     });
 
@@ -39,7 +41,7 @@ void main() {
       final date = DateTime(2024, 9, 26); // Thursday
       final sunrise = DateTime(2024, 9, 26, 6, 11);
       final sunset = DateTime(2024, 9, 26, 18, 15);
-      
+
       // Pushya is Nakshatra 8
       final nakshatraPeriods = [
         (8, DateTime(2024, 9, 26, 0, 0), DateTime(2024, 9, 26, 23, 59)),
@@ -66,7 +68,7 @@ void main() {
       final date = DateTime(2024, 5, 12); // Sunday
       final sunrise = DateTime(2024, 5, 12, 5, 33);
       final sunset = DateTime(2024, 5, 12, 19, 3);
-      
+
       // Tithi 7 is Bhadra
       // Nakshatra 5 is Mrigashirsha (Dwi-pada)
       final tithiPeriods = [
@@ -93,7 +95,7 @@ void main() {
       final date = DateTime(2024, 4, 7); // Sunday
       final sunrise = DateTime(2024, 4, 7, 6, 3);
       final sunset = DateTime(2024, 4, 7, 18, 42);
-      
+
       // Tithi 2 (Pratipada end, Dwitiya start)
       // Nakshatra 3 is Krittika (Tri-pada)
       final tithiPeriods = [

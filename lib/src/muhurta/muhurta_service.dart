@@ -60,7 +60,9 @@ class MuhurtaService {
     final currentPeriods = <MuhurtaPeriod>[
       ...horaPeriods.where((h) => h.contains(DateTime.now())),
       ...choghadiya.allPeriods.where((c) => c.contains(DateTime.now())),
-      ...specialYogas.where((y) => DateTime.now().isAfter(y.startTime) && DateTime.now().isBefore(y.endTime)),
+      ...specialYogas.where((y) =>
+          DateTime.now().isAfter(y.startTime) &&
+          DateTime.now().isBefore(y.endTime)),
     ];
 
     return Muhurta(
@@ -142,8 +144,12 @@ class MuhurtaService {
       for (final tithi in tithiPeriods) {
         // Bhadra Tithis: 2, 7, 12 of either Paksha
         final tNum = tithi.$1;
-        final isBhadraTithi = (tNum == 2 || tNum == 7 || tNum == 12 || 
-                               tNum == 17 || tNum == 22 || tNum == 27);
+        final isBhadraTithi = (tNum == 2 ||
+            tNum == 7 ||
+            tNum == 12 ||
+            tNum == 17 ||
+            tNum == 22 ||
+            tNum == 27);
 
         if (isBhadraTithi) {
           for (final nak in nakshatraPeriods) {
@@ -156,8 +162,7 @@ class MuhurtaService {
 
             if (start.isBefore(end)) {
               // Dwi Pushkar
-              if (MuhurtaConstants.dwiPushkarNakshatras
-                  .contains(nak.$1)) {
+              if (MuhurtaConstants.dwiPushkarNakshatras.contains(nak.$1)) {
                 yogas.add(SpecialYoga(
                   type: SpecialYogaType.dwiPushkar,
                   startTime: start,
@@ -166,8 +171,7 @@ class MuhurtaService {
               }
 
               // Tri Pushkar
-              if (MuhurtaConstants.triPushkarNakshatras
-                  .contains(nak.$1)) {
+              if (MuhurtaConstants.triPushkarNakshatras.contains(nak.$1)) {
                 yogas.add(SpecialYoga(
                   type: SpecialYogaType.triPushkar,
                   startTime: start,
@@ -180,10 +184,8 @@ class MuhurtaService {
       }
     }
 
-
     return yogas;
   }
-
 
   /// Calculates Hora (planetary hour) periods.
   List<HoraPeriod> _calculateHoraPeriods({

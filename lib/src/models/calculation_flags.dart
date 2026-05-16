@@ -1,5 +1,3 @@
-import 'package:jyotish/jyotish.dart' show KPService;
-
 import 'package:jyotish/src/systems/kp_service.dart' show KPService;
 
 import '../constants/planet_constants.dart';

@@ -55,9 +55,33 @@ class DashaService {
   ];
 
   static const List<String> _nakshatraNames = [
-    'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra', 'Punarvasu', 'Pushya', 'Ashlesha',
-    'Magha', 'Purva Phalguni', 'Uttara Phalguni', 'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha', 'Jyeshtha',
-    'Mula', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana', 'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'
+    'Ashwini',
+    'Bharani',
+    'Krittika',
+    'Rohini',
+    'Mrigashira',
+    'Ardra',
+    'Punarvasu',
+    'Pushya',
+    'Ashlesha',
+    'Magha',
+    'Purva Phalguni',
+    'Uttara Phalguni',
+    'Hasta',
+    'Chitra',
+    'Swati',
+    'Vishakha',
+    'Anuradha',
+    'Jyeshtha',
+    'Mula',
+    'Purva Ashadha',
+    'Uttara Ashadha',
+    'Shravana',
+    'Dhanishta',
+    'Shatabhisha',
+    'Purva Bhadrapada',
+    'Uttara Bhadrapada',
+    'Revati'
   ];
 
   /// Calculates Vimshottari Dasha from birth details.
@@ -88,7 +112,8 @@ class DashaService {
 
     String? precisionWarning;
     if (birthTimeUncertainty != null && birthTimeUncertainty > 0) {
-      precisionWarning = 'Birth time uncertain by $birthTimeUncertainty minutes. '
+      precisionWarning =
+          'Birth time uncertain by $birthTimeUncertainty minutes. '
           'Dasha timing may vary by up to ${(birthTimeUncertainty / 60 * 0.2).toStringAsFixed(1)} days.';
     }
 
@@ -124,7 +149,9 @@ class DashaService {
       for (var i = 0; i < 9; i++) {
         final lordIndex = (startingLordIndex + i) % 9;
         final planetInfo = _vimshottariPlanets[lordIndex];
-        final durationDays = (cycle == 0 && i == 0) ? balanceDays : planetInfo.years * yearLength;
+        final durationDays = (cycle == 0 && i == 0)
+            ? balanceDays
+            : planetInfo.years * yearLength;
         final durationMs = (durationDays * 86400000).round();
         final duration = Duration(milliseconds: durationMs);
         final endDate = currentDate + duration;
@@ -169,7 +196,8 @@ class DashaService {
       final lordIndex = (startingLordIndex + i) % 9;
       final planetInfo = _vimshottariPlanets[lordIndex];
       final durationDays = mahadashaDays * (planetInfo.years / 120.0);
-      final duration = Duration(milliseconds: (durationDays * 86400000).round());
+      final duration =
+          Duration(milliseconds: (durationDays * 86400000).round());
       final endDate = currentDate + duration;
 
       List<DashaPeriod> subPeriods = [];
@@ -209,7 +237,8 @@ class DashaService {
       final lordIndex = (startingLordIndex + i) % 9;
       final planetInfo = _vimshottariPlanets[lordIndex];
       final durationDays = antardashaDays * (planetInfo.years / 120.0);
-      final duration = Duration(milliseconds: (durationDays * 86400000).round());
+      final duration =
+          Duration(milliseconds: (durationDays * 86400000).round());
       final endDate = currentDate + duration;
 
       List<DashaPeriod> subPeriods = [];
@@ -249,7 +278,8 @@ class DashaService {
       final lordIndex = (startingLordIndex + i) % 9;
       final planetInfo = _vimshottariPlanets[lordIndex];
       final durationDays = pratyantharDays * (planetInfo.years / 120.0);
-      final duration = Duration(milliseconds: (durationDays * 86400000).round());
+      final duration =
+          Duration(milliseconds: (durationDays * 86400000).round());
       final endDate = currentDate + duration;
 
       List<DashaPeriod> subPeriods = [];
@@ -287,7 +317,8 @@ class DashaService {
       final lordIndex = (startingLordIndex + i) % 9;
       final planetInfo = _vimshottariPlanets[lordIndex];
       final durationDays = sookshmaDays * (planetInfo.years / 120.0);
-      final duration = Duration(milliseconds: (durationDays * 86400000).round());
+      final duration =
+          Duration(milliseconds: (durationDays * 86400000).round());
       final endDate = currentDate + duration;
 
       pranadashas.add(DashaPeriod(
@@ -326,7 +357,8 @@ class DashaService {
       for (var i = 0; i < 8; i++) {
         final idx = (startingYoginiIndex + i) % 8;
         final yogini = Yogini.values[idx];
-        final double durationDays = (cycle == 0 && i == 0) ? balanceDays : yogini.years * 365.25;
+        final double durationDays =
+            (cycle == 0 && i == 0) ? balanceDays : yogini.years * 365.25;
         final durationMs = (durationDays * 86400000).round();
         final duration = Duration(milliseconds: durationMs);
         final endDate = currentDate + duration;
@@ -457,12 +489,24 @@ class DashaService {
       final durationDays = years * 365.25;
       final endDate = currentDate.add(Duration(days: durationDays.round()));
 
+      List<DashaPeriod> subPeriods = [];
+      if (levels >= 2) {
+        subPeriods = _calculateCharaAntardashas(
+          sequence: sequence,
+          mahadashaStart: currentDate,
+          mahadashaEnd: endDate,
+          levels: levels - 1,
+          chart: chart,
+        );
+      }
+
       mahadashas.add(DashaPeriod(
         rashi: sign,
         startDate: currentDate,
         endDate: endDate,
         duration: Duration(days: durationDays.round()),
-        level: 1,
+        level: 0,
+        subPeriods: subPeriods,
       ));
       currentDate = endDate;
     }
@@ -476,6 +520,52 @@ class DashaService {
       balanceOfFirstDasha: 0,
       allMahadashas: mahadashas,
     );
+  }
+
+  List<DashaPeriod> _calculateCharaAntardashas({
+    required List<Rashi> sequence,
+    required DateTime mahadashaStart,
+    required DateTime mahadashaEnd,
+    required int levels,
+    required VedicChart chart,
+  }) {
+    if (levels <= 0) return [];
+    final totalMs = mahadashaEnd.difference(mahadashaStart).inMilliseconds;
+    final totalYears = sequence
+        .map((s) => _calculateCharaDashaYears(s, chart))
+        .fold(0, (a, b) => a + b);
+    if (totalYears == 0) return [];
+
+    final periods = <DashaPeriod>[];
+    var current = mahadashaStart;
+
+    for (final sign in sequence) {
+      final years = _calculateCharaDashaYears(sign, chart);
+      final proportion = years / totalYears;
+      final ms = (totalMs * proportion).round();
+      final end = current.add(Duration(milliseconds: ms));
+
+      final subPeriods = levels >= 2
+          ? _calculateCharaAntardashas(
+              sequence: sequence,
+              mahadashaStart: current,
+              mahadashaEnd: end,
+              levels: levels - 1,
+              chart: chart,
+            )
+          : <DashaPeriod>[];
+
+      periods.add(DashaPeriod(
+        rashi: sign,
+        startDate: current,
+        endDate: end,
+        duration: Duration(milliseconds: ms),
+        level: 1,
+        subPeriods: subPeriods,
+      ));
+      current = end;
+    }
+    return periods;
   }
 
   int _calculateCharaDashaYears(Rashi sign, VedicChart chart) {
@@ -496,7 +586,8 @@ class DashaService {
     final seventhSign = Rashi.fromIndex((lagnaSign.number + 6) % 12);
     final lagnaStrength = _calculateSignSourceStrength(lagnaSign, chart);
     final seventhStrength = _calculateSignSourceStrength(seventhSign, chart);
-    final startingSign = lagnaStrength >= seventhStrength ? lagnaSign : seventhSign;
+    final startingSign =
+        lagnaStrength >= seventhStrength ? lagnaSign : seventhSign;
 
     final sequence = <Rashi>[];
     final isOdd = startingSign.number % 2 != 0;
@@ -577,7 +668,8 @@ class DashaService {
     for (final sign in sequence) {
       final years = _calculateNarayanaDashaYears(sign, chart);
       final proportion = years / 12.0;
-      final duration = Duration(milliseconds: (totalDuration.inMilliseconds * proportion).round());
+      final duration = Duration(
+          milliseconds: (totalDuration.inMilliseconds * proportion).round());
       final endDate = currentDate + duration;
       if (endDate > mahadashaEnd) break;
 
@@ -599,7 +691,8 @@ class DashaService {
     if (lagnaLord == null) return false;
 
     final lagnaLordInfo = chart.planets[lagnaLord];
-    final rahuInfo = chart.planets[Planet.meanNode] ?? chart.planets[Planet.trueNode];
+    final rahuInfo =
+        chart.planets[Planet.meanNode] ?? chart.planets[Planet.trueNode];
 
     if (lagnaLordInfo != null && rahuInfo != null) {
       int houseDiff = rahuInfo.house - lagnaLordInfo.house;
@@ -625,16 +718,29 @@ class DashaService {
     int levels = 2,
   }) {
     if (!forceCalculation && !isAshtottariApplicable(chart)) {
-      throw JyotishException('Ashtottari Dasha is not applicable for this chart according to BPHS rules.');
+      throw JyotishException(
+          'Ashtottari Dasha is not applicable for this chart according to BPHS rules.');
     }
     final moonLongitude = chart.planets[Planet.moon]!.longitude;
     final ashtottariSequence = [
-      Planet.sun, Planet.moon, Planet.mars, Planet.mercury,
-      Planet.saturn, Planet.jupiter, Planet.meanNode, Planet.venus
+      Planet.sun,
+      Planet.moon,
+      Planet.mars,
+      Planet.mercury,
+      Planet.saturn,
+      Planet.jupiter,
+      Planet.meanNode,
+      Planet.venus
     ];
     final ashtottariYears = {
-      Planet.sun: 6.0, Planet.moon: 15.0, Planet.mars: 8.0, Planet.mercury: 17.0,
-      Planet.saturn: 10.0, Planet.jupiter: 19.0, Planet.meanNode: 12.0, Planet.venus: 21.0
+      Planet.sun: 6.0,
+      Planet.moon: 15.0,
+      Planet.mars: 8.0,
+      Planet.mercury: 17.0,
+      Planet.saturn: 10.0,
+      Planet.jupiter: 19.0,
+      Planet.meanNode: 12.0,
+      Planet.venus: 21.0
     };
 
     const nakshatraWidth = 360.0 / 27;
@@ -653,8 +759,11 @@ class DashaService {
       }
     }
 
-    final firstDashaYears = ashtottariYears[ashtottariSequence[startingLordIndex]] ?? 6.0;
-    final balanceDays = firstDashaYears * 365.25 * (1.0 - (moonLongitude % nakshatraWidth / nakshatraWidth));
+    final firstDashaYears =
+        ashtottariYears[ashtottariSequence[startingLordIndex]] ?? 6.0;
+    final balanceDays = firstDashaYears *
+        365.25 *
+        (1.0 - (moonLongitude % nakshatraWidth / nakshatraWidth));
 
     final mahadashas = <DashaPeriod>[];
     var currentDate = chart.dateTime;
@@ -687,7 +796,8 @@ class DashaService {
       currentDate = endDate;
     }
 
-    final nakPada = (moonLongitude % nakshatraWidth / (nakshatraWidth / 4)).floor() + 1;
+    final nakPada =
+        (moonLongitude % nakshatraWidth / (nakshatraWidth / 4)).floor() + 1;
 
     return DashaResult(
       type: DashaType.ashtottari,
@@ -732,9 +842,18 @@ class DashaService {
 
   Planet? _getSignLord(int signIndex) {
     const signLords = {
-      0: Planet.mars, 1: Planet.venus, 2: Planet.mercury, 3: Planet.moon, 4: Planet.sun,
-      5: Planet.mercury, 6: Planet.venus, 7: Planet.mars, 8: Planet.jupiter, 9: Planet.saturn,
-      10: Planet.saturn, 11: Planet.jupiter,
+      0: Planet.mars,
+      1: Planet.venus,
+      2: Planet.mercury,
+      3: Planet.moon,
+      4: Planet.sun,
+      5: Planet.mercury,
+      6: Planet.venus,
+      7: Planet.mars,
+      8: Planet.jupiter,
+      9: Planet.saturn,
+      10: Planet.saturn,
+      11: Planet.jupiter,
     };
     return signLords[signIndex];
   }
@@ -743,7 +862,8 @@ class DashaService {
     final moonLongitude = chart.planets[Planet.moon]!.longitude;
     const nakshatraWidth = 360.0 / 27;
     final nakshatraIndex = (moonLongitude / nakshatraWidth).floor() % 27;
-    final pada = (moonLongitude % nakshatraWidth / (nakshatraWidth / 4)).floor() + 1;
+    final pada =
+        (moonLongitude % nakshatraWidth / (nakshatraWidth / 4)).floor() + 1;
     final groupIdx = (nakshatraIndex / 3).floor();
     final isSavya = groupIdx % 2 == 0;
 
@@ -757,7 +877,8 @@ class DashaService {
     final portionRemaining = 1.0 - (posInPada / padaWidth);
     final firstDashaYears = _getKalachakraYears(sequence.first);
     final balanceDays = firstDashaYears * 365.25 * portionRemaining;
-    final totalCycleYears = sequence.map(_getKalachakraYears).reduce((a, b) => a + b);
+    final totalCycleYears =
+        sequence.map(_getKalachakraYears).reduce((a, b) => a + b);
 
     for (var idx = 0; idx < sequence.length; idx++) {
       final sign = sequence[idx];
@@ -845,31 +966,88 @@ class DashaService {
 
   List<Rashi> _getKalachakraSequence(int nakIdx, int pada, bool isSavya) {
     final savyaSequences = [
-      [Rashi.aries, Rashi.taurus, Rashi.gemini, Rashi.cancer, Rashi.leo, Rashi.virgo, Rashi.libra, Rashi.scorpio, Rashi.sagittarius],
-      [Rashi.capricorn, Rashi.aquarius, Rashi.pisces, Rashi.scorpio, Rashi.libra, Rashi.virgo, Rashi.cancer, Rashi.leo, Rashi.gemini],
-      [Rashi.taurus, Rashi.aries, Rashi.sagittarius, Rashi.capricorn, Rashi.aquarius, Rashi.pisces, Rashi.scorpio, Rashi.libra, Rashi.virgo],
-      [Rashi.cancer, Rashi.leo, Rashi.gemini, Rashi.taurus, Rashi.aries, Rashi.sagittarius, Rashi.capricorn, Rashi.aquarius, Rashi.pisces],
+      [
+        Rashi.aries,
+        Rashi.taurus,
+        Rashi.gemini,
+        Rashi.cancer,
+        Rashi.leo,
+        Rashi.virgo,
+        Rashi.libra,
+        Rashi.scorpio,
+        Rashi.sagittarius
+      ],
+      [
+        Rashi.capricorn,
+        Rashi.aquarius,
+        Rashi.pisces,
+        Rashi.scorpio,
+        Rashi.libra,
+        Rashi.virgo,
+        Rashi.cancer,
+        Rashi.leo,
+        Rashi.gemini
+      ],
+      [
+        Rashi.taurus,
+        Rashi.aries,
+        Rashi.sagittarius,
+        Rashi.capricorn,
+        Rashi.aquarius,
+        Rashi.pisces,
+        Rashi.scorpio,
+        Rashi.libra,
+        Rashi.virgo
+      ],
+      [
+        Rashi.cancer,
+        Rashi.leo,
+        Rashi.gemini,
+        Rashi.taurus,
+        Rashi.aries,
+        Rashi.sagittarius,
+        Rashi.capricorn,
+        Rashi.aquarius,
+        Rashi.pisces
+      ],
     ];
-    return isSavya ? savyaSequences[(pada - 1) % 4] : savyaSequences[(pada - 1) % 4].reversed.toList();
+    return isSavya
+        ? savyaSequences[(pada - 1) % 4]
+        : savyaSequences[(pada - 1) % 4].reversed.toList();
   }
 
   Planet _getSignLordAdvanced(Rashi sign, VedicChart chart) {
     if (sign == Rashi.scorpio) {
       final mars = chart.getPlanet(Planet.mars);
       final ketu = chart.ketu;
-      final marsSignPlanets = chart.getPlanetsInHouse(chart.houses.getHouseForLongitude(mars?.longitude ?? 0)).length;
-      final ketuSignPlanets = chart.getPlanetsInHouse(chart.houses.getHouseForLongitude(ketu.longitude)).length;
+      final marsSignPlanets = chart
+          .getPlanetsInHouse(
+              chart.houses.getHouseForLongitude(mars?.longitude ?? 0))
+          .length;
+      final ketuSignPlanets = chart
+          .getPlanetsInHouse(chart.houses.getHouseForLongitude(ketu.longitude))
+          .length;
       if (marsSignPlanets > ketuSignPlanets) return Planet.mars;
       if (ketuSignPlanets > marsSignPlanets) return Planet.ketu;
-      return (mars?.longitude ?? 0) % 30 > (ketu.longitude % 30) ? Planet.mars : Planet.ketu;
+      return (mars?.longitude ?? 0) % 30 > (ketu.longitude % 30)
+          ? Planet.mars
+          : Planet.ketu;
     } else if (sign == Rashi.aquarius) {
       final saturn = chart.getPlanet(Planet.saturn);
       final rahu = chart.getPlanet(Planet.meanNode);
-      final saturnSignPlanets = chart.getPlanetsInHouse(chart.houses.getHouseForLongitude(saturn?.longitude ?? 0)).length;
-      final rahuSignPlanets = chart.getPlanetsInHouse(chart.houses.getHouseForLongitude(rahu?.longitude ?? 0)).length;
+      final saturnSignPlanets = chart
+          .getPlanetsInHouse(
+              chart.houses.getHouseForLongitude(saturn?.longitude ?? 0))
+          .length;
+      final rahuSignPlanets = chart
+          .getPlanetsInHouse(
+              chart.houses.getHouseForLongitude(rahu?.longitude ?? 0))
+          .length;
       if (saturnSignPlanets > rahuSignPlanets) return Planet.saturn;
       if (rahuSignPlanets > saturnSignPlanets) return Planet.meanNode;
-      return (saturn?.longitude ?? 0) % 30 > (rahu?.longitude ?? 0) % 30 ? Planet.saturn : Planet.meanNode;
+      return (saturn?.longitude ?? 0) % 30 > (rahu?.longitude ?? 0) % 30
+          ? Planet.saturn
+          : Planet.meanNode;
     }
     return switch (sign) {
       Rashi.aries || Rashi.scorpio => Planet.mars,
@@ -884,7 +1062,10 @@ class DashaService {
 
   double _calculateSignSourceStrength(Rashi sign, VedicChart chart) {
     var strength = 0.0;
-    strength += chart.planets.values.where((p) => Rashi.fromLongitude(p.longitude) == sign).length * 10.0;
+    strength += chart.planets.values
+            .where((p) => Rashi.fromLongitude(p.longitude) == sign)
+            .length *
+        10.0;
     final lord = _getSignLordAdvanced(sign, chart);
     final lordInfo = chart.getPlanet(lord);
     if (lordInfo != null) {
@@ -893,7 +1074,8 @@ class DashaService {
     }
     final ak = _getAtmakaraka(chart);
     final akInfo = chart.getPlanet(ak);
-    if (akInfo != null && Rashi.fromLongitude(akInfo.longitude) == sign) strength += 50.0;
+    if (akInfo != null && Rashi.fromLongitude(akInfo.longitude) == sign)
+      strength += 50.0;
     return strength;
   }
 

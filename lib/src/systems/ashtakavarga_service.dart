@@ -244,7 +244,8 @@ class AshtakavargaService {
   /// sign with 0 bindus. This differs from some interpretations but strictly
   /// follows the standard BPHS method of subtraction.
   Ashtakavarga applyTrikonaShodhana(Ashtakavarga ashtakavarga) {
-    final reducedBhinnashtakavarga = ashtakavarga.bhinnashtakavarga.keys.associateWith((planet) {
+    final reducedBhinnashtakavarga =
+        ashtakavarga.bhinnashtakavarga.keys.associateWith((planet) {
       final bav = ashtakavarga.bhinnashtakavarga[planet]!;
       final reducedBindus = List<int>.from(bav.bindus);
 
@@ -265,13 +266,16 @@ class AshtakavargaService {
 
         // Subtract minimum from each sign (traditional method)
         if (bindu1 > 0) {
-          reducedBindus[trikona[0]] = (bindu1 - minBindu).clamp(0, bindu1).toInt();
+          reducedBindus[trikona[0]] =
+              (bindu1 - minBindu).clamp(0, bindu1).toInt();
         }
         if (bindu2 > 0) {
-          reducedBindus[trikona[1]] = (bindu2 - minBindu).clamp(0, bindu2).toInt();
+          reducedBindus[trikona[1]] =
+              (bindu2 - minBindu).clamp(0, bindu2).toInt();
         }
         if (bindu3 > 0) {
-          reducedBindus[trikona[2]] = (bindu3 - minBindu).clamp(0, bindu3).toInt();
+          reducedBindus[trikona[2]] =
+              (bindu3 - minBindu).clamp(0, bindu3).toInt();
         }
       }
 
@@ -307,7 +311,8 @@ class AshtakavargaService {
   /// Note: This is a simplified version. Traditional method also considers
   /// whether planets are actually in the signs or lords are in own signs.
   Ashtakavarga applyEkadhipatiShodhana(Ashtakavarga ashtakavarga) {
-    final reducedBhinnashtakavarga = ashtakavarga.bhinnashtakavarga.keys.associateWith((planet) {
+    final reducedBhinnashtakavarga =
+        ashtakavarga.bhinnashtakavarga.keys.associateWith((planet) {
       final bav = ashtakavarga.bhinnashtakavarga[planet]!;
       final reducedBindus = List<int>.from(bav.bindus);
 
@@ -361,7 +366,8 @@ class AshtakavargaService {
   ///
   /// This implements the traditional Shodhya Pinda calculation.
   Map<Planet, PindaResult> calculatePinda(Ashtakavarga ashtakavarga) {
-    final pindaResults = ashtakavarga.bhinnashtakavarga.keys.associateWith((planet) {
+    final pindaResults =
+        ashtakavarga.bhinnashtakavarga.keys.associateWith((planet) {
       final bav = ashtakavarga.bhinnashtakavarga[planet]!;
 
       var totalRashiPinda = 0.0;
@@ -429,7 +435,8 @@ class AshtakavargaService {
   ///
   /// Returns the Yoga Pinda for each planet
   Map<Planet, YogaPindaResult> calculateYogaPinda(Ashtakavarga ashtakavarga) {
-    final yogaPindaResults = ashtakavarga.bhinnashtakavarga.keys.associateWith((planet) {
+    final yogaPindaResults =
+        ashtakavarga.bhinnashtakavarga.keys.associateWith((planet) {
       final bav = ashtakavarga.bhinnashtakavarga[planet]!;
 
       var totalYogaPinda = 0.0;

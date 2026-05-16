@@ -556,8 +556,9 @@ class Jyotish {
   }) {
     _ensureInitialized();
 
-    final positions = Map<Planet, PlanetPosition>.from(chart.planets.map((k, v) => MapEntry(k, v.position)));
-    
+    final positions = Map<Planet, PlanetPosition>.from(
+        chart.planets.map((k, v) => MapEntry(k, v.position)));
+
     // Explicitly add nodes if they aren't in the main map
     if (config.includeNodes) {
       positions[Planet.meanNode] = chart.rahu.position;
@@ -1251,10 +1252,26 @@ class Jyotish {
   // JAIMINI ASTROLOGY (Arudha, Argala, Karakamsa, Drishti)
   // ============================================================
 
-  /// Gets the Atmakaraka (planet with highest degree).
-  Planet getAtmakaraka(VedicChart chart) {
+  /// Returns all 7 (or 8) Chara Karakas ranked by degree.
+  ///
+  /// [useEightKarakaScheme] - if true (default), uses the 8-karaka scheme
+  /// (includes Rahu). If false, uses the classical 7-karaka scheme.
+  CharaKarakaResult getCharaKarakas(
+    VedicChart chart, {
+    bool useEightKarakaScheme = true,
+  }) {
     _ensureInitialized();
-    return _jaiminiService!.getAtmakaraka(chart);
+    return _jaiminiService!.getCharaKarakas(
+      chart,
+      useEightKarakaScheme: useEightKarakaScheme,
+    );
+  }
+
+  /// Gets the Atmakaraka (planet with highest degree).
+  Planet getAtmakaraka(VedicChart chart, {bool useEightKarakaScheme = true}) {
+    _ensureInitialized();
+    return _jaiminiService!
+        .getAtmakaraka(chart, useEightKarakaScheme: useEightKarakaScheme);
   }
 
   /// Gets Karakamsa (Atmakaraka in Navamsa).
@@ -2026,7 +2043,8 @@ class Jyotish {
     required VedicChart natalChart,
   }) {
     _ensureInitialized();
-    final matrix = _planetaryRelationshipService!.getAllRelationships(natalChart);
+    final matrix =
+        _planetaryRelationshipService!.getAllRelationships(natalChart);
     final results = <PlanetaryRelationship>[];
     for (final row in matrix.values) {
       results.addAll(row.values);
@@ -2297,7 +2315,8 @@ class Jyotish {
   Future<Map<Planet, VimshopakBala>> getAllPlanetsVimshopakBalaAsync(
       VedicChart chart) async {
     _ensureInitialized();
-    return await _strengthAnalysisService!.getAllPlanetsVimshopakBalaAsync(chart);
+    return await _strengthAnalysisService!
+        .getAllPlanetsVimshopakBalaAsync(chart);
   }
 
   // ============================================================

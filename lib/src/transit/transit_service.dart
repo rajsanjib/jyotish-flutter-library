@@ -80,58 +80,61 @@ class TransitService {
   ) {
     const config = AspectConfig.vedic;
 
-    return natalChart.planets.entries.map((entry) {
-      final natalPlanet = entry.key;
-      final natalPos = entry.value.position;
+    return natalChart.planets.entries
+        .map((entry) {
+          final natalPlanet = entry.key;
+          final natalPos = entry.value.position;
 
-      // Calculate angular difference
-      var angularDiff = (natalPos.longitude - transitPos.longitude) % 360;
-      if (angularDiff < 0) angularDiff += 360;
+          // Calculate angular difference
+          var angularDiff = (natalPos.longitude - transitPos.longitude) % 360;
+          if (angularDiff < 0) angularDiff += 360;
 
-      final aspects = <AspectInfo>[];
+          final aspects = <AspectInfo>[];
 
-      // Check conjunction
-      if (angularDiff.abs() <= 10 || (360 - angularDiff).abs() <= 10) {
-        final orb = angularDiff <= 180 ? angularDiff : 360 - angularDiff;
-        aspects.add(AspectInfo(
-          aspectingPlanet: transitPos.planet,
-          aspectedPlanet: natalPlanet,
-          type: AspectType.conjunction,
-          exactOrb: orb,
-          isApplying: transitPos.longitudeSpeed > 0,
-          strength: 1.0 - (orb / 10).clamp(0.0, 1.0),
-          aspectingLongitude: transitPos.longitude,
-          aspectedLongitude: natalPos.longitude,
-        ));
-      }
+          // Check conjunction
+          if (angularDiff.abs() <= 10 || (360 - angularDiff).abs() <= 10) {
+            final orb = angularDiff <= 180 ? angularDiff : 360 - angularDiff;
+            aspects.add(AspectInfo(
+              aspectingPlanet: transitPos.planet,
+              aspectedPlanet: natalPlanet,
+              type: AspectType.conjunction,
+              exactOrb: orb,
+              isApplying: transitPos.longitudeSpeed > 0,
+              strength: 1.0 - (orb / 10).clamp(0.0, 1.0),
+              aspectingLongitude: transitPos.longitude,
+              aspectedLongitude: natalPos.longitude,
+            ));
+          }
 
-      // Check opposition (180)
-      final oppDiff = (angularDiff - 180).abs();
-      if (oppDiff <= 10) {
-        aspects.add(AspectInfo(
-          aspectingPlanet: transitPos.planet,
-          aspectedPlanet: natalPlanet,
-          type: AspectType.opposition,
-          exactOrb: oppDiff,
-          isApplying: transitPos.longitudeSpeed > 0,
-          strength: 1.0 - (oppDiff / 10).clamp(0.0, 1.0),
-          aspectingLongitude: transitPos.longitude,
-          aspectedLongitude: natalPos.longitude,
-        ));
-      }
+          // Check opposition (180)
+          final oppDiff = (angularDiff - 180).abs();
+          if (oppDiff <= 10) {
+            aspects.add(AspectInfo(
+              aspectingPlanet: transitPos.planet,
+              aspectedPlanet: natalPlanet,
+              type: AspectType.opposition,
+              exactOrb: oppDiff,
+              isApplying: transitPos.longitudeSpeed > 0,
+              strength: 1.0 - (oppDiff / 10).clamp(0.0, 1.0),
+              aspectingLongitude: transitPos.longitude,
+              aspectedLongitude: natalPos.longitude,
+            ));
+          }
 
-      // Check special aspects for Mars, Jupiter, Saturn transits
-      if (config.includeSpecialAspects) {
-        aspects.addAll(_checkTransitSpecialAspects(
-          transitPos,
-          natalPlanet,
-          natalPos,
-          angularDiff,
-        ));
-      }
+          // Check special aspects for Mars, Jupiter, Saturn transits
+          if (config.includeSpecialAspects) {
+            aspects.addAll(_checkTransitSpecialAspects(
+              transitPos,
+              natalPlanet,
+              natalPos,
+              angularDiff,
+            ));
+          }
 
-      return aspects;
-    }).expand((element) => element).toList();
+          return aspects;
+        })
+        .expand((element) => element)
+        .toList();
   }
 
   /// Check special aspects for transit planets.
@@ -293,8 +296,10 @@ class TransitService {
   }
 
   List<TransitEvent> _deduplicateEvents(List<TransitEvent> events) {
-    return events.distinctBy((e) =>
-        '${e.transitPlanet}-${e.natalPlanet}-${e.aspectType}-${(e.exactDate.millisecondsSinceEpoch / (1000 * 60 * 60 * 24 * 7)).floor()}').toList();
+    return events
+        .distinctBy((e) =>
+            '${e.transitPlanet}-${e.natalPlanet}-${e.aspectType}-${(e.exactDate.millisecondsSinceEpoch / (1000 * 60 * 60 * 24 * 7)).floor()}')
+        .toList();
   }
 
   String _generateTransitDescription(AspectInfo aspect, bool isRetrograde) {

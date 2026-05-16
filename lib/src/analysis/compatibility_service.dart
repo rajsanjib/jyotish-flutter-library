@@ -485,7 +485,11 @@ class CompatibilityService {
   }
 
   String _getGanaType(String nakshatra, Map<String, List<String>> ganaTypes) {
-    return ganaTypes.entries.where((e) => e.value.contains(nakshatra)).firstOrNull?.key ?? 'Manushya';
+    return ganaTypes.entries
+            .where((e) => e.value.contains(nakshatra))
+            .firstOrNull
+            ?.key ??
+        'Manushya';
   }
 
   //  Bhakoot Koota (max 7 points)

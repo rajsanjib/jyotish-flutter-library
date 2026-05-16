@@ -6,34 +6,55 @@ import 'package:dartx/dartx.dart';
 
 /// Service for Jaimini astrology calculations (Karakamsa, Rashi Drishti).
 class JaiminiService {
-  /// Gets the Atmakaraka (planet with highest degree in its sign).
+  /// Returns all Chara Karakas ranked from highest to lowest degree.
   ///
-  /// Per Jaimini, Atmakaraka is the planet with the highest degree
-  /// in its sign (excluding the Sun). Traditionally includes 7 planets + Rahu.
-  ///
-  /// Special rule for Rahu: Since Rahu moves in reverse direction,
-  /// its degrees are measured as 30 minus its longitude within the sign.
-  /// This gives Rahu a chance to be Atmakaraka.
-  Planet getAtmakaraka(VedicChart chart) {
-    return [
-      Planet.sun,
-      Planet.moon,
-      Planet.mars,
-      Planet.mercury,
-      Planet.jupiter,
-      Planet.venus,
-      Planet.saturn,
-      Planet.meanNode,
-    ].filter((p) => p != Planet.sun).maxBy((p) {
-      final info = chart.getPlanet(p);
-      if (info == null) return -1.0;
-      var degree = info.longitude % 30;
-      if (p == Planet.meanNode || p == Planet.ketu) {
-        degree = 30.0 - degree;
-      }
-      return degree;
-    }) ?? Planet.moon;
+  /// [useEightKarakaScheme] - if true (default), uses 8 candidates including Rahu.
+  /// If false, uses 7 classical planets (Sun through Saturn) without Rahu.
+  CharaKarakaResult getCharaKarakas(
+    VedicChart chart, {
+    bool useEightKarakaScheme = true, // Default to 8-karaka per user decision
+  }) {
+    final candidates = useEightKarakaScheme
+        ? [
+            Planet.sun,
+            Planet.moon,
+            Planet.mars,
+            Planet.mercury,
+            Planet.jupiter,
+            Planet.venus,
+            Planet.saturn,
+            Planet.meanNode
+          ]
+        : [
+            Planet.sun,
+            Planet.moon,
+            Planet.mars,
+            Planet.mercury,
+            Planet.jupiter,
+            Planet.venus,
+            Planet.saturn
+          ];
+
+    final ranked = candidates.where((p) => chart.getPlanet(p) != null).toList()
+      ..sort((a, b) {
+        double degA = chart.getPlanet(a)!.longitude % 30;
+        double degB = chart.getPlanet(b)!.longitude % 30;
+        // Rahu's degree is measured in reverse
+        if (a == Planet.meanNode || a == Planet.trueNode) degA = 30.0 - degA;
+        if (b == Planet.meanNode || b == Planet.trueNode) degB = 30.0 - degB;
+        return degB.compareTo(degA); // descending
+      });
+
+    return CharaKarakaResult(
+      karakas: ranked.take(useEightKarakaScheme ? 8 : 7).toList(),
+      scheme: useEightKarakaScheme,
+    );
   }
+
+  /// Convenience - returns only the Atmakaraka.
+  Planet getAtmakaraka(VedicChart chart, {bool useEightKarakaScheme = true}) =>
+      getCharaKarakas(chart, useEightKarakaScheme: useEightKarakaScheme)
+          .atmakaraka;
 
   /// Gets Karakamsa information.
   /// Requires both Rashi (D1) and Navamsa (D9) charts.

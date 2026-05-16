@@ -168,6 +168,9 @@ class PlanetPosition {
   /// Gets the nakshatra name.
   String get nakshatra => _nakshatras[nakshatraIndex];
 
+  /// Sanskrit (IAST) name of the nakshatra.
+  String get nakshatraSanskrit => _nakshatrasSanskrit[nakshatraIndex];
+
   /// Gets the nakshatra pada (quarter, 1-4).
   int get nakshatraPada {
     final posInNakshatra = longitude % (360 / 27);
@@ -214,6 +217,7 @@ class PlanetPosition {
       'zodiacSignIndex': zodiacSignIndex,
       'positionInSign': positionInSign,
       'nakshatra': nakshatra,
+      'nakshatraSanskrit': nakshatraSanskrit,
       'nakshatraIndex': nakshatraIndex,
       'nakshatraPada': nakshatraPada,
     };
@@ -286,5 +290,36 @@ class PlanetPosition {
     'Purva Bhadrapada',
     'Uttara Bhadrapada',
     'Revati',
+  ];
+
+  // Nakshatras (27 lunar mansions) in Sanskrit (IAST)
+  static const List<String> _nakshatrasSanskrit = [
+    'Ashvinī',
+    'Bharaṇī',
+    'Kṛttikā',
+    'Rohiṇī',
+    'Mṛgaśirā',
+    'Ārdrā',
+    'Punarvasu',
+    'Puṣya',
+    'Āśleṣā',
+    'Maghā',
+    'Pūrva Phālgunī',
+    'Uttara Phālgunī',
+    'Hasta',
+    'Citrā',
+    'Svātī',
+    'Viśākhā',
+    'Anurādhā',
+    'Jyeṣṭhā',
+    'Mūla',
+    'Pūrva Āṣāḍhā',
+    'Uttara Āṣāḍhā',
+    'Śravaṇa',
+    'Dhaniṣṭhā',
+    'Śatabhiṣā',
+    'Pūrva Bhādrapadā',
+    'Uttara Bhādrapadā',
+    'Revatī',
   ];
 }

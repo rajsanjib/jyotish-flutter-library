@@ -8,7 +8,7 @@
 /// - Aspect calculations (Graha Drishti)
 /// - Transit calculations
 /// - Dasha system support (Vimshottari and Yogini)
-library jyotish;
+library;
 
 // Jyotish Core
 export 'package:jyotish/src/jyotish_core.dart';

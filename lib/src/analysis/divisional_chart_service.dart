@@ -31,7 +31,8 @@ class DivisionalChartService {
         '_${rashiChart.ascendant.hashCode}'
         '_${planetsHash}_${type.name}';
 
-    return _cache.putIfAbsent(key, () => _computeDivisionalChart(rashiChart, type));
+    return _cache.putIfAbsent(
+        key, () => _computeDivisionalChart(rashiChart, type));
   }
 
   VedicChart _computeDivisionalChart(

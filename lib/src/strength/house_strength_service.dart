@@ -22,7 +22,7 @@ class HouseStrengthService {
 
   static Map<Planet, VimsopakaBalaResult> _calculateVimsopakaBalaStatic(
       VedicChart chart) {
-    // Note: ShadbalaService(null) is fine because calculateVimsopakaBala 
+    // Note: ShadbalaService(null) is fine because calculateVimsopakaBala
     // only uses divisional chart service.
     final service = HouseStrengthService(ShadbalaService(EphemerisService()));
     return service.calculateVimsopakaBala(chart);
@@ -52,7 +52,8 @@ class HouseStrengthService {
   Future<Map<int, EnhancedBhavaBalaResult>> calculateEnhancedBhavaBala(
       VedicChart chart) async {
     if (_shadbalaService == null) {
-      throw StateError('ShadbalaService must be provided to calculate Bhava Bala');
+      throw StateError(
+          'ShadbalaService must be provided to calculate Bhava Bala');
     }
     final shadbala = await _shadbalaService!.calculateShadbala(chart);
     final vimsopakaBala = calculateVimsopakaBala(chart);

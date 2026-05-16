@@ -224,7 +224,8 @@ class EphemerisService {
         _bindings!.setSiderealMode(mode.constant, 0.0, 0.0);
 
         // Convert DateTime to Julian Day
-        final julianDay = _dateTimeToJulianDay(dateTime, timezoneId: timezoneId);
+        final julianDay =
+            _dateTimeToJulianDay(dateTime, timezoneId: timezoneId);
 
         // Get ayanamsa
         return _bindings!.getAyanamsaUT(julianDay);

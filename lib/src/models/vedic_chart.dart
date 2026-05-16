@@ -1,4 +1,5 @@
 import 'package:jyotish/src/models/planet.dart';
+import 'package:jyotish/src/models/rashi.dart';
 import 'package:jyotish/src/astronomy/planet_position.dart';
 import 'package:jyotish/src/models/calculation_flags.dart';
 
@@ -60,6 +61,20 @@ class HouseSystem {
     final signIndex = (ascendant / 30).floor() % 12;
     return _zodiacSigns[signIndex];
   }
+
+  /// Sanskrit name of the Ascendant sign.
+  String get ascendantSignSanskrit {
+    final signIndex = (ascendant / 30).floor() % 12;
+    return Rashi.values[signIndex].sanskritName;
+  }
+
+  /// Converts this HouseSystem to a JSON map.
+  Map<String, dynamic> toJson() => {
+        'system': system,
+        'ascendant': ascendant,
+        'midheaven': midheaven,
+        'cusps': cusps,
+      };
 
   static const List<String> _zodiacSigns = [
     'Aries',
@@ -144,6 +159,19 @@ class KetuPosition {
 
   /// DateTime of the calculation
   DateTime get dateTime => rahuPosition.dateTime;
+
+  /// Converts this KetuPosition to a JSON map.
+  Map<String, dynamic> toJson() => {
+        'longitude': longitude,
+        'latitude': latitude,
+        'distance': distance,
+        'longitudeSpeed': longitudeSpeed,
+        'isRetrograde': isRetrograde,
+        'zodiacSign': zodiacSign,
+        'positionInSign': positionInSign,
+        'nakshatra': nakshatra,
+        'nakshatraPada': nakshatraPada,
+      };
 
   static const List<String> _zodiacSigns = [
     'Aries',
@@ -269,6 +297,18 @@ class VedicPlanetInfo {
 
   /// Formatted position
   String get formattedPosition => position.formattedPosition;
+
+  /// Converts this VedicPlanetInfo to a JSON map.
+  Map<String, dynamic> toJson() => {
+        'planet': position.planet.displayName,
+        'house': house,
+        'dignity': dignity.english,
+        'dignitySanskrit': dignity.sanskrit,
+        'isCombust': isCombust,
+        'exaltationDegree': exaltationDegree,
+        'debilitationDegree': debilitationDegree,
+        'position': position.toJson(),
+      };
 }
 
 /// Complete Vedic astrology chart data.
@@ -356,4 +396,20 @@ class VedicChart {
   List<VedicPlanetInfo> get combustPlanets {
     return planets.values.where((info) => info.isCombust).toList();
   }
+
+  /// Converts this VedicChart to a JSON map.
+  Map<String, dynamic> toJson() => {
+        'dateTime': dateTime.toIso8601String(),
+        'location': location,
+        'latitude': latitude,
+        'longitude': longitudeCoord,
+        'ascendant': ascendant,
+        'ascendantSign': ascendantSign,
+        'houses': houses.toJson(),
+        'planets': planets.map(
+          (planet, info) => MapEntry(planet.displayName, info.toJson()),
+        ),
+        'rahu': rahu.toJson(),
+        'ketu': ketu.toJson(),
+      };
 }

@@ -411,44 +411,47 @@ class AspectService {
     Map<Planet, PlanetPosition> positions, {
     bool useWholeSign = true,
   }) {
-    return positions.entries.where((entry) {
-      final planet = entry.key;
-      final pos = entry.value;
+    return positions.entries
+        .where((entry) {
+          final planet = entry.key;
+          final pos = entry.value;
 
-      if (useWholeSign) {
-        final planetSign = (pos.longitude / 30).floor() % 12;
-        final d = (houseSignIndex - planetSign + 12) % 12;
+          if (useWholeSign) {
+            final planetSign = (pos.longitude / 30).floor() % 12;
+            final d = (houseSignIndex - planetSign + 12) % 12;
 
-        if (d == 6 || d == 0) return true;
-        if (planet == Planet.mars && (d == 3 || d == 7)) return true;
-        if (planet == Planet.jupiter && (d == 4 || d == 8)) return true;
-        if (planet == Planet.saturn && (d == 2 || d == 9)) return true;
-        return false;
-      } else {
-        final targetMidpoint = (houseSignIndex * 30) + 15;
-        final angularDiff = _calculateAngularDifference(
-            pos.longitude, targetMidpoint.toDouble());
+            if (d == 6 || d == 0) return true;
+            if (planet == Planet.mars && (d == 3 || d == 7)) return true;
+            if (planet == Planet.jupiter && (d == 4 || d == 8)) return true;
+            if (planet == Planet.saturn && (d == 2 || d == 9)) return true;
+            return false;
+          } else {
+            final targetMidpoint = (houseSignIndex * 30) + 15;
+            final angularDiff = _calculateAngularDifference(
+                pos.longitude, targetMidpoint.toDouble());
 
-        if ((angularDiff - 180).abs() <= 15) {
-          return true;
-        }
-        if (planet == Planet.mars &&
-            ((angularDiff - 90).abs() <= 15 ||
-                (angularDiff - 210).abs() <= 15)) {
-          return true;
-        }
-        if (planet == Planet.jupiter &&
-            ((angularDiff - 120).abs() <= 15 ||
-                (angularDiff - 240).abs() <= 15)) {
-          return true;
-        }
-        if (planet == Planet.saturn &&
-            ((angularDiff - 60).abs() <= 15 ||
-                (angularDiff - 270).abs() <= 15)) {
-          return true;
-        }
-        return false;
-      }
-    }).map((e) => e.key).toList();
+            if ((angularDiff - 180).abs() <= 15) {
+              return true;
+            }
+            if (planet == Planet.mars &&
+                ((angularDiff - 90).abs() <= 15 ||
+                    (angularDiff - 210).abs() <= 15)) {
+              return true;
+            }
+            if (planet == Planet.jupiter &&
+                ((angularDiff - 120).abs() <= 15 ||
+                    (angularDiff - 240).abs() <= 15)) {
+              return true;
+            }
+            if (planet == Planet.saturn &&
+                ((angularDiff - 60).abs() <= 15 ||
+                    (angularDiff - 270).abs() <= 15)) {
+              return true;
+            }
+            return false;
+          }
+        })
+        .map((e) => e.key)
+        .toList();
   }
 }

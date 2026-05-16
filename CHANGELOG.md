@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.0] - 2026-05-16
+
+### Added
+- **JSON Serialization**: Full serialization support via `toJson()` across core models (`VedicChart`, `HouseSystem`, `VedicPlanetInfo`, `KetuPosition`, `PlanetPosition`). Deeply nested objects are natively supported for easier cross-isolate processing and caching.
+- **Sanskrit Localization (IAST)**:
+  - `Planet` enum now includes `sanskritName` (e.g., `Sūrya`, `Candra`).
+  - Added `ascendantSignSanskrit` to `HouseSystem`.
+  - Added `nakshatraSanskrit` to `PlanetPosition` using proper IAST (e.g., `Āśleṣā`).
+
+### Fixed
+- **Jaimini Chara Karakas**: Fixed calculation to include the full 7 or 8 Karaka ranking system (AK, AmK, BK, etc.). Default behavior respects the 8-Karaka scheme. Exposed via `getCharaKarakas()`.
+- **Chara Dasha Sub-periods**: Resolved a bug where `levels` parameter was ignored. Chara Dasha now recursively calculates sub-periods (Antardashas) to the requested depth. Mahadasha levels correctly reflect depth `0`.
+- **Cleanup**: Removed circular `KPService` imports in configuration flags.
+
+---
+
 ## [2.8.0] - 2026-05-02
 
 ### Added — Special Muhurta Yogas

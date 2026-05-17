@@ -811,6 +811,7 @@ await service.initialize();
 | `getPlanetVisibility({planet, date, location})` | `Future<PlanetVisibility>` | Heliacal rise/set |
 | `getEclipseData({date, location, eclipseType})` | `Future<EclipseData?>` | Solar/lunar eclipse info |
 | `getJulianDay(dateTime, {timezoneId?})` | `double` | DateTime to Julian Day |
+| `dateTimeToJulianDay(dateTime, {timezoneId?})` | `double` | Converts a DateTime to Julian Day number |
 | `dispose()` | `void` | Release resources |
 | `isInitialized` | `bool` | Whether the service has been initialized |
 

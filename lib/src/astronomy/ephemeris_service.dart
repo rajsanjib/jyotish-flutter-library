@@ -57,6 +57,11 @@ class EphemerisService {
     }
   }
 
+  /// Converts a DateTime to Julian Day number.
+  double dateTimeToJulianDay(DateTime dateTime, {String? timezoneId}) {
+    return _dateTimeToJulianDay(dateTime, timezoneId: timezoneId);
+  }
+
   /// Calculates the position of a planet.
   ///
   /// [planet] - The planet to calculate.

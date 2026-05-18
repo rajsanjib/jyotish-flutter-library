@@ -48,6 +48,7 @@ This fork significantly extends the original library with high-level astrologica
 - **❓ Prashna (Horary)**: Arudha calculation (1-249), Sphutas, and Gulika.
 
 ### New Features (Latest)
+- **🌴 Tree-Shaking & Modular Imports**: Support for 9 micro-targeted barrel files (e.g. `core.dart`, `panchanga.dart`, `systems.dart`) allowing aggressive dead-code elimination and minimized bundle sizes in Flutter production builds.
 - **📐 House Strength (Vimsopaka Bala)**: Enhanced house strength with divisional chart integration.
 - **🔢 Nadi Astrology**: Nadi identification from planetary positions (150 Nadis per sign).
 - **👶 Progeny Analysis**: Child prediction based on 5th house, Jupiter, and D7 chart.
@@ -88,6 +89,9 @@ void main() async {
   jyotish.dispose();
 }
 ```
+
+> [!TIP]
+> **Tree-Shaking Support**: For optimized production builds, you can import specific sub-modules instead of the entire library (e.g., `import 'package:jyotish/core.dart';` and `import 'package:jyotish/panchanga.dart';`). Learn more in the [API Reference](API_REFERENCE.md#new-in-v2100--tree-shaking--module-isolation).
 
 **Key Features:**
 
@@ -432,12 +436,13 @@ final ayanamsa = await service.getAyanamsa(
 print('Lahiri Ayanamsa: ${ayanamsa.toStringAsFixed(6)}°');
 ```
 
-## Performance Considerations
+## Performance & Tree-Shaking Considerations
 
 1. **Initialization**: Call `initialize()` once at app startup
 2. **Batch Calculations**: Use `getMultiplePlanetPositions()` for multiple planets
 3. **Caching**: Consider caching results if querying the same time repeatedly
 4. **Resource Management**: Always call `dispose()` when done
+5. **Modular Imports**: Import micro-targeted barrel modules (e.g., `package:jyotish/core.dart`, `package:jyotish/transit.dart`) instead of the monolithic `package:jyotish/jyotish.dart` to enable aggressive compiler tree-shaking and reduce your Flutter app's compiled binary size.
 
 ## Contributing
 

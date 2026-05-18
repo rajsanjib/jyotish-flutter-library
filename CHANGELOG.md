@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.0] - 2026-05-18
+
+### Added
+- **Tree-Shaking & Modular Barrel Files**: Added 9 independent barrel files representing logically isolated sub-modules. Consumers can now import micro-targeted modules directly instead of the heavy all-in-one barrel to optimize compiled bundle sizes and avoid cross-module export leaks:
+  - `package:jyotish/core.dart` — Common models, enums, calculation flags, and base exceptions (`Jyotish`, `GeographicLocation`, `CalculationFlags`, `Planet`, `Rashi`, etc.)
+  - `package:jyotish/analysis.dart` — Chart structures, divisional charts, compatibility Guna Milan, aspects, progeny, event timing, and Sudarshan Chakra
+  - `package:jyotish/astronomy.dart` — Precision coordinate translations, astronomy time service, Udaya Lagna, and ephemeris structures
+  - `package:jyotish/muhurta.dart` — Auspicious timings, Hora/Choghadiya services, Gowri Panchangam, Tarabalam/Chandrabalam, and ritual selectors
+  - `package:jyotish/nadi.dart` — Nadi leaf prediction engines and services
+  - `package:jyotish/panchanga.dart` — Core 5 limbs of time (Tithi, Vara, Nakshatra, Yoga, Karana) and Masa services
+  - `package:jyotish/strength.dart` — Shadbala, Bhava Bala, Vimshopak Bala, Graha Avasthas, and Planetary friendship relations
+  - `package:jyotish/systems.dart` — Astrological engine systems (Dasha, Ashtakavarga, KP System, Varshapal, Jaimini, Prashna, Argala, Arudha Pada)
+  - `package:jyotish/transit.dart` — Planetary movements, Sade Sati, transit events, Gochara Vedha, and Sarvatobhadra Chakra
+- **Module Isolation & Safety**: Internal types like `VedhaSeverity` in `sarvatobhadra.dart` are hidden from external exports in `transit.dart` to prevent implementation detail leakage.
+- **Tree Shaking Verification Test Suite**: Added a robust test suite (`test/tree_shaking_test.dart`) with 119 unit tests to guarantee clean compilation boundaries, verify correct export counts per module, validate selective import usage, and ensure module isolation.
+
+---
+
 ## [2.9.1] - 2026-05-17
 
 ### Added

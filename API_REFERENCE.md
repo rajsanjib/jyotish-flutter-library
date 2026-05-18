@@ -11,6 +11,8 @@ A comprehensive API reference for the Jyotish Flutter library - production-ready
   - [Jyotish](#jyotish)
   - [GeographicLocation](#geographiclocation)
   - [CalculationFlags](#calculationflags)
+- [New in v2.10.0 — Tree Shaking & Module Isolation](#new-in-v2100--tree-shaking--module-isolation)
+- [New in v2.9.0 & v2.9.1 — JSON, Sanskrit, Jaimini, and Julian Day](#new-in-v290--v291--json-sanskrit-jaimini-and-julian-day)
 - [New in v2.7.0 — Performance & Modernization](#new-in-v270--performance--modernization)
 - [New in v2.6.0 — High-Precision Eclipse Reporting](#new-in-v260--high-precision-eclipse-reporting)
 - [New in v2.5.0 — AstrologicalSystem](#new-in-v250--astrologicalsystem)
@@ -120,6 +122,8 @@ A comprehensive API reference for the Jyotish Flutter library - production-ready
   - [EclipseData](#eclipsedata)
 - [Enums](#enums)
 - [Professional Features (v2.3.0)](#professional-features-v230)
+- [New in v2.10.0 — Tree Shaking & Module Isolation](#new-in-v2100--tree-shaking--module-isolation)
+- [New in v2.9.0 & v2.9.1 — JSON, Sanskrit, Jaimini, and Julian Day](#new-in-v290--v291--json-sanskrit-jaimini-and-julian-day)
 - [New in v2.7.0 — Performance & Modernization](#new-in-v270--performance--modernization)
 - [New in v2.6.0 — High-Precision Eclipse Reporting](#new-in-v260--high-precision-eclipse-reporting)
 - [Error Handling](#error-handling)
@@ -2853,6 +2857,97 @@ Type of eclipse.
 |-------|-------------|
 | `solar` | Solar eclipse |
 | `lunar` | Lunar eclipse |
+
+---
+
+## New in v2.10.0 — Tree Shaking & Module Isolation
+
+This update introduces high-performance modular imports for the `jyotish` library, dividing the massive API surface into 9 independent barrel files. This prevents cross-module export leakage and allows Flutter bundlers to perform aggressive dead-code elimination (tree-shaking), reducing the size of production applications.
+
+### 1. The 9 Independent Barrel Files
+
+Instead of importing `package:jyotish/jyotish.dart`, consumers can now micro-target their imports using the following module-specific entry points:
+
+| Module / Entry Point | What it Exports | Primary Use Cases |
+|---|---|---|
+| `package:jyotish/core.dart` | `Jyotish` facade, `GeographicLocation`, `CalculationFlags`, `Planet`, `Rashi`, `AspectType`, exceptions, and base constants. | Essential models, initialization, and shared flags. |
+| `package:jyotish/analysis.dart` | `VedicChartService`, `DivisionalChartService`, `AspectService`, `CompatibilityService`, `CareerAnalysisService`, `EventTimingService`, `SudarshanChakraService`, `ProgenyService`, and related result models. | Birth chart creation, compatibility Guna Milan, aspects, career, and event timing prediction. |
+| `package:jyotish/astronomy.dart` | `PlanetPosition`, `EphemerisService`, `AstrologyTimeService`, `UdayaLagnaService`. | Coordinate conversions, high-precision Swiss Ephemeris data, and rising sign periods. |
+| `package:jyotish/muhurta.dart` | `MuhurtaService`, `HoraService`, `ChoghadiyaService`, `GowriPanchangamService`, `TarabalamInfo`/`ChandrabalamInfo`, `RitualService`. | Selecting auspicious times, planet-hours (Horas), daytime/nighttime Choghadiya, and ritual boundaries. |
+| `package:jyotish/nadi.dart` | `NadiService`, `NadiInfo`, `NadiChart`, `NadiType`. | Nadi leaf predictions and astrological interpretations. |
+| `package:jyotish/panchanga.dart` | `PanchangaService`, `MasaService`, `NakshatraInfo`, `MasaInfo`. | Accessing the 5 traditional limbs of time (Tithi, Nakshatra, Yoga, Karana, Vara) and lunar month schemes. |
+| `package:jyotish/strength.dart` | `PlanetaryRelationshipService`, `StrengthAnalysisService`, `StrengthReportService`, `BhavaBalaService`, `BhavaChalitService`, `HouseStrengthService`, `GrahaAvasthaService`, `PanchangStrengthService`. | Shadbala (six-fold strength), Vimshopak Bala, Bhava Chalit, planetary friendships (Pancha Maitri), and planetary conditions (Avasthas). |
+| `package:jyotish/systems.dart` | `DashaService`, `AshtakavargaService`, `KPService`, `VarshapalService`, `TajakaService`, `JaiminiService`, `PrashnaService`, `ArgalaService`, `ArudhaPadaService`, `ShadbalaService`. | Core astrological system engines: all Dasha systems (Vimshottari, Yogini, Chara, Narayana, Ashtottari, Kalachakra), Ashtakavarga reductions, Krishnamurti Paddhati (KP) 249 sub-lords, annual charts (Varshapal), Jaimini, Prashna, Arudha Padas, and Argalas. |
+| `package:jyotish/transit.dart` | `TransitService`, `SpecialTransitService` (Sade Sati, Dhaiya, Panchak), `GocharaVedhaService`, `SarvatobhadraService`. | Live transit positions, transit-event prediction, Sade Sati calculations, and transit obstructions (Vedha & Sarvatobhadra). |
+
+### 2. Module Isolation and Safety
+- All internal helper functions and sub-service implementation details are kept private under the `lib/src/` folder.
+- Entry points strictly export public API components. For example, `transit.dart` explicitly hides internal helper types such as `VedhaSeverity` from `sarvatobhadra.dart` to prevent import pollution.
+- Enforced at compile time and covered by tests.
+
+### 3. Verification Test Suite
+- A new dedicated test file `test/tree_shaking_test.dart` has been added with **119 comprehensive unit tests**.
+- Tests verify:
+  - Export counts per barrel file to prevent accidental additions.
+  - Strict module isolation (e.g., verifying that the `core` module does not leak `MuhurtaService`, and the `astronomy` module does not leak `DashaService`).
+  - Selective import usage patterns to ensure consumers can use single modules independently in isolation.
+  - Full library completeness (ensuring the main `jyotish.dart` continues to export all public features for backward compatibility).
+
+### Import Example Comparison
+
+**Before (Heavy, All-in-One):**
+```dart
+import 'package:jyotish/jyotish.dart';
+
+void main() async {
+  final jyotish = Jyotish();
+  await jyotish.initialize();
+  // Imports everything, including unused Nadi, Tajaka, and Varshapal services
+}
+```
+
+**After (Micro-targeted, Optimized):**
+```dart
+import 'package:jyotish/core.dart';
+import 'package:jyotish/panchanga.dart';
+
+void main() async {
+  final jyotish = Jyotish();
+  await jyotish.initialize();
+  
+  final location = GeographicLocation(latitude: 28.6139, longitude: 77.2090);
+  final panchanga = await jyotish.panchangaService.calculatePanchanga(
+    dateTime: DateTime.now(),
+    location: location,
+  );
+  // Only the core and panchanga binaries are compiled, allowing unused systems to be tree-shaken!
+}
+```
+
+---
+
+## New in v2.9.0 & v2.9.1 — JSON, Sanskrit, Jaimini, and Julian Day
+
+This sequence of releases introduces native cross-isolate support, deeper traditional Sanskrit integration, Jaimini calculations, and essential utility wrappers.
+
+### 1. High-Precision Julian Day Conversion (v2.9.1)
+- **Helper Method**: `dateTimeToJulianDay(DateTime, {String? timezoneId})` is exposed as a public method directly on `EphemerisService`.
+- **Purpose**: Allows external consumers to convert timezone-aware Dart `DateTime` objects to high-precision Julian Day floats, bypassing the need for low-level internal conversions.
+
+### 2. Full JSON Serialization (v2.9.0)
+- Natively added `toJson()` and `fromJson()` support across core data models:
+  - `VedicChart`, `HouseSystem`, `VedicPlanetInfo`, `KetuPosition`, and `PlanetPosition`.
+- **Purpose**: Enables seamless data sharing across Flutter isolates (essential for multi-threaded batch calculations) and makes local caching/persistence extremely straightforward.
+
+### 3. Sanskrit (IAST) Localization (v2.9.0)
+To support traditional representations:
+- `Planet` enum now contains a `sanskritName` getter (e.g., returns `Sūrya` for Sun, `Candra` for Moon).
+- `HouseSystem` now includes `ascendantSignSanskrit` representing the ascendant's IAST name.
+- `PlanetPosition` includes `nakshatraSanskrit` returning the high-precision nakshatra IAST name (e.g., `Āśleṣā` instead of Ashlesha).
+
+### 4. Advanced Jaimini Systems (v2.9.0)
+- **Jaimini Chara Karakas**: Fixed calculation of Jaimini Karakas (`getCharaKarakas()`) to fully support the traditional 7 or 8-Karaka ranking system (Atmakaraka, Amatyakaraka, Bhratrukaraka, etc.), defaulting to the classic 8-Karaka scheme.
+- **Chara Dasha Antardashas**: Fixed a bug where the `levels` parameter was ignored. Chara Dasha calculations now recursively traverse down to the requested sub-period depth (Mahadashas and Antardashas).
 
 ---
 

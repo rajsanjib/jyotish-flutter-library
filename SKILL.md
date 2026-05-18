@@ -43,15 +43,26 @@ final chart = await jyotish.calculateVedicChart(
 | **Muhurta** | `jyotish.calculateMuhurta(date: d, sunrise: sr, sunset: ss, location: l)` |
 | **Divisional** | `jyotish.getDivisionalChart(rashiChart: chart, type: DivisionalChartType.d9)` |
 | **Special Yogas**| Access `muhurta.specialYogas` for Sarvartha Siddhi, Guru Pushya, etc. |
+| **Julian Day** | `ephemerisService.dateTimeToJulianDay(dateTime, timezoneId: tz)` |
 
 ## 5. System Differentiator: Traditional vs KP
 Crucial for v2.5.0+:
 - **Traditional**: Use `CalculationFlags.traditionalist()`. Best for Parashari, Dasha, Shadbala.
 - **KP System**: Use `CalculationFlags.kp()`. **Mandatory** for KP Sub-Lords and significators. Throws `StateError` if mixed.
 
-## 6. Performance & Threads
+## 6. Performance, Threads, & Tree Shaking
 - For batch calculations (e.g., searching periods), use `Async` variants like `getAllPlanetsVimshopakBalaAsync` to avoid blocking the UI thread.
 - `EphemerisService` is a singleton; do not re-initialize it unnecessarily.
+- **Tree Shaking & Module Imports (v2.10.0+)**: To reduce application compiled sizes, import micro-targeted barrel files instead of the monolithic `package:jyotish/jyotish.dart`. Available barrel modules:
+  - `package:jyotish/core.dart` (facade, location, flags, planets, rashis)
+  - `package:jyotish/panchanga.dart` (tithi, vara, nakshatra, yoga, karana, masa)
+  - `package:jyotish/systems.dart` (dashas, ashtakavarga, KP system, Varshapal, Jaimini, Prashna)
+  - `package:jyotish/transit.dart` (movements, Sade Sati, transit events, Gochara Vedha, Sarvatobhadra)
+  - `package:jyotish/strength.dart` (Shadbala, Vimshopak, Avasthas, relationships)
+  - `package:jyotish/analysis.dart` (charts, divisional charts, compatibility, progeny, aspects)
+  - `package:jyotish/astronomy.dart` (ephemeris coordinates, rise/set calculations)
+  - `package:jyotish/muhurta.dart` (auspicious times, Horas, Choghadiyas)
+  - `package:jyotish/nadi.dart` (nadi prediction services)
 
 ## 7. Common Gotchas for Agents
 - **Moon Illumination**: v2.1.0 corrected the formula. 0% = New Moon (Amavasya), 100% = Full Moon (Purnima).
@@ -65,4 +76,4 @@ Crucial for v2.5.0+:
 - **House Systems**: 'W' (Whole Sign - Default), 'P' (Placidus - Mandatory for KP).
 
 ---
-*This skill file was automatically generated based on API_REFERENCE.md v2.8.0.*
+*This skill file was automatically generated based on API_REFERENCE.md v2.10.0.*

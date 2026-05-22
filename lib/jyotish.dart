@@ -26,12 +26,18 @@ export 'package:jyotish/src/models/geographic_location.dart';
 export 'package:jyotish/src/models/planet.dart';
 export 'package:jyotish/src/models/rashi.dart';
 export 'package:jyotish/src/models/aspect.dart';
+export 'package:jyotish/src/models/varga_configuration.dart';
+export 'package:jyotish/src/models/graha_yuddha.dart';
+export 'package:jyotish/src/models/prastara_result.dart';
+export 'package:jyotish/src/models/special_lagnas.dart';
+export 'package:jyotish/src/models/compatibility_report.dart';
 
 // Astronomy
 export 'package:jyotish/src/astronomy/planet_position.dart';
 export 'package:jyotish/src/astronomy/ephemeris_service.dart';
 export 'package:jyotish/src/astronomy/astrology_time_service.dart';
 export 'package:jyotish/src/astronomy/udaya_lagna_service.dart';
+export 'package:jyotish/src/astronomy/special_lagnas_service.dart';
 
 // Analysis
 export 'package:jyotish/src/analysis/vedic_chart_service.dart';
@@ -39,6 +45,7 @@ export 'package:jyotish/src/analysis/divisional_chart_service.dart';
 export 'package:jyotish/src/analysis/aspect_service.dart';
 export 'package:jyotish/src/analysis/compatibility.dart';
 export 'package:jyotish/src/analysis/compatibility_service.dart';
+export 'package:jyotish/src/analysis/graha_yuddha_service.dart';
 export 'package:jyotish/src/analysis/career_analysis.dart';
 export 'package:jyotish/src/analysis/career_analysis_service.dart';
 export 'package:jyotish/src/analysis/event_timing.dart';

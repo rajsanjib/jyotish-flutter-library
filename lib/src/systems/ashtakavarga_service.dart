@@ -1,6 +1,8 @@
+import 'dart:typed_data';
 import 'package:jyotish/src/systems/ashtakavarga.dart';
 import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
+import 'package:jyotish/src/models/prastara_result.dart';
 import 'package:dartx/dartx.dart';
 
 /// Service for calculating Ashtakavarga (eightfold division) system.
@@ -9,6 +11,26 @@ import 'package:dartx/dartx.dart';
 /// benefic points (bindus) contributed by each of the seven planets plus
 /// the ascendant in each sign of the zodiac.
 class AshtakavargaService {
+  /// Calculates the Prastara Ashtakavarga 96-cell grid for a planet.
+  PrastaraResult calculatePrastaraAshtakavarga(
+      VedicChart chart, Planet planet) {
+    final ashtakavarga = calculateAshtakavarga(chart);
+    final bav = ashtakavarga.bhinnashtakavarga[planet];
+    if (bav == null) {
+      throw ArgumentError('Planet $planet not found in traditional planets');
+    }
+
+    final grid = Uint8List(8 * 12);
+    for (var sign = 0; sign < 12; sign++) {
+      final mask = bav.contributions[sign];
+      for (var point = 0; point < 8; point++) {
+        grid[point * 12 + sign] = (mask & (1 << point) != 0) ? 1 : 0;
+      }
+    }
+
+    return PrastaraResult(planet: planet, grid: grid);
+  }
+
   /// Calculates the complete Ashtakavarga for a birth chart.
   ///
   /// [natalChart] - The Vedic birth chart

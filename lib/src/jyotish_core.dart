@@ -34,6 +34,13 @@ import 'package:jyotish/src/strength/graha_avastha.dart';
 import 'package:jyotish/src/strength/strength_report.dart';
 import 'package:jyotish/src/analysis/event_timing.dart';
 import 'package:jyotish/src/analysis/career_analysis.dart';
+import 'package:jyotish/src/models/varga_configuration.dart';
+import 'package:jyotish/src/models/graha_yuddha.dart';
+import 'package:jyotish/src/analysis/graha_yuddha_service.dart';
+import 'package:jyotish/src/models/prastara_result.dart';
+import 'package:jyotish/src/models/special_lagnas.dart';
+import 'package:jyotish/src/astronomy/special_lagnas_service.dart';
+import 'package:jyotish/src/models/compatibility_report.dart';
 
 import 'package:jyotish/src/transit/sarvatobhadra.dart';
 import 'package:jyotish/src/systems/tajaka.dart';
@@ -158,6 +165,8 @@ class Jyotish {
   PanchangStrengthService? _panchangStrengthService;
   UdayaLagnaService? _udayaLagnaService;
   RitualService? _ritualService;
+  GrahaYuddhaService? _grahaYuddhaService;
+  SpecialLagnasService? _specialLagnasService;
   bool _isInitialized = false;
 
   /// Access point for specialized systems like Argala, Arudha Pada, etc.
@@ -263,6 +272,8 @@ class Jyotish {
       _panchangStrengthService = PanchangStrengthService();
       _udayaLagnaService = UdayaLagnaService(_ephemerisService!);
       _ritualService = RitualService();
+      _grahaYuddhaService = const GrahaYuddhaService();
+      _specialLagnasService = const SpecialLagnasService();
       _isInitialized = true;
     } catch (e) {
       throw JyotishException(
@@ -457,10 +468,55 @@ class Jyotish {
   VedicChart getDivisionalChart({
     required VedicChart rashiChart,
     required DivisionalChartType type,
+    VargaConfiguration? config,
   }) {
     // _ensureInitialized(); // Not needed for pure math
     _divisionalChartService ??= DivisionalChartService();
-    return _divisionalChartService!.calculateDivisionalChart(rashiChart, type);
+    return _divisionalChartService!
+        .calculateDivisionalChart(rashiChart, type, config: config);
+  }
+
+  // ============================================================
+  // ADVANCED FEATURE WRAPPERS
+  // ============================================================
+
+  /// Checks for planetary war (Graha Yuddha) between true planets (Mars, Mercury, Jupiter, Venus, Saturn)
+  /// conjunct within 1 degree in a chart.
+  ///
+  /// Returns [WarDetails] if a war is active, or null otherwise.
+  WarDetails? checkGrahaYuddha(VedicChart chart) {
+    _ensureInitialized();
+    return _grahaYuddhaService!.checkGrahaYuddha(chart);
+  }
+
+  /// Calculates the flat 96-cell binary contribution matrix (8 rows of contributors x 12 signs)
+  /// of bindus/rekhas for a target planet.
+  ///
+  /// Returns [PrastaraResult] containing the binary grid.
+  PrastaraResult calculatePrastaraAshtakavarga(
+      VedicChart chart, Planet planet) {
+    _ensureInitialized();
+    return _ashtakavargaService!.calculatePrastaraAshtakavarga(chart, planet);
+  }
+
+  /// Calculates special time-proportionate and mathematical wealth and power lagnas
+  /// (Hora Lagna, Ghati Lagna, and Sree Lagna).
+  ///
+  /// Returns [SpecialLagnas] containing the calculated degrees.
+  SpecialLagnas calculateSpecialLagnas(VedicChart chart, DateTime sunrise) {
+    _ensureInitialized();
+    return _specialLagnasService!.calculateSpecialLagnas(chart, sunrise);
+  }
+
+  /// Generates a comprehensive Marriage Compatibility Report for two charts.
+  /// Evaluates Ashtakoota Gunas, Nadi/Bhakoot doshas, Manglik status, and cancels/remedies.
+  ///
+  /// Returns a [CompatibilityReport] with unified details.
+  CompatibilityReport calculateCompatibilityReport(
+      VedicChart boyChart, VedicChart girlChart) {
+    _ensureInitialized();
+    return _compatibilityService!
+        .calculateCompatibilityReport(boyChart, girlChart);
   }
 
   // ============================================================

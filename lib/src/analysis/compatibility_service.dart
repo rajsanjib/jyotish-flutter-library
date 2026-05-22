@@ -1,6 +1,7 @@
 import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/models/rashi.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
+import 'package:jyotish/src/models/compatibility_report.dart';
 import 'package:jyotish/src/analysis/compatibility.dart';
 import 'package:dartx/dartx.dart';
 
@@ -42,6 +43,42 @@ class CompatibilityService {
       doshaCheck: doshaCheck,
       dashaCompatibility: dashaCompatibility,
       analysis: analysis,
+    );
+  }
+
+  CompatibilityReport calculateCompatibilityReport(
+      VedicChart boyChart, VedicChart girlChart) {
+    final result = calculateCompatibility(boyChart, girlChart);
+    final boyManglikResult = checkManglikDosha(boyChart);
+    final girlManglikResult = checkManglikDosha(girlChart);
+
+    final compatibilityPercentage = (result.totalScore / 36.0) * 100.0;
+
+    final boyCancellations = List<String>.from(
+        boyManglikResult.severity == 'Cancelled'
+            ? boyManglikResult.remedies
+            : <String>[]);
+    final girlCancellations = List<String>.from(
+        girlManglikResult.severity == 'Cancelled'
+            ? girlManglikResult.remedies
+            : <String>[]);
+
+    if (boyManglikResult.isManglik && girlManglikResult.isManglik) {
+      boyCancellations.add('Mutual cancellation: both partners are Manglik');
+      girlCancellations.add('Mutual cancellation: both partners are Manglik');
+    }
+
+    return CompatibilityReport(
+      totalScore: result.totalScore,
+      gunaScores: result.gunaScores,
+      compatibilityPercentage: compatibilityPercentage.clamp(0.0, 100.0),
+      hasNadiDosha: result.doshaCheck.hasNadiDosha,
+      hasBhakootDosha: result.doshaCheck.hasBhakootDosha,
+      boyManglik: boyManglikResult.isManglik,
+      girlManglik: girlManglikResult.isManglik,
+      boyManglikCancellations: boyCancellations,
+      girlManglikCancellations: girlCancellations,
+      analysis: result.analysis,
     );
   }
 

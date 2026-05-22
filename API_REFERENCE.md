@@ -11,6 +11,7 @@ A comprehensive API reference for the Jyotish Flutter library - production-ready
   - [Jyotish](#jyotish)
   - [GeographicLocation](#geographiclocation)
   - [CalculationFlags](#calculationflags)
+- [New in v2.11.0 — Advanced Jyotish Feature Suite](#new-in-v2110--advanced-jyotish-feature-suite)
 - [New in v2.10.0 — Tree Shaking & Module Isolation](#new-in-v2100--tree-shaking--module-isolation)
 - [New in v2.9.0 & v2.9.1 — JSON, Sanskrit, Jaimini, and Julian Day](#new-in-v290--v291--json-sanskrit-jaimini-and-julian-day)
 - [New in v2.7.0 — Performance & Modernization](#new-in-v270--performance--modernization)
@@ -2857,6 +2858,86 @@ Type of eclipse.
 |-------|-------------|
 | `solar` | Solar eclipse |
 | `lunar` | Lunar eclipse |
+
+## New in v2.11.0 — Advanced Jyotish Feature Suite
+
+This update adds an extensive suite of advanced mathematical, divisional, and compatibility features to the `jyotish` library:
+
+### 1. Configurable Divisional Chart Variations
+Traditional Divisional Chart (Varga) calculations now support parampara-specific calculation variations across key divisional charts:
+- **D2 (Hora)**: Standard Parashara, Labha Mandooka, Purva/Kura, and Kashinatha methods.
+- **D3 (Drekkana)**: Parashara, Jagannatha (Somnath/Drekkana), Somanatha, and Parivritti (cycle) methods.
+- **D9 (Navamsha)**: Parashara, Krishna Mishra, Somanatha, and Nadamsa methods.
+- **D10 (Dashamsha)**: Standard Parashara and Kashinatha methods.
+
+#### Usage Example:
+```dart
+final config = VargaConfiguration(
+  horaMethod: HoraMethod.labhaMandooka,
+  drekkanaMethod: DrekkanaMethod.somanatha,
+  navamshaMethod: NavamshaMethod.krishnaMishra,
+  dashamshaMethod: DashamshaMethod.kashinatha,
+);
+
+final d9Chart = jyotish.getDivisionalChart(
+  rashiChart: chart,
+  type: DivisionalChartType.d9,
+  config: config,
+);
+```
+
+### 2. Graha Yuddha (Planetary War) Evaluator
+Automatically scans a birth or transit chart for planetary wars between the true planets (Mars, Mercury, Jupiter, Venus, Saturn) when they are conjunct within a 1-degree orb.
+- Returns detailed coordinates, declination checks, calculated magnitudes based on elongation/phase factors, and astronomical rules to declare the clear winner of the war.
+
+#### Usage Example:
+```dart
+final war = jyotish.checkGrahaYuddha(chart);
+if (war != null) {
+  print('Planetary War between ${war.planet1.name} and ${war.planet2.name}');
+  print('Winner: ${Planet.values[war.winnerId].name}');
+  print('Magnitude Difference: ${(war.planet1Magnitude - war.planet2Magnitude).abs()}');
+}
+```
+
+### 3. Prastara Ashtakavarga Grids
+Exposes the underlying 96-cell binary contribution matrix (8 contributing points including Lagna × 12 signs) of bindus/rekhas for any planet.
+- Allows developers to build detailed visual Ashtakavarga grids showing exactly which planet contributed points to which house.
+
+#### Usage Example:
+```dart
+final prastara = jyotish.calculatePrastaraAshtakavarga(chart, Planet.jupiter);
+// Get contribution of Sun (row 0) to Aries (col 0)
+final contributed = prastara.grid[0 * 12 + 0] == 1;
+print('Sun contributed to Jupiter in Aries: $contributed');
+```
+
+### 4. Special Mathematical Lagnas
+Computes precise time-proportionate and mathematical Lagna (ascendant) points used in Jaimini and Parashari systems:
+- **Hora Lagna (HL)**: Used for evaluating financial prosperity, assets, and Jaimini longevity.
+- **Ghati Lagna (GL)**: Used for evaluating power, fame, authority, and public status.
+- **Sree Lagna (SL)**: Calculated based on the precise nakshatra fraction of the Moon, representing the point of Lakshmi (prosperity).
+
+#### Usage Example:
+```dart
+final specialLagnas = jyotish.calculateSpecialLagnas(chart, sunriseDateTime);
+print('Hora Lagna Degree: ${specialLagnas.horaLagna}');
+print('Ghati Lagna Degree: ${specialLagnas.ghatiLagna}');
+print('Sree Lagna Degree: ${specialLagnas.sreeLagna}');
+```
+
+### 5. Marriage Compatibility Suite API
+A unified, zero-dependency endpoint that performs full Ashtakoota Milan (out of 36), evaluates Nadi/Bhakoot doshas (and their traditional cancellations), checks for boy/girl Manglik (Kuja) doshas along with all five standard BPHS/Phaladeepika cancellations (Pariharas), and outputs an exhaustive textual analysis.
+
+#### Usage Example:
+```dart
+final report = jyotish.calculateCompatibilityReport(boyChart, girlChart);
+print('Compatibility: ${report.totalScore}/36 (${report.compatibilityPercentage}%)');
+print('Boy Manglik: ${report.boyManglik} (Cancellations: ${report.boyManglikCancellations})');
+print('Girl Manglik: ${report.girlManglik} (Cancellations: ${report.girlManglikCancellations})');
+print('Has Nadi Dosha: ${report.hasNadiDosha}');
+print('Has Bhakoot Dosha: ${report.hasBhakootDosha}');
+```
 
 ---
 

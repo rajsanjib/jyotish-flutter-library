@@ -34,6 +34,11 @@ final chart = await jyotish.calculateVedicChart(
 - **Rashi**: Enum representing Aries (1) to Pisces (12).
 - **Nakshatra**: 1 to 27 (standard) or 28 (with Abhijit).
 - **VedicChart**: Contains all planetary positions, house cusps, and divisional charts.
+- **VargaConfiguration**: Specifies calculation variations for Divisional Charts (D2 Hora, D3 Drekkana, D9 Navamsha, D10 Dashamsha).
+- **WarDetails**: Carries participant details, magnitudes, declinations, and the winner of a planetary war.
+- **PrastaraResult**: Holds the 96-cell binary Ashtakavarga contribution grid (8 points × 12 signs) for a planet.
+- **SpecialLagnas**: Carries calculated degrees for Hora Lagna (HL), Ghati Lagna (GL), and Sree Lagna (SL).
+- **CompatibilityReport**: Contains Guna Milan score/details, Nadi & Bhakoot doshas, Manglik status, and cancellations.
 
 ## 4. Common Tasks & Service Access
 | Task | Recommended Method |
@@ -41,7 +46,11 @@ final chart = await jyotish.calculateVedicChart(
 | **Panchanga** | `jyotish.calculatePanchanga(dateTime: dt, location: loc)` |
 | **Dasha** | `jyotish.getVimshottariDasha(natalChart: chart)` |
 | **Muhurta** | `jyotish.calculateMuhurta(date: d, sunrise: sr, sunset: ss, location: l)` |
-| **Divisional** | `jyotish.getDivisionalChart(rashiChart: chart, type: DivisionalChartType.d9)` |
+| **Divisional** | `jyotish.getDivisionalChart(rashiChart: chart, type: DivisionalChartType.d9, config: config)` |
+| **Graha Yuddha** | `jyotish.checkGrahaYuddha(chart)` |
+| **Prastara Grid** | `jyotish.calculatePrastaraAshtakavarga(chart, planet)` |
+| **Special Lagnas** | `jyotish.calculateSpecialLagnas(chart, sunrise)` |
+| **Compatibility Report** | `jyotish.calculateCompatibilityReport(boyChart, girlChart)` |
 | **Special Yogas**| Access `muhurta.specialYogas` for Sarvartha Siddhi, Guru Pushya, etc. |
 | **Julian Day** | `ephemerisService.dateTimeToJulianDay(dateTime, timezoneId: tz)` |
 

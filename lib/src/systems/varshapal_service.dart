@@ -323,9 +323,11 @@ class VarshapalService {
     final activeFlags = flags ?? CalculationFlags.defaultFlags();
     final birthUtc = birthDateTime.isUtc
         ? birthDateTime
-        : AstrologyTimeService.localToUtc(birthDateTime, location.timezone);
+        : AstrologyTimeService.localToUtc(
+            birthDateTime, location.timezone ?? 'UTC');
 
-    final natalSunLong = await _getSunLongitude(birthUtc, location, activeFlags);
+    final natalSunLong =
+        await _getSunLongitude(birthUtc, location, activeFlags);
 
     // Initial guess: same month/day/time in the target year in local time, then to UTC
     final approxLocal = DateTime(
@@ -337,7 +339,8 @@ class VarshapalService {
       birthDateTime.second,
       birthDateTime.millisecond,
     );
-    final approxUtc = AstrologyTimeService.localToUtc(approxLocal, location.timezone);
+    final approxUtc = AstrologyTimeService.localToUtc(
+        approxLocal, location.timezone ?? 'UTC');
 
     var low = approxUtc.subtract(const Duration(days: 2));
     var high = approxUtc.add(const Duration(days: 2));
@@ -347,13 +350,18 @@ class VarshapalService {
       if (high.difference(low).inMilliseconds <= 1) {
         break;
       }
-      final midMs = (low.millisecondsSinceEpoch + high.millisecondsSinceEpoch) ~/ 2;
+      final midMs =
+          (low.millisecondsSinceEpoch + high.millisecondsSinceEpoch) ~/ 2;
       final midTime = DateTime.fromMillisecondsSinceEpoch(midMs, isUtc: true);
       final midLong = await _getSunLongitude(midTime, location, activeFlags);
 
       var diff = midLong - natalSunLong;
-      while (diff < -180) diff += 360;
-      while (diff > 180) diff -= 360;
+      while (diff < -180) {
+        diff += 360;
+      }
+      while (diff > 180) {
+        diff -= 360;
+      }
 
       if (diff.abs() < 1e-12) {
         best = midTime;
@@ -369,7 +377,7 @@ class VarshapalService {
     }
 
     // Convert UTC result back to local timezone
-    return AstrologyTimeService.utcToLocal(best, location.timezone);
+    return AstrologyTimeService.utcToLocal(best, location.timezone ?? 'UTC');
   }
 
   Future<double> _getSunLongitude(
@@ -387,7 +395,8 @@ class VarshapalService {
   }
 
   /// Calculates Panchavargiya Bala (5-fold planetary strength) for a planet in a VedicChart.
-  PanchavargiyaBalaResult calculatePanchavargiyaBala(Planet planet, VedicChart chart) {
+  PanchavargiyaBalaResult calculatePanchavargiyaBala(
+      Planet planet, VedicChart chart) {
     final planetInfo = chart.getPlanet(planet);
     if (planetInfo == null) {
       return PanchavargiyaBalaResult(
@@ -476,8 +485,12 @@ class VarshapalService {
     final E = exaltationDegrees[planet] ?? 0.0;
     final debilPoint = (E + 180.0) % 360.0;
     var diff = longitude - debilPoint;
-    while (diff < 0) diff += 360;
-    while (diff >= 360) diff -= 360;
+    while (diff < 0) {
+      diff += 360;
+    }
+    while (diff >= 360) {
+      diff -= 360;
+    }
 
     double ucchaBala;
     if (diff <= 180.0) {
@@ -486,7 +499,8 @@ class VarshapalService {
       ucchaBala = (360.0 - diff) / 9.0;
     }
 
-    final double totalBala = kshetraBala + haddaBala + drekkanaBala + navamsaBala + ucchaBala;
+    final double totalBala =
+        kshetraBala + haddaBala + drekkanaBala + navamsaBala + ucchaBala;
     final double vishwaBala = totalBala / 4.0;
 
     return PanchavargiyaBalaResult(
@@ -513,7 +527,8 @@ class VarshapalService {
     final varshaLagnaLord = Rashi.fromLongitude(annualChart.ascendant).lord;
 
     final age = varshaDateTime.year - birthDateTime.year;
-    final munthaSignIndex = (Rashi.fromLongitude(natalChart.ascendant).number + age) % 12;
+    final munthaSignIndex =
+        (Rashi.fromLongitude(natalChart.ascendant).number + age) % 12;
     final munthaLord = Rashi.values[munthaSignIndex].lord;
 
     final sunHouse = annualChart.getPlanet(Planet.sun)?.house ?? 1;
@@ -523,7 +538,8 @@ class VarshapalService {
     final dinaRatriLord = isDay ? Planet.sun : Planet.moon;
 
     // Trirashi Lord
-    final trirashiLord = getTrirashiLord(Rashi.fromLongitude(annualChart.ascendant), isDay);
+    final trirashiLord =
+        getTrirashiLord(Rashi.fromLongitude(annualChart.ascendant), isDay);
 
     final candidates = [
       janmaLagnaLord,
@@ -537,10 +553,18 @@ class VarshapalService {
     final eligibleCandidates = candidates.where((p) {
       final h = annualChart.getPlanet(p)?.house;
       if (h == null) return false;
-      return h == 1 || h == 3 || h == 4 || h == 5 || h == 7 || h == 9 || h == 10 || h == 11;
+      return h == 1 ||
+          h == 3 ||
+          h == 4 ||
+          h == 5 ||
+          h == 7 ||
+          h == 9 ||
+          h == 10 ||
+          h == 11;
     }).toList();
 
-    final List<Planet> activeCandidates = eligibleCandidates.isNotEmpty ? eligibleCandidates : candidates;
+    final List<Planet> activeCandidates =
+        eligibleCandidates.isNotEmpty ? eligibleCandidates : candidates;
 
     Planet bestPlanet = activeCandidates.first;
     double maxBala = -1.0;
@@ -669,7 +693,8 @@ class VarshapalService {
 
     // 1. Balance of starting planet
     final startPlanet = muddaOrder[rulerIndex];
-    final startFullDurationMs = (vimshottariYears[startPlanet]! / 120.0) * yearDuration.inMilliseconds;
+    final startFullDurationMs =
+        (vimshottariYears[startPlanet]! / 120.0) * yearDuration.inMilliseconds;
     final startBalanceMs = startFullDurationMs * fractionRemaining;
     final startBalanceDuration = Duration(milliseconds: startBalanceMs.round());
 
@@ -688,7 +713,8 @@ class VarshapalService {
     // 2. The other 8 planets in cycle
     for (int i = 1; i < 9; i++) {
       final p = muddaOrder[(rulerIndex + i) % 9];
-      final pFullMs = (vimshottariYears[p]! / 120.0) * yearDuration.inMilliseconds;
+      final pFullMs =
+          (vimshottariYears[p]! / 120.0) * yearDuration.inMilliseconds;
       final pDuration = Duration(milliseconds: pFullMs.round());
 
       final end = currentStart.add(pDuration);
@@ -819,7 +845,8 @@ class VarshapalService {
     return Rashi.values[navSignIndex].lord;
   }
 
-  RelationshipType _getTajikaFriendship(Planet planetA, Planet planetB, VedicChart chart) {
+  RelationshipType _getTajikaFriendship(
+      Planet planetA, Planet planetB, VedicChart chart) {
     if (planetA == planetB) return RelationshipType.friend;
     final hA = chart.getPlanet(planetA)?.house;
     final hB = chart.getPlanet(planetB)?.house;
@@ -845,18 +872,6 @@ class VarshapalService {
     // Each sign lasts approximately 12/60 = 0.2 years = ~2 months
     final cyclePosition = (signNumber * 2 + (degreeInSign / 15).floor()) % 60;
     return cyclePosition + 1;
-  }
-
-  /// Gets the varsha lord for a given varsha number (1-60).
-  Planet _getVarshaLord(int varshaNumber) {
-    // In the 60-year cycle, each planet rules for different numbers of years
-    // This follows the traditional Samvatsara pattern
-    final index = (varshaNumber - 1) % 60;
-
-    // Based on traditional Vimshottari-type cycle for annual charts
-    // Using a modified 7-year cycle pattern
-    final planetIndex = (index ~/ 2) % 7;
-    return varshaDasaOrder[planetIndex];
   }
 
   /// Calculates all Varsha (year) periods.

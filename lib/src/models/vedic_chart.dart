@@ -497,7 +497,8 @@ class VedicChart {
     final originalSignIndex = getPlanetSignIndex(planet);
     if (originalSignIndex == null) return false;
 
-    final d9Chart = DivisionalChartService().calculateDivisionalChart(this, DivisionalChartType.d9);
+    final d9Chart = DivisionalChartService()
+        .calculateDivisionalChart(this, DivisionalChartType.d9);
     final d9SignIndex = d9Chart.getPlanetSignIndex(planet);
     return originalSignIndex == d9SignIndex;
   }
@@ -551,7 +552,8 @@ class VedicChart {
 
   /// Returns the simplified compound relationship (Panchadha Maitri) between two planets.
   CompoundRelationship getCompoundRelationship(Planet planetA, Planet planetB) {
-    final rel = PlanetaryRelationshipService().getRelationship(planetA, planetB, this);
+    final rel =
+        PlanetaryRelationshipService().getRelationship(planetA, planetB, this);
     return switch (rel.compound) {
       RelationshipType.greatFriend => CompoundRelationship.greatFriend,
       RelationshipType.friend => CompoundRelationship.friend,
@@ -588,7 +590,8 @@ class House {
   final String zodiacSign;
 
   /// Whether this house is a Kendra (angular house: 1, 4, 7, 10)
-  bool get isKendra => number == 1 || number == 4 || number == 7 || number == 10;
+  bool get isKendra =>
+      number == 1 || number == 4 || number == 7 || number == 10;
 
   /// Whether this house is a Trikona (trine house: 1, 5, 9)
   bool get isTrikona => number == 1 || number == 5 || number == 9;
@@ -597,7 +600,8 @@ class House {
   bool get isDusthana => number == 6 || number == 8 || number == 12;
 
   /// Whether this house is an Upachaya (growing house: 3, 6, 10, 11)
-  bool get isUpachaya => number == 3 || number == 6 || number == 10 || number == 11;
+  bool get isUpachaya =>
+      number == 3 || number == 6 || number == 10 || number == 11;
 }
 
 typedef VedicHouse = House;

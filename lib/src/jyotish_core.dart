@@ -172,6 +172,9 @@ class Jyotish {
   /// Access point for specialized systems like Argala, Arudha Pada, etc.
   JyotishSystems get systems => JyotishSystems(this);
 
+  /// Gets the underlying ephemeris service.
+  EphemerisService get ephemeris => _ephemerisService!;
+
   // ============================================================
   // ASTROLOGY TIME SERVICE — STATIC CONVENIENCE PROXIES
   // ============================================================

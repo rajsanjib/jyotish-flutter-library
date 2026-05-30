@@ -187,7 +187,8 @@ class Varshapal {
       'varshaLord': varshaLord.name,
       'varshaNumber': varshaNumber,
       'samvatsaraName': samvatsaraName,
-      'panchavargiyaBala': panchavargiyaBala.map((k, v) => MapEntry(k.name, v.toJson())),
+      'panchavargiyaBala':
+          panchavargiyaBala.map((k, v) => MapEntry(k.name, v.toJson())),
       'muddaDasha': muddaDasha.map((v) => v.toJson()).toList(),
     };
   }

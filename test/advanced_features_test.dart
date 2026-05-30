@@ -31,7 +31,7 @@ void main() {
       final jyotish = Jyotish();
 
       // D9 Navamsha calculation with customized parampara config
-      final config = VargaConfiguration(
+      const config = VargaConfiguration(
         horaMethod: HoraMethod.labhaMandooka,
         drekkanaMethod: DrekkanaMethod.somanatha,
         navamshaMethod: NavamshaMethod.krishnaMishra,
@@ -54,7 +54,7 @@ void main() {
 
       // Check if Graha Yuddha evaluator runs without errors on chart
       final war = jyotish.checkGrahaYuddha(chart);
-      
+
       // Even if there is no active war in this specific chart, the method should return null
       // or a valid WarDetails. Let's make sure the call executes successfully.
       if (war != null) {
@@ -69,13 +69,14 @@ void main() {
     test('3. Prastara Ashtakavarga Grid calculation', () {
       final jyotish = Jyotish();
 
-      final prastara = jyotish.calculatePrastaraAshtakavarga(chart, Planet.jupiter);
+      final prastara =
+          jyotish.calculatePrastaraAshtakavarga(chart, Planet.jupiter);
 
       expect(prastara, isNotNull);
       expect(prastara.planet, equals(Planet.jupiter));
       expect(prastara.grid, isNotNull);
       expect(prastara.grid.length, equals(96)); // 8 contributors x 12 signs
-      
+
       // Every element in the grid must be either 0 or 1
       for (final cell in prastara.grid) {
         expect(cell == 0 || cell == 1, isTrue);
@@ -113,18 +114,23 @@ void main() {
       expect(report, isNotNull);
       expect(report.totalScore, isA<double>());
       expect(report.totalScore >= 0.0 && report.totalScore <= 36.0, isTrue);
-      
-      expect(report.gunaScores, isNotNull);
-      expect(report.gunaScores.total, equals(report.gunaScores.varna +
-          report.gunaScores.vashya +
-          report.gunaScores.tara +
-          report.gunaScores.yoni +
-          report.gunaScores.grahaMaitri +
-          report.gunaScores.gana +
-          report.gunaScores.bhakoot +
-          report.gunaScores.nadi));
 
-      expect(report.compatibilityPercentage >= 0.0 && report.compatibilityPercentage <= 100.0, isTrue);
+      expect(report.gunaScores, isNotNull);
+      expect(
+          report.gunaScores.total,
+          equals(report.gunaScores.varna +
+              report.gunaScores.vashya +
+              report.gunaScores.tara +
+              report.gunaScores.yoni +
+              report.gunaScores.grahaMaitri +
+              report.gunaScores.gana +
+              report.gunaScores.bhakoot +
+              report.gunaScores.nadi));
+
+      expect(
+          report.compatibilityPercentage >= 0.0 &&
+              report.compatibilityPercentage <= 100.0,
+          isTrue);
       expect(report.hasNadiDosha, isA<bool>());
       expect(report.hasBhakootDosha, isA<bool>());
       expect(report.boyManglik, isA<bool>());
@@ -132,12 +138,14 @@ void main() {
       expect(report.boyManglikCancellations, isA<List<String>>());
       expect(report.girlManglikCancellations, isA<List<String>>());
       expect(report.analysis, isA<List<String>>());
-      
+
       // Test JSON serialization
       final json = report.toJson();
       expect(json['totalScore'], equals(report.totalScore));
-      expect(json['gunaScores']['nadi'], equals(report.gunaScores.nadi));
-      expect(json['compatibilityPercentage'], equals(report.compatibilityPercentage));
+      expect((json['gunaScores'] as Map<String, dynamic>)['nadi'],
+          equals(report.gunaScores.nadi));
+      expect(json['compatibilityPercentage'],
+          equals(report.compatibilityPercentage));
     });
   });
 }

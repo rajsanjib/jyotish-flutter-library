@@ -2,6 +2,10 @@ import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/models/rashi.dart';
 import 'package:jyotish/src/astronomy/planet_position.dart';
 import 'package:jyotish/src/models/calculation_flags.dart';
+import 'package:jyotish/src/models/divisional_chart_type.dart';
+import 'package:jyotish/src/analysis/divisional_chart_service.dart';
+import 'package:jyotish/src/strength/planetary_relationship_service.dart';
+import 'package:jyotish/src/strength/relationship.dart';
 
 /// Represents Vedic astrology house system information.
 ///
@@ -75,6 +79,34 @@ class HouseSystem {
         'midheaven': midheaven,
         'cusps': cusps,
       };
+
+  /// Gets a list of all 12 houses as [House] models.
+  List<House> get individualHouses {
+    return List.generate(12, (index) {
+      final num = index + 1;
+      final cusp = cusps[index];
+      final signIndex = (cusp / 30).floor() % 12;
+      return House(
+        number: num,
+        cusp: cusp,
+        zodiacSign: _zodiacSigns[signIndex],
+      );
+    });
+  }
+
+  /// Gets a specific house model by its house number (1-12).
+  House getHouse(int number) {
+    if (number < 1 || number > 12) {
+      throw RangeError.range(number, 1, 12, 'house number');
+    }
+    final cusp = cusps[number - 1];
+    final signIndex = (cusp / 30).floor() % 12;
+    return House(
+      number: number,
+      cusp: cusp,
+      zodiacSign: _zodiacSigns[signIndex],
+    );
+  }
 
   static const List<String> _zodiacSigns = [
     'Aries',
@@ -298,6 +330,38 @@ class VedicPlanetInfo {
   /// Formatted position
   String get formattedPosition => position.formattedPosition;
 
+  /// Checks if the planet is in its Moola Trikona sign and degree range.
+  bool get isMoolatrikona => dignity == PlanetaryDignity.moolaTrikona;
+
+  /// Checks if the planet is within a specific orb (in degrees) of its deep exaltation degree (Param Uccha).
+  bool isDeepExalted(double orb) {
+    if (exaltationDegree == null) return false;
+    final diff = ((longitude - exaltationDegree! + 540) % 360) - 180;
+    return diff.abs() <= orb;
+  }
+
+  /// Checks if the planet is within a specific orb (in degrees) of its deep debilitation degree (Param Neecha).
+  bool isDeepDebilitated(double orb) {
+    if (debilitationDegree == null) return false;
+    final diff = ((longitude - debilitationDegree! + 540) % 360) - 180;
+    return diff.abs() <= orb;
+  }
+
+  /// Gets the combustion distance limit for this planet in degrees, taking retrograde status into account.
+  /// Returns null for the Sun or if the planet has no defined combustion limit.
+  double? get combustionDistance {
+    if (planet == Planet.sun) return null;
+    return switch (planet) {
+      Planet.moon => 12.0,
+      Planet.mercury => isRetrograde ? 12.0 : 14.0,
+      Planet.venus => isRetrograde ? 8.0 : 10.0,
+      Planet.mars => 17.0,
+      Planet.jupiter => 11.0,
+      Planet.saturn => 15.0,
+      _ => null,
+    };
+  }
+
   /// Converts this VedicPlanetInfo to a JSON map.
   Map<String, dynamic> toJson() => {
         'planet': position.planet.displayName,
@@ -412,4 +476,128 @@ class VedicChart {
         'rahu': rahu.toJson(),
         'ketu': ketu.toJson(),
       };
+
+  /// Gets the zodiac sign index (0-11) for any planet in the chart.
+  int? getPlanetSignIndex(Planet planet) {
+    if (planet == Planet.ketu) {
+      return (ketu.longitude / 30).floor() % 12;
+    }
+    final info = getPlanet(planet);
+    if (info != null) {
+      return info.position.zodiacSignIndex;
+    }
+    if (planet == Planet.meanNode || planet == Planet.trueNode) {
+      return rahu.position.zodiacSignIndex;
+    }
+    return null;
+  }
+
+  /// Checks if a planet is Vargottama (occupies the same sign index in both this chart and the Navamsa D-9 chart).
+  bool isVargottama(Planet planet) {
+    final originalSignIndex = getPlanetSignIndex(planet);
+    if (originalSignIndex == null) return false;
+
+    final d9Chart = DivisionalChartService().calculateDivisionalChart(this, DivisionalChartType.d9);
+    final d9SignIndex = d9Chart.getPlanetSignIndex(planet);
+    return originalSignIndex == d9SignIndex;
+  }
+
+  /// Gets the Vargottama status of a planet.
+  VargottamaStatus getVargottamaStatus(Planet planet) {
+    if (!isVargottama(planet)) {
+      return VargottamaStatus.none;
+    }
+
+    final signIndex = getPlanetSignIndex(planet);
+    if (signIndex == null) return VargottamaStatus.none;
+
+    final exaltationSign = _exaltationSigns[planet];
+    final debilitationSign = _debilitationSigns[planet];
+
+    if (signIndex == exaltationSign) {
+      return VargottamaStatus.ucchaVargottama;
+    } else if (signIndex == debilitationSign) {
+      return VargottamaStatus.neechaVargottama;
+    }
+
+    return VargottamaStatus.vargottama;
+  }
+
+  static const Map<Planet, int> _exaltationSigns = {
+    Planet.sun: 0,
+    Planet.moon: 1,
+    Planet.mercury: 5,
+    Planet.venus: 11,
+    Planet.mars: 9,
+    Planet.jupiter: 3,
+    Planet.saturn: 6,
+    Planet.meanNode: 2,
+    Planet.trueNode: 2,
+    Planet.ketu: 8,
+  };
+
+  static const Map<Planet, int> _debilitationSigns = {
+    Planet.sun: 6,
+    Planet.moon: 7,
+    Planet.mercury: 11,
+    Planet.venus: 5,
+    Planet.mars: 3,
+    Planet.jupiter: 9,
+    Planet.saturn: 0,
+    Planet.meanNode: 8,
+    Planet.trueNode: 8,
+    Planet.ketu: 2,
+  };
+
+  /// Returns the simplified compound relationship (Panchadha Maitri) between two planets.
+  CompoundRelationship getCompoundRelationship(Planet planetA, Planet planetB) {
+    final rel = PlanetaryRelationshipService().getRelationship(planetA, planetB, this);
+    return switch (rel.compound) {
+      RelationshipType.greatFriend => CompoundRelationship.greatFriend,
+      RelationshipType.friend => CompoundRelationship.friend,
+      RelationshipType.neutral => CompoundRelationship.neutral,
+      RelationshipType.enemy => CompoundRelationship.enemy,
+      RelationshipType.greatEnemy => CompoundRelationship.greatEnemy,
+    };
+  }
 }
+
+/// The Vargottama status of a planet.
+enum VargottamaStatus {
+  none,
+  vargottama,
+  neechaVargottama,
+  ucchaVargottama,
+}
+
+/// Represents an individual house in a Vedic chart.
+class House {
+  const House({
+    required this.number,
+    required this.cusp,
+    required this.zodiacSign,
+  });
+
+  /// The house number (1-12)
+  final int number;
+
+  /// The cusp degree of this house (0-360)
+  final double cusp;
+
+  /// The zodiac sign name of the house cusp
+  final String zodiacSign;
+
+  /// Whether this house is a Kendra (angular house: 1, 4, 7, 10)
+  bool get isKendra => number == 1 || number == 4 || number == 7 || number == 10;
+
+  /// Whether this house is a Trikona (trine house: 1, 5, 9)
+  bool get isTrikona => number == 1 || number == 5 || number == 9;
+
+  /// Whether this house is a Dusthana (difficult house: 6, 8, 12)
+  bool get isDusthana => number == 6 || number == 8 || number == 12;
+
+  /// Whether this house is an Upachaya (growing house: 3, 6, 10, 11)
+  bool get isUpachaya => number == 3 || number == 6 || number == 10 || number == 11;
+}
+
+typedef VedicHouse = House;

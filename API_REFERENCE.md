@@ -2939,6 +2939,91 @@ print('Has Nadi Dosha: ${report.hasNadiDosha}');
 print('Has Bhakoot Dosha: ${report.hasBhakootDosha}');
 ```
 
+### 6. Native Moolatrikona Dignity Detection
+Provides native detection for whether a planet resides within its specific Moolatrikona sign and degree ranges.
+- Property: `bool get isMoolatrikona` on `VedicPlanetInfo`.
+
+#### Usage Example:
+```dart
+final sunInfo = chart.getPlanet(Planet.sun);
+if (sunInfo != null && sunInfo.isMoolatrikona) {
+  print('Sun is in Moolatrikona!');
+}
+```
+
+### 7. Vargottama & Neecha-Vargottama State Calculations
+Detects when a planet occupies the same sign index in both the natal Rashi chart (D-1) and the Navamsa chart (D-9).
+- Methods on `VedicChart`:
+  - `bool isVargottama(Planet planet)`
+  - `VargottamaStatus getVargottamaStatus(Planet planet)`
+
+#### Usage Example:
+```dart
+final isVarg = chart.isVargottama(Planet.jupiter);
+final status = chart.getVargottamaStatus(Planet.jupiter);
+if (status == VargottamaStatus.ucchaVargottama) {
+  print('Jupiter is in Exalted Vargottama state!');
+}
+```
+
+### 8. Deep Exaltation & Debilitation Degrees (Param Uccha / Param Neecha)
+Checks if a planet is placed close to its peak exaltation or debilitation degree coordinates.
+- Methods on `VedicPlanetInfo`:
+  - `bool isDeepExalted(double orb)`
+  - `bool isDeepDebilitated(double orb)`
+
+#### Usage Example:
+```dart
+final sunInfo = chart.getPlanet(Planet.sun);
+// Check if Sun is within a 2-degree orb of peak exaltation (10° Aries)
+if (sunInfo != null && sunInfo.isDeepExalted(2.0)) {
+  print('Sun is in deep exaltation!');
+}
+```
+
+### 9. Planet-Specific Combustion (Kopa) Ranges
+Exposes the exact combustion threshold in degrees based on the planet's specific combustion rules and retrograde status.
+- Property: `double? get combustionDistance` on `VedicPlanetInfo`.
+
+#### Usage Example:
+```dart
+final mercuryInfo = chart.getPlanet(Planet.mercury);
+if (mercuryInfo != null) {
+  print('Mercury combustion limit: ${mercuryInfo.combustionDistance}°');
+}
+```
+
+### 10. Simplified Compound Friendship (Panchadha Maitri) Queries
+Allows direct querying of compound friendship relationship states without manually looking up or calculating natural/temporary matrices.
+- Method on `VedicChart`: `CompoundRelationship getCompoundRelationship(Planet planetA, Planet planetB)`
+
+#### Usage Example:
+```dart
+final friendship = chart.getCompoundRelationship(Planet.sun, Planet.saturn);
+print('Relationship: ${friendship.displayName}'); // e.g. "Great Enemy"
+```
+
+### 11. Astrological House Classifications
+Exposes boolean flags on individual house models to easily check house groups and properties (Kendra, Trikona, Dusthana, Upachaya).
+- Model: `House` (aliased as `VedicHouse`).
+- Properties:
+  - `number`: House number (1-12)
+  - `cusp`: Cusp degree (0-360)
+  - `zodiacSign`: Sign name
+  - `isKendra`
+  - `isTrikona`
+  - `isDusthana`
+  - `isUpachaya`
+- Access via `HouseSystem`: `List<House> get individualHouses` and `House getHouse(int number)`.
+
+#### Usage Example:
+```dart
+final house5 = chart.houses.getHouse(5);
+if (house5.isTrikona) {
+  print('5th house is a Trikona (Trine) house.');
+}
+```
+
 ---
 
 ## New in v2.10.0 — Tree Shaking & Module Isolation

@@ -15,6 +15,21 @@ enum RelationshipType {
   String toString() => displayName;
 }
 
+/// Compound relationships between planets (Panchadha Maitri).
+enum CompoundRelationship {
+  greatFriend('Great Friend'),
+  friend('Friend'),
+  neutral('Neutral'),
+  enemy('Enemy'),
+  greatEnemy('Great Enemy');
+
+  const CompoundRelationship(this.displayName);
+  final String displayName;
+
+  @override
+  String toString() => displayName;
+}
+
 /// Nature of a planetary relationship component.
 enum RelationshipNature { natural, temporary, compound }
 

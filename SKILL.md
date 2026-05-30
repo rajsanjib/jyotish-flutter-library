@@ -39,6 +39,9 @@ final chart = await jyotish.calculateVedicChart(
 - **PrastaraResult**: Holds the 96-cell binary Ashtakavarga contribution grid (8 points × 12 signs) for a planet.
 - **SpecialLagnas**: Carries calculated degrees for Hora Lagna (HL), Ghati Lagna (GL), and Sree Lagna (SL).
 - **CompatibilityReport**: Contains Guna Milan score/details, Nadi & Bhakoot doshas, Manglik status, and cancellations.
+- **VargottamaStatus**: Enum representing planet's Vargottama state (`none`, `vargottama`, `neechaVargottama`, `ucchaVargottama`).
+- **CompoundRelationship**: Enum representing Panchadha Maitri relationship (`greatFriend`, `friend`, `neutral`, `enemy`, `greatEnemy`).
+- **House**: Model representing individual houses with attributes (`number`, `cusp`, `zodiacSign`) and classifications (`isKendra`, `isTrikona`, `isDusthana`, `isUpachaya`).
 
 ## 4. Common Tasks & Service Access
 | Task | Recommended Method |
@@ -53,6 +56,12 @@ final chart = await jyotish.calculateVedicChart(
 | **Compatibility Report** | `jyotish.calculateCompatibilityReport(boyChart, girlChart)` |
 | **Special Yogas**| Access `muhurta.specialYogas` for Sarvartha Siddhi, Guru Pushya, etc. |
 | **Julian Day** | `ephemerisService.dateTimeToJulianDay(dateTime, timezoneId: tz)` |
+| **Moolatrikona Check** | `planetInfo.isMoolatrikona` |
+| **Vargottama Check** | `chart.isVargottama(planet)` / `chart.getVargottamaStatus(planet)` |
+| **Deep Exalt/Debilit Check** | `planetInfo.isDeepExalted(orb)` / `planetInfo.isDeepDebilitated(orb)` |
+| **Combustion Distance** | `planetInfo.combustionDistance` |
+| **Compound Friendship** | `chart.getCompoundRelationship(planetA, planetB)` |
+| **House Classification** | `house.isKendra` / `house.isTrikona` / `house.isDusthana` / `house.isUpachaya` |
 
 ## 5. System Differentiator: Traditional vs KP
 Crucial for v2.5.0+:

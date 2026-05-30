@@ -64,12 +64,8 @@ class ProgenyService {
 
   FifthHouseStrength analyzeFifthHouse(VedicChart chart) {
     var score = 0;
-    final ascLong = chart.ascendant;
-    final fifthHouse = (4 * 30 + ascLong) % 360;
-    final fifthHouseNumber = ((fifthHouse / 30).floor() + 1);
-
-    final planetsInHouse = chart.getPlanetsInHouse(fifthHouseNumber);
-    final fifthLord = _getHouseLord(chart, fifthHouseNumber);
+    final planetsInHouse = chart.getPlanetsInHouse(5);
+    final fifthLord = _getHouseLord(chart, 5);
 
     final lordInfo = chart.getPlanet(fifthLord);
     final lordStrength = lordInfo != null ? 30.0 : 0.0;
@@ -95,7 +91,7 @@ class ProgenyService {
       }
     }
 
-    final aspectsOnHouse = _getPlanetsAspectingHouse(chart, fifthHouseNumber);
+    final aspectsOnHouse = _getPlanetsAspectingHouse(chart, 5);
     for (final planet in aspectsOnHouse) {
       if (_isBenefic(planet)) {
         score += 5;
@@ -148,7 +144,12 @@ class ProgenyService {
       score += 15;
     }
 
-    final isCombust = jupiterInfo.position.longitude < 10.0;
+    // Check actual angular distance to the Sun for combustion (limit ~11 degrees)
+    final sunInfo = chart.getPlanet(Planet.sun);
+    double diff = sunInfo != null ? (jupiterInfo.longitude - sunInfo.longitude).abs() : 0.0;
+    while (diff > 180) diff = 360 - diff;
+    final isCombust = sunInfo != null && diff < 11.0;
+
     if (isCombust) {
       score -= 10;
     }
@@ -200,9 +201,7 @@ class ProgenyService {
     final yogas = <ChildYoga>[];
 
     final jupiterInfo = chart.getPlanet(Planet.jupiter);
-    final fifthHouse = (4 * 30 + chart.ascendant) % 360;
-    final fifthHouseNumber = ((fifthHouse / 30).floor() + 1);
-    final planetsInFifth = chart.getPlanetsInHouse(fifthHouseNumber);
+    final planetsInFifth = chart.getPlanetsInHouse(5);
 
     yogas.add(ChildYoga(
       name: 'Jupiter in 5th',
@@ -214,7 +213,8 @@ class ProgenyService {
       name: 'Santanada Yoga',
       description: 'When Jupiter aspects the 5th house or its lord',
       isPresent: jupiterInfo != null &&
-          _doesPlanetAspectHouse(jupiterInfo, fifthHouseNumber),
+          (_doesPlanetAspectHouse(jupiterInfo, 5) ||
+              _doesPlanetAspectHouse(jupiterInfo, chart.getPlanet(_getHouseLord(chart, 5))?.house ?? 999)),
     ));
 
     yogas.add(ChildYoga(
@@ -224,10 +224,31 @@ class ProgenyService {
       isPresent: planetsInFifth.any((p) => p.planet == Planet.venus),
     ));
 
-    yogas.add(const ChildYoga(
+    // Find Atmakaraka (traditional planet with highest longitude % 30)
+    Planet? atmakaraka;
+    double maxDeg = -1.0;
+    for (final p in Planet.traditionalPlanets) {
+      final info = chart.getPlanet(p);
+      if (info == null) continue;
+      final deg = info.longitude % 30;
+      if (deg > maxDeg) {
+        maxDeg = deg;
+        atmakaraka = p;
+      }
+    }
+
+    final d9Chart = _divisionalChartService.calculateDivisionalChart(
+        chart, DivisionalChartType.d9);
+    final jupD9Info = d9Chart.getPlanet(Planet.jupiter);
+
+    final bool isJupAtmakaraka = atmakaraka == Planet.jupiter;
+    final bool jupIn5thRashi = jupiterInfo?.house == 5;
+    final bool jupIn5thD9 = jupD9Info?.house == 5;
+
+    yogas.add(ChildYoga(
       name: 'Putra Karaka',
       description: 'Jupiter as Atmakaraka in 5th house or Navamsa',
-      isPresent: false,
+      isPresent: isJupAtmakaraka && (jupIn5thRashi || jupIn5thD9),
     ));
 
     return yogas;
@@ -283,25 +304,36 @@ class ProgenyService {
 
   List<Planet> _getPlanetsAspectingHouse(VedicChart chart, int houseNumber) {
     final aspects = <Planet>[];
-    final houseCusp = (chart.ascendant + (houseNumber - 1) * 30) % 360;
-
-    for (final entry in chart.planets.entries) {
-      final planet = entry.key;
-      final planetInfo = entry.value;
-      final angle = (planetInfo.longitude - houseCusp + 360) % 360;
-
-      if ((angle >= 60 && angle <= 120) ||
-          (angle >= 240 && angle <= 300) ||
-          angle == 180) {
+    for (final planet in Planet.traditionalPlanets) {
+      final info = chart.getPlanet(planet);
+      if (info == null) continue;
+      if (_doesPlanetAspectHouse(info, houseNumber)) {
         aspects.add(planet);
       }
     }
-
     return aspects;
   }
 
-  bool _doesPlanetAspectHouse(VedicPlanetInfo planet, int houseNumber) {
-    return true;
+  bool _doesPlanetAspectHouse(VedicPlanetInfo planetInfo, int targetHouse) {
+    final h = planetInfo.house;
+    final h0 = h - 1;
+    final planet = planetInfo.position.planet;
+
+    final List<int> aspectedHouses0 = [];
+    aspectedHouses0.add((h0 + 6) % 12);
+
+    if (planet == Planet.mars) {
+      aspectedHouses0.add((h0 + 3) % 12);
+      aspectedHouses0.add((h0 + 7) % 12);
+    } else if (planet == Planet.jupiter) {
+      aspectedHouses0.add((h0 + 4) % 12);
+      aspectedHouses0.add((h0 + 8) % 12);
+    } else if (planet == Planet.saturn) {
+      aspectedHouses0.add((h0 + 2) % 12);
+      aspectedHouses0.add((h0 + 9) % 12);
+    }
+
+    return aspectedHouses0.contains(targetHouse - 1);
   }
 
   ProgenyStrength _getProgenyStrength(int score) {

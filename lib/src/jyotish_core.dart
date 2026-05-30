@@ -3518,4 +3518,5 @@ class JyotishSystems {
   JaiminiService get jaimini => _jyotish._jaiminiService!;
   PrashnaService get prashna => _jyotish._prashnaService!;
   VarshapalService get varshapal => _jyotish._varshapalService!;
+  TajakaService get tajaka => _jyotish._tajakaService!;
 }

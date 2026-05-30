@@ -15,7 +15,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Mudda Dasha**: Scaled annual Vimshottari periods based on the annual Moon's Nakshatra, adjusting start balance and cycling through all planetary periods.
 
 ---
-
 ## [2.10.0] - 2026-05-18
 
 ### Added

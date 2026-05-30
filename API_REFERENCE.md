@@ -2925,7 +2925,6 @@ final muddaPeriods = await jyotish.varshapal.calculateMuddaDasha(
 ```
 
 ---
-
 ## New in v2.11.0 — Advanced Jyotish Feature Suite
 
 This update adds an extensive suite of advanced mathematical, divisional, and compatibility features to the `jyotish` library:
@@ -3090,7 +3089,6 @@ if (house5.isTrikona) {
   print('5th house is a Trikona (Trine) house.');
 }
 ```
-
 ---
 
 ## New in v2.10.0 — Tree Shaking & Module Isolation

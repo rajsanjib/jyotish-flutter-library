@@ -147,7 +147,9 @@ class ProgenyService {
     // Check actual angular distance to the Sun for combustion (limit ~11 degrees)
     final sunInfo = chart.getPlanet(Planet.sun);
     double diff = sunInfo != null ? (jupiterInfo.longitude - sunInfo.longitude).abs() : 0.0;
-    while (diff > 180) diff = 360 - diff;
+    while (diff > 180) {
+      diff = 360 - diff;
+    }
     final isCombust = sunInfo != null && diff < 11.0;
 
     if (isCombust) {

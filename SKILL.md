@@ -75,7 +75,7 @@ Crucial for v2.5.0+:
 ## 6. Performance, Threads, & Tree Shaking
 - For batch calculations (e.g., searching periods), use `Async` variants like `getAllPlanetsVimshopakBalaAsync` to avoid blocking the UI thread.
 - `EphemerisService` is a singleton; do not re-initialize it unnecessarily.
-- **Tree Shaking & Module Imports (v2.10.0+)**: To reduce application compiled sizes, import micro-targeted barrel files instead of the monolithic `package:jyotish/jyotish.dart`. Available barrel modules:
+- **Tree Shaking & Module Imports (v2.12.0+)**: To reduce application compiled sizes, import micro-targeted barrel files instead of the monolithic `package:jyotish/jyotish.dart`. Available barrel modules:
   - `package:jyotish/core.dart` (facade, location, flags, planets, rashis)
   - `package:jyotish/panchanga.dart` (tithi, vara, nakshatra, yoga, karana, masa)
   - `package:jyotish/systems.dart` (dashas, ashtakavarga, KP system, Varshapal, Jaimini, Prashna)
@@ -98,4 +98,4 @@ Crucial for v2.5.0+:
 - **House Systems**: 'W' (Whole Sign - Default), 'P' (Placidus - Mandatory for KP).
 
 ---
-*This skill file was automatically generated based on API_REFERENCE.md v2.10.0.*
+*This skill file was automatically generated based on API_REFERENCE.md v2.12.0.*

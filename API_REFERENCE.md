@@ -11,6 +11,7 @@ A comprehensive API reference for the Jyotish Flutter library - production-ready
   - [Jyotish](#jyotish)
   - [GeographicLocation](#geographiclocation)
   - [CalculationFlags](#calculationflags)
+- [New in v2.12.0 — Tajika Varshapal (Solar Return) Engine Suite](#new-in-v2120--tajika-varshapal-solar-return-engine-suite)
 - [New in v2.11.0 — Advanced Jyotish Feature Suite](#new-in-v2110--advanced-jyotish-feature-suite)
 - [New in v2.10.0 — Tree Shaking & Module Isolation](#new-in-v2100--tree-shaking--module-isolation)
 - [New in v2.9.0 & v2.9.1 — JSON, Sanskrit, Jaimini, and Julian Day](#new-in-v290--v291--json-sanskrit-jaimini-and-julian-day)
@@ -2862,6 +2863,68 @@ Type of eclipse.
 |-------|-------------|
 | `solar` | Solar eclipse |
 | `lunar` | Lunar eclipse |
+
+## New in v2.12.0 — Tajika Varshapal (Solar Return) Engine Suite
+
+This update adds a suite of precise Tajika Varshapal calculations to the `jyotish` library:
+
+### 1. True Solar Return Moment (calculateSolarReturn)
+Calculates the exact millisecond the transiting Sun returns to its natal longitude, resolving leap-years and timezone drift using UTC binary search.
+- Method on `VarshapalService`: `Future<DateTime> calculateSolarReturn({required DateTime birthDateTime, required int targetYear, required GeographicLocation location, CalculationFlags? flags})`
+
+#### Usage Example:
+```dart
+final solarReturnTime = await jyotish.varshapal.calculateSolarReturn(
+  birthDateTime: DateTime(1990, 5, 15, 14, 30),
+  targetYear: 2026,
+  location: location,
+);
+print('Exact Solar Return Moment: $solarReturnTime');
+```
+
+### 2. Panchavargiya Bala (5-fold planetary strength)
+Natively calculates the five traditional strengths of any planet (Kshetra, Hadda, Drekkana, Navamsa, and Uccha Bala).
+- Method on `VarshapalService`: `PanchavargiyaBalaResult calculatePanchavargiyaBala(Planet planet, VedicChart chart)`
+- Properties on `PanchavargiyaBalaResult`: `kshetraBala`, `haddaBala`, `drekkanaBala`, `navamsaBala`, `ucchaBala`, `totalBala`, `vishwaBala`
+
+#### Usage Example:
+```dart
+final result = jyotish.varshapal.calculatePanchavargiyaBala(Planet.sun, annualChart);
+print('Sun Vishwa Bala: ${result.vishwaBala} / 20');
+```
+
+### 3. Varshesh (Year Lord) Determination
+Selects the Year Lord from the five candidate planets (Panchadhikaris) using strict aspect checks to Lagna and Panchavargiya Bala tie-breakers.
+- Method on `VarshapalService`: `Planet determineVarshesh(...)`
+
+#### Usage Example:
+```dart
+final varshesh = jyotish.varshapal.determineVarshesh(
+  natalChart: natalChart,
+  annualChart: annualChart,
+  balaMap: balaMap,
+  varshaDateTime: varshaDateTime,
+  birthDateTime: birthDateTime,
+);
+print('Varshesha for the year: ${varshesh.displayName}');
+```
+
+### 4. Mudda Dasha (Annual Dasha)
+Calculates annual Vimshottari period durations scaled to the exact Varshapal year, starting with the Nakshatra ruler's balance.
+- Method on `VarshapalService`: `Future<List<VarshapalPeriod>> calculateMuddaDasha(...)`
+
+#### Usage Example:
+```dart
+final muddaPeriods = await jyotish.varshapal.calculateMuddaDasha(
+  birthDateTime: birthDateTime,
+  varshaDateTime: varshaDateTime,
+  annualChart: annualChart,
+  location: location,
+  flags: flags,
+);
+```
+
+---
 
 ## New in v2.11.0 — Advanced Jyotish Feature Suite
 

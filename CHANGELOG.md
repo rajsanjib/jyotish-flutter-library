@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.12.0] - 2026-05-30
+
+### Added
+- **Tajika Varshapal (Solar Return) Engine Enhancements**:
+  - **True Solar Return Moment**: High-precision binary search on UTC time to find the exact millisecond the transiting Sun returns to its natal longitude, with clean local timezone conversion.
+  - **Panchavargiya Bala**: Standard 5-fold planetary strength calculation (Kshetra, Hadda, Drekkana, Navamsa, and Uccha Bala).
+  - **Varshesh Determination**: Precise Year Lord selection utilizing the five candidate planets (Panchadhikaris) with aspect checks to Lagna and priority tie-breaking.
+  - **Mudda Dasha**: Scaled annual Vimshottari periods based on the annual Moon's Nakshatra, adjusting start balance and cycling through all planetary periods.
+
+---
+
 ## [2.10.0] - 2026-05-18
 
 ### Added

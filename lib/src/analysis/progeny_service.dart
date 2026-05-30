@@ -166,31 +166,75 @@ class ProgenyService {
   }
 
   D7Analysis analyzeD7Chart(VedicChart chart) {
-    var score = 0;
+    var score = 15; // Start with a baseline score of 15 (neutral)
     final d7Chart = _divisionalChartService.calculateDivisionalChart(
         chart, DivisionalChartType.d7);
 
-    final fifthLord = _getHouseLord(chart, 5);
-    final fifthLordD7 = d7Chart.getPlanet(fifthLord);
-    if (fifthLordD7 != null) {
-      if (fifthLordD7.dignity == PlanetaryDignity.exalted ||
-          fifthLordD7.dignity == PlanetaryDignity.ownSign) {
-        score += 15;
+    // 1. D7 Lagna Lord placement in D7
+    final d7LagnaSign = Rashi.fromLongitude(d7Chart.ascendant);
+    final d7LagnaLord = d7LagnaSign.lord;
+    final d7LagnaLordInfo = d7Chart.getPlanet(d7LagnaLord);
+    if (d7LagnaLordInfo != null) {
+      final house = d7LagnaLordInfo.house;
+      if (house == 1 || house == 4 || house == 7 || house == 10 || house == 5 || house == 9) {
+        score += 5;
+      } else if (house == 6 || house == 8 || house == 12) {
+        score -= 5;
+      }
+      if (d7LagnaLordInfo.dignity == PlanetaryDignity.exalted) {
+        score += 5;
+      } else if (d7LagnaLordInfo.dignity == PlanetaryDignity.debilitated) {
+        score -= 5;
       }
     }
 
+    // 2. D7 5th Lord placement in D7
+    final d7FifthLord = _getHouseLord(d7Chart, 5);
+    final d7FifthLordInfo = d7Chart.getPlanet(d7FifthLord);
+    if (d7FifthLordInfo != null) {
+      final house = d7FifthLordInfo.house;
+      if (house == 1 || house == 4 || house == 7 || house == 10 || house == 5 || house == 9) {
+        score += 5;
+      } else if (house == 6 || house == 8 || house == 12) {
+        score -= 5;
+      }
+      if (d7FifthLordInfo.dignity == PlanetaryDignity.exalted) {
+        score += 5;
+      } else if (d7FifthLordInfo.dignity == PlanetaryDignity.debilitated) {
+        score -= 5;
+      }
+    }
+
+    // 3. Planets in the 5th house of D7
+    final d7PlanetsIn5 = d7Chart.getPlanetsInHouse(5);
+    for (final p in d7PlanetsIn5) {
+      if (_isBenefic(p.position.planet)) {
+        score += 3;
+      } else {
+        score -= 3;
+      }
+    }
+
+    // 4. Jupiter condition in D7
     final jupiterD7 = d7Chart.getPlanet(Planet.jupiter);
     if (jupiterD7 != null) {
-      if (jupiterD7.dignity == PlanetaryDignity.exalted ||
-          jupiterD7.dignity == PlanetaryDignity.ownSign) {
-        score += 15;
+      final house = jupiterD7.house;
+      if (house == 1 || house == 4 || house == 7 || house == 10 || house == 5 || house == 9) {
+        score += 5;
+      } else if (house == 6 || house == 8 || house == 12) {
+        score -= 5;
+      }
+      if (jupiterD7.dignity == PlanetaryDignity.exalted) {
+        score += 5;
+      } else if (jupiterD7.dignity == PlanetaryDignity.debilitated) {
+        score -= 5;
       }
     }
 
     return D7Analysis(
       score: score.clamp(0, 30),
       isStrong: score >= 20,
-      fifthLordD7: fifthLord,
+      fifthLordD7: d7FifthLord,
       jupiterD7: Planet.jupiter,
       venusD7: Planet.venus,
       moonD7: Planet.moon,

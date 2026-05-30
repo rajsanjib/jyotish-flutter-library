@@ -62,6 +62,10 @@ final chart = await jyotish.calculateVedicChart(
 | **Combustion Distance** | `planetInfo.combustionDistance` |
 | **Compound Friendship** | `chart.getCompoundRelationship(planetA, planetB)` |
 | **House Classification** | `house.isKendra` / `house.isTrikona` / `house.isDusthana` / `house.isUpachaya` |
+| **True Solar Return** | `varshapalService.calculateSolarReturn(birthDateTime: dt, targetYear: yr, location: loc)` |
+| **Panchavargiya Bala** | `varshapalService.calculatePanchavargiyaBala(planet, chart)` |
+| **Varshesh Determination** | `varshapalService.determineVarshesh(natalChart: nc, annualChart: ac, balaMap: bm, varshaDateTime: vdt, birthDateTime: bdt)` |
+| **Mudda Dasha** | `varshapalService.calculateMuddaDasha(birthDateTime: bdt, varshaDateTime: vdt, annualChart: ac, location: loc, flags: f)` |
 
 ## 5. System Differentiator: Traditional vs KP
 Crucial for v2.5.0+:

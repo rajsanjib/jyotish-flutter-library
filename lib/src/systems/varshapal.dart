@@ -49,6 +49,18 @@ class VarshapalPeriod {
   String get periodString {
     return '${lord.displayName} - ${startDate.day}/${startDate.month} to ${endDate.day}/${endDate.month}';
   }
+
+  /// Converts this period to a JSON map
+  Map<String, dynamic> toJson() {
+    return {
+      'type': type.name,
+      'lord': lord.name,
+      'startDate': startDate.toIso8601String(),
+      'endDate': endDate.toIso8601String(),
+      'duration': duration.inMilliseconds,
+      'subPeriods': subPeriods.map((s) => s.toJson()).toList(),
+    };
+  }
 }
 
 /// Represents the Varshapal (Annual Chart) in Vedic astrology.
@@ -78,6 +90,8 @@ class Varshapal {
     required this.currentMaasaPeriod,
     required this.currentDinaPeriod,
     required this.currentHoraPeriod,
+    this.panchavargiyaBala = const {},
+    this.muddaDasha = const [],
   });
 
   /// The annual chart for this Varshapal year
@@ -121,6 +135,12 @@ class Varshapal {
 
   /// Current active Hora period at the given date
   final VarshapalPeriod? currentHoraPeriod;
+
+  /// Panchavargiya Bala (5-fold strength) for each traditional planet
+  final Map<Planet, PanchavargiyaBalaResult> panchavargiyaBala;
+
+  /// Mudda Dasha (scaled annual Vimshottari dasha) periods
+  final List<VarshapalPeriod> muddaDasha;
 
   /// Alias for [currentMaasaPeriod?.lord] for legacy tests.
   Planet? get maasLord => currentMaasaPeriod?.lord;
@@ -167,7 +187,64 @@ class Varshapal {
       'varshaLord': varshaLord.name,
       'varshaNumber': varshaNumber,
       'samvatsaraName': samvatsaraName,
+      'panchavargiyaBala': panchavargiyaBala.map((k, v) => MapEntry(k.name, v.toJson())),
+      'muddaDasha': muddaDasha.map((v) => v.toJson()).toList(),
     };
+  }
+}
+
+/// Represents the Panchavargiya Bala (5-fold strength) calculation result for a planet in a solar return (Varshapal) chart.
+class PanchavargiyaBalaResult {
+  const PanchavargiyaBalaResult({
+    required this.planet,
+    required this.kshetraBala,
+    required this.haddaBala,
+    required this.drekkanaBala,
+    required this.navamsaBala,
+    required this.ucchaBala,
+    required this.totalBala,
+    required this.vishwaBala,
+  });
+
+  /// The planet evaluated
+  final Planet planet;
+
+  /// Kshetra Bala (0 - 30 points)
+  final double kshetraBala;
+
+  /// Hadda Bala (0 - 15 points)
+  final double haddaBala;
+
+  /// Drekkana Bala (0 - 10 points)
+  final double drekkanaBala;
+
+  /// Navamsa Bala (0 - 5 points)
+  final double navamsaBala;
+
+  /// Uccha Bala (0 - 20 points)
+  final double ucchaBala;
+
+  /// Total combined strength (sum of the five strengths, 0 - 80 points)
+  final double totalBala;
+
+  /// Vishwa Bala score (totalBala / 4, 0 - 20 points)
+  final double vishwaBala;
+
+  /// Converts this result to a JSON map
+  Map<String, dynamic> toJson() => {
+        'planet': planet.displayName,
+        'kshetraBala': kshetraBala,
+        'haddaBala': haddaBala,
+        'drekkanaBala': drekkanaBala,
+        'navamsaBala': navamsaBala,
+        'ucchaBala': ucchaBala,
+        'totalBala': totalBala,
+        'vishwaBala': vishwaBala,
+      };
+
+  @override
+  String toString() {
+    return '${planet.displayName}: Total $totalBala (Vishwa: $vishwaBala)';
   }
 }
 

@@ -120,5 +120,102 @@ void main() {
         expect(individualHouses[i].number, equals(i + 1));
       }
     });
+
+    test('7. True Solar Return Moment (calculateSolarReturn)', () async {
+      final service = VarshapalService(Jyotish().ephemeris);
+      final birthDateTime = DateTime(1990, 5, 15, 14, 30);
+      final targetYear = 2026;
+
+      final srMoment = await service.calculateSolarReturn(
+        birthDateTime: birthDateTime,
+        targetYear: targetYear,
+        location: location,
+      );
+
+      expect(srMoment.year, equals(targetYear));
+      expect(srMoment.month, equals(5));
+      // Solar return should be close to May 15 (within 1-2 days)
+      expect((srMoment.day - 15).abs() <= 2, isTrue);
+    });
+
+    test('8. Panchavargiya Bala calculations', () async {
+      final service = VarshapalService(Jyotish().ephemeris);
+      for (final planet in Planet.traditionalPlanets) {
+        final result = service.calculatePanchavargiyaBala(planet, chart);
+        expect(result.planet, equals(planet));
+        expect(result.kshetraBala, anyOf(equals(30.0), equals(22.5), equals(15.0), equals(7.5)));
+        expect(result.haddaBala, anyOf(equals(15.0), equals(11.25), equals(7.5), equals(3.75)));
+        expect(result.drekkanaBala, anyOf(equals(10.0), equals(7.5), equals(5.0), equals(2.5)));
+        expect(result.navamsaBala, anyOf(equals(5.0), equals(3.75), equals(2.5), equals(1.25)));
+        expect(result.ucchaBala, >=(0.0));
+        expect(result.ucchaBala, <=(20.0));
+        expect(result.totalBala, equals(result.kshetraBala + result.haddaBala + result.drekkanaBala + result.navamsaBala + result.ucchaBala));
+        expect(result.vishwaBala, equals(result.totalBala / 4.0));
+      }
+    });
+
+    test('9. Varshesh Determination and calculateVarshapal Integration', () async {
+      final service = VarshapalService(Jyotish().ephemeris);
+      final birthDateTime = DateTime(1990, 5, 15, 14, 30);
+      final targetYear = 2026;
+
+      final srMoment = await service.calculateSolarReturn(
+        birthDateTime: birthDateTime,
+        targetYear: targetYear,
+        location: location,
+      );
+
+      final varshapal = await service.calculateVarshapal(
+        birthDateTime: birthDateTime,
+        varshaDateTime: srMoment,
+        location: location,
+      );
+
+      expect(varshapal.varshaDateTime, equals(srMoment));
+      expect(varshapal.varshaLord, isNotNull);
+      expect(Planet.traditionalPlanets.contains(varshapal.varshaLord), isTrue);
+      expect(varshapal.panchavargiyaBala.keys.length, equals(7));
+      for (final planet in Planet.traditionalPlanets) {
+        expect(varshapal.panchavargiyaBala.containsKey(planet), isTrue);
+      }
+    });
+
+    test('10. Mudda Dasha scaling and duration checks', () async {
+      final service = VarshapalService(Jyotish().ephemeris);
+      final birthDateTime = DateTime(1990, 5, 15, 14, 30);
+      final targetYear = 2026;
+
+      final srMoment = await service.calculateSolarReturn(
+        birthDateTime: birthDateTime,
+        targetYear: targetYear,
+        location: location,
+      );
+
+      final varshapal = await service.calculateVarshapal(
+        birthDateTime: birthDateTime,
+        varshaDateTime: srMoment,
+        location: location,
+      );
+
+      final mudda = varshapal.muddaDasha;
+      expect(mudda, isNotEmpty);
+      expect(mudda.length, anyOf(equals(9), equals(10))); // Depending on if elapsed portion is 0 or not
+
+      // The sum of durations of all periods should match the total year duration.
+      final nextSrMoment = await service.calculateSolarReturn(
+        birthDateTime: birthDateTime,
+        targetYear: targetYear + 1,
+        location: location,
+      );
+      final expectedYearDurationMs = nextSrMoment.difference(srMoment).inMilliseconds;
+
+      var totalDurationMs = 0;
+      for (final period in mudda) {
+        totalDurationMs += period.duration.inMilliseconds;
+      }
+
+      // Check with a very small tolerance of 5ms due to roundings in individual period calculations.
+      expect((totalDurationMs - expectedYearDurationMs).abs() <= 5, isTrue);
+    });
   });
 }

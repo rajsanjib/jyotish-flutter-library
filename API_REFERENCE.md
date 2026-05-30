@@ -949,8 +949,12 @@ final service = VarshapalService(ephemerisService);
 |--------|---------|-------------|
 | `calculateVarshapal({birthDateTime, varshaDateTime, location, houseSystem?, checkDate?})` | `Future<Varshapal>` | Annual chart for a specific year |
 | `calculateCurrentVarshapal({birthDateTime, location, houseSystem?, checkDate?})` | `Future<Varshapal>` | Current year's annual chart |
+| `calculateSolarReturn({birthDateTime, targetYear, location, flags?})` | `Future<DateTime>` | Exact millisecond the transiting Sun returns to its natal longitude |
+| `calculatePanchavargiyaBala(Planet planet, VedicChart chart)` | `PanchavargiyaBalaResult` | Calculates the five-fold strength of a planet |
+| `determineVarshesh({natalChart, annualChart, balaMap, varshaDateTime, birthDateTime})` | `Planet` | Selects Year Lord based on classical Panchadhikari rules |
+| `calculateMuddaDasha({birthDateTime, varshaDateTime, annualChart, location, flags})` | `Future<List<VarshapalPeriod>>` | Calculates scaled Vimshottari periods for the annual year |
 | `getVarshapal(...)` | `Future<Varshapal>` | Alias for `calculateVarshapal` |
-| `getCurrentVarshapal(...)` | `Future<Varshapal>` | Alias for `calculateCurrentVarshapal` |
+| `calculateCurrentVarshapal(...)` | `Future<Varshapal>` | Alias for `calculateCurrentVarshapal` (corrected description/redundancy check) |
 | `getSamvatsaraName(int yearNumber)` | `static String` | Gets Samvatsara name from year number (1-60) |
 | `getCurrentVarshaNumber(DateTime date, {int? referenceYear})` | `static int` | Gets current varsha number (1-60). `referenceYear` defaults to `DateTime.now().year`; reference epoch: 1983 = Prabhava (year 1). |
 

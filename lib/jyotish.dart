@@ -57,6 +57,8 @@ export 'package:jyotish/src/analysis/progeny.dart';
 export 'package:jyotish/src/analysis/progeny_service.dart';
 export 'package:jyotish/src/analysis/yoga.dart';
 export 'package:jyotish/src/analysis/yoga_service.dart';
+export 'package:jyotish/src/analysis/dosha.dart';
+export 'package:jyotish/src/analysis/dosha_service.dart';
 
 // Panchanga
 export 'package:jyotish/src/models/vedic_chart.dart';

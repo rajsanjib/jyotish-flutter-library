@@ -43,6 +43,7 @@ final chart = await jyotish.calculateVedicChart(
 - **CompoundRelationship**: Enum representing Panchadha Maitri relationship (`greatFriend`, `friend`, `neutral`, `enemy`, `greatEnemy`).
 - **House**: Model representing individual houses with attributes (`number`, `cusp`, `zodiacSign`) and classifications (`isKendra`, `isTrikona`, `isDusthana`, `isUpachaya`).
 - **NatalYoga**: Holds detected yoga results with attributes (`key`, `name`, `category`, `description`, `benefits`, `isPresent`, `explanation`).
+- **FullDoshaReport**: Holds detected individual natal doshas (Kala Sarpa, Manglik with 17 exceptions, Pitru, Guru Chandala, Ganda Moola, Kalathra, Ghata, and Shrapit).
 - **VedicTime**: Model representing traditional time elapsed since sunrise (`ghati`, `vighati`, `lipta`, `prana`, `currentSunrise`, `nextSunrise`, `totalGhatis`).
 
 ## 4. Common Tasks & Service Access
@@ -71,6 +72,8 @@ final chart = await jyotish.calculateVedicChart(
 | **Gregorian to Vedic Time** | `VedicTime.calculate(time: dt, location: loc, getSunriseSunset: fn)` |
 | **Vedic Time to Gregorian** | `vt.toDateTime()` |
 | **Yoga Detection** | `YogaService().detectNatalYogas(chart)` |
+| **Dosha Detection** | `jyotish.checkNatalDoshas(chart)` / `DoshaService().calculateFullDoshaReport(chart)` |
+| **Manglik Raman Check** | `jyotish.checkManglikDoshaWithRamanExceptions(chart)` |
 | **Eclipse Predictions** | `EclipseService().getLunarEclipses(startYear: s, endYear: e)` / `getSolarEclipses(...)` |
 
 ## 5. System Differentiator: Traditional vs KP
@@ -104,4 +107,5 @@ Crucial for v2.5.0+:
 - **House Systems**: 'W' (Whole Sign - Default), 'P' (Placidus - Mandatory for KP).
 
 ---
-*This skill file was automatically generated based on API_REFERENCE.md v2.12.0.*
+*This skill file was last updated for API_REFERENCE.md v2.14.0 — includes DoshaService, FullDoshaReport, and all 8 natal doshas.*
+

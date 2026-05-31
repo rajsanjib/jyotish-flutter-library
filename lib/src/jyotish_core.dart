@@ -32,6 +32,8 @@ import 'package:jyotish/src/analysis/progeny.dart';
 import 'package:jyotish/src/analysis/compatibility.dart';
 import 'package:jyotish/src/analysis/yoga.dart';
 import 'package:jyotish/src/analysis/yoga_service.dart';
+import 'package:jyotish/src/analysis/dosha.dart';
+import 'package:jyotish/src/analysis/dosha_service.dart';
 import 'package:jyotish/src/strength/graha_avastha.dart';
 import 'package:jyotish/src/strength/strength_report.dart';
 import 'package:jyotish/src/analysis/event_timing.dart';
@@ -172,6 +174,7 @@ class Jyotish {
   SpecialLagnasService? _specialLagnasService;
   EclipseService? _eclipseService;
   YogaService? _yogaService;
+  DoshaService? _doshaService;
   bool _isInitialized = false;
 
   /// Access point for specialized systems like Argala, Arudha Pada, etc.
@@ -287,6 +290,7 @@ class Jyotish {
       _specialLagnasService = const SpecialLagnasService();
       _eclipseService = EclipseService(_ephemerisService!.bindings);
       _yogaService = const YogaService();
+      _doshaService = const DoshaService();
       _isInitialized = true;
     } catch (e) {
       throw JyotishException(
@@ -3083,6 +3087,60 @@ class Jyotish {
   ) {
     _ensureInitialized();
     return _compatibilityService!.checkBhakootDosha(boyChart, girlChart);
+  }
+
+  /// Analyzes a chart and produces a full report of natal doshas.
+  FullDoshaReport checkNatalDoshas(VedicChart chart) {
+    _ensureInitialized();
+    return _doshaService!.calculateFullDoshaReport(chart);
+  }
+
+  /// Checks for Kala Sarpa Dosha in a chart.
+  KalaSarpaDoshaResult checkKalaSarpaDosha(VedicChart chart) {
+    _ensureInitialized();
+    return _doshaService!.checkKalaSarpaDosha(chart);
+  }
+
+  /// Checks for Manglik Dosha using BV Raman's 17 exceptions.
+  ManglikDoshaResult checkManglikDoshaWithRamanExceptions(VedicChart chart) {
+    _ensureInitialized();
+    return _doshaService!.checkManglikDoshaWithRamanExceptions(chart);
+  }
+
+  /// Checks for Pitru Dosha in a chart.
+  PitruDoshaResult checkPitruDosha(VedicChart chart) {
+    _ensureInitialized();
+    return _doshaService!.checkPitruDosha(chart);
+  }
+
+  /// Checks for Guru Chandala Dosha in a chart.
+  GuruChandalaDoshaResult checkGuruChandalaDosha(VedicChart chart) {
+    _ensureInitialized();
+    return _doshaService!.checkGuruChandalaDosha(chart);
+  }
+
+  /// Checks for Ganda Moola Dosha in a chart.
+  GandaMoolaDoshaResult checkGandaMoolaDosha(VedicChart chart) {
+    _ensureInitialized();
+    return _doshaService!.checkGandaMoolaDosha(chart);
+  }
+
+  /// Checks for Kalathra Dosha in a chart.
+  KalathraDoshaResult checkKalathraDosha(VedicChart chart) {
+    _ensureInitialized();
+    return _doshaService!.checkKalathraDosha(chart);
+  }
+
+  /// Checks for Ghata Dosha (Mars/Saturn conjunction) in a chart.
+  ConjunctionDoshaResult checkGhataDosha(VedicChart chart) {
+    _ensureInitialized();
+    return _doshaService!.checkGhataDosha(chart);
+  }
+
+  /// Checks for Shrapit Dosha (Saturn/Rahu conjunction) in a chart.
+  ConjunctionDoshaResult checkShrapitDosha(VedicChart chart) {
+    _ensureInitialized();
+    return _doshaService!.checkShrapitDosha(chart);
   }
 
   // ============================================================

@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [2.14.0] - 2026-05-31
+
+### Added
+- **Natal & Conjunction Dosha Detection Engine**:
+  - Implemented a comprehensive, high-precision dosha detection module at par with PyJHora, capable of identifying 8 key Vedic astrological flaws (Doshas) in natal charts.
+  - **Kala Sarpa Dosha**: Detects if all traditional planets are hemmed between Rahu and Ketu. Resolves 12 specific types (Anant, Kulik, Vasuki, Shankhapal, Padma, Mahapadma, Takshak, Karkotak, Shankhachur, Ghatak, Vishdhar, Sheshnag) based on Rahu's house placement.
+  - **Manglik Dosha**: Evaluates Mars placement relative to Lagna, Moon, and Venus. Integrates 17 BV Raman exceptions (such as Leo/Aquarius sign, Yoga Karaka Lagna, combustion, conjunctions with Jupiter/Moon, aspect from Saturn, and retrograde status) to calculate accurate Manglik cancellation status.
+  - **Pitru Dosha**: Scans ancestral karmic afflictions using 5 classical rules (such as Sun/Moon/Rahu in the 9th house, Ketu in the 4th house, and Saturn/Mars afflictions to Sun/Moon/Nodes). Includes detailed remedies and factors matched.
+  - **Guru Chandala Dosha**: Identifies Jupiter-Rahu/Ketu conjunctions, including planet strength evaluation to determine if Jupiter is stronger, which mitigates/cancels the dosha.
+  - **Ganda Moola Dosha**: Scans if the Moon at birth is in one of the 6 Ketu/Mercury junction Nakshatras (Ashlesha, Magha, Jyeshtha, Mula, Revati, Ashwini).
+  - **Kalathra Dosha**: Checks for natural malefic placements in spouse/partner houses (1st, 2nd, 4th, 7th, 8th, and 12th) from Lagna and Moon.
+  - **Ghata & Shrapit Conjunction Doshas**: Scans for Mars-Saturn (Ghata) and Saturn-Rahu (Shrapit) conjunctions in the same house.
+  - Exposed `checkNatalDoshas(chart)` through the main `Jyotish` facade, and `DoshaService().calculateFullDoshaReport(chart)` for direct usage.
+  - Added unit test suite `test/dosha_test.dart` to verify logic accuracy.
+
 ## [2.13.0] - 2026-05-31
 
 ### Added

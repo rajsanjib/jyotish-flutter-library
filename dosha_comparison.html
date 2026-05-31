@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vedic Astrology Doshas Comparison: Jyotish vs. PyJHora</title>
+  
+  <!-- Modern Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --bg-space: #03020c;
+      --bg-glass: rgba(13, 10, 36, 0.7);
+      --bg-glass-hover: rgba(23, 18, 58, 0.85);
+      --border-glow: rgba(139, 92, 246, 0.22);
+      --border-glow-hover: rgba(139, 92, 246, 0.45);
+      
+      --accent-purple: #8b5cf6;
+      --accent-purple-glow: rgba(139, 92, 246, 0.35);
+      --accent-cyan: #06b6d4;
+      --accent-cyan-glow: rgba(6, 182, 212, 0.35);
+      --accent-gold: #f59e0b;
+      
+      --text-main: #f8fafc;
+      --text-muted: #a4b5cf;
+      --text-dark: #64748b;
+      
+      --color-supported: #10b981;
+      --color-supported-bg: rgba(16, 185, 129, 0.12);
+      --color-unsupported: #ef4444;
+      --color-unsupported-bg: rgba(239, 68, 68, 0.12);
+      --color-partial: #eab308;
+      --color-partial-bg: rgba(234, 179, 8, 0.12);
+      
+      --transition-smooth: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-space);
+      color: var(--text-main);
+      min-height: 100vh;
+      line-height: 1.6;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Ambient Background Glows */
+    .bg-glow-purple {
+      position: absolute;
+      top: 5%;
+      left: 10%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+      z-index: -1;
+      pointer-events: none;
+      filter: blur(80px);
+    }
+    
+    .bg-glow-cyan {
+      position: absolute;
+      bottom: 10%;
+      right: 5%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(6, 182, 212, 0.12) 0%, rgba(0, 0, 0, 0) 70%);
+      z-index: -1;
+      pointer-events: none;
+      filter: blur(80px);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Header styling */
+    header {
+      text-align: center;
+      margin-bottom: 3.5rem;
+      padding-top: 2rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.4rem 1rem;
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid var(--border-glow);
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 3rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 30%, var(--accent-cyan) 70%, var(--accent-purple) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.15rem;
+      max-width: 700px;
+      margin: 0 auto;
+      font-weight: 300;
+    }
+
+    /* Architecture overview */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 3.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+      h1 {
+        font-size: 2.25rem;
+      }
+    }
+
+    .glass-card {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glow);
+      border-radius: 16px;
+      padding: 2rem;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all var(--transition-smooth);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glass-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, var(--accent-purple), var(--accent-cyan), transparent);
+      opacity: 0;
+      transition: opacity var(--transition-smooth);
+    }
+
+    .glass-card:hover {
+      border-color: var(--border-glow-hover);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(139, 92, 246, 0.12);
+    }
+
+    .glass-card:hover::before {
+      opacity: 1;
+    }
+
+    .card-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .card-title i {
+      color: var(--accent-cyan);
+    }
+
+    .card-list {
+      list-style: none;
+      margin-top: 1rem;
+    }
+
+    .card-list li {
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .card-list li i {
+      color: var(--accent-purple);
+      margin-top: 0.25rem;
+    }
+
+    /* Comparison Table Styling */
+    .table-container {
+      margin-bottom: 3.5rem;
+      overflow-x: auto;
+      border-radius: 16px;
+      border: 1px solid var(--border-glow);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--bg-glass);
+      backdrop-filter: blur(12px);
+      text-align: left;
+    }
+
+    th, td {
+      padding: 1.2rem 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    th {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      background: rgba(13, 10, 36, 0.9);
+      letter-spacing: 0.02em;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .feature-header {
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .feature-desc {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-top: 0.25rem;
+    }
+
+    /* Badge indicators inside table */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .status-badge.supported {
+      background: var(--color-supported-bg);
+      color: var(--color-supported);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .status-badge.unsupported {
+      background: var(--color-unsupported-bg);
+      color: var(--color-unsupported);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+
+    .status-badge.partial {
+      background: var(--color-partial-bg);
+      color: var(--color-partial);
+      border: 1px solid rgba(234, 179, 8, 0.25);
+    }
+
+    /* Detailed section grids */
+    .section-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 2rem;
+      color: var(--text-main);
+      border-left: 4px solid var(--accent-purple);
+      padding-left: 0.85rem;
+    }
+
+    .detail-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      margin-bottom: 3.5rem;
+    }
+
+    .detail-card {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glow);
+      border-radius: 16px;
+      padding: 2rem;
+      backdrop-filter: blur(12px);
+      transition: all var(--transition-smooth);
+    }
+
+    .detail-card:hover {
+      border-color: var(--border-glow-hover);
+      box-shadow: 0 8px 25px rgba(6, 182, 212, 0.08);
+    }
+
+    .detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .detail-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .detail-title span.sanskrit {
+      font-size: 1.1rem;
+      color: var(--accent-cyan);
+      font-weight: 500;
+      opacity: 0.85;
+    }
+
+    .detail-badges {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .lib-indicator {
+      font-size: 0.8rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .lib-indicator.jyotish {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+
+    .lib-indicator.pyjhora {
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--accent-purple);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .comparison-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-top: 1.25rem;
+    }
+
+    @media (max-width: 768px) {
+      .comparison-box {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+    }
+
+    .lib-pane {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .lib-pane-header {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .lib-pane-header.jyotish {
+      color: var(--accent-cyan);
+    }
+
+    .lib-pane-header.pyjhora {
+      color: var(--accent-purple);
+    }
+
+    .lib-pane p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .rule-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .rules-list {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    .rules-list li {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.4rem;
+    }
+
+    .rules-list li i {
+      margin-top: 0.2rem;
+      font-size: 0.75rem;
+    }
+
+    .rules-list li i.fa-check {
+      color: var(--color-supported);
+    }
+
+    .rules-list li i.fa-times {
+      color: var(--color-unsupported);
+    }
+
+    .rules-list li i.fa-shield-halved {
+      color: var(--accent-gold);
+    }
+
+    footer {
+      text-align: center;
+      padding: 3rem 0;
+      color: var(--text-dark);
+      font-size: 0.9rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      margin-top: 3rem;
+    }
+
+    footer a {
+      color: var(--accent-cyan);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    .architectural-note {
+      background: rgba(245, 158, 11, 0.05);
+      border: 1px solid rgba(245, 158, 11, 0.15);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 3.5rem;
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .architectural-note i {
+      color: var(--accent-gold);
+      font-size: 1.5rem;
+      margin-top: 0.2rem;
+    }
+
+    .architectural-note div h4 {
+      font-family: 'Outfit', sans-serif;
+      color: var(--accent-gold);
+      margin-bottom: 0.4rem;
+      font-weight: 700;
+    }
+
+    .architectural-note div p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="bg-glow-purple"></div>
+  <div class="bg-glow-cyan"></div>
+
+  <div class="container">
+    <header>
+      <div class="badge">Engine Feature Analysis</div>
+      <h1>Vedic Astrology Doshas</h1>
+      <div class="subtitle">Comparison of planetary afflictions and compatibility overrides calculated by Jyotish Flutter Library (SV-stark Fork) and PyJHora (naturalstupid)</div>
+    </header>
+
+    <!-- Core Paradigms Summary -->
+    <div class="summary-grid">
+      <div class="glass-card">
+        <div class="card-title">
+          <i class="fa-solid fa-mobile-screen-button"></i>
+          Jyotish Flutter Library
+        </div>
+        <p>A native, high-performance Dart engine designed for mobile (iOS/Android), web, and desktop. Focuses heavily on production-readiness for mobile apps, offering high-precision astronomical foundations and <strong>marriage compatibility (Ashtakoota Milan)</strong> including traditional doshas and complex overrides.</p>
+        <ul class="card-list">
+          <li><i class="fa-solid fa-circle-check"></i> Standard <strong>Manglik (Kuja) Dosha</strong> checks with 5 cancellations.</li>
+          <li><i class="fa-solid fa-circle-check"></i> Traditional <strong>Nadi Dosha</strong> + extensive Nakshatra/Pada cancels.</li>
+          <li><i class="fa-solid fa-circle-check"></i> Traditional <strong>Bhakoot (Rashi) Dosha</strong> + Lord/Friendship cancels.</li>
+          <li><i class="fa-solid fa-circle-check"></i> Direct integration into 36-point Guna Milan matching system.</li>
+        </ul>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-title">
+          <i class="fa-solid fa-gears"></i>
+          PyJHora (Python)
+        </div>
+        <p>An open-source Python library and desktop/CLI package inspired by PVR Narasimha Rao's book <em>Vedic Astrology - An Integrated Approach</em> and Jagannatha Hora software. Focuses heavily on single-chart analysis, <strong>astrological research</strong>, and implementing a vast set of classical text combinations.</p>
+        <ul class="card-list">
+          <li><i class="fa-solid fa-circle-check"></i> Standalone <code>dosha.py</code> module with 8 distinct dosha checks.</li>
+          <li><i class="fa-solid fa-circle-check"></i> Complete <strong>Kala Sarpa Dosha</strong> axis (12 types) calculations.</li>
+          <li><i class="fa-solid fa-circle-check"></i> Extensive <strong>Manglik</strong> check with 17 BV Raman exemption rules.</li>
+          <li><i class="fa-solid fa-circle-check"></i> Advanced single-chart doshas (Pitru, Guru Chandala, Shrapit, etc.).</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Architectural Alignment Note -->
+    <div class="architectural-note">
+      <i class="fa-solid fa-lightbulb"></i>
+      <div>
+        <h4>Key Functional Separation</h4>
+        <p>Your library is optimized for **marriage matchmaking (Ashtakoota Milan)**, implementing the crucial compatibility-based overrides (Nadi & Bhakoot Dosha) that modify the 36 Guna compatibility score. In contrast, PyJHora focuses primarily on **individual chart afflictions (Lagna/Natal Doshas)**, looking at combinations that impact a single person's horoscope (e.g. ancestral karma via Pitru Dosha, planetary alignments via Kala Sarpa, or specific bad conjunctions like Ghata and Shrapit).</p>
+      </div>
+    </div>
+
+    <!-- Feature Support Table -->
+    <div class="section-title">Dosha Support Matrix</div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Dosha Name</th>
+            <th>Astrological Description</th>
+            <th>Jyotish Flutter (Dart)</th>
+            <th>PyJHora (Python)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="feature-header">Manglik Dosha
+              <span class="feature-desc">Kuja / Mars affliction</span>
+            </td>
+            <td>Mars placed in houses 1, 2, 4, 7, 8, or 12 from Lagna, Moon, or Venus. Causes delay/discord in marriage.</td>
+            <td>
+              <span class="status-badge supported">
+                <i class="fa-solid fa-check"></i> Supported
+              </span>
+            </td>
+            <td>
+              <span class="status-badge supported">
+                <i class="fa-solid fa-check"></i> Supported
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td class="feature-header">Kala Sarpa Dosha
+              <span class="feature-desc">All planets hemmed by Nodes</span>
+            </td>
+            <td>All 7 major planets positioned between the Rahu and Ketu axis, dividing the chart in half.</td>
+            <td>
+              <span class="status-badge supported">
+                <i class="fa-solid fa-check"></i> Supported
+              </span>
+            </td>
+            <td>
+              <span class="status-badge supported">
+                <i class="fa-solid fa-check"></i> Supported
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td class="feature-header">Nadi Dosha
+              <span class="feature-desc">Physiological / genetic match</span>
+            </td>
+            <td>Both partners have the same Nadi (Adi, Madhya, or Antya), signifying genetic incompatibility. Check in matchmaking.</td>
+            <td>
+              <span class="status-badge supported">
+                <i class="fa-solid fa-check"></i> Supported
+              </span>
+            </td>
+            <td>
+              <span class="status-badge partial">
+                <i class="fa-solid fa-triangle-exclamation"></i> Implicit
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td class="feature-header">Bhakoot Dosha
+              <span class="feature-desc">Moon sign relationship (Rashi)</span>
+            </td>
+            <td>Partners' Moon signs are in 2/12 (Dwirdwadashe), 5/9 (Navapancham), or 6/8 (Shadashtak) relative positions.</td>
+            <td>
+              <span class="status-badge supported">
+                <i class="fa-solid fa-check"></i> Supported
+              </span>
+            </td>
+            <td>
+              <span class="status-badge partial">
+                <i class="fa-solid fa-triangle-exclamation"></i> Implicit
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td class="feature-header">Pitru Dosha
+              <span class="feature-desc">Ancestral karmic afflictions</span>
+            </td>
+            <td>Afflictions in 9th house, 9th lord, Sun, or Moon by Rahu/Ketu/Saturn/Mars. Signifies ancestral debts.</td>
+            <td>
+              <span class="status-badge supported">
+                <i class="fa-solid fa-check"></i> Supported
+              </span>
+            </td>
+            <td>
+              <span class="status-badge supported">
+                <i class="fa-solid fa-check"></i> Supported
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td class="feature-header">Guru Chandala Dosha
+              <span class="feature-desc">Jupiter-Node conjunction</span>
+            </td>
+            <td>Jupiter conjoined with Rahu or Ketu in the same house. Impacts wisdom, wealth, and moral values.</td>
+            <td>
+              <span class="status-badge supported">
+                <i class="fa-solid fa-check"></i> Supported
+              </span>
+            </td>
+            <td>
+              <span class="status-badge supported">
+                <i class="fa-solid fa-check"></i> Supported
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td class="feature-header">Ganda Moola Dosha
+              <span class="feature-desc">Nakshatra junction birth</span>
+            </td>
+            <td>Born when Moon occupies Ketu-ruled or Mercury-ruled Nakshatras (junction of water/fire signs).</td>
+            <td>
+              <span class="status-badge supported">
+                <i class="fa-solid fa-check"></i> Supported
+              </span>
+            </td>
+            <td>
+              <span class="status-badge supported">
+                <i class="fa-solid fa-check"></i> Supported
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td class="feature-header">Kalathra Dosha
+              <span class="feature-desc">Affliction to spouse house</span>
+            </td>
+            <td>Malefics in 1, 2, 4, 7, 8, or 12 from Ascendant or Moon causing problems to spouse/relationship.</td>
+            <td>
+              <span class="status-badge supported">
+                <i class="fa-solid fa-check"></i> Supported
+              </span>
+            </td>
+            <td>
+              <span class="status-badge supported">
+                <i class="fa-solid fa-check"></i> Supported
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td class="feature-header">Ghata Dosha
+              <span class="feature-desc">Mars-Saturn conjunction</span>
+            </td>
+            <td>Mars and Saturn conjoined in the same house, creating aggressive and highly volatile energies.</td>
+            <td>
+              <span class="status-badge supported">
+                <i class="fa-solid fa-check"></i> Supported
+              </span>
+            </td>
+            <td>
+              <span class="status-badge supported">
+                <i class="fa-solid fa-check"></i> Supported
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td class="feature-header">Shrapit Dosha
+              <span class="feature-desc">Saturn-Rahu conjunction</span>
+            </td>
+            <td>Saturn and Rahu conjoined in the same house, creating a "cursed" placement due to combined karmic nodes.</td>
+            <td>
+              <span class="status-badge supported">
+                <i class="fa-solid fa-check"></i> Supported
+              </span>
+            </td>
+            <td>
+              <span class="status-badge supported">
+                <i class="fa-solid fa-check"></i> Supported
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Detailed Astrological Comparison -->
+    <div class="section-title">Deep Dive: Calculation Rules compared</div>
+    <div class="detail-grid">
+
+      <!-- Manglik Dosha -->
+      <div class="detail-card">
+        <div class="detail-header">
+          <div class="detail-title">
+            <i class="fa-solid fa-fire-flame-simple"></i>
+            Manglik Dosha
+            <span class="sanskrit">(Kuja Dosha / Mangal Dosh)</span>
+          </div>
+          <div class="detail-badges">
+            <span class="lib-indicator jyotish">Jyotish</span>
+            <span class="lib-indicator pyjhora">PyJHora</span>
+          </div>
+        </div>
+        <p>This is checked in both libraries but with a different set of cancellation rules and options. Jyotish uses 5 standard rules based on BPHS/Phaladeepika, whereas PyJHora implements 17 detailed BV Raman exceptions.</p>
+        <div class="comparison-box">
+          <div class="lib-pane">
+            <div class="lib-pane-header jyotish">
+              <i class="fa-solid fa-mobile"></i> Jyotish Flutter Implementation
+            </div>
+            <p>Calculates Mars placement in houses 1, 2, 4, 7, 8, or 12 from Ascendant, Moon, and Venus. The severity is 'High' if present in 2 or 3 charts, and 'Moderate' if present in 1 chart.</p>
+            <div class="rule-title">Cancellations (Pariharas) Check:</div>
+            <ul class="rules-list">
+              <li><i class="fa-solid fa-check"></i> Mars in Aries, Scorpio (own signs) or Capricorn (exalted).</li>
+              <li><i class="fa-solid fa-check"></i> Mars conjunct (same sign as) Jupiter or Moon.</li>
+              <li><i class="fa-solid fa-check"></i> Mars in Leo or Aquarius (cancels dosha in houses 7 and 8).</li>
+              <li><i class="fa-solid fa-check"></i> Mars aspected by Jupiter or Venus (checks 7th sign whole aspect).</li>
+              <li><i class="fa-solid fa-check"></i> Mars is the Lagna Lord (Aries or Scorpio Ascendant).</li>
+              <li><i class="fa-solid fa-shield-halved"></i> <strong>Matchmaking:</strong> Cancellations are aggregated at compatibility level (e.g., both partners Manglik). Also, Nadi Dosha override cancels Manglik.</li>
+            </ul>
+          </div>
+          <div class="lib-pane">
+            <div class="lib-pane-header pyjhora">
+              <i class="fa-brands fa-python"></i> PyJHora Implementation
+            </div>
+            <p>Calculates Mars placement in houses 2, 4, 7, 8, 12 from a reference planet. Includes option to add 1st house (lagna house is omitted by default per Sanjay Rath's commentary). Allows choosing Venus, Moon, or Lagna as reference.</p>
+            <div class="rule-title">17 BV Raman Exemptions:</div>
+            <ul class="rules-list">
+              <li><i class="fa-solid fa-check"></i> Mars in Leo or Aquarius (Exemption 1).</li>
+              <li><i class="fa-solid fa-check"></i> Mars in 2nd in Gemini/Virgo, 4th in Aries/Scorpio, 7th in Cancer/Capricorn, 8th in Sagittarius/Pisces, 12th in Taurus/Libra (Exemptions 2-6).</li>
+              <li><i class="fa-solid fa-check"></i> Mars conjoined or aspected by Jupiter or Saturn.</li>
+              <li><i class="fa-solid fa-check"></i> Retrograde Mars or weak Mars (combust, Rasi Sandhi).</li>
+              <li><i class="fa-solid fa-check"></i> Mars is Lagna Lord.</li>
+              <li><i class="fa-solid fa-check"></i> Mars in own, exalted, or friendly sign.</li>
+              <li><i class="fa-solid fa-check"></i> Mars in movable sign.</li>
+              <li><i class="fa-solid fa-times"></i> Dispositor rules (currently hardcoded as False in python script).</li>
+              <li><i class="fa-solid fa-check"></i> Jupiter or Venus in Lagna, or Mars conjoined with Jupiter/Moon.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kala Sarpa Dosha -->
+      <div class="detail-card">
+        <div class="detail-header">
+          <div class="detail-title">
+            <i class="fa-solid fa-infinity"></i>
+            Kala Sarpa Dosha
+            <span class="sanskrit">(Kalsarp Dosh)</span>
+          </div>
+          <div class="detail-badges">
+            <span class="lib-indicator pyjhora">PyJHora Only</span>
+          </div>
+        </div>
+        <p>A classical astrological flaw formed when all planets are sandwiched between Rahu and Ketu, making them passive and restricting their positive effects.</p>
+        <div class="comparison-box">
+          <div class="lib-pane">
+            <div class="lib-pane-header jyotish text-muted">
+              <i class="fa-solid fa-circle-minus"></i> Jyotish Flutter
+            </div>
+            <p>Not natively implemented in the analysis packages. While longitudes of Rahu, Ketu, and all planets are calculated at the core engine level, no specialized service method exits to flag or identify this condition.</p>
+          </div>
+          <div class="lib-pane">
+            <div class="lib-pane-header pyjhora">
+              <i class="fa-brands fa-python"></i> PyJHora Implementation
+            </div>
+            <p>Fully implemented via the <code>kala_sarpa(house_to_planet_list)</code> helper function. It checks if the houses of all planets from Sun to Saturn lie sequentially between Rahu's house and Ketu's house.</p>
+            <div class="rule-title">Calculates 12 Sub-Types (by Rahu position):</div>
+            <ul class="rules-list">
+              <li><i class="fa-solid fa-circle"></i> 1st House: <strong>Anant</strong> Kala Sarpa</li>
+              <li><i class="fa-solid fa-circle"></i> 2nd House: <strong>Kulik</strong> Kala Sarpa</li>
+              <li><i class="fa-solid fa-circle"></i> 3rd & 4th Houses: <strong>Vasuki</strong> & <strong>Shankhapal</strong></li>
+              <li><i class="fa-solid fa-circle"></i> 5th & 6th Houses: <strong>Padma</strong> & <strong>Mahapadma</strong></li>
+              <li><i class="fa-solid fa-circle"></i> 7th & 8th Houses: <strong>Takshak</strong> & <strong>Karkotak</strong></li>
+              <li><i class="fa-solid fa-circle"></i> 9th to 12th Houses: <strong>Shankhachur</strong>, <strong>Ghatak</strong>, <strong>Vishdhar</strong>, & <strong>Sheshnag</strong></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nadi Dosha -->
+      <div class="detail-card">
+        <div class="detail-header">
+          <div class="detail-title">
+            <i class="fa-solid fa-dna"></i>
+            Nadi Dosha
+            <span class="sanskrit">(Vedic Compatibility Flaw)</span>
+          </div>
+          <div class="detail-badges">
+            <span class="lib-indicator jyotish">Jyotish (Primary)</span>
+            <span class="lib-indicator pyjhora">PyJHora (Implicit)</span>
+          </div>
+        </div>
+        <p>Crucial for marital compatibility. If both partners have the same Nadi (Vata/Adi, Pitta/Madhya, Kapha/Antya), it causes severe energy and health clashes, reducing matchmaking scores by 8 points (out of 36).</p>
+        <div class="comparison-box">
+          <div class="lib-pane">
+            <div class="lib-pane-header jyotish">
+              <i class="fa-solid fa-mobile"></i> Jyotish Flutter Implementation
+            </div>
+            <p>Calculates the Nadi classification from Nakshatra index modulo 3: Adi (index % 3 = 0), Madhya (index % 3 = 1), Antya (index % 3 = 2). Implements native cancellations:</p>
+            <div class="rule-title">Cancellations Checked:</div>
+            <ul class="rules-list">
+              <li><i class="fa-solid fa-check"></i> <strong>Rule 1:</strong> Same Nakshatra, but different Padas.</li>
+              <li><i class="fa-solid fa-check"></i> <strong>Rule 2:</strong> Same Moon sign (Rashi), but different Nakshatras.</li>
+            </ul>
+            <p>If cancelled, Nadi compatibility score is restored from 0 to 8 points.</p>
+          </div>
+          <div class="lib-pane">
+            <div class="lib-pane-header pyjhora">
+              <i class="fa-brands fa-python"></i> PyJHora Implementation
+            </div>
+            <p>Nadi Dosha is not a standalone function in <code>dosha.py</code>. Instead, it is evaluated inside the star-compatibility module (<code>match_ui.py</code>) using Tamil Porutham (or Koota Milan) mapping. Cancellation rules are implicit in the Nakshatra lookup table but are not calculated dynamically using detailed chart longitude conditions like Pada offsets.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bhakoot Dosha -->
+      <div class="detail-card">
+        <div class="detail-header">
+          <div class="detail-title">
+            <i class="fa-solid fa-arrows-spin"></i>
+            Bhakoot Dosha
+            <span class="sanskrit">(Rashi / Moon Sign Relationship Flaw)</span>
+          </div>
+          <div class="detail-badges">
+            <span class="lib-indicator jyotish">Jyotish (Primary)</span>
+            <span class="lib-indicator pyjhora">PyJHora (Implicit)</span>
+          </div>
+        </div>
+        <p>Checked during compatibility. If Moon signs are in 2/12, 5/9, or 6/8 relative distances, it causes financial, emotional, or health friction, subtracting 7 points from compatibility.</p>
+        <div class="comparison-box">
+          <div class="lib-pane">
+            <div class="lib-pane-header jyotish">
+              <i class="fa-solid fa-mobile"></i> Jyotish Flutter Implementation
+            </div>
+            <p>Specifically checks forward and reverse Moon sign distances between boy and girl. If 2/12, 5/9, or 6/8 relationships are found, it triggers Bhakoot Dosha. Implements full cancellation rules:</p>
+            <div class="rule-title">Cancellations Checked:</div>
+            <ul class="rules-list">
+              <li><i class="fa-solid fa-check"></i> Same Sign Lord (e.g. Taurus & Libra ruled by Venus, Scorpio & Aries ruled by Mars).</li>
+              <li><i class="fa-solid fa-check"></i> Sign Lords are mutual friends (e.g., Sun & Moon, Jupiter & Mars).</li>
+            </ul>
+            <p>If cancelled, compatibility score restores from 0 to 7 points.</p>
+          </div>
+          <div class="lib-pane">
+            <div class="lib-pane-header pyjhora">
+              <i class="fa-brands fa-python"></i> PyJHora Implementation
+            </div>
+            <p>Bhakoot check is not exposed in `dosha.py` but is handled within the <code>match_ui.py</code> compatibility UI. It checks basic star matches (Kootas) but does not expose detailed Lord friendship-based overrides directly as programmatic variables.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Other PyJHora Exclusive Doshas -->
+      <div class="detail-card">
+        <div class="detail-header">
+          <div class="detail-title">
+            <i class="fa-solid fa-skull-crossbones"></i>
+            PyJHora Exclusive Individual Doshas
+            <span class="sanskrit">(Pitru, Guru Chandala, Ganda Moola, etc.)</span>
+          </div>
+          <div class="detail-badges">
+            <span class="lib-indicator pyjhora">PyJHora Only</span>
+          </div>
+        </div>
+        <p>PyJHora has dedicated algorithms for identifying single-chart natal afflictions that describe personal spiritual barriers or karmic lessons, which are not currently implemented in the Jyotish Flutter library:</p>
+        <div class="comparison-box">
+          <div class="lib-pane">
+            <div class="rule-title">1. Pitru Dosha (Ancestral karma)</div>
+            <p>Indicates negative ancestral influences due to unresolved karmas. Triggered if:</p>
+            <ul class="rules-list" style="margin-bottom: 1rem;">
+              <li><i class="fa-solid fa-times"></i> Sun, Moon, or Rahu is in 9th house (house of father/dharma).</li>
+              <li><i class="fa-solid fa-times"></i> Ketu is in 4th house (house of mother/roots).</li>
+              <li><i class="fa-solid fa-times"></i> Sun, Moon, Rahu, or Ketu is conjoined/aspected by Mars or Saturn.</li>
+              <li><i class="fa-solid fa-times"></i> Venus, Mercury, or Rahu (any two) reside in 2nd, 5th, 9th, or 12th.</li>
+            </ul>
+
+            <div class="rule-title">2. Guru Chandala Dosha</div>
+            <p>Indicates disruption in guru guidance and wisdom. Formed when Rahu or Ketu conjoins Jupiter in the same house. Calculates whether Jupiter's strength dominates the node to mitigate the flaw.</p>
+          </div>
+          <div class="lib-pane">
+            <div class="rule-title">3. Ganda Moola Dosha</div>
+            <p>Triggered if born under Moon Nakshatras ruled by Ketu (Ashwini, Magha, Moola) or Mercury (Ashlesha, Jyeshtha, Revati). Signifies planetary transition zones (sandhis) which can cause early life challenges.</p>
+
+            <div class="rule-title">4. Kalathra Dosha (Marital affliction in single chart)</div>
+            <p>Formed when malefics (Sun, Mars, Saturn, Rahu, Ketu) occupy the 1st, 2nd, 4th, 7th, 8th, or 12th houses from Ascendant or Moon.</p>
+
+            <div class="rule-title">5. Ghata & Shrapit Doshas (Bad conjunctions)</div>
+            <ul class="rules-list">
+              <li><strong>Ghata Dosha:</strong> Mars and Saturn conjoined in the same house.</li>
+              <li><strong>Shrapit Dosha:</strong> Saturn and Rahu conjoined in the same house (cursed combination).</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Recommendations for Developers -->
+    <div class="section-title">Developer Summary & Guidance</div>
+    <div class="glass-card" style="margin-bottom: 2rem;">
+      <p style="margin-bottom: 1rem; font-size: 1.05rem;">Depending on your application's target use-cases, you can choose how to leverage these differences:</p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <div style="background: rgba(255,255,255,0.02); padding: 1.25rem; border-radius: 8px;">
+          <h4 style="color: var(--accent-cyan); margin-bottom: 0.5rem; font-family: 'Outfit';">1. For Marriage Matching Apps</h4>
+          <p style="font-size: 0.9rem; color: var(--text-muted);">Use the <strong>Jyotish Flutter Library</strong>. It calculates the necessary Nadi and Bhakoot overrides and includes precise planetary longitudinal checks for Manglik cancellation. These are essential to output correct Guna Milan scores out of 36.</p>
+        </div>
+        <div style="background: rgba(255,255,255,0.02); padding: 1.25rem; border-radius: 8px;">
+          <h4 style="color: var(--accent-purple); margin-bottom: 0.5rem; font-family: 'Outfit';">2. For Natal Horoscope Analysis</h4>
+          <p style="font-size: 0.9rem; color: var(--text-muted);">If you want to support report generation for single horoscopes (e.g., "Kalsarp Dosh" or "Guru Chandal Dosh" warnings), you can port the Python functions in PyJHora's <code>dosha.py</code> to your Dart library. Since your core engine already outputs exact planet coordinates and house charts, writing the Dart equivalent of these dosha rules is trivial.</p>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>Report generated for the Jyotish Flutter Library project.</p>
+      <p>Source repositories: <a href="https://github.com/SV-stark/jyotish-flutter-library-fork" target="_blank">Jyotish (Dart)</a> &bull; <a href="https://github.com/naturalstupid/PyJHora" target="_blank">PyJHora (Python)</a></p>
+    </footer>
+  </div>
+
+</body>
+</html>

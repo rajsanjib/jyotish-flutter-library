@@ -3,10 +3,7 @@ import 'package:jyotish/src/models/planet.dart';
 
 /// Represents the Prastara Ashtakavarga grid for a planet.
 class PrastaraResult {
-  const PrastaraResult({
-    required this.planet,
-    required this.grid,
-  });
+  const PrastaraResult({required this.planet, required this.grid});
 
   /// The target planet this grid is calculated for.
   final Planet planet;

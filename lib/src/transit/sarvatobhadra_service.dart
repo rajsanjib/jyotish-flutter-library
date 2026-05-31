@@ -44,7 +44,7 @@ class SarvatobhadraService {
         Planet.saturn,
         Planet.meanNode,
         Planet.trueNode,
-        Planet.ketu
+        Planet.ketu,
       ].contains(planet);
 
       VedhaSeverity severity = VedhaSeverity.mild;

@@ -36,24 +36,30 @@ class SudarshanChakraResult {
   /// Gets the overall chart strength as a percentage (0-100).
   double get overallStrength {
     if (houseStrengths.isEmpty) return 0.0;
-    final totalHouseStrength =
-        houseStrengths.values.fold(0.0, (sum, h) => sum + h.combinedScore);
+    final totalHouseStrength = houseStrengths.values.fold(
+      0.0,
+      (sum, h) => sum + h.combinedScore,
+    );
     return totalHouseStrength / 12.0;
   }
 
   /// Gets a list of houses that are strong in all three perspectives.
   List<int> get strongHouses => houseStrengths.entries
-      .where((e) =>
-          e.value.category == SudarshanStrengthCategory.excellent ||
-          e.value.category == SudarshanStrengthCategory.good)
+      .where(
+        (e) =>
+            e.value.category == SudarshanStrengthCategory.excellent ||
+            e.value.category == SudarshanStrengthCategory.good,
+      )
       .map((e) => e.key)
       .toList();
 
   /// Gets a list of houses that are weak in all three perspectives.
   List<int> get weakHouses => houseStrengths.entries
-      .where((e) =>
-          e.value.category == SudarshanStrengthCategory.weak ||
-          e.value.category == SudarshanStrengthCategory.veryWeak)
+      .where(
+        (e) =>
+            e.value.category == SudarshanStrengthCategory.weak ||
+            e.value.category == SudarshanStrengthCategory.veryWeak,
+      )
       .map((e) => e.key)
       .toList();
 

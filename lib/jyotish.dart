@@ -38,6 +38,7 @@ export 'package:jyotish/src/astronomy/ephemeris_service.dart';
 export 'package:jyotish/src/astronomy/astrology_time_service.dart';
 export 'package:jyotish/src/astronomy/udaya_lagna_service.dart';
 export 'package:jyotish/src/astronomy/special_lagnas_service.dart';
+export 'package:jyotish/src/astronomy/eclipse_service.dart';
 
 // Analysis
 export 'package:jyotish/src/analysis/vedic_chart_service.dart';
@@ -54,6 +55,8 @@ export 'package:jyotish/src/analysis/sudarshan_chakra.dart';
 export 'package:jyotish/src/analysis/sudarshan_chakra_service.dart';
 export 'package:jyotish/src/analysis/progeny.dart';
 export 'package:jyotish/src/analysis/progeny_service.dart';
+export 'package:jyotish/src/analysis/yoga.dart';
+export 'package:jyotish/src/analysis/yoga_service.dart';
 
 // Panchanga
 export 'package:jyotish/src/models/vedic_chart.dart';
@@ -95,6 +98,8 @@ export 'package:jyotish/src/muhurta/chandrabalam.dart';
 export 'package:jyotish/src/muhurta/tarabalam.dart';
 export 'package:jyotish/src/muhurta/ritual_elements.dart';
 export 'package:jyotish/src/muhurta/ritual_service.dart';
+export 'package:jyotish/src/muhurta/vedic_time.dart';
+export 'package:jyotish/src/muhurta/vedic_clock.dart';
 
 // Transit
 export 'package:jyotish/src/transit/transit.dart';

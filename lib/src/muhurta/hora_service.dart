@@ -67,7 +67,11 @@ class HoraService {
     }
 
     return _calculateHoraForTime(
-        dateTime, effectiveSunrise, effectiveSunset, location);
+      dateTime,
+      effectiveSunrise,
+      effectiveSunset,
+      location,
+    );
   }
 
   /// Calculates the specific Hora for a given time relative to sunrise/sunset.
@@ -112,7 +116,9 @@ class HoraService {
       // Daytime
       final nextDate = sunrise.add(const Duration(days: 1));
       final nextSunriseSunset = await _ephemerisService.getSunriseSunset(
-          date: nextDate, location: location);
+        date: nextDate,
+        location: location,
+      );
       nextSunrise =
           nextSunriseSunset.$1 ?? sunrise.add(const Duration(hours: 24));
     }
@@ -137,10 +143,12 @@ class HoraService {
       final currentHoraIndex = (startIndex + horaIndex) % 7;
       final lord = chaldeanOrder[currentHoraIndex];
 
-      final startTime =
-          sunrise.add(Duration(microseconds: (horaLength * horaIndex).round()));
-      final endTime = sunrise
-          .add(Duration(microseconds: (horaLength * (horaIndex + 1)).round()));
+      final startTime = sunrise.add(
+        Duration(microseconds: (horaLength * horaIndex).round()),
+      );
+      final endTime = sunrise.add(
+        Duration(microseconds: (horaLength * (horaIndex + 1)).round()),
+      );
 
       return HoraPeriod(
         lord: lord,
@@ -167,10 +175,12 @@ class HoraService {
       final currentHoraIndex = (nightStartLordIndex + horaIndex) % 7;
       final lord = chaldeanOrder[currentHoraIndex];
 
-      final startTime =
-          sunset.add(Duration(microseconds: (horaLength * horaIndex).round()));
-      final endTime = sunset
-          .add(Duration(microseconds: (horaLength * (horaIndex + 1)).round()));
+      final startTime = sunset.add(
+        Duration(microseconds: (horaLength * horaIndex).round()),
+      );
+      final endTime = sunset.add(
+        Duration(microseconds: (horaLength * (horaIndex + 1)).round()),
+      );
 
       return HoraPeriod(
         lord: lord,
@@ -221,18 +231,22 @@ class HoraService {
       final lordIndex = (startIndex + i) % 7;
       final lord = chaldeanOrder[lordIndex];
 
-      final start =
-          sunrise.add(Duration(microseconds: (dayHoraLength * i).round()));
-      final end = sunrise
-          .add(Duration(microseconds: (dayHoraLength * (i + 1)).round()));
+      final start = sunrise.add(
+        Duration(microseconds: (dayHoraLength * i).round()),
+      );
+      final end = sunrise.add(
+        Duration(microseconds: (dayHoraLength * (i + 1)).round()),
+      );
 
-      horas.add(HoraPeriod(
-        lord: lord,
-        startTime: start,
-        endTime: end,
-        hourNumber: i + 1,
-        isDaytime: true,
-      ));
+      horas.add(
+        HoraPeriod(
+          lord: lord,
+          startTime: start,
+          endTime: end,
+          hourNumber: i + 1,
+          isDaytime: true,
+        ),
+      );
     }
 
     // 12 Nighttime Horas
@@ -245,18 +259,22 @@ class HoraService {
       final lordIndex = (nightStartIndex + i) % 7;
       final lord = chaldeanOrder[lordIndex];
 
-      final start =
-          sunset.add(Duration(microseconds: (nightHoraLength * i).round()));
-      final end = sunset
-          .add(Duration(microseconds: (nightHoraLength * (i + 1)).round()));
+      final start = sunset.add(
+        Duration(microseconds: (nightHoraLength * i).round()),
+      );
+      final end = sunset.add(
+        Duration(microseconds: (nightHoraLength * (i + 1)).round()),
+      );
 
-      horas.add(HoraPeriod(
-        lord: lord,
-        startTime: start,
-        endTime: end,
-        hourNumber: i + 1,
-        isDaytime: false,
-      ));
+      horas.add(
+        HoraPeriod(
+          lord: lord,
+          startTime: start,
+          endTime: end,
+          hourNumber: i + 1,
+          isDaytime: false,
+        ),
+      );
     }
 
     return horas;

@@ -127,7 +127,7 @@ class HoraPeriod implements MuhurtaPeriod {
       'marriage',
       'children',
       'education',
-      'religion'
+      'religion',
     ],
     Planet.venus: ['love', 'marriage', 'art', 'beauty', 'luxury'],
     Planet.saturn: ['labor', 'construction', 'iron', 'oil'],
@@ -409,7 +409,7 @@ class MuhurtaConstants {
       ChoghadiyaType.kaal,
       ChoghadiyaType.shubh,
       ChoghadiyaType.rog,
-      ChoghadiyaType.udveg
+      ChoghadiyaType.udveg,
     ],
     1: [
       ChoghadiyaType.amrit,
@@ -419,7 +419,7 @@ class MuhurtaConstants {
       ChoghadiyaType.udveg,
       ChoghadiyaType.char,
       ChoghadiyaType.labh,
-      ChoghadiyaType.amrit
+      ChoghadiyaType.amrit,
     ],
     2: [
       ChoghadiyaType.rog,
@@ -429,7 +429,7 @@ class MuhurtaConstants {
       ChoghadiyaType.amrit,
       ChoghadiyaType.kaal,
       ChoghadiyaType.shubh,
-      ChoghadiyaType.rog
+      ChoghadiyaType.rog,
     ],
     3: [
       ChoghadiyaType.labh,
@@ -439,7 +439,7 @@ class MuhurtaConstants {
       ChoghadiyaType.rog,
       ChoghadiyaType.udveg,
       ChoghadiyaType.char,
-      ChoghadiyaType.labh
+      ChoghadiyaType.labh,
     ],
     4: [
       ChoghadiyaType.shubh,
@@ -449,7 +449,7 @@ class MuhurtaConstants {
       ChoghadiyaType.labh,
       ChoghadiyaType.amrit,
       ChoghadiyaType.kaal,
-      ChoghadiyaType.shubh
+      ChoghadiyaType.shubh,
     ],
     5: [
       ChoghadiyaType.char,
@@ -459,7 +459,7 @@ class MuhurtaConstants {
       ChoghadiyaType.shubh,
       ChoghadiyaType.rog,
       ChoghadiyaType.udveg,
-      ChoghadiyaType.char
+      ChoghadiyaType.char,
     ],
     6: [
       ChoghadiyaType.kaal,
@@ -469,7 +469,7 @@ class MuhurtaConstants {
       ChoghadiyaType.char,
       ChoghadiyaType.labh,
       ChoghadiyaType.amrit,
-      ChoghadiyaType.kaal
+      ChoghadiyaType.kaal,
     ],
   };
 
@@ -483,7 +483,7 @@ class MuhurtaConstants {
       ChoghadiyaType.kaal,
       ChoghadiyaType.labh,
       ChoghadiyaType.udveg,
-      ChoghadiyaType.shubh
+      ChoghadiyaType.shubh,
     ],
     1: [
       ChoghadiyaType.char,
@@ -493,7 +493,7 @@ class MuhurtaConstants {
       ChoghadiyaType.udveg,
       ChoghadiyaType.shubh,
       ChoghadiyaType.amrit,
-      ChoghadiyaType.char
+      ChoghadiyaType.char,
     ],
     2: [
       ChoghadiyaType.kaal,
@@ -503,7 +503,7 @@ class MuhurtaConstants {
       ChoghadiyaType.amrit,
       ChoghadiyaType.char,
       ChoghadiyaType.rog,
-      ChoghadiyaType.kaal
+      ChoghadiyaType.kaal,
     ],
     3: [
       ChoghadiyaType.udveg,
@@ -513,7 +513,7 @@ class MuhurtaConstants {
       ChoghadiyaType.rog,
       ChoghadiyaType.kaal,
       ChoghadiyaType.labh,
-      ChoghadiyaType.udveg
+      ChoghadiyaType.udveg,
     ],
     4: [
       ChoghadiyaType.amrit,
@@ -523,7 +523,7 @@ class MuhurtaConstants {
       ChoghadiyaType.labh,
       ChoghadiyaType.udveg,
       ChoghadiyaType.shubh,
-      ChoghadiyaType.amrit
+      ChoghadiyaType.amrit,
     ],
     5: [
       ChoghadiyaType.rog,
@@ -533,7 +533,7 @@ class MuhurtaConstants {
       ChoghadiyaType.shubh,
       ChoghadiyaType.amrit,
       ChoghadiyaType.char,
-      ChoghadiyaType.rog
+      ChoghadiyaType.rog,
     ],
     6: [
       ChoghadiyaType.labh,
@@ -543,7 +543,7 @@ class MuhurtaConstants {
       ChoghadiyaType.char,
       ChoghadiyaType.rog,
       ChoghadiyaType.kaal,
-      ChoghadiyaType.labh
+      ChoghadiyaType.labh,
     ],
   };
 
@@ -558,7 +558,7 @@ class MuhurtaConstants {
       21,
       26,
       19,
-      4
+      4,
     ], // Sun: Ashwini, Pushya, Hasta, Anuradha(Wait, 17 is Anuradha?), Moola, U.Phalguni, U.Ashada, U.Bhadrapada, Rohini
     1: [4, 5, 8, 17, 22], // Mon: Rohini, Mrigashira, Pushya, Anuradha, Shravana
     2: [
@@ -566,7 +566,7 @@ class MuhurtaConstants {
       3,
       5,
       9,
-      21
+      21,
     ], // Tue: Ashwini, Krittika, Mrigashira, Ashlesha, U.Ashada
     3: [4, 5, 6, 17, 13], // Wed: Rohini, Mrigashira, Ardra, Anuradha, Hasta
     4: [1, 7, 8, 17, 27], // Thu: Ashwini, Punarvasu, Pushya, Anuradha, Revati
@@ -577,7 +577,7 @@ class MuhurtaConstants {
       7,
       17,
       22,
-      27
+      27,
     ], // Fri: Ashwini, Bharani, Rohini, Punarvasu, Anuradha, Shravana, Revati
     6: [4, 15, 22], // Sat: Rohini, Swati, Shravana
   };
@@ -597,7 +597,7 @@ class MuhurtaConstants {
   static const List<int> dwiPushkarNakshatras = [
     5,
     14,
-    23
+    23,
   ]; // Mrigashira, Chitra, Dhanishta
 
   /// Tri-pada Nakshatras for Tri Pushkar Yog
@@ -607,16 +607,13 @@ class MuhurtaConstants {
     12,
     16,
     21,
-    25
+    25,
   ]; // Krittika, Punarvasu, U.Phalguni, Vishakha, U.Ashada, P.Bhadrapada
 }
 
 /// Information about Disha Shool (Directional Flaw).
 class DishashoolInfo {
-  const DishashoolInfo({
-    required this.direction,
-    required this.weekday,
-  });
+  const DishashoolInfo({required this.direction, required this.weekday});
 
   /// The unfavorable direction for travel
   final String direction;
@@ -638,9 +635,7 @@ class DishashoolInfo {
 
 /// Information about Rahu Vasa (Residence of Rahu).
 class RahuVasaInfo {
-  const RahuVasaInfo({
-    required this.location,
-  });
+  const RahuVasaInfo({required this.location});
 
   /// Where Rahu is residing
   final String location;
@@ -648,9 +643,7 @@ class RahuVasaInfo {
 
 /// Information about Chandra Vasa (Residence of Moon).
 class ChandraVasaInfo {
-  const ChandraVasaInfo({
-    required this.location,
-  });
+  const ChandraVasaInfo({required this.location});
 
   /// Where Chandra (Moon) is residing
   final String location;
@@ -700,8 +693,10 @@ enum SpecialYogaType {
   amritSiddhi('Amrit Siddhi Yog', true),
   guruPushya('Guru Pushya Yog', true),
   raviPushya('Ravi Pushya Yog', true),
-  dwiPushkar('Dwi Pushkar Yog',
-      false), // False because it's repetitive, can be good or bad
+  dwiPushkar(
+    'Dwi Pushkar Yog',
+    false,
+  ), // False because it's repetitive, can be good or bad
   triPushkar('Tri Pushkar Yog', false); // False because it's repetitive
 
   const SpecialYogaType(this.displayName, this.isAuspicious);

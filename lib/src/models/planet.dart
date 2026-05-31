@@ -46,7 +46,10 @@ enum Planet {
 
   /// Osculating Lunar Apogee
   osculatingApogee(
-      SwissEphConstants.oscuApog, 'Osculating Apogee', 'Osculating Apogee'),
+    SwissEphConstants.oscuApog,
+    'Osculating Apogee',
+    'Osculating Apogee',
+  ),
 
   /// Earth (for heliocentric calculations)
   earth(SwissEphConstants.earthPlanet, 'Earth', 'Bhūmi'),
@@ -106,24 +109,13 @@ enum Planet {
       ];
 
   /// Returns a list of outer planets (Uranus, Neptune, Pluto).
-  static List<Planet> get outerPlanets => [
-        uranus,
-        neptune,
-        pluto,
-      ];
+  static List<Planet> get outerPlanets => [uranus, neptune, pluto];
 
   /// Returns a list of lunar nodes.
-  static List<Planet> get lunarNodes => [
-        meanNode,
-        trueNode,
-        ketu,
-      ];
+  static List<Planet> get lunarNodes => [meanNode, trueNode, ketu];
 
   /// Returns a list of lunar apogees.
-  static List<Planet> get lunarApogees => [
-        meanApogee,
-        osculatingApogee,
-      ];
+  static List<Planet> get lunarApogees => [meanApogee, osculatingApogee];
 
   /// Returns a list of asteroids/minor planets.
   static List<Planet> get asteroids => [

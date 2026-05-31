@@ -1,28 +1,10 @@
-enum HoraMethod {
-  parashara,
-  labhaMandooka,
-  kura,
-  kashinatha,
-}
+enum HoraMethod { parashara, labhaMandooka, kura, kashinatha }
 
-enum DrekkanaMethod {
-  parashara,
-  jagannatha,
-  somanatha,
-  parivritti,
-}
+enum DrekkanaMethod { parashara, jagannatha, somanatha, parivritti }
 
-enum NavamshaMethod {
-  parashara,
-  krishnaMishra,
-  somanatha,
-  nadamsa,
-}
+enum NavamshaMethod { parashara, krishnaMishra, somanatha, nadamsa }
 
-enum DashamshaMethod {
-  parashara,
-  behari,
-}
+enum DashamshaMethod { parashara, behari }
 
 /// Configuration class specifying custom algorithms for divisional charts (Vargas).
 class VargaConfiguration {

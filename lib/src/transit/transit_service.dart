@@ -32,10 +32,7 @@ class TransitService {
     final transits = <Planet, TransitInfo>{};
 
     // Calculate transit positions for traditional planets + nodes
-    final planetsToCalculate = [
-      ...Planet.traditionalPlanets,
-      Planet.meanNode,
-    ];
+    final planetsToCalculate = [...Planet.traditionalPlanets, Planet.meanNode];
 
     for (final planet in planetsToCalculate) {
       final transitPosition = await _ephemerisService.calculatePlanetPosition(
@@ -50,8 +47,9 @@ class TransitService {
       final natalPosition = natalInfo?.position;
 
       // Determine which house the transit planet is in (natal chart houses)
-      final transitHouse =
-          natalChart.houses.getHouseForLongitude(transitPosition.longitude);
+      final transitHouse = natalChart.houses.getHouseForLongitude(
+        transitPosition.longitude,
+      );
       final transitSignIndex = (transitPosition.longitude / 30).floor() % 12;
 
       // Calculate aspects to natal planets
@@ -94,41 +92,47 @@ class TransitService {
           // Check conjunction
           if (angularDiff.abs() <= 10 || (360 - angularDiff).abs() <= 10) {
             final orb = angularDiff <= 180 ? angularDiff : 360 - angularDiff;
-            aspects.add(AspectInfo(
-              aspectingPlanet: transitPos.planet,
-              aspectedPlanet: natalPlanet,
-              type: AspectType.conjunction,
-              exactOrb: orb,
-              isApplying: transitPos.longitudeSpeed > 0,
-              strength: 1.0 - (orb / 10).clamp(0.0, 1.0),
-              aspectingLongitude: transitPos.longitude,
-              aspectedLongitude: natalPos.longitude,
-            ));
+            aspects.add(
+              AspectInfo(
+                aspectingPlanet: transitPos.planet,
+                aspectedPlanet: natalPlanet,
+                type: AspectType.conjunction,
+                exactOrb: orb,
+                isApplying: transitPos.longitudeSpeed > 0,
+                strength: 1.0 - (orb / 10).clamp(0.0, 1.0),
+                aspectingLongitude: transitPos.longitude,
+                aspectedLongitude: natalPos.longitude,
+              ),
+            );
           }
 
           // Check opposition (180)
           final oppDiff = (angularDiff - 180).abs();
           if (oppDiff <= 10) {
-            aspects.add(AspectInfo(
-              aspectingPlanet: transitPos.planet,
-              aspectedPlanet: natalPlanet,
-              type: AspectType.opposition,
-              exactOrb: oppDiff,
-              isApplying: transitPos.longitudeSpeed > 0,
-              strength: 1.0 - (oppDiff / 10).clamp(0.0, 1.0),
-              aspectingLongitude: transitPos.longitude,
-              aspectedLongitude: natalPos.longitude,
-            ));
+            aspects.add(
+              AspectInfo(
+                aspectingPlanet: transitPos.planet,
+                aspectedPlanet: natalPlanet,
+                type: AspectType.opposition,
+                exactOrb: oppDiff,
+                isApplying: transitPos.longitudeSpeed > 0,
+                strength: 1.0 - (oppDiff / 10).clamp(0.0, 1.0),
+                aspectingLongitude: transitPos.longitude,
+                aspectedLongitude: natalPos.longitude,
+              ),
+            );
           }
 
           // Check special aspects for Mars, Jupiter, Saturn transits
           if (config.includeSpecialAspects) {
-            aspects.addAll(_checkTransitSpecialAspects(
-              transitPos,
-              natalPlanet,
-              natalPos,
-              angularDiff,
-            ));
+            aspects.addAll(
+              _checkTransitSpecialAspects(
+                transitPos,
+                natalPlanet,
+                natalPos,
+                angularDiff,
+              ),
+            );
           }
 
           return aspects;
@@ -150,66 +154,78 @@ class TransitService {
     // Mars special aspects
     if (transitPos.planet == Planet.mars) {
       if ((angularDiff - 90).abs() <= orb) {
-        aspects.add(_createTransitAspect(
-          transitPos,
-          natalPlanet,
-          natalPos,
-          AspectType.marsSpecial4th,
-          angularDiff - 90,
-        ));
+        aspects.add(
+          _createTransitAspect(
+            transitPos,
+            natalPlanet,
+            natalPos,
+            AspectType.marsSpecial4th,
+            angularDiff - 90,
+          ),
+        );
       }
       if ((angularDiff - 210).abs() <= orb) {
-        aspects.add(_createTransitAspect(
-          transitPos,
-          natalPlanet,
-          natalPos,
-          AspectType.marsSpecial8th,
-          angularDiff - 210,
-        ));
+        aspects.add(
+          _createTransitAspect(
+            transitPos,
+            natalPlanet,
+            natalPos,
+            AspectType.marsSpecial8th,
+            angularDiff - 210,
+          ),
+        );
       }
     }
 
     // Jupiter special aspects
     if (transitPos.planet == Planet.jupiter) {
       if ((angularDiff - 120).abs() <= orb) {
-        aspects.add(_createTransitAspect(
-          transitPos,
-          natalPlanet,
-          natalPos,
-          AspectType.jupiterSpecial5th,
-          angularDiff - 120,
-        ));
+        aspects.add(
+          _createTransitAspect(
+            transitPos,
+            natalPlanet,
+            natalPos,
+            AspectType.jupiterSpecial5th,
+            angularDiff - 120,
+          ),
+        );
       }
       if ((angularDiff - 240).abs() <= orb) {
-        aspects.add(_createTransitAspect(
-          transitPos,
-          natalPlanet,
-          natalPos,
-          AspectType.jupiterSpecial9th,
-          angularDiff - 240,
-        ));
+        aspects.add(
+          _createTransitAspect(
+            transitPos,
+            natalPlanet,
+            natalPos,
+            AspectType.jupiterSpecial9th,
+            angularDiff - 240,
+          ),
+        );
       }
     }
 
     // Saturn special aspects
     if (transitPos.planet == Planet.saturn) {
       if ((angularDiff - 60).abs() <= orb) {
-        aspects.add(_createTransitAspect(
-          transitPos,
-          natalPlanet,
-          natalPos,
-          AspectType.saturnSpecial3rd,
-          angularDiff - 60,
-        ));
+        aspects.add(
+          _createTransitAspect(
+            transitPos,
+            natalPlanet,
+            natalPos,
+            AspectType.saturnSpecial3rd,
+            angularDiff - 60,
+          ),
+        );
       }
       if ((angularDiff - 270).abs() <= orb) {
-        aspects.add(_createTransitAspect(
-          transitPos,
-          natalPlanet,
-          natalPos,
-          AspectType.saturnSpecial10th,
-          angularDiff - 270,
-        ));
+        aspects.add(
+          _createTransitAspect(
+            transitPos,
+            natalPlanet,
+            natalPos,
+            AspectType.saturnSpecial10th,
+            angularDiff - 270,
+          ),
+        );
       }
     }
 
@@ -248,11 +264,8 @@ class TransitService {
     required GeographicLocation location,
   }) async {
     final events = <TransitEvent>[];
-    final planets = config.planets ??
-        [
-          ...Planet.traditionalPlanets,
-          Planet.meanNode,
-        ];
+    final planets =
+        config.planets ?? [...Planet.traditionalPlanets, Planet.meanNode];
 
     var currentDate = config.startDate;
     while (currentDate.isBefore(config.endDate)) {
@@ -278,8 +291,10 @@ class TransitService {
               startDate: currentDate.subtract(config.intervalDays.days * 3),
               endDate: currentDate.add(config.intervalDays.days * 3),
               isRetrograde: transit.isRetrograde,
-              description:
-                  _generateTransitDescription(aspect, transit.isRetrograde),
+              description: _generateTransitDescription(
+                aspect,
+                transit.isRetrograde,
+              ),
               significance: _calculateSignificance(aspect),
             );
             events.add(event);
@@ -297,8 +312,10 @@ class TransitService {
 
   List<TransitEvent> _deduplicateEvents(List<TransitEvent> events) {
     return events
-        .distinctBy((e) =>
-            '${e.transitPlanet}-${e.natalPlanet}-${e.aspectType}-${(e.exactDate.millisecondsSinceEpoch / (1000 * 60 * 60 * 24 * 7)).floor()}')
+        .distinctBy(
+          (e) =>
+              '${e.transitPlanet}-${e.natalPlanet}-${e.aspectType}-${(e.exactDate.millisecondsSinceEpoch / (1000 * 60 * 60 * 24 * 7)).floor()}',
+        )
         .toList();
   }
 

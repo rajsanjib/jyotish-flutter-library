@@ -453,6 +453,12 @@ No initialization required — call directly on the class.
 | `detectChildYogas(chart)` | `List<ChildYoga>` | Favorable combinations |
 | `analyzeD7Chart(chart)` | `D7Analysis` | D7 chart analysis for progeny |
 
+#### Natal & Raja Yoga Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `detectNatalYogas(chart)` | `List<NatalYoga>` | Detects 50+ core solar, lunar, Nabhasa, and Raja yogas |
+
 #### Marriage Compatibility Methods
 
 | Method | Returns | Description |
@@ -820,6 +826,23 @@ await service.initialize();
 | `dateTimeToJulianDay(dateTime, {timezoneId?})` | `double` | Converts a DateTime to Julian Day number |
 | `dispose()` | `void` | Release resources |
 | `isInitialized` | `bool` | Whether the service has been initialized |
+
+---
+
+### EclipseService
+
+Predicts future and past solar and lunar eclipses.
+
+```dart
+final service = EclipseService(ephemerisService.bindings);
+```
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `predictLunarEclipses({startDate, count})` | `Future<List<EclipseData>>` | Predicts the next `count` lunar eclipses globally |
+| `predictSolarEclipses({startDate, count, location?})` | `Future<List<EclipseData>>` | Predicts the next `count` solar eclipses. If `location` is provided, filters for visibility at that location, otherwise searches globally. |
+| `predictEclipses({startDate, count, location?, type})` | `Future<List<EclipseData>>` | Predicts the next `count` solar/lunar eclipses starting from `startDate` |
+| `predictEclipsesInYear({year, location?})` | `Future<List<EclipseData>>` | Predicts all eclipses occurring in a specific Gregorian year |
 
 ---
 
@@ -1221,6 +1244,42 @@ final service = MuhurtaService();
 
 ---
 
+### VedicTime & VedicClock
+
+Converts standard Gregorian time to traditional Vedic time units since local Sunrise, and provides interactive Flutter widgets.
+
+#### VedicTime Model
+
+Represents the Vedic time elapsed since Sunrise.
+
+```dart
+final vedicTime = await VedicTime.calculate(
+  time: DateTime.now(),
+  location: location,
+  getSunriseSunset: jyotish.getSunriseSunset,
+);
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `ghati` | `int` | Ghatis elapsed since Sunrise (0 to 59) |
+| `vighati` | `int` | Vighatis elapsed within the current Ghati (0 to 59) |
+| `lipta` | `int` | Liptas elapsed within the current Vighati (0 to 59) |
+| `prana` | `int` | Pranas (breaths) elapsed within the current Vighati (0 to 5) |
+| `currentSunrise` | `DateTime` | Sunrise starting the current Vedic day |
+| `nextSunrise` | `DateTime` | Sunrise ending the current Vedic day |
+| `totalGhatis` | `double` | Raw elapsed Ghatis as a double (0.0 to 60.0) |
+| `format({includeLipta, includePr})` | `String` | Formats time as a String (e.g. `32 : 15 : 04`) |
+
+#### Vedic Clock Widgets
+
+Reusable Flutter widgets to display live Vedic Time.
+
+- **`VedicDigitalClock`**: Digital clock displaying `Ghatis : Vighatis : Liptas` with optional local time and sunrise display.
+- **`VedicAnalogClock`**: CustomPainter-based circular clock face divided into 60 Ghatis with smooth hands.
+
+---
+
 ### MasaService
 
 Lunar month (Masa) and calendar calculations.
@@ -1499,6 +1558,36 @@ final service = ProgenyService();
 | `detectChildYogas(chart)` | `List<ChildYoga>` | Favorable combinations |
 | `analyzeD7Chart(chart)` | `D7Analysis` | Analyzes the D7 (Saptamsa) chart for progeny |
 | `analyzeKalatrakaraka(chart)` | `KalatrakarakaInfo` | Analyzes Kalatrakaraka (spouse/child karaka) |
+
+---
+
+### YogaService
+
+A comprehensive yoga detection module to identify natal, Raja, and Nabhasa yogas at par with PyJHora.
+
+```dart
+final service = YogaService();
+```
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `detectNatalYogas(chart)` | `List<NatalYoga>` | Detects 50+ core solar, lunar, Nabhasa, and Raja yogas |
+
+#### Example Usage
+```dart
+final jyotish = Jyotish();
+final chart = await jyotish.calculateChart(...);
+
+// Detect yogas using the core delegator
+final yogas = jyotish.detectNatalYogas(chart);
+
+for (final yoga in yogas.where((y) => y.isPresent)) {
+  print('Yoga: ${yoga.name}');
+  print('Criteria: ${yoga.description}');
+  print('Effects: ${yoga.benefits}');
+  print('Explanation: ${yoga.explanation}');
+}
+```
 
 ---
 

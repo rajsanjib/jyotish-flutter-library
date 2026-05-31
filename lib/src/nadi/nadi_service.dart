@@ -263,15 +263,18 @@ class NadiService {
     final sb = StringBuffer();
     sb.writeln('Nadi $nadiNumber - ${sign.name}');
     sb.writeln(
-        'Position in sign: ${(positionInSign / 150 * 100).toStringAsFixed(1)}%');
+      'Position in sign: ${(positionInSign / 150 * 100).toStringAsFixed(1)}%',
+    );
     sb.writeln('');
 
     if (nadiNumber <= 300) {
       sb.writeln(
-          'This nadi indicates early life experiences and foundational karma.');
+        'This nadi indicates early life experiences and foundational karma.',
+      );
     } else if (nadiNumber <= 600) {
       sb.writeln(
-          'This nadi relates to material pursuits and worldly achievements.');
+        'This nadi relates to material pursuits and worldly achievements.',
+      );
     } else if (nadiNumber <= 900) {
       sb.writeln('This nadi indicates relationships and partnerships.');
     } else if (nadiNumber <= 1200) {

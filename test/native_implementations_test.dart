@@ -59,8 +59,10 @@ void main() {
         // Sun deep exaltation is at 10 degrees Aries.
         expect(sunInfo.isDeepExalted(360.0), isTrue);
         expect(sunInfo.isDeepDebilitated(360.0), isTrue);
-        expect(sunInfo.isDeepExalted(0.0001),
-            isFalse); // Sun in mid-May is in Taurus, not Aries 10
+        expect(
+          sunInfo.isDeepExalted(0.0001),
+          isFalse,
+        ); // Sun in mid-May is in Taurus, not Aries 10
       }
     });
 
@@ -92,8 +94,10 @@ void main() {
       expect(relation, isA<CompoundRelationship>());
 
       // Self relationship should be greatFriend
-      final selfRelation =
-          chart.getCompoundRelationship(Planet.sun, Planet.sun);
+      final selfRelation = chart.getCompoundRelationship(
+        Planet.sun,
+        Planet.sun,
+      );
       expect(selfRelation, equals(CompoundRelationship.greatFriend));
     });
 
@@ -145,53 +149,69 @@ void main() {
       for (final planet in Planet.traditionalPlanets) {
         final result = service.calculatePanchavargiyaBala(planet, chart);
         expect(result.planet, equals(planet));
-        expect(result.kshetraBala,
-            anyOf(equals(30.0), equals(22.5), equals(15.0), equals(7.5)));
-        expect(result.haddaBala,
-            anyOf(equals(15.0), equals(11.25), equals(7.5), equals(3.75)));
-        expect(result.drekkanaBala,
-            anyOf(equals(10.0), equals(7.5), equals(5.0), equals(2.5)));
-        expect(result.navamsaBala,
-            anyOf(equals(5.0), equals(3.75), equals(2.5), equals(1.25)));
+        expect(
+          result.kshetraBala,
+          anyOf(equals(30.0), equals(22.5), equals(15.0), equals(7.5)),
+        );
+        expect(
+          result.haddaBala,
+          anyOf(equals(15.0), equals(11.25), equals(7.5), equals(3.75)),
+        );
+        expect(
+          result.drekkanaBala,
+          anyOf(equals(10.0), equals(7.5), equals(5.0), equals(2.5)),
+        );
+        expect(
+          result.navamsaBala,
+          anyOf(equals(5.0), equals(3.75), equals(2.5), equals(1.25)),
+        );
         expect(result.ucchaBala, greaterThanOrEqualTo(0.0));
         expect(result.ucchaBala, lessThanOrEqualTo(20.0));
         expect(
-            result.totalBala,
-            equals(result.kshetraBala +
+          result.totalBala,
+          equals(
+            result.kshetraBala +
                 result.haddaBala +
                 result.drekkanaBala +
                 result.navamsaBala +
-                result.ucchaBala));
+                result.ucchaBala,
+          ),
+        );
         expect(result.vishwaBala, equals(result.totalBala / 4.0));
       }
     });
 
-    test('9. Varshesh Determination and calculateVarshapal Integration',
-        () async {
-      final service = VarshapalService(Jyotish().ephemeris);
-      final birthDateTime = DateTime(1990, 5, 15, 14, 30);
-      final targetYear = 2026;
+    test(
+      '9. Varshesh Determination and calculateVarshapal Integration',
+      () async {
+        final service = VarshapalService(Jyotish().ephemeris);
+        final birthDateTime = DateTime(1990, 5, 15, 14, 30);
+        final targetYear = 2026;
 
-      final srMoment = await service.calculateSolarReturn(
-        birthDateTime: birthDateTime,
-        targetYear: targetYear,
-        location: location,
-      );
+        final srMoment = await service.calculateSolarReturn(
+          birthDateTime: birthDateTime,
+          targetYear: targetYear,
+          location: location,
+        );
 
-      final varshapal = await service.calculateVarshapal(
-        birthDateTime: birthDateTime,
-        varshaDateTime: srMoment,
-        location: location,
-      );
+        final varshapal = await service.calculateVarshapal(
+          birthDateTime: birthDateTime,
+          varshaDateTime: srMoment,
+          location: location,
+        );
 
-      expect(varshapal.varshaDateTime, equals(srMoment));
-      expect(varshapal.varshaLord, isNotNull);
-      expect(Planet.traditionalPlanets.contains(varshapal.varshaLord), isTrue);
-      expect(varshapal.panchavargiyaBala.keys.length, equals(7));
-      for (final planet in Planet.traditionalPlanets) {
-        expect(varshapal.panchavargiyaBala.containsKey(planet), isTrue);
-      }
-    });
+        expect(varshapal.varshaDateTime, equals(srMoment));
+        expect(varshapal.varshaLord, isNotNull);
+        expect(
+          Planet.traditionalPlanets.contains(varshapal.varshaLord),
+          isTrue,
+        );
+        expect(varshapal.panchavargiyaBala.keys.length, equals(7));
+        for (final planet in Planet.traditionalPlanets) {
+          expect(varshapal.panchavargiyaBala.containsKey(planet), isTrue);
+        }
+      },
+    );
 
     test('10. Mudda Dasha scaling and duration checks', () async {
       final service = VarshapalService(Jyotish().ephemeris);
@@ -213,9 +233,9 @@ void main() {
       final mudda = varshapal.muddaDasha;
       expect(mudda, isNotEmpty);
       expect(
-          mudda.length,
-          anyOf(equals(9),
-              equals(10))); // Depending on if elapsed portion is 0 or not
+        mudda.length,
+        anyOf(equals(9), equals(10)),
+      ); // Depending on if elapsed portion is 0 or not
 
       // The sum of durations of all periods should match the total year duration.
       final nextSrMoment = await service.calculateSolarReturn(

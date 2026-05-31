@@ -53,6 +53,9 @@ This fork significantly extends the original library with high-level astrologica
 - **🔢 Nadi Astrology**: Nadi identification from planetary positions (150 Nadis per sign).
 - **👶 Progeny Analysis**: Child prediction based on 5th house, Jupiter, and D7 chart.
 - **💑 Marriage Compatibility**: Ashtakoota (36 Guna) matching with Manglik/Nadi/Bhakoot Dosha checks.
+- **🌑 Eclipse Prediction**: Forward prediction of solar and lunar eclipses, globally or locally visible, with contact timings and magnitude data.
+- **🧘 Natal & Raja Yogas (PyJHora Parity)**: Implementation of a comprehensive, high-precision yoga detection engine covering over 280+ standard solar, lunar, Nabhasa (Aasraya, Dala, Aakriti, Sankhya), and Raja/Vipareetha/Neecha-Bhanga yogas at par with PyJHora.
+- **⏰ Vedic Clocks**: Conversion of Gregorian time to Ghati, Vighati, Lipta, and Prana units since Sunrise, with interactive digital and CustomPainter-based analog Flutter clock widgets.
 
 ### Muhurta
 - **⏰ Hora**: Planetary hours calculations.
@@ -102,7 +105,7 @@ void main() async {
 - Divisional charts (D1-D60, D249)
 - Ashtakavarga, KP System, Jaimini astrology
 - Panchanga, Muhurta, Transit calculations
-- **NEW:** House Strength (Vimsopaka Bala), Nadi Astrology, Progeny Analysis, Marriage Compatibility
+- **NEW:** House Strength (Vimsopaka Bala), Nadi Astrology, Progeny Analysis, Marriage Compatibility, Eclipse Prediction, Vedic Clocks
 
 See [USAGE.md](USAGE.md) for comprehensive examples of all features.
 

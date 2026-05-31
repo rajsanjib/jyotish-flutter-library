@@ -9,7 +9,9 @@ class CompatibilityService {
   CompatibilityService();
 
   CompatibilityResult calculateCompatibility(
-      VedicChart boyChart, VedicChart girlChart) {
+    VedicChart boyChart,
+    VedicChart girlChart,
+  ) {
     final gunaScores = calculateGunaMilan(boyChart, girlChart);
     final doshaCheck = checkDoshas(boyChart, girlChart);
     final dashaCompatibility = calculateDashaCompatibility(boyChart, girlChart);
@@ -47,7 +49,9 @@ class CompatibilityService {
   }
 
   CompatibilityReport calculateCompatibilityReport(
-      VedicChart boyChart, VedicChart girlChart) {
+    VedicChart boyChart,
+    VedicChart girlChart,
+  ) {
     final result = calculateCompatibility(boyChart, girlChart);
     final boyManglikResult = checkManglikDosha(boyChart);
     final girlManglikResult = checkManglikDosha(girlChart);
@@ -55,13 +59,15 @@ class CompatibilityService {
     final compatibilityPercentage = (result.totalScore / 36.0) * 100.0;
 
     final boyCancellations = List<String>.from(
-        boyManglikResult.severity == 'Cancelled'
-            ? boyManglikResult.remedies
-            : <String>[]);
+      boyManglikResult.severity == 'Cancelled'
+          ? boyManglikResult.remedies
+          : <String>[],
+    );
     final girlCancellations = List<String>.from(
-        girlManglikResult.severity == 'Cancelled'
-            ? girlManglikResult.remedies
-            : <String>[]);
+      girlManglikResult.severity == 'Cancelled'
+          ? girlManglikResult.remedies
+          : <String>[],
+    );
 
     if (boyManglikResult.isManglik && girlManglikResult.isManglik) {
       boyCancellations.add('Mutual cancellation: both partners are Manglik');
@@ -157,12 +163,7 @@ class CompatibilityService {
       return 'Kshatriya';
     }
     // Vaishya: Rohini, Mrigashira, Ardra, Punarvasu
-    if ([
-      'Rohini',
-      'Mrigashira',
-      'Ardra',
-      'Punarvasu',
-    ].contains(nakshatra)) {
+    if (['Rohini', 'Mrigashira', 'Ardra', 'Punarvasu'].contains(nakshatra)) {
       return 'Vaishya';
     }
     // Shudra: Mula (remaining)
@@ -229,7 +230,11 @@ class CompatibilityService {
   // Each direction yields 1.5 (auspicious) or 0 (inauspicious). Maximum score 3.
 
   double calculateTara(
-      String boyNakshatra, String girlNakshatra, int boyPada, int girlPada) {
+    String boyNakshatra,
+    String girlNakshatra,
+    int boyPada,
+    int girlPada,
+  ) {
     final boyNakshatraNum = _getNakshatraNumber(boyNakshatra);
     final girlNakshatraNum = _getNakshatraNumber(girlNakshatra);
 
@@ -287,7 +292,7 @@ class CompatibilityService {
       'Shatabhisha',
       'Purva Bhadrapada',
       'Uttara Bhadrapada',
-      'Revati'
+      'Revati',
     ];
     final index = nakshatras.indexOf(nakshatra);
     return index >= 0 ? index + 1 : 1;
@@ -348,7 +353,7 @@ class CompatibilityService {
       'Deer',
       'Monkey',
       'Mongoose',
-      'Lion'
+      'Lion',
     ];
 
     const yoniScoreMatrix = [
@@ -395,10 +400,12 @@ class CompatibilityService {
   // Planet friendship table from Brihat Parashara Hora Shastra.
 
   int calculateGrahaMaitri(VedicChart boyChart, VedicChart girlChart) {
-    final boyMoonSign =
-        Rashi.fromLongitude(boyChart.getPlanet(Planet.moon)?.longitude ?? 0);
-    final girlMoonSign =
-        Rashi.fromLongitude(girlChart.getPlanet(Planet.moon)?.longitude ?? 0);
+    final boyMoonSign = Rashi.fromLongitude(
+      boyChart.getPlanet(Planet.moon)?.longitude ?? 0,
+    );
+    final girlMoonSign = Rashi.fromLongitude(
+      girlChart.getPlanet(Planet.moon)?.longitude ?? 0,
+    );
 
     final boyLord = _getSignLord(boyMoonSign);
     final girlLord = _getSignLord(girlMoonSign);
@@ -535,10 +542,12 @@ class CompatibilityService {
   // Score 0 if dosha, 7 otherwise.
 
   int calculateBhakoot(VedicChart boyChart, VedicChart girlChart) {
-    final boyMoonSign =
-        Rashi.fromLongitude(boyChart.getPlanet(Planet.moon)?.longitude ?? 0);
-    final girlMoonSign =
-        Rashi.fromLongitude(girlChart.getPlanet(Planet.moon)?.longitude ?? 0);
+    final boyMoonSign = Rashi.fromLongitude(
+      boyChart.getPlanet(Planet.moon)?.longitude ?? 0,
+    );
+    final girlMoonSign = Rashi.fromLongitude(
+      girlChart.getPlanet(Planet.moon)?.longitude ?? 0,
+    );
 
     if (_isBhakootDoshaCancelled(boyMoonSign, girlMoonSign)) {
       return 7;
@@ -598,10 +607,12 @@ class CompatibilityService {
       return 8;
     }
 
-    final boyNadi =
-        _getNadiFromNakshatraIndex(boyMoonInfo?.position.nakshatraIndex ?? 0);
-    final girlNadi =
-        _getNadiFromNakshatraIndex(girlMoonInfo?.position.nakshatraIndex ?? 0);
+    final boyNadi = _getNadiFromNakshatraIndex(
+      boyMoonInfo?.position.nakshatraIndex ?? 0,
+    );
+    final girlNadi = _getNadiFromNakshatraIndex(
+      girlMoonInfo?.position.nakshatraIndex ?? 0,
+    );
 
     if (boyNadi == girlNadi) return 0; // Nadi Dosha
     return 8;
@@ -691,12 +702,15 @@ class CompatibilityService {
 
     final ascendantSignStr = chart.ascendantSign;
     final ascendantSign = Rashi.values.firstWhere(
-        (r) => r.name.toLowerCase() == ascendantSignStr.toLowerCase(),
-        orElse: () => Rashi.aries);
-    final moonSign =
-        Rashi.fromLongitude(chart.getPlanet(Planet.moon)?.longitude ?? 0);
-    final venusSign =
-        Rashi.fromLongitude(chart.getPlanet(Planet.venus)?.longitude ?? 0);
+      (r) => r.name.toLowerCase() == ascendantSignStr.toLowerCase(),
+      orElse: () => Rashi.aries,
+    );
+    final moonSign = Rashi.fromLongitude(
+      chart.getPlanet(Planet.moon)?.longitude ?? 0,
+    );
+    final venusSign = Rashi.fromLongitude(
+      chart.getPlanet(Planet.venus)?.longitude ?? 0,
+    );
 
     final marsSign = Rashi.fromLongitude(mars.longitude);
 
@@ -741,8 +755,9 @@ class CompatibilityService {
           moon != null ? Rashi.fromLongitude(moon.longitude) : null;
       if (jupiterSign == marsSign || moonSignCurrent == marsSign) {
         isCancelled = true;
-        remedies
-            .add('Mars conjunct Jupiter/Moon  Dosha cancelled (Parihara 2)');
+        remedies.add(
+          'Mars conjunct Jupiter/Moon  Dosha cancelled (Parihara 2)',
+        );
       }
 
       // Rule 3: Mars in Leo or Aquarius (weakens dosha in houses 7 and 8)
@@ -763,14 +778,16 @@ class CompatibilityService {
         if (jupAspectsSign == marsSign) marsAspectedByBenefic = true;
       }
       if (venusSignForAspect != null) {
-        final venAspectsSign =
-            Rashi.fromIndex((venusSignForAspect.index + 6) % 12);
+        final venAspectsSign = Rashi.fromIndex(
+          (venusSignForAspect.index + 6) % 12,
+        );
         if (venAspectsSign == marsSign) marsAspectedByBenefic = true;
       }
       if (marsAspectedByBenefic) {
         isCancelled = true;
         remedies.add(
-            'Mars aspected by Jupiter or Venus  Dosha cancelled (Parihara 4)');
+          'Mars aspected by Jupiter or Venus  Dosha cancelled (Parihara 4)',
+        );
       }
 
       // Rule 5: Mars is the lagna lord (Aries or Scorpio Ascendant)
@@ -810,10 +827,12 @@ class CompatibilityService {
     final boyMoonInfo = boyChart.getPlanet(Planet.moon);
     final girlMoonInfo = girlChart.getPlanet(Planet.moon);
 
-    final boyNadi =
-        _getNadiFromNakshatraIndex(boyMoonInfo?.position.nakshatraIndex ?? 0);
-    final girlNadi =
-        _getNadiFromNakshatraIndex(girlMoonInfo?.position.nakshatraIndex ?? 0);
+    final boyNadi = _getNadiFromNakshatraIndex(
+      boyMoonInfo?.position.nakshatraIndex ?? 0,
+    );
+    final girlNadi = _getNadiFromNakshatraIndex(
+      girlMoonInfo?.position.nakshatraIndex ?? 0,
+    );
 
     final hasDosha =
         boyNadi == girlNadi && !_isNadiDoshaCancelled(boyChart, girlChart);
@@ -826,11 +845,15 @@ class CompatibilityService {
   }
 
   BhakootDoshaResult checkBhakootDosha(
-      VedicChart boyChart, VedicChart girlChart) {
-    final boyMoonSign =
-        Rashi.fromLongitude(boyChart.getPlanet(Planet.moon)?.longitude ?? 0);
-    final girlMoonSign =
-        Rashi.fromLongitude(girlChart.getPlanet(Planet.moon)?.longitude ?? 0);
+    VedicChart boyChart,
+    VedicChart girlChart,
+  ) {
+    final boyMoonSign = Rashi.fromLongitude(
+      boyChart.getPlanet(Planet.moon)?.longitude ?? 0,
+    );
+    final girlMoonSign = Rashi.fromLongitude(
+      girlChart.getPlanet(Planet.moon)?.longitude ?? 0,
+    );
 
     final boySignNum = boyMoonSign.index + 1;
     final girlSignNum = girlMoonSign.index + 1;
@@ -873,17 +896,16 @@ class CompatibilityService {
   }
 
   DashaCompatibility calculateDashaCompatibility(
-      VedicChart boyChart, VedicChart girlChart) {
+    VedicChart boyChart,
+    VedicChart girlChart,
+  ) {
     const score = 5;
     final analysis = <String>[];
 
     analysis.add('Dasha compatibility is an advanced feature');
     analysis.add('Further analysis requires detailed Dasha timing');
 
-    return DashaCompatibility(
-      score: score,
-      analysis: analysis,
-    );
+    return DashaCompatibility(score: score, analysis: analysis);
   }
 
   CompatibilityLevel _getCompatibilityLevel(double score) {

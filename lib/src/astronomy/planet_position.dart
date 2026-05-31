@@ -50,8 +50,12 @@ class PlanetPosition {
       distanceSpeed: results[5],
       declination: results.length > 6 ? results[6] : 0.0,
       isCombust: sunLongitude != null
-          ? calculateCombustion(planet, results[0], sunLongitude,
-              longitudeSpeed: results.length > 3 ? results[3] : 1.0)
+          ? calculateCombustion(
+              planet,
+              results[0],
+              sunLongitude,
+              longitudeSpeed: results.length > 3 ? results[3] : 1.0,
+            )
           : false,
       isRetrograde: isRetrograde,
     );
@@ -95,8 +99,11 @@ class PlanetPosition {
   /// Calculates if a planet is combust (too close to the Sun).
   /// Uses traditional Vedic astrology combustion distances.
   static bool calculateCombustion(
-      Planet planet, double planetLongitude, double sunLongitude,
-      {double? longitudeSpeed}) {
+    Planet planet,
+    double planetLongitude,
+    double sunLongitude, {
+    double? longitudeSpeed,
+  }) {
     // Sun is never combust
     if (planet == Planet.sun) return false;
 
@@ -132,8 +139,12 @@ class PlanetPosition {
       longitudeSpeed: longitudeSpeed,
       latitudeSpeed: latitudeSpeed,
       distanceSpeed: distanceSpeed,
-      isCombust: calculateCombustion(planet, longitude, sunLongitude,
-          longitudeSpeed: longitudeSpeed),
+      isCombust: calculateCombustion(
+        planet,
+        longitude,
+        sunLongitude,
+        longitudeSpeed: longitudeSpeed,
+      ),
     );
   }
 
@@ -154,11 +165,7 @@ class PlanetPosition {
     final minutes = minutesDecimal.floor();
     final seconds = (minutesDecimal - minutes) * 60;
 
-    return {
-      'degrees': degrees,
-      'minutes': minutes,
-      'seconds': seconds,
-    };
+    return {'degrees': degrees, 'minutes': minutes, 'seconds': seconds};
   }
 
   /// Gets the nakshatra (lunar mansion) index (0-26).
@@ -236,14 +243,8 @@ class PlanetPosition {
   }
 
   @override
-  int get hashCode => Object.hash(
-        planet,
-        dateTime,
-        longitude,
-        latitude,
-        distance,
-        isCombust,
-      );
+  int get hashCode =>
+      Object.hash(planet, dateTime, longitude, latitude, distance, isCombust);
 
   // Zodiac signs
   static const List<String> _zodiacSigns = [

@@ -599,10 +599,7 @@ void main() {
 
     test('nadi.dart has expected number of exports', () {
       // nadi.dart exports 2 files
-      final types = [
-        nadi.NadiInfo,
-        nadi.NadiService,
-      ];
+      final types = [nadi.NadiInfo, nadi.NadiService];
       expect(types.length, 2);
     });
 

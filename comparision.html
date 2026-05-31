@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vedic Astrology Engines Comparison: Jyotish vs. PyJHora</title>
+  
+  <!-- Modern Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome for Premium Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* Styling System */
+    :root {
+      --bg-space: #03030f;
+      --bg-glass: rgba(13, 13, 35, 0.7);
+      --bg-glass-hover: rgba(22, 22, 59, 0.85);
+      --border-glow: rgba(139, 92, 246, 0.25);
+      --border-glow-hover: rgba(139, 92, 246, 0.5);
+      
+      --accent-purple: #8b5cf6;
+      --accent-purple-glow: rgba(139, 92, 246, 0.4);
+      --accent-cyan: #06b6d4;
+      --accent-cyan-glow: rgba(6, 182, 212, 0.4);
+      --accent-pink: #ec4899;
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dark: #64748b;
+      
+      --color-check: #10b981;
+      --color-check-bg: rgba(16, 185, 129, 0.15);
+      --color-cross: #ef4444;
+      --color-cross-bg: rgba(239, 68, 68, 0.15);
+      --color-warning: #f59e0b;
+      
+      --transition-fast: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Reset and Base Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-space);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+      position: relative;
+    }
+
+    /* Ambient Background Glows */
+    .bg-glow-1 {
+      position: absolute;
+      top: -10%;
+      left: -10%;
+      width: 60vw;
+      height: 60vw;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .bg-glow-2 {
+      position: absolute;
+      bottom: -10%;
+      right: -10%;
+      width: 60vw;
+      height: 60vw;
+      background: radial-gradient(circle, rgba(6, 182, 212, 0.08) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    /* Header Section */
+    header {
+      text-align: center;
+      margin-bottom: 50px;
+      position: relative;
+    }
+
+    .badge-container {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      padding: 6px 16px;
+      border-radius: 100px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 15px rgba(139, 92, 246, 0.15);
+      animation: pulse 2.5s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 10px rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.2); }
+      100% { box-shadow: 0 0 25px rgba(139, 92, 246, 0.3); border-color: rgba(139, 92, 246, 0.6); }
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 1.2;
+      background: linear-gradient(135deg, #fff 30%, #a78bfa 70%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.15rem;
+      max-width: 700px;
+      margin: 0 auto;
+      font-weight: 400;
+    }
+
+    /* Scorecards / Quick Overview Grid */
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glow);
+      border-radius: 20px;
+      padding: 30px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      transition: var(--transition-smooth);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(to bottom, var(--accent-purple), var(--accent-cyan));
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      border-color: var(--border-glow-hover);
+      box-shadow: 0 12px 40px 0 rgba(139, 92, 246, 0.15);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .card-icon {
+      font-size: 1.8rem;
+      background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .feature-list {
+      list-style: none;
+    }
+
+    .feature-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .feature-list li i {
+      color: var(--accent-cyan);
+      margin-top: 4px;
+    }
+
+    .score-badge {
+      display: inline-block;
+      margin-top: 15px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 100px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .score-badge.purple {
+      background: rgba(139, 92, 246, 0.15);
+      color: #c084fc;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .score-badge.cyan {
+      background: rgba(6, 182, 212, 0.15);
+      color: #22d3ee;
+      border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+
+    /* Controls Panel (Tabs, Search, Toggles) */
+    .controls-panel {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glow);
+      border-radius: 24px;
+      padding: 20px;
+      margin-bottom: 30px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .search-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .search-box-wrapper {
+      position: relative;
+      flex-grow: 1;
+      max-width: 500px;
+    }
+
+    .search-box-wrapper i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dark);
+      font-size: 1.1rem;
+      transition: var(--transition-fast);
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(5, 5, 15, 0.8);
+      border: 1px solid rgba(139, 92, 246, 0.2);
+      border-radius: 14px;
+      padding: 14px 16px 14px 48px;
+      color: var(--text-main);
+      font-size: 0.95rem;
+      font-family: inherit;
+      transition: var(--transition-fast);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent-purple);
+      box-shadow: 0 0 15px rgba(139, 92, 246, 0.25);
+    }
+
+    .search-input:focus + i {
+      color: var(--accent-purple);
+    }
+
+    .toggle-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 26px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.1);
+      transition: .4s;
+      border-radius: 34px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--accent-purple);
+      border-color: var(--accent-purple-glow);
+    }
+
+    input:focus + .slider {
+      box-shadow: 0 0 8px var(--accent-purple-glow);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+
+    .toggle-label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    /* Tabs list */
+    .tabs-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 20px;
+    }
+
+    .tab-button {
+      background: transparent;
+      border: 1px solid transparent;
+      padding: 10px 18px;
+      border-radius: 100px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-button:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-button.active {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(6, 182, 212, 0.2));
+      border-color: var(--border-glow);
+      color: var(--text-main);
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.1);
+    }
+
+    /* Comparison Table Container */
+    .table-container {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glow);
+      border-radius: 24px;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4);
+      margin-bottom: 40px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    thead {
+      background: linear-gradient(90deg, rgba(139, 92, 246, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%);
+      border-bottom: 2px solid var(--border-glow);
+    }
+
+    th {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 20px;
+      color: var(--text-main);
+      letter-spacing: 0.5px;
+    }
+
+    th:first-child {
+      width: 25%;
+    }
+
+    th:nth-child(2), th:nth-child(3) {
+      width: 37.5%;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      transition: var(--transition-fast);
+    }
+
+    tbody tr:hover {
+      background: var(--bg-glass-hover);
+    }
+
+    tbody tr.category-header {
+      background: rgba(5, 5, 20, 0.6);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      border-bottom: 2px solid rgba(139, 92, 246, 0.3);
+    }
+
+    tbody tr.category-header td {
+      padding: 24px 20px 14px 20px;
+      font-size: 1.3rem;
+      color: var(--accent-cyan);
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      padding: 18px 20px;
+      vertical-align: top;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    td.feature-name {
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    td.feature-name .description {
+      font-weight: 400;
+      font-size: 0.8rem;
+      color: var(--text-dark);
+      line-height: 1.3;
+    }
+
+    /* Comparison Status Styles */
+    .highlight-diff .is-same {
+      opacity: 0.35;
+    }
+
+    .badge-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .badge-box.check {
+      background: var(--color-check-bg);
+      color: var(--color-check);
+    }
+
+    .badge-box.cross {
+      background: var(--color-cross-bg);
+      color: var(--color-cross);
+    }
+
+    .badge-box.warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--color-warning);
+    }
+
+    .badge-box.info {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--accent-cyan);
+    }
+
+    /* Verdict Card */
+    .verdict-box {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+      border: 1px solid var(--border-glow);
+      border-radius: 24px;
+      padding: 40px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4);
+      margin-bottom: 40px;
+    }
+
+    .verdict-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 25px;
+    }
+
+    .verdict-header i {
+      font-size: 2.2rem;
+      color: var(--accent-cyan);
+    }
+
+    .verdict-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .verdict-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+
+    @media (max-width: 768px) {
+      .verdict-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .verdict-col h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .verdict-col p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 15px;
+      line-height: 1.6;
+    }
+
+    /* Footer styling */
+    footer {
+      text-align: center;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-dark);
+      font-size: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    footer a {
+      color: var(--accent-cyan);
+      text-decoration: none;
+      transition: var(--transition-fast);
+    }
+
+    footer a:hover {
+      color: var(--accent-purple);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-glow-1"></div>
+  <div class="bg-glow-2"></div>
+
+  <div class="container">
+    
+    <!-- Header -->
+    <header>
+      <div class="badge-container">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Deep Comparison Report
+      </div>
+      <h1>Jyotish (Flutter) vs. PyJHora (Python)</h1>
+      <p class="subtitle">A technical and feature evaluation matrix of two Swiss Ephemeris-powered Vedic astrology engines built for developers and researchers.</p>
+    </header>
+
+    <!-- Scorecards / Quick Overview -->
+    <div class="overview-grid">
+      
+      <!-- Card 1 -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Jyotish (Flutter)</h2>
+          <i class="fa-brands fa-flutter card-icon"></i>
+        </div>
+        <ul class="feature-list">
+          <li><i class="fa-solid fa-circle-check"></i> Cross-platform compilation (iOS, Android, Desktop, Web)</li>
+          <li><i class="fa-solid fa-circle-check"></i> Modular import barrel files with full tree-shaking</li>
+          <li><i class="fa-solid fa-circle-check"></i> Permissive MIT License (ideal for proprietary apps)</li>
+          <li><i class="fa-solid fa-circle-check"></i> Specialized KP, Nadi/Progeny, Eclipses & Vedic clocks</li>
+        </ul>
+        <span class="score-badge purple">Best for Production Apps</span>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">PyJHora (Python)</h2>
+          <i class="fa-brands fa-python card-icon"></i>
+        </div>
+        <ul class="feature-list">
+          <li><i class="fa-solid fa-circle-check"></i> Over 50+ Dasha systems with custom year calculations</li>
+          <li><i class="fa-solid fa-circle-check"></i> Built-in PyQt6 desktop UI & Vedic clocks</li>
+          <li><i class="fa-solid fa-circle-check"></i> Comprehensive place database with automatic DST rules</li>
+          <li><i class="fa-solid fa-circle-check"></i> 7,600+ test suite verifying calculations against BPHS</li>
+        </ul>
+        <span class="score-badge cyan">Best for Research & Scripting</span>
+      </div>
+
+    </div>
+
+    <!-- Controls Panel -->
+    <div class="controls-panel">
+      <div class="search-row">
+        <div class="search-box-wrapper">
+          <input type="text" class="search-input" id="searchBox" placeholder="Search feature, math formula or keyword...">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+        <div class="toggle-wrapper" id="diffToggle">
+          <span class="toggle-label">Highlight differences only</span>
+          <label class="switch">
+            <input type="checkbox" id="diffCheckbox">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+      
+      <!-- Category Tabs -->
+      <div class="tabs-list">
+        <button class="tab-button active" data-filter="all">
+          <i class="fa-solid fa-border-all"></i> All Features
+        </button>
+        <button class="tab-button" data-filter="core">
+          <i class="fa-solid fa-circle-info"></i> Project Core
+        </button>
+        <button class="tab-button" data-filter="astronomy">
+          <i class="fa-solid fa-user-astronaut"></i> Astronomy & Ephemeris
+        </button>
+        <button class="tab-button" data-filter="panchanga">
+          <i class="fa-solid fa-calendar-days"></i> Panchanga & Muhurta
+        </button>
+        <button class="tab-button" data-filter="charts">
+          <i class="fa-solid fa-chart-pie"></i> Vargas & Houses
+        </button>
+        <button class="tab-button" data-filter="dashas">
+          <i class="fa-solid fa-hourglass-half"></i> Dashas & Strength
+        </button>
+        <button class="tab-button" data-filter="special">
+          <i class="fa-solid fa-star-and-crescent"></i> Special Vedic Systems
+        </button>
+        <button class="tab-button" data-filter="developer">
+          <i class="fa-solid fa-code"></i> Developer Spec
+        </button>
+      </div>
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="table-container">
+      <table id="comparisonTable">
+        <thead>
+          <tr>
+            <th>Astrological Feature</th>
+            <th>Jyotish Flutter Library (Fork)</th>
+            <th>PyJHora (Python)</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+          <!-- Category 1 -->
+          <tr class="category-header" data-category="core">
+            <td colspan="3">1. Project Core & Ecosystem Information</td>
+          </tr>
+          <tr data-category="core" class="is-diff">
+            <td class="feature-name">Primary Language & Framework<span class="description">Core language stack</span></td>
+            <td>
+              <div class="badge-box info"><i class="fa-solid fa-code-fork"></i> Dart</div>
+              <p>Optimized for Flutter (cross-platform compile targets).</p>
+            </td>
+            <td>
+              <div class="badge-box info"><i class="fa-solid fa-cube"></i> Python</div>
+              <p>Designed for Python scripting, data analytics, and CLI tools.</p>
+            </td>
+          </tr>
+          <tr data-category="core" class="is-diff">
+            <td class="feature-name">License Type<span class="description">Commercial permissions</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-shield-halved"></i> MIT License</div>
+              <p>Highly permissive. Can be integrated into commercial, closed-source app publications.</p>
+            </td>
+            <td>
+              <div class="badge-box cross"><i class="fa-solid fa-triangle-exclamation"></i> GNU AGPL-3.0</div>
+              <p>Copyleft. Commercial systems hosting PyJHora over a network must open-source their entire code.</p>
+            </td>
+          </tr>
+          <tr data-category="core" class="is-diff">
+            <td class="feature-name">User Interface (UI)<span class="description">Out-of-the-box UI</span></td>
+            <td>
+              <div class="badge-box cross"><i class="fa-solid fa-circle-xmark"></i> Headless Engine</div>
+              <p>Provides data models and services; user must build all graphical representations in Flutter.</p>
+            </td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-display"></i> Desktop GUI Included</div>
+              <p>Includes complete PyQt6 widgets for chart views, calendars, and matchmaking out-of-the-box.</p>
+            </td>
+          </tr>
+          <tr data-category="core" class="is-diff">
+            <td class="feature-name">Target Environment<span class="description">Where does it run?</span></td>
+            <td>
+              <div class="badge-box info"><i class="fa-solid fa-mobile-screen-button"></i> Mobile & Desktop</div>
+              <p>Runs natively on iOS, Android, macOS, Windows, Linux, and web browser compilation.</p>
+            </td>
+            <td>
+              <div class="badge-box info"><i class="fa-solid fa-server"></i> Desktop & Server</div>
+              <p>Runs on local desktops (via PyQt6) or backends. Hard to compile natively for mobile apps.</p>
+            </td>
+          </tr>
+
+          <!-- Category 2 -->
+          <tr class="category-header" data-category="astronomy">
+            <td colspan="3">2. Astronomical & Calculation Foundation</td>
+          </tr>
+          <tr data-category="astronomy" class="is-same">
+            <td class="feature-name">Swiss Ephemeris Base<span class="description">Astronomical precision engine</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-circle-check"></i> Standard Integration</div>
+              <p>Integrates with C-based Swiss Ephemeris libraries using direct <code>dart:ffi</code> links.</p>
+            </td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-circle-check"></i> Standard Integration</div>
+              <p>Integrates Swiss Ephemeris via <code>pyswisseph</code> wrappers.</p>
+            </td>
+          </tr>
+          <tr data-category="astronomy" class="is-diff">
+            <td class="feature-name">Ayanamsa Default & Settings<span class="description">Precision adjustments</span></td>
+            <td>
+              <div class="badge-box info"><i class="fa-solid fa-compass"></i> Lahiri Default</div>
+              <p>40+ Ayanamsas supported. Features specific <strong>VP291 KP New Ayanamsa</strong> for Krishnamurti Paddhati.</p>
+            </td>
+            <td>
+              <div class="badge-box info"><i class="fa-solid fa-compass"></i> True Pushya Default</div>
+              <p>40+ Ayanamsas. Uses <code>TRUE_PUSHYA</code> as default to match Jagannatha Hora software configurations.</p>
+            </td>
+          </tr>
+          <tr data-category="astronomy" class="is-diff">
+            <td class="feature-name">Node Configurations (Rahu/Ketu)<span class="description">Intersection paths calculation</span></td>
+            <td>
+              <div class="badge-box info"><i class="fa-solid fa-ellipsis"></i> Mean Node Default</div>
+              <p>Uses Mean Node as default (traditional standard). True Node can be toggle-activated via flags.</p>
+            </td>
+            <td>
+              <div class="badge-box info"><i class="fa-solid fa-ellipsis"></i> True Node Default</div>
+              <p>Uses True Node as default in later versions to achieve identical longitudes with JHora desktop software.</p>
+            </td>
+          </tr>
+          <tr data-category="astronomy" class="is-diff">
+            <td class="feature-name">Timezone & Elevation Database<span class="description">Location lookup parameters</span></td>
+            <td>
+              <div class="badge-box warning"><i class="fa-solid fa-circle-exclamation"></i> Manual coordinates</div>
+              <p>Relies on manual inputs of latitude/longitude. Developers must handle DST offsets independently.</p>
+            </td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-database"></i> Integrated DB & DST</div>
+              <p>Built-in place database (Pickle/SQLite/CSV) that handles coordinate lookup and automatic DST calculations.</p>
+            </td>
+          </tr>
+
+          <!-- Category 3 -->
+          <tr class="category-header" data-category="panchanga">
+            <td colspan="3">3. Panchanga & Muhurta Systems</td>
+          </tr>
+          <tr data-category="panchanga" class="is-diff">
+            <td class="feature-name">Tithi Calculations<span class="description">Lunar day resolution</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-bullseye"></i> Binary Search</div>
+              <p>Calculates precise Tithi end-times using high-speed binary search down to 1-minute resolutions.</p>
+            </td>
+            <td>
+              <div class="badge-box info"><i class="fa-solid fa-bolt"></i> Speed-based / Lagrange</div>
+              <p>Uses Moon/Sun speeds for end timings. Keeps older Lagrange interpolation methods as backup functions.</p>
+            </td>
+          </tr>
+          <tr data-category="panchanga" class="is-same">
+            <td class="feature-name">Vara (Day Lord) Boundary<span class="description">Weekday transition calculation</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-sun"></i> Sunrise-based Vara</div>
+              <p>Transitions weekday Lord strictly at local Sunrise (BPHS rule).</p>
+            </td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-sun"></i> Sunrise-based Vara</div>
+              <p>Transitions weekday Lord strictly at local Sunrise.</p>
+            </td>
+          </tr>
+          <tr data-category="panchanga" class="is-diff">
+            <td class="feature-name">Muhurta Indicators & Auspicious Times<span class="description">Auspicious/Inauspicious slots</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-check-double"></i> Complete suite</div>
+              <p>Calculates Hora, Choghadiya, Rahukalam, Yamagandam, Gulikalam, and Varjyam. Supports Southern (15-part) and Northern (8-part) Dur Muhurtam.</p>
+            </td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-check-double"></i> Extended indicators</div>
+              <p>Calculates same parameters + Pushkara Yoga, Aadal Yoga, Vidaal Yoga, Disha Shool, and Yogini Vaasa indicators.</p>
+            </td>
+          </tr>
+          <tr data-category="panchanga" class="is-same">
+            <td class="feature-name">Vedic Clocks<span class="description">Visual astrological time indicator</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-clock"></i> Analog & Digital Widgets</div>
+              <p>Provides <code>VedicTime</code> model and interactive <code>VedicDigitalClock</code> & CustomPainter <code>VedicAnalogClock</code> Flutter widgets.</p>
+            </td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-clock"></i> Analog & Digital Widgets</div>
+              <p>Provides fully functional <code>VedicAnalogClock</code> and <code>VedicDigitalClock</code> UI widgets.</p>
+            </td>
+          </tr>
+          <tr data-category="panchanga" class="is-diff">
+            <td class="feature-name">Ritual Calculations<span class="description">Sacred ceremony metrics</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-fire-burner"></i> Agnivasa & Shivavasa</div>
+              <p>Calculates fire residence (Agnivasa) and Shiva's presence (Shivavasa) for ritual planning.</p>
+            </td>
+            <td>
+              <div class="badge-box cross"><i class="fa-solid fa-circle-xmark"></i> Traditional Vratha only</div>
+              <p>Focuses on vratha date rules and festival listings rather than ritual-fire elements.</p>
+            </td>
+          </tr>
+          <tr data-category="panchanga" class="is-diff">
+            <td class="feature-name">Calendar Types & Conversions<span class="description">Alternative calendar frameworks</span></td>
+            <td>
+              <div class="badge-box info"><i class="fa-solid fa-calendar"></i> Solar/Lunar Hindu</div>
+              <p>Supports Amanta/Purnimanta lunar calendars, solar calendars, and 60-year Samvatsara cycles.</p>
+            </td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-calendar-plus"></i> Multi-Calendar + Islamic</div>
+              <p>Supports Amanta/Purnimanta lunar calendars, solar (Tamil) methods, and full <strong>Islamic (Hijri) Calendar</strong> conversions.</p>
+            </td>
+          </tr>
+
+          <!-- Category 4 -->
+          <tr class="category-header" data-category="charts">
+            <td colspan="3">4. Varga Charts & House Division (Bhava) Systems</td>
+          </tr>
+          <tr data-category="charts" class="is-diff">
+            <td class="feature-name">Divisional Charts (Vargas)<span class="description">Subdivisional chart accuracy</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-sitemap"></i> D1–D60 + D249</div>
+              <p>Supports all 16 major divisional charts (D1 to D60). Adds high-precision <strong>D249 subdivision chart</strong> for KP sub-lord mapping.</p>
+            </td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-sitemap"></i> D1–D60 standard</div>
+              <p>Supports the standard 16 divisional charts verified directly against Jagannatha Hora software.</p>
+            </td>
+          </tr>
+          <tr data-category="charts" class="is-diff">
+            <td class="feature-name">House Division Algorithms<span class="description">Ascendant cusp mappings</span></td>
+            <td>
+              <div class="badge-box warning"><i class="fa-solid fa-snowflake"></i> Standard systems</div>
+              <p>Supports Whole Sign, Placidus, and Koch. Includes strict polar coordinate checks to avoid crashes above the Arctic Circle.</p>
+            </td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-network-wired"></i> 18+ house systems</div>
+              <p>Implements KN Rao, Raman, Sripathi, Placidus, Koch, Porphyrius, Morinus, Alcabitus, Regiomontanus, and various western models.</p>
+            </td>
+          </tr>
+          <tr data-category="charts" class="is-same">
+            <td class="feature-name">Jaimini Arudhas<span class="description">Special reference points</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-check"></i> Arudha & Upapada Lagna</div>
+              <p>Calculates Arudha Lagna (AL) and Upapada Lagna (UL) for Jaimini analysis.</p>
+            </td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-check"></i> Arudha & Upapada Lagna</div>
+              <p>Calculates AL and UL. Adjusted formulas to match JHora 8.0 bhava arudha research papers.</p>
+            </td>
+          </tr>
+
+          <!-- Category 5 -->
+          <tr class="category-header" data-category="dashas">
+            <td colspan="3">5. Dasha Systems & Planetary Strengths</td>
+          </tr>
+          <tr data-category="dashas" class="is-diff">
+            <td class="feature-name">Dasha System Diversity<span class="description">Quantity of planetary periods</span></td>
+            <td>
+              <div class="badge-box warning"><i class="fa-solid fa-hourglass-half"></i> 6 Core Dashas</div>
+              <p>Vimshottari, Yogini, Ashtottari, Kalachakra, Chara, and Narayana Dasha.</p>
+            </td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-hourglass-start"></i> 50+ Dasha Systems</div>
+              <p>Vimshottari, Yogini, Ashtottari, Chara, Narayana, Kalachakra, Drig, Padhanadhamsa, Sudharsana Chakra, Panchasvara, Rashmi, Ashtakavarga, Nakshathra Progression, etc.</p>
+            </td>
+          </tr>
+          <tr data-category="dashas" class="is-diff">
+            <td class="feature-name">Dasha Sub-levels & Math<span class="description">Depth of calculations</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-calendar-check"></i> Millisecond Precision</div>
+              <p>Vimshottari calculates down to 5th-level sub-periods (Maha -> Bhukti -> Antara -> Prana -> Deha) with millisecond precision.</p>
+            </td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-gear"></i> Highly Configurable</div>
+              <p>Calculates down to Deha/Dehaantara level. Allows selecting year length bases (Sidereal, Tropical, Lunar, Savana, Gregorian).</p>
+            </td>
+          </tr>
+          <tr data-category="dashas" class="is-diff">
+            <td class="feature-name">Shadbala (Planetary Strength)<span class="description">Six-fold planetary power</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-weight-hanging"></i> Full BPHS Model</div>
+              <p>Calculates all 6 components (Sthana, Dig, Kala, Chesta, Naisargika, Drik) and functional Ishta/Kashta Phala values.</p>
+            </td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-weight-hanging"></i> Book-aligned Model</div>
+              <p>Calculates all 6 components. Aligned to match BV Raman/VP Jain book examples, but lists minor deviations from JHora software.</p>
+            </td>
+          </tr>
+          <tr data-category="dashas" class="is-diff">
+            <td class="feature-name">Ashtakavarga System<span class="description">Planetary point reductions</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-shield"></i> BAV, SAV & Reduction</div>
+              <p>Calculates BAV, SAV, Trikona Shodhana, Ekadhipati Shodhana, and final Shodhya Pinda.</p>
+            </td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-shield"></i> BAV, SAV & Reduction</div>
+              <p>Calculates BAV, SAV, reductions, and shodhyapindas. Includes experimental Ashtakavarga Dasha systems.</p>
+            </td>
+          </tr>
+          <tr data-category="dashas" class="is-diff">
+            <td class="feature-name">Vimsopaka Bala<span class="description">Varga divisional strength</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-circle-check"></i> Native Support</div>
+              <p>Calculates Vimsopaka Bala across multiple divisional chart systems automatically.</p>
+            </td>
+            <td>
+              <div class="badge-box cross"><i class="fa-solid fa-circle-xmark"></i> Not natively isolated</div>
+              <p>Strength factors are calculated, but Vimsopaka Bala is not isolated as a standalone API model.</p>
+            </td>
+          </tr>
+
+          <!-- Category 6 -->
+          <tr class="category-header" data-category="special">
+            <td colspan="3">6. Specialized Vedic Astrology Systems</td>
+          </tr>
+          <tr data-category="special" class="is-diff">
+            <td class="feature-name">KP System (Krishnamurti)<span class="description">Starlord-sublord logic</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-star-of-david"></i> Complete Native Module</div>
+              <p>Natively computes Sign/Star/Sub/Sub-Sub lords, A-D significators, Placidus houses, and specialized KP New ayanamsa.</p>
+            </td>
+            <td>
+              <div class="badge-box warning"><i class="fa-solid fa-circle-info"></i> Basic coordinates</div>
+              <p>Supports Placidus/KP house grids and KP ayanamsa but lacks automated Grade A-D significator classification.</p>
+            </td>
+          </tr>
+          <tr data-category="special" class="is-diff">
+            <td class="feature-name">Nadi Astrology<span class="description">150 Nadi division analysis</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-eye"></i> Native Nadi Identification</div>
+              <p>Identifies exact Nadi placements (150 Nadis per sign) from planetary positions.</p>
+            </td>
+            <td>
+              <div class="badge-box cross"><i class="fa-solid fa-circle-xmark"></i> Not Implemented</div>
+              <p>No native implementation of Nadi longitude-based partitions.</p>
+            </td>
+          </tr>
+          <tr data-category="special" class="is-diff">
+            <td class="feature-name">Progeny Analysis<span class="description">Santan (child) prediction logic</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-baby"></i> Native Module</div>
+              <p>Evaluates progeny indicators based on 5th house dynamics, Jupiter, and D7 divisional chart factors.</p>
+            </td>
+            <td>
+              <div class="badge-box cross"><i class="fa-solid fa-circle-xmark"></i> Not Implemented</div>
+              <p>Does not contain specialized predictive progeny evaluation algorithms.</p>
+            </td>
+          </tr>
+          <tr data-category="special" class="is-diff">
+            <td class="feature-name">Marriage Compatibility<span class="description">Guna Milan / Matchmaking</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-heart"></i> Guna Milan + Dosha checks</div>
+              <p>Calculates 36-point Guna Milan (Ashtakoota) with detailed Manglik, Nadi, and Bhakoot Dosha overrides.</p>
+            </td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-heart"></i> Star-based matchmaking</div>
+              <p>Features <code>match_ui.py</code> for matchmaking based on birth stars, including minimum Tamil Porutham checks.</p>
+            </td>
+          </tr>
+          <tr data-category="special" class="is-diff">
+            <td class="feature-name">Special Transits & Vedha<span class="description">Gochara (transit) metrics</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-user-clock"></i> Sade Sati, Dhaiya, Panchak</div>
+              <p>Automates Gochara transit analysis relative to natal moon, including Vedha (obstructions) and Saturn transits.</p>
+            </td>
+            <td>
+              <div class="badge-box info"><i class="fa-solid fa-angles-right"></i> Planetary entry dates</div>
+              <p>Tracks planet entry dates, nakshatra transits, and planet-pair conjunctions. Less focus on specific Sade Sati classification.</p>
+            </td>
+          </tr>
+          <tr data-category="special" class="is-same">
+            <td class="feature-name">Eclipse Prediction Module<span class="description">Solar/Lunar eclipse calculations</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-moon"></i> Solar & Lunar Eclipses</div>
+              <p>Provides <code>EclipseService</code> to predict future/past lunar and solar eclipses (global or local visibility at specific coordinates) with detailed contact times and magnitudes.</p>
+            </td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-moon"></i> Solar & Lunar Eclipses</div>
+              <p>Provides predictions for eclipse type (Total, Annular, Penumbral), Local/Global visibility, and coordinates of maximum eclipse.</p>
+            </td>
+          </tr>
+          <tr data-category="special" class="is-diff">
+            <td class="feature-name">Yoga & Dosha Systems<span class="description">Astrological combinations</span></td>
+            <td>
+              <div class="badge-box warning"><i class="fa-solid fa-circle-info"></i> Basic Combinations</div>
+              <p>Detects standard combinations (Manglik, Panchak, etc.) and basic natal configurations.</p>
+            </td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-book-open"></i> 284+ Yogas</div>
+              <p>Detects 284+ yogas, including 186 classical yogas imported directly from B.V. Raman's works.</p>
+            </td>
+          </tr>
+
+          <!-- Category 7 -->
+          <tr class="category-header" data-category="developer">
+            <td colspan="3">7. Developer & Architectural Specification</td>
+          </tr>
+          <tr data-category="developer" class="is-diff">
+            <td class="feature-name">JSON Serialization<span class="description">API/Local database mappings</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-circle-check"></i> Standardized Models</div>
+              <p>All 30+ data models support native <code>toJson()</code> and <code>fromJson()</code> methods for backend serialization.</p>
+            </td>
+            <td>
+              <div class="badge-box cross"><i class="fa-solid fa-circle-xmark"></i> Basic settings only</div>
+              <p>Lacks built-in JSON model structure. Settings are loaded/saved in INI and JSON, but calculations output raw Python lists/tuples.</p>
+            </td>
+          </tr>
+          <tr data-category="developer" class="is-diff">
+            <td class="feature-name">Bundle Optimization (Tree-Shaking)<span class="description">Dead code elimination</span></td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-leaf"></i> 9 Modular Import Files</div>
+              <p>Imports can be isolated (e.g. <code>core.dart</code>, <code>muhurta.dart</code>) allowing aggressive dead-code elimination in Flutter production builds.</p>
+            </td>
+            <td>
+              <div class="badge-box cross"><i class="fa-solid fa-circle-xmark"></i> No Tree-Shaking</div>
+              <p>Monolithic Python structure. The entire package must be installed and loaded in memory.</p>
+            </td>
+          </tr>
+          <tr data-category="developer" class="is-diff">
+            <td class="feature-name">Test Suite Rigor<span class="description">Integration testing volume</span></td>
+            <td>
+              <div class="badge-box warning"><i class="fa-solid fa-microscope"></i> ~200 Unit Tests</div>
+              <p>Covers DMS conversion, basic calculation steps, and coordinate edge cases.</p>
+            </td>
+            <td>
+              <div class="badge-box check"><i class="fa-solid fa-microscope"></i> 7,600+ Integration Tests</div>
+              <p>Vast test suite (<code>jhora.tests.pvr_tests</code>) verifying astronomical math against JHora software baselines.</p>
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Verdict -->
+    <div class="verdict-box">
+      <div class="verdict-header">
+        <i class="fa-solid fa-award"></i>
+        <h2 class="verdict-title">Architectural Verdict & Recommendations</h2>
+      </div>
+      <div class="verdict-grid">
+        <div class="verdict-col">
+          <h3><i class="fa-brands fa-flutter"></i> When to choose Jyotish (Flutter Fork)</h3>
+          <p>This library is a **production-ready**, highly optimized engine for **mobile application developers**. Because it compiles natively to iOS and Android, uses permissive **MIT licensing**, and features **clean JSON serialization models**, it is the ideal choice for launching commercial products on the App Store or Google Play.</p>
+          <p>Additionally, developers building modern systems around the **KP System, Nadi Astrology, or Guna Milan Matchmaking** will find ready-to-use services that require no extra algorithmic implementation.</p>
+        </div>
+        <div class="verdict-col">
+          <h3><i class="fa-brands fa-python"></i> When to choose PyJHora</h3>
+          <p>PyJHora is a powerhouse for **researchers, data scientists, and desktop enthusiasts**. If you need access to **50+ Dasha systems** or want to test specific classical astronomical adjustments, PyJHora's library is mathematically unmatched. The **built-in PyQt6 GUI** allows immediate interaction without code-writing.</p>
+          <p>Keep in mind that the **GNU AGPL-3.0 License** requires any network-facing derivative software to be open-sourced, making it less suitable for proprietary commercial APIs, but perfect for academic research and personal projects.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <p>Astrology Engines Comparison Report • Generated on 2026-05-31</p>
+      <p>Created by Antigravity AI • Back to <a href="file:///F:/jyotish-flutter-library-fork/README.md">README.md</a></p>
+    </footer>
+
+  </div>
+
+  <script>
+    // Search Filtering Logic
+    const searchBox = document.getElementById('searchBox');
+    const tableRows = document.querySelectorAll('#comparisonTable tbody tr');
+    
+    searchBox.addEventListener('input', function(e) {
+      const query = e.target.value.toLowerCase().trim();
+      
+      tableRows.forEach(row => {
+        // Skip category headers
+        if (row.classList.contains('category-header')) return;
+        
+        const rowText = row.innerText.toLowerCase();
+        if (rowText.includes(query)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+      
+      // Handle category headers visibility
+      toggleCategoryHeaders();
+    });
+
+    // Tab Filtering Logic
+    const tabButtons = document.querySelectorAll('.tab-button');
+    let currentFilter = 'all';
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        tabButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        currentFilter = btn.getAttribute('data-filter');
+        applyFilters();
+      });
+    });
+
+    // Difference Toggle Logic
+    const diffCheckbox = document.getElementById('diffCheckbox');
+    const tableElement = document.getElementById('comparisonTable');
+    
+    diffCheckbox.addEventListener('change', function() {
+      if (this.checked) {
+        tableElement.classList.add('highlight-diff');
+      } else {
+        tableElement.classList.remove('highlight-diff');
+      }
+    });
+
+    function applyFilters() {
+      tableRows.forEach(row => {
+        if (row.classList.contains('category-header')) return;
+        
+        const category = row.getAttribute('data-category');
+        const matchesTab = (currentFilter === 'all' || category === currentFilter);
+        
+        // Match Search Query too
+        const query = searchBox.value.toLowerCase().trim();
+        const matchesSearch = row.innerText.toLowerCase().includes(query);
+        
+        if (matchesTab && matchesSearch) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+      
+      toggleCategoryHeaders();
+    }
+
+    function toggleCategoryHeaders() {
+      const headers = document.querySelectorAll('.category-header');
+      headers.forEach(header => {
+        const category = header.getAttribute('data-category');
+        
+        // Find if there are visible rows in this category
+        const visibleRows = Array.from(tableRows).some(row => {
+          if (row.classList.contains('category-header')) return false;
+          return row.getAttribute('data-category') === category && row.style.display !== 'none';
+        });
+        
+        if (visibleRows && (currentFilter === 'all' || currentFilter === category)) {
+          header.style.display = '';
+        } else {
+          header.style.display = 'none';
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>

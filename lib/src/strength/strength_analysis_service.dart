@@ -53,8 +53,11 @@ class StrengthAnalysisService {
     // 4. Relationship with lagna lord (0-10%)
     final lagnaLord = _getLagnaLord(chart.houses.ascendant);
     if (lagnaLord != null) {
-      final relationshipScore =
-          _getPlanetaryRelationship(planet, lagnaLord, chart);
+      final relationshipScore = _getPlanetaryRelationship(
+        planet,
+        lagnaLord,
+        chart,
+      );
       ishtaphala += relationshipScore * 0.1;
     }
 
@@ -204,7 +207,11 @@ class StrengthAnalysisService {
         if (beneficInfo != null) {
           // Check if benefic aspects this house
           if (_isPlanetAspectingHouse(
-              beneficInfo.longitude, houseNum, chart, benefic)) {
+            beneficInfo.longitude,
+            houseNum,
+            chart,
+            benefic,
+          )) {
             aspectStrength += 3.33; // Max 10 for 3 benefics
           }
         }
@@ -301,12 +308,14 @@ class StrengthAnalysisService {
 
   /// Calculates Vimshopak Bala for all planets asynchronously.
   Future<Map<Planet, VimshopakBala>> getAllPlanetsVimshopakBalaAsync(
-      VedicChart chart) async {
+    VedicChart chart,
+  ) async {
     return compute(_calculateVimshopakBalaStatic, chart);
   }
 
   static Map<Planet, VimshopakBala> _calculateVimshopakBalaStatic(
-      VedicChart chart) {
+    VedicChart chart,
+  ) {
     final service = StrengthAnalysisService();
     return service.getAllPlanetsVimshopakBala(chart);
   }
@@ -382,7 +391,10 @@ class StrengthAnalysisService {
   }
 
   double _getPlanetaryRelationship(
-      Planet planet1, Planet planet2, VedicChart chart) {
+    Planet planet1,
+    Planet planet2,
+    VedicChart chart,
+  ) {
     if (planet1 == planet2) return 1.0;
 
     // 1. Natural Relationship (Naisargika Maitri)
@@ -452,7 +464,11 @@ class StrengthAnalysisService {
   }
 
   bool _isPlanetAspectingHouse(
-      double planetLongitude, int houseNum, VedicChart chart, Planet planet) {
+    double planetLongitude,
+    int houseNum,
+    VedicChart chart,
+    Planet planet,
+  ) {
     // Calculate Ascendant Sign
     final ascSignIndex = (chart.houses.ascendant / 30).floor();
 

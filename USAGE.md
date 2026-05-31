@@ -22,6 +22,9 @@ This document provides comprehensive usage examples for the Jyotish library, cov
 16. [Nadi Astrology](#nadi-astrology)
 17. [Progeny Analysis](#progeny-analysis)
 18. [Marriage Compatibility](#marriage-compatibility)
+19. [Eclipse Prediction Module](#eclipse-prediction-module)
+20. [Vedic Clocks](#vedic-clocks)
+
 
 ---
 
@@ -793,6 +796,140 @@ final location = GeographicLocation.fromDMS(
   isEast: true,
   altitude: 1400,
 );
+```
+
+---
+
+## Eclipse Prediction Module
+
+The `EclipseService` allows predicting future and past solar and lunar eclipses, globally or for a specific geographic location.
+
+```dart
+final location = GeographicLocation(
+  latitude: 13.0827,
+  longitude: 80.2707,
+  altitude: 6,
+);
+
+final start = DateTime.now();
+
+// 1. Predict next 5 eclipses (solar or lunar, visible at location or global)
+final nextEclipses = await jyotish.eclipse.predictEclipses(
+  startDate: start,
+  count: 5,
+  location: location,
+  type: EclipseType.any,
+);
+
+for (final eclipse in nextEclipses) {
+  print('Date (Max): ${eclipse.date}');
+  print('Type: ${eclipse.eclipseType.name}');
+  print('Magnitude: ${eclipse.magnitude}');
+  print('Visible locally: ${eclipse.isVisible}');
+  print('Description: ${eclipse.description}');
+  print('Start Time: ${eclipse.startTime}');
+  print('End Time: ${eclipse.endTime}');
+  print('---');
+}
+
+// 2. Predict all eclipses (global or local) for a specific year
+final yearEclipses = await jyotish.eclipse.predictEclipsesInYear(
+  year: 2026,
+  location: location,
+);
+
+print('Total eclipses in 2026: ${yearEclipses.length}');
+
+// 3. Predict only lunar eclipses
+final lunarEclipses = await jyotish.eclipse.predictLunarEclipses(
+  startDate: start,
+  count: 3,
+);
+
+// 4. Predict only solar eclipses (global, ignoring observer visibility)
+final globalSolar = await jyotish.eclipse.predictSolarEclipses(
+  startDate: start,
+  count: 3,
+  location: null, // Null location defaults to global search
+);
+```
+
+---
+
+## Vedic Clocks
+
+The `VedicTime` and `VedicClock` modules calculate Vedic time divisions relative to Sunrise, and provide interactive Flutter widgets.
+
+### Vedic Time Calculation
+
+```dart
+final now = DateTime.now();
+
+// Calculate the Vedic Time (Ghati, Vighati, Lipta, Prana since sunrise)
+final vt = await VedicTime.calculate(
+  time: now,
+  location: location,
+  getSunriseSunset: jyotish.getSunriseSunset,
+);
+
+print('Vedic Time: $vt'); // Format: 32 : 15 : 04 : 3 (Ghati : Vighati : Lipta : Prana)
+print('Current Ghati: ${vt.ghati}');
+print('Current Vighati: ${vt.vighati}');
+print('Current Lipta: ${vt.lipta}');
+print('Current Prana: ${vt.prana}');
+print('Sunrise that started this day: ${vt.currentSunrise}');
+```
+
+### Vedic Clock Widgets (Flutter)
+
+You can drop the following UI components directly into your Flutter widget tree:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:jyotish/jyotish.dart';
+
+class MyAstrologyDashboard extends StatelessWidget {
+  final GeographicLocation location;
+
+  const MyAstrologyDashboard({Key? key, required this.location}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final jyotish = Jyotish(); // Singleton instance
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Vedic Time Dashboard')),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              // 1. Digital Vedic Clock
+              VedicDigitalClock(
+                location: location,
+                getSunriseSunset: jyotish.getSunriseSunset,
+                showLocalTime: true,
+                showSunriseSunset: true,
+              ),
+              const SizedBox(height: 30),
+              
+              // 2. Beautiful CustomPainter-based Analog Vedic Clock (60-Ghati dial)
+              VedicAnalogClock(
+                location: location,
+                getSunriseSunset: jyotish.getSunriseSunset,
+                size: 300,
+                faceColor: const Color(0xFF0F0F1E),
+                dialColor: const Color(0xFF6366F1),
+                ghatiHandColor: const Color(0xFFEC4899),
+                vighatiHandColor: const Color(0xFF06B6D4),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 ```
 
 ---

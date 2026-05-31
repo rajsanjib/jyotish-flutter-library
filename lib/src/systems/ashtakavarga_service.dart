@@ -13,7 +13,9 @@ import 'package:dartx/dartx.dart';
 class AshtakavargaService {
   /// Calculates the Prastara Ashtakavarga 96-cell grid for a planet.
   PrastaraResult calculatePrastaraAshtakavarga(
-      VedicChart chart, Planet planet) {
+    VedicChart chart,
+    Planet planet,
+  ) {
     final ashtakavarga = calculateAshtakavarga(chart);
     final bav = ashtakavarga.bhinnashtakavarga[planet];
     if (bav == null) {
@@ -40,10 +42,7 @@ class AshtakavargaService {
   Ashtakavarga calculateAshtakavarga(VedicChart natalChart) {
     // Calculate Bhinnashtakavarga for each planet
     final bhinnashtakavarga = Planet.traditionalPlanets.associateWith(
-      (planet) => _calculateBhinnashtakavarga(
-        planet,
-        natalChart,
-      ),
+      (planet) => _calculateBhinnashtakavarga(planet, natalChart),
     );
 
     // Calculate Sarvashtakavarga
@@ -230,10 +229,7 @@ class AshtakavargaService {
   ///
   /// Returns a list of sign indices where the planet receives
   /// more than 28 bindus in the Sarvashtakavarga.
-  List<int> getFavorableTransitSigns(
-    Ashtakavarga ashtakavarga,
-    Planet planet,
-  ) {
+  List<int> getFavorableTransitSigns(Ashtakavarga ashtakavarga, Planet planet) {
     final favorableSigns = <int>[];
 
     for (var sign = 0; sign < 12; sign++) {
@@ -309,15 +305,17 @@ class AshtakavargaService {
     });
 
     // Recalculate Sarvashtakavarga
-    final sarvashtakavarga =
-        _calculateSarvashtakavarga(reducedBhinnashtakavarga);
+    final sarvashtakavarga = _calculateSarvashtakavarga(
+      reducedBhinnashtakavarga,
+    );
 
     return Ashtakavarga(
       natalChart: ashtakavarga.natalChart,
       bhinnashtakavarga: reducedBhinnashtakavarga,
       sarvashtakavarga: sarvashtakavarga,
-      samudayaAshtakavarga:
-          _calculateSamudayaAshtakavarga(reducedBhinnashtakavarga),
+      samudayaAshtakavarga: _calculateSamudayaAshtakavarga(
+        reducedBhinnashtakavarga,
+      ),
     );
   }
 
@@ -368,15 +366,17 @@ class AshtakavargaService {
     });
 
     // Recalculate Sarvashtakavarga
-    final sarvashtakavarga =
-        _calculateSarvashtakavarga(reducedBhinnashtakavarga);
+    final sarvashtakavarga = _calculateSarvashtakavarga(
+      reducedBhinnashtakavarga,
+    );
 
     return Ashtakavarga(
       natalChart: ashtakavarga.natalChart,
       bhinnashtakavarga: reducedBhinnashtakavarga,
       sarvashtakavarga: sarvashtakavarga,
-      samudayaAshtakavarga:
-          _calculateSamudayaAshtakavarga(reducedBhinnashtakavarga),
+      samudayaAshtakavarga: _calculateSamudayaAshtakavarga(
+        reducedBhinnashtakavarga,
+      ),
     );
   }
 
@@ -388,8 +388,9 @@ class AshtakavargaService {
   ///
   /// This implements the traditional Shodhya Pinda calculation.
   Map<Planet, PindaResult> calculatePinda(Ashtakavarga ashtakavarga) {
-    final pindaResults =
-        ashtakavarga.bhinnashtakavarga.keys.associateWith((planet) {
+    final pindaResults = ashtakavarga.bhinnashtakavarga.keys.associateWith((
+      planet,
+    ) {
       final bav = ashtakavarga.bhinnashtakavarga[planet]!;
 
       var totalRashiPinda = 0.0;
@@ -457,8 +458,9 @@ class AshtakavargaService {
   ///
   /// Returns the Yoga Pinda for each planet
   Map<Planet, YogaPindaResult> calculateYogaPinda(Ashtakavarga ashtakavarga) {
-    final yogaPindaResults =
-        ashtakavarga.bhinnashtakavarga.keys.associateWith((planet) {
+    final yogaPindaResults = ashtakavarga.bhinnashtakavarga.keys.associateWith((
+      planet,
+    ) {
       final bav = ashtakavarga.bhinnashtakavarga[planet]!;
 
       var totalYogaPinda = 0.0;

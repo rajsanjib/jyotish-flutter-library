@@ -156,7 +156,11 @@ class ArudhaPadaService {
       return _getStrongerLord(chart, Planet.mars, Planet.ketu, rashi);
     } else if (rashi == Rashi.aquarius) {
       return _getStrongerLord(
-          chart, Planet.saturn, Planet.meanNode, rashi); // Rahu
+        chart,
+        Planet.saturn,
+        Planet.meanNode,
+        rashi,
+      ); // Rahu
     } else {
       final lord = _getSignLord(rashi);
       final lordInfo = chart.getPlanet(lord);
@@ -172,7 +176,11 @@ class ArudhaPadaService {
   /// 2. If one is in the sign itself and other is not, the one NOT in sign is stronger (for Arudha).
   /// 3. If still equal, the one with more degrees is stronger.
   Rashi _getStrongerLord(
-      VedicChart chart, Planet p1, Planet p2, Rashi ownSign) {
+    VedicChart chart,
+    Planet p1,
+    Planet p2,
+    Rashi ownSign,
+  ) {
     final info1 = chart.getPlanet(p1);
     final info2 = chart.getPlanet(p2);
 

@@ -16,37 +16,37 @@ class GowriPanchangamService {
     7: [
       // Sunday
       GowriType.uthi, GowriType.amrit, GowriType.rogam, GowriType.labhamu,
-      GowriType.dhana, GowriType.soolai, GowriType.visham, GowriType.nirkku
+      GowriType.dhana, GowriType.soolai, GowriType.visham, GowriType.nirkku,
     ],
     1: [
       // Monday
       GowriType.amrit, GowriType.rogam, GowriType.labhamu, GowriType.dhana,
-      GowriType.soolai, GowriType.visham, GowriType.nirkku, GowriType.uthi
+      GowriType.soolai, GowriType.visham, GowriType.nirkku, GowriType.uthi,
     ],
     2: [
       // Tuesday
       GowriType.rogam, GowriType.labhamu, GowriType.dhana, GowriType.soolai,
-      GowriType.visham, GowriType.nirkku, GowriType.uthi, GowriType.amrit
+      GowriType.visham, GowriType.nirkku, GowriType.uthi, GowriType.amrit,
     ],
     3: [
       // Wednesday
       GowriType.labhamu, GowriType.dhana, GowriType.soolai, GowriType.visham,
-      GowriType.nirkku, GowriType.uthi, GowriType.amrit, GowriType.rogam
+      GowriType.nirkku, GowriType.uthi, GowriType.amrit, GowriType.rogam,
     ],
     4: [
       // Thursday
       GowriType.dhana, GowriType.soolai, GowriType.visham, GowriType.nirkku,
-      GowriType.uthi, GowriType.amrit, GowriType.rogam, GowriType.labhamu
+      GowriType.uthi, GowriType.amrit, GowriType.rogam, GowriType.labhamu,
     ],
     5: [
       // Friday
       GowriType.soolai, GowriType.visham, GowriType.nirkku, GowriType.uthi,
-      GowriType.amrit, GowriType.rogam, GowriType.labhamu, GowriType.dhana
+      GowriType.amrit, GowriType.rogam, GowriType.labhamu, GowriType.dhana,
     ],
     6: [
       // Saturday
       GowriType.visham, GowriType.nirkku, GowriType.uthi, GowriType.amrit,
-      GowriType.rogam, GowriType.labhamu, GowriType.dhana, GowriType.soolai
+      GowriType.rogam, GowriType.labhamu, GowriType.dhana, GowriType.soolai,
     ],
   };
 
@@ -82,7 +82,7 @@ class GowriPanchangamService {
       GowriType.dhana,
       GowriType.soolai,
       GowriType.visham,
-      GowriType.nirkku
+      GowriType.nirkku,
     ];
 
     // Determine Day Start Index
@@ -93,7 +93,7 @@ class GowriPanchangamService {
       3: GowriType.labhamu, // Wed
       4: GowriType.dhana, // Thu
       5: GowriType.soolai, // Fri
-      6: GowriType.visham // Sat
+      6: GowriType.visham, // Sat
     };
 
     final dayStartGowri = dayStarts[weekday];
@@ -127,7 +127,9 @@ class GowriPanchangamService {
     if (dateTime.isBefore(sunrise)) {
       final prevDate = dateTime.subtract(const Duration(days: 1));
       final prevInfo = await _ephemerisService.getSunriseSunset(
-          date: prevDate, location: location);
+        date: prevDate,
+        location: location,
+      );
       if (prevInfo.$1 != null) {
         effectiveSunrise = prevInfo.$1!;
         effectiveSunset = prevInfo.$2!;
@@ -139,7 +141,9 @@ class GowriPanchangamService {
       // Nighttime
       final nextDate = effectiveSunrise.add(const Duration(days: 1));
       final nextInfo = await _ephemerisService.getSunriseSunset(
-          date: nextDate, location: location);
+        date: nextDate,
+        location: location,
+      );
       final nextSunrise =
           nextInfo.$1 ?? effectiveSunrise.add(const Duration(hours: 24));
 
@@ -156,10 +160,12 @@ class GowriPanchangamService {
       final nightSequence = _getNightSequence(weekday);
       final type = nightSequence[adjustedIndex];
 
-      final startTime = effectiveSunset
-          .add(Duration(microseconds: (segmentLength * adjustedIndex).round()));
-      final endTime = effectiveSunset.add(Duration(
-          microseconds: (segmentLength * (adjustedIndex + 1)).round()));
+      final startTime = effectiveSunset.add(
+        Duration(microseconds: (segmentLength * adjustedIndex).round()),
+      );
+      final endTime = effectiveSunset.add(
+        Duration(microseconds: (segmentLength * (adjustedIndex + 1)).round()),
+      );
 
       return GowriPanchangamInfo(
         type: type,
@@ -180,10 +186,12 @@ class GowriPanchangamService {
       final weekday = effectiveSunrise.weekday;
       final type = _daySequences[weekday]![adjustedIndex];
 
-      final startTime = effectiveSunrise
-          .add(Duration(microseconds: (segmentLength * adjustedIndex).round()));
-      final endTime = effectiveSunrise.add(Duration(
-          microseconds: (segmentLength * (adjustedIndex + 1)).round()));
+      final startTime = effectiveSunrise.add(
+        Duration(microseconds: (segmentLength * adjustedIndex).round()),
+      );
+      final endTime = effectiveSunrise.add(
+        Duration(microseconds: (segmentLength * (adjustedIndex + 1)).round()),
+      );
 
       return GowriPanchangamInfo(
         type: type,

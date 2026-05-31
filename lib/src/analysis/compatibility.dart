@@ -16,7 +16,11 @@ enum CompatibilityLevel {
   poor('Poor', 0, 11, 'Not recommended');
 
   const CompatibilityLevel(
-      this.name, this.minScore, this.maxScore, this.description);
+    this.name,
+    this.minScore,
+    this.maxScore,
+    this.description,
+  );
 
   /// Display name of the compatibility level.
   final String name;
@@ -196,10 +200,7 @@ class BhakootDoshaResult {
 
 /// Compatibility analysis based on planetary periods (Dashas).
 class DashaCompatibility {
-  const DashaCompatibility({
-    required this.score,
-    required this.analysis,
-  });
+  const DashaCompatibility({required this.score, required this.analysis});
 
   /// A numeric score representing Dasha synchronization.
   final int score;

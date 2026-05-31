@@ -139,7 +139,9 @@ class RelationshipCalculator {
 
   /// Calculates the compound relationship (Panchadha Maitri).
   static RelationshipType calculateCompound(
-      RelationshipType natural, RelationshipType temporary) {
+    RelationshipType natural,
+    RelationshipType temporary,
+  ) {
     if (natural == RelationshipType.friend) {
       return temporary == RelationshipType.friend
           ? RelationshipType.greatFriend

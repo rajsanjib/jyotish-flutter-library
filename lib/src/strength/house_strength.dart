@@ -10,7 +10,11 @@ enum VimsopakaCategory {
   sangatDurga('Sangat Durga', 5, 8, 'Very Weak');
 
   const VimsopakaCategory(
-      this.name, this.minScore, this.maxScore, this.description);
+    this.name,
+    this.minScore,
+    this.maxScore,
+    this.description,
+  );
   final String name;
   final double minScore;
   final double maxScore;
@@ -74,7 +78,11 @@ enum EnhancedBhavaStrengthCategory {
   atiKrishna('Ati-Krishna', 0, 30, 'Very Weak');
 
   const EnhancedBhavaStrengthCategory(
-      this.name, this.minStrength, this.maxStrength, this.description);
+    this.name,
+    this.minStrength,
+    this.maxStrength,
+    this.description,
+  );
   final String name;
   final double minStrength;
   final double maxStrength;

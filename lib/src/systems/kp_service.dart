@@ -86,10 +86,7 @@ class KPService {
       // Adjust cusp longitude from Lahiri to KP ayanamsa
       final adjustedCusp =
           (natalChart.houses.cusps[house - 1] - ayanamsaDiff + 360) % 360;
-      houseDivisions[house] = _calculateKPDivision(
-        adjustedCusp,
-        null,
-      );
+      houseDivisions[house] = _calculateKPDivision(adjustedCusp, null);
     }
 
     // Calculate ABCD significators
@@ -129,8 +126,12 @@ class KPService {
     final (subStart, subEnd) = _calculateSubBoundaries(longitude, star);
 
     // Calculate Sub-Sub-Lord using sub-lord boundaries
-    final subSubLord =
-        _calculateSubSubLord(longitude, subLord, subStart, subEnd);
+    final subSubLord = _calculateSubSubLord(
+      longitude,
+      subLord,
+      subStart,
+      subEnd,
+    );
 
     return KPDivision(
       sign: sign,
@@ -193,7 +194,11 @@ class KPService {
   /// The Sub-Sub-Lord divides each Sub-Lord into 9 parts using the same
   /// Vimshottari sequence (120 years total).
   Planet? _calculateSubSubLord(
-      double longitude, Planet subLord, double subStart, double subEnd) {
+    double longitude,
+    Planet subLord,
+    double subStart,
+    double subEnd,
+  ) {
     // Full Vimshottari sequence
     final dashaPeriods = [
       (Planet.ketu, 7), // Ketu
@@ -214,10 +219,12 @@ class KPService {
     final posInSub = (longitude - subStart) / subSpan;
 
     // Find the starting planet in the sequence
-    final subLordIndex = dashaPeriods.indexWhere((p) =>
-        (p.$1 == Planet.meanNode && subLord == Planet.meanNode) ||
-        (p.$1 == Planet.trueNode && subLord == Planet.trueNode) ||
-        p.$1 == subLord);
+    final subLordIndex = dashaPeriods.indexWhere(
+      (p) =>
+          (p.$1 == Planet.meanNode && subLord == Planet.meanNode) ||
+          (p.$1 == Planet.trueNode && subLord == Planet.trueNode) ||
+          p.$1 == subLord,
+    );
 
     if (subLordIndex < 0) return null;
 
@@ -299,12 +306,16 @@ class KPService {
     );
 
     // C Significators: Houses OWNED by the planet (cusp-based, not Aries Lagna)
-    final cSignificators =
-        KPPlanetOwnership.getOwnedHousesFromChart(planet, natalChart);
+    final cSignificators = KPPlanetOwnership.getOwnedHousesFromChart(
+      planet,
+      natalChart,
+    );
 
     // D Significators: Houses OWNED by the planet's sign lord (cusp-based)
     final dSignificators = KPPlanetOwnership.getOwnedHousesFromChart(
-        division.signLord, natalChart);
+      division.signLord,
+      natalChart,
+    );
 
     return KPSignificators(
       planet: planet,
@@ -469,14 +480,16 @@ class KPService {
       final commonHouses = natalHouses.intersection(transitHouses).toList()
         ..sort();
 
-      comparisons.add(KPTransitComparison(
-        planet: planet,
-        transitDivision: transitDiv,
-        natalDivision: natalDiv,
-        starLordMatches: starLordMatches,
-        subLordMatches: subLordMatches,
-        commonNatalSignificators: commonHouses,
-      ));
+      comparisons.add(
+        KPTransitComparison(
+          planet: planet,
+          transitDivision: transitDiv,
+          natalDivision: natalDiv,
+          starLordMatches: starLordMatches,
+          subLordMatches: subLordMatches,
+          commonNatalSignificators: commonHouses,
+        ),
+      );
     }
 
     // Sort: strongest matches first
@@ -600,7 +613,7 @@ class KPService {
         Planet.meanNode,
         Planet.jupiter,
         Planet.saturn,
-        Planet.mercury
+        Planet.mercury,
       ];
       // Note: in _calculateSubLord we had meanNode. Make sure starLord logic uses meanNode for Rahu.
       final searchStarLord =
@@ -623,40 +636,46 @@ class KPService {
           final boundary = signEnd * 30.0;
 
           final div1 = _calculateKPDivision(currentSubStart, null);
-          table.add(KPDivisionEntry(
-            index: index++,
-            sign: div1.sign,
-            signLord: div1.signLord,
-            star: star,
-            starLord: starLord,
-            subLord: subLord,
-            startLongitude: currentSubStart,
-            endLongitude: boundary,
-          ));
+          table.add(
+            KPDivisionEntry(
+              index: index++,
+              sign: div1.sign,
+              signLord: div1.signLord,
+              star: star,
+              starLord: starLord,
+              subLord: subLord,
+              startLongitude: currentSubStart,
+              endLongitude: boundary,
+            ),
+          );
 
           final div2 = _calculateKPDivision(boundary + 0.000001, null);
-          table.add(KPDivisionEntry(
-            index: index++,
-            sign: div2.sign,
-            signLord: div2.signLord,
-            star: star,
-            starLord: starLord,
-            subLord: subLord,
-            startLongitude: boundary,
-            endLongitude: subEnd,
-          ));
+          table.add(
+            KPDivisionEntry(
+              index: index++,
+              sign: div2.sign,
+              signLord: div2.signLord,
+              star: star,
+              starLord: starLord,
+              subLord: subLord,
+              startLongitude: boundary,
+              endLongitude: subEnd,
+            ),
+          );
         } else {
           final div = _calculateKPDivision(currentSubStart + 0.000001, null);
-          table.add(KPDivisionEntry(
-            index: index++,
-            sign: div.sign,
-            signLord: div.signLord,
-            star: star,
-            starLord: starLord,
-            subLord: subLord,
-            startLongitude: currentSubStart,
-            endLongitude: subEnd,
-          ));
+          table.add(
+            KPDivisionEntry(
+              index: index++,
+              sign: div.sign,
+              signLord: div.signLord,
+              star: star,
+              starLord: starLord,
+              subLord: subLord,
+              startLongitude: currentSubStart,
+              endLongitude: subEnd,
+            ),
+          );
         }
 
         currentSubStart = subEnd;
@@ -682,9 +701,6 @@ class KPService {
         ? SiderealMode.krishnamurtiVP291
         : SiderealMode.krishnamurti;
 
-    return await _ephemerisService.getAyanamsa(
-      dateTime: dateTime,
-      mode: mode,
-    );
+    return await _ephemerisService.getAyanamsa(dateTime: dateTime, mode: mode);
   }
 }

@@ -23,7 +23,7 @@ class JaiminiService {
             Planet.jupiter,
             Planet.venus,
             Planet.saturn,
-            Planet.meanNode
+            Planet.meanNode,
           ]
         : [
             Planet.sun,
@@ -32,7 +32,7 @@ class JaiminiService {
             Planet.mercury,
             Planet.jupiter,
             Planet.venus,
-            Planet.saturn
+            Planet.saturn,
           ];
 
     final ranked = candidates.where((p) => chart.getPlanet(p) != null).toList()
@@ -53,8 +53,10 @@ class JaiminiService {
 
   /// Convenience - returns only the Atmakaraka.
   Planet getAtmakaraka(VedicChart chart, {bool useEightKarakaScheme = true}) =>
-      getCharaKarakas(chart, useEightKarakaScheme: useEightKarakaScheme)
-          .atmakaraka;
+      getCharaKarakas(
+        chart,
+        useEightKarakaScheme: useEightKarakaScheme,
+      ).atmakaraka;
 
   /// Gets Karakamsa information.
   /// Requires both Rashi (D1) and Navamsa (D9) charts.
@@ -96,12 +98,14 @@ class JaiminiService {
         final planetsInAspecting = _getPlanetsInSign(chart, aspectingRashi);
         final planetsInAspected = _getPlanetsInSign(chart, aspectedRashi);
 
-        drishtiList.add(RashiDrishtiInfo(
-          aspectingSign: aspectingRashi,
-          aspectedSign: aspectedRashi,
-          planetsInAspectingSign: planetsInAspecting,
-          planetsInAspectedSign: planetsInAspected,
-        ));
+        drishtiList.add(
+          RashiDrishtiInfo(
+            aspectingSign: aspectingRashi,
+            aspectedSign: aspectedRashi,
+            planetsInAspectingSign: planetsInAspecting,
+            planetsInAspectedSign: planetsInAspected,
+          ),
+        );
       }
     }
 
@@ -134,12 +138,14 @@ class JaiminiService {
       for (final aspectedRashi in aspectedSigns) {
         final planetsInAspected = _getPlanetsInSign(chart, aspectedRashi);
 
-        drishtiList.add(RashiDrishtiInfo(
-          aspectingSign: aspectingRashi,
-          aspectedSign: aspectedRashi,
-          planetsInAspectingSign: planetsInAspecting,
-          planetsInAspectedSign: planetsInAspected,
-        ));
+        drishtiList.add(
+          RashiDrishtiInfo(
+            aspectingSign: aspectingRashi,
+            aspectedSign: aspectedRashi,
+            planetsInAspectingSign: planetsInAspecting,
+            planetsInAspectedSign: planetsInAspected,
+          ),
+        );
       }
     }
 

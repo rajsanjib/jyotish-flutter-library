@@ -5,8 +5,11 @@ enum GowriType {
   uthi('Uthi', true, 'Auspicious, progress, upliftment'),
   labhamu('Labhamu', true, 'Auspicious, gain, profit'),
   dhana('Dhana', true, 'Auspicious, wealth, prosperity'),
-  nirkku('Nirkku', false,
-      'Inauspicious, obstacles, impediments'), // Also spelled 'Sor'
+  nirkku(
+    'Nirkku',
+    false,
+    'Inauspicious, obstacles, impediments',
+  ), // Also spelled 'Sor'
   visham('Visham', false, 'Inauspicious, poison, danger'),
   soolai('Soolai', false, 'Inauspicious, distress, pain');
 

@@ -39,7 +39,7 @@ class UdayaLagnaService {
     'Dhanu',
     'Makara',
     'Kumbha',
-    'Meena'
+    'Meena',
   ];
 
   /// Calculates the 12 Udaya Lagna periods for a full day,
@@ -99,12 +99,14 @@ class UdayaLagnaService {
         nextTime = nextSunrise;
       }
 
-      periods.add(UdayaLagnaPeriod(
-        rashiIndex: currentRashiIndex,
-        rashiName: rashiNames[currentRashiIndex],
-        startTime: currentTime,
-        endTime: nextTime,
-      ));
+      periods.add(
+        UdayaLagnaPeriod(
+          rashiIndex: currentRashiIndex,
+          rashiName: rashiNames[currentRashiIndex],
+          startTime: currentTime,
+          endTime: nextTime,
+        ),
+      );
 
       currentTime = nextTime;
     }

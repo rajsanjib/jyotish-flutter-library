@@ -24,7 +24,8 @@ class EventTimingService {
   final EphemerisService _ephemerisService;
 
   Future<List<EventTimingWindow>> findEventTimingWindows(
-      EventTimingRequest request) async {
+    EventTimingRequest request,
+  ) async {
     final windows = <EventTimingWindow>[];
 
     // Default to Vimshottari Dasha for timing
@@ -94,14 +95,16 @@ class EventTimingService {
       if (vedhaResult.isFavorablePosition) {
         score += 0.3;
         reasons.add(
-            '${dashaLord.displayName} is transiting favorable house $gocharaHouse from Moon.');
+          '${dashaLord.displayName} is transiting favorable house $gocharaHouse from Moon.',
+        );
         if (vedhaResult.isObstructed) {
           score -= 0.2;
           final obstructors = vedhaResult.obstructingPlanets
               .map((p) => p.displayName)
               .join(', ');
           reasons.add(
-              'But favorable effects are obstructed (Vedha) by $obstructors.');
+            'But favorable effects are obstructed (Vedha) by $obstructors.',
+          );
         } else {
           score += 0.1;
           reasons.add('No Vedha obstruction.');
@@ -109,14 +112,16 @@ class EventTimingService {
       } else {
         score -= 0.2;
         reasons.add(
-            '${dashaLord.displayName} is transiting unfavorable house $gocharaHouse from Moon.');
+          '${dashaLord.displayName} is transiting unfavorable house $gocharaHouse from Moon.',
+        );
         if (vedhaResult.isObstructed) {
           score += 0.1;
           final obstructors = vedhaResult.obstructingPlanets
               .map((p) => p.displayName)
               .join(', ');
           reasons.add(
-              'Harmful effects are mitigated (Vama Vedha) by $obstructors.');
+            'Harmful effects are mitigated (Vama Vedha) by $obstructors.',
+          );
         }
       }
 
@@ -137,12 +142,14 @@ class EventTimingService {
         if (adVedhaResult.isFavorablePosition && !adVedhaResult.isObstructed) {
           score += 0.15;
           reasons.add(
-              'Antardasha lord ${adLord.displayName} adds to favorable timing.');
+            'Antardasha lord ${adLord.displayName} adds to favorable timing.',
+          );
         } else if (!adVedhaResult.isFavorablePosition &&
             !adVedhaResult.isObstructed) {
           score -= 0.1;
           reasons.add(
-              'Antardasha lord ${adLord.displayName} is transiting unfavorably.');
+            'Antardasha lord ${adLord.displayName} is transiting unfavorably.',
+          );
         }
       }
 
@@ -170,15 +177,17 @@ class EventTimingService {
         quality = TimingQuality.challenging;
       }
 
-      windows.add(EventTimingWindow(
-        start: current,
-        end: end,
-        quality: quality,
-        dashaLord: dashaLord,
-        dashaContext: dashaContext,
-        reasons: reasons,
-        score: score,
-      ));
+      windows.add(
+        EventTimingWindow(
+          start: current,
+          end: end,
+          quality: quality,
+          dashaLord: dashaLord,
+          dashaContext: dashaContext,
+          reasons: reasons,
+          score: score,
+        ),
+      );
 
       current = end;
     }

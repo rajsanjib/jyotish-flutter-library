@@ -110,8 +110,9 @@ class SpecialTransitService {
     if (houseFromMoon == 0) houseFromMoon = 12;
 
     // Check if Saturn is in Sade Sati houses (12th, 1st, or 2nd from Moon)
-    final isActive =
-        SaturnTransitConstants.sadeSatiHouses.contains(houseFromMoon);
+    final isActive = SaturnTransitConstants.sadeSatiHouses.contains(
+      houseFromMoon,
+    );
 
     SadeSatiPhase? phase;
     double? progress;
@@ -179,11 +180,7 @@ class SpecialTransitService {
     required Duration signExitAccuracy,
     required Duration signEntryAccuracy,
   }) async {
-    final location = GeographicLocation(
-      latitude: 0,
-      longitude: 0,
-      altitude: 0,
-    );
+    final location = GeographicLocation(latitude: 0, longitude: 0, altitude: 0);
     final flags = CalculationFlags.defaultFlags();
 
     // Calculate end date using ephemeris projection
@@ -288,8 +285,9 @@ class SpecialTransitService {
 
     // Search backwards to find when Saturn entered this sign
     var searchDate = checkDate.subtract(const Duration(days: 900));
-    var earlyBound =
-        checkDate.subtract(const Duration(days: 2700)); // ~7.5 years max
+    var earlyBound = checkDate.subtract(
+      const Duration(days: 2700),
+    ); // ~7.5 years max
     var lateBound = checkDate;
 
     const maxIterations = 50;
@@ -367,8 +365,9 @@ class SpecialTransitService {
     if (houseFromMoon == 0) houseFromMoon = 12;
 
     // Check if Saturn is in Dhaiya houses (4th or 8th from Moon)
-    final isActive =
-        SaturnTransitConstants.dhaiyaHouses.contains(houseFromMoon);
+    final isActive = SaturnTransitConstants.dhaiyaHouses.contains(
+      houseFromMoon,
+    );
 
     DhaiyaType? type;
     DateTime? startDate;

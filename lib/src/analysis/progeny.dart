@@ -7,7 +7,11 @@ enum ProgenyStrength {
   veryWeak('Very Weak', 0, 20, 'Significant challenges');
 
   const ProgenyStrength(
-      this.name, this.minScore, this.maxScore, this.description);
+    this.name,
+    this.minScore,
+    this.maxScore,
+    this.description,
+  );
   final String name;
   final int minScore;
   final int maxScore;

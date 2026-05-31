@@ -182,11 +182,7 @@ class KetuPosition {
     final minutes = minutesDecimal.floor();
     final seconds = (minutesDecimal - minutes) * 60;
 
-    return {
-      'degrees': degrees,
-      'minutes': minutes,
-      'seconds': seconds,
-    };
+    return {'degrees': degrees, 'minutes': minutes, 'seconds': seconds};
   }
 
   /// DateTime of the calculation
@@ -497,8 +493,10 @@ class VedicChart {
     final originalSignIndex = getPlanetSignIndex(planet);
     if (originalSignIndex == null) return false;
 
-    final d9Chart = DivisionalChartService()
-        .calculateDivisionalChart(this, DivisionalChartType.d9);
+    final d9Chart = DivisionalChartService().calculateDivisionalChart(
+      this,
+      DivisionalChartType.d9,
+    );
     final d9SignIndex = d9Chart.getPlanetSignIndex(planet);
     return originalSignIndex == d9SignIndex;
   }
@@ -552,8 +550,11 @@ class VedicChart {
 
   /// Returns the simplified compound relationship (Panchadha Maitri) between two planets.
   CompoundRelationship getCompoundRelationship(Planet planetA, Planet planetB) {
-    final rel =
-        PlanetaryRelationshipService().getRelationship(planetA, planetB, this);
+    final rel = PlanetaryRelationshipService().getRelationship(
+      planetA,
+      planetB,
+      this,
+    );
     return switch (rel.compound) {
       RelationshipType.greatFriend => CompoundRelationship.greatFriend,
       RelationshipType.friend => CompoundRelationship.friend,
@@ -565,12 +566,7 @@ class VedicChart {
 }
 
 /// The Vargottama status of a planet.
-enum VargottamaStatus {
-  none,
-  vargottama,
-  neechaVargottama,
-  ucchaVargottama,
-}
+enum VargottamaStatus { none, vargottama, neechaVargottama, ucchaVargottama }
 
 /// Represents an individual house in a Vedic chart.
 class House {

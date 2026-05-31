@@ -59,13 +59,15 @@ class BhavaChalitService {
         }
       }
 
-      bhavas.add(BhavaInfo(
-        houseNumber: houseNumber,
-        midCuspStart: midStart,
-        midCuspEnd: midEnd,
-        cusp: cusps[i],
-        planets: planetsInBhava,
-      ));
+      bhavas.add(
+        BhavaInfo(
+          houseNumber: houseNumber,
+          midCuspStart: midStart,
+          midCuspEnd: midEnd,
+          cusp: cusps[i],
+          planets: planetsInBhava,
+        ),
+      );
     }
 
     return BhavaChalit(bhavas: bhavas, chart: chart);

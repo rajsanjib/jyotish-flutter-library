@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.0] - 2026-05-31
+
+### Added
+- **Natal & Raja Yoga Detection Engine**:
+  - Implemented a comprehensive, high-precision yoga detection module at par with PyJHora, capable of identifying 287 different standard and Raja yogas in natal charts.
+  - Added support for Sun/Moon flanking configurations (Vesi, Vosi, Sunapha, Anapha, Duradhara, Kemadruma Yogas).
+  - Added full evaluation for Pancha Mahapurusha Yogas (Ruchaka, Bhadra, Hamsa, Malavya, Sasa).
+  - Added complete Nabhasa Yogas suite (3 Aasraya Yogas, 2 Dala Yogas, 8 Aakriti Yogas, 7 Sankhya Yogas).
+  - Added core Raja Yogas (Dharma-Karmadhipati, Vipareetha, and Neecha-Bhanga) with automatic debilitation cancellation rules.
+  - Added `NatalYoga` model representing a detected yoga, its criteria, benefits, presence status, and dynamic explanation.
+  - Added a high-level delegate method `detectNatalYogas(VedicChart chart)` in `Jyotish` core.
+  - Added unit test suite `test/natal_yoga_test.dart` to verify logic correctness using mock longitudinal configurations.
+- **Vedic Clock & Vedic Time Enhancements**:
+  - Added round-trip conversion method `toDateTime()` in `VedicTime` to calculate Gregorian `DateTime` from traditional Vedic time (Ghati, Vighati, Lipta).
+  - Refactored `VedicDigitalClock` and `VedicAnalogClock` widgets to use modern Flutter `super.key` and non-deprecated `.withValues(alpha: ...)` for color opacities.
+  - Cleaned up all compile warnings and static analysis lints across newly introduced modules (such as unused variables, comment references, and curly brace block control flow).
+
 ## [2.12.0] - 2026-05-30
 
 ### Added

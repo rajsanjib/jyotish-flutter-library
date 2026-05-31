@@ -16,12 +16,14 @@ class HouseStrengthService {
 
   /// Calculates Vimsopaka Bala asynchronously using an isolate.
   Future<Map<Planet, VimsopakaBalaResult>> calculateVimsopakaBalaAsync(
-      VedicChart chart) async {
+    VedicChart chart,
+  ) async {
     return compute(_calculateVimsopakaBalaStatic, chart);
   }
 
   static Map<Planet, VimsopakaBalaResult> _calculateVimsopakaBalaStatic(
-      VedicChart chart) {
+    VedicChart chart,
+  ) {
     // Note: ShadbalaService(null) is fine because calculateVimsopakaBala
     // only uses divisional chart service.
     final service = HouseStrengthService(ShadbalaService(EphemerisService()));
@@ -50,10 +52,12 @@ class HouseStrengthService {
   };
 
   Future<Map<int, EnhancedBhavaBalaResult>> calculateEnhancedBhavaBala(
-      VedicChart chart) async {
+    VedicChart chart,
+  ) async {
     if (_shadbalaService == null) {
       throw StateError(
-          'ShadbalaService must be provided to calculate Bhava Bala');
+        'ShadbalaService must be provided to calculate Bhava Bala',
+      );
     }
     final shadbala = await _shadbalaService!.calculateShadbala(chart);
     final vimsopakaBala = calculateVimsopakaBala(chart);
@@ -64,8 +68,11 @@ class HouseStrengthService {
       final kendradiStrength = _kendraStrengthValues[kendraType]!;
       final lordStrength = _getHouseLordStrength(chart, house, shadbala);
       final drishtiStrength = _calculateBhavaDrishtiStrength(chart, house);
-      final vimsopakaStrength =
-          _getHouseVimsopakaStrength(chart, house, vimsopakaBala);
+      final vimsopakaStrength = _getHouseVimsopakaStrength(
+        chart,
+        house,
+        vimsopakaBala,
+      );
 
       final totalStrength =
           lordStrength + kendradiStrength + drishtiStrength + vimsopakaStrength;
@@ -87,7 +94,10 @@ class HouseStrengthService {
   }
 
   double _getHouseLordStrength(
-      VedicChart chart, int house, Map<Planet, ShadbalaResult> shadbala) {
+    VedicChart chart,
+    int house,
+    Map<Planet, ShadbalaResult> shadbala,
+  ) {
     final lord = _getHouseLord(chart, house);
     final lordBala = shadbala[lord];
     return lordBala?.totalBala ?? 0.0;
@@ -157,12 +167,19 @@ class HouseStrengthService {
   }
 
   bool _isBenefic(Planet planet) {
-    return [Planet.jupiter, Planet.venus, Planet.moon, Planet.mercury]
-        .contains(planet);
+    return [
+      Planet.jupiter,
+      Planet.venus,
+      Planet.moon,
+      Planet.mercury,
+    ].contains(planet);
   }
 
-  double _getHouseVimsopakaStrength(VedicChart chart, int house,
-      Map<Planet, VimsopakaBalaResult> vimsopakaBala) {
+  double _getHouseVimsopakaStrength(
+    VedicChart chart,
+    int house,
+    Map<Planet, VimsopakaBalaResult> vimsopakaBala,
+  ) {
     final lord = _getHouseLord(chart, house);
     final vimsopaka = vimsopakaBala[lord];
     if (vimsopaka == null) return 0.0;
@@ -201,8 +218,11 @@ class HouseStrengthService {
       if (Planet.lunarNodes.contains(planet)) continue;
 
       final vargaScore = _calculateVargaScore(planet, chart, relevantCharts);
-      final sambandhaScore =
-          _calculateSambandhaScore(planet, chart, relevantCharts);
+      final sambandhaScore = _calculateSambandhaScore(
+        planet,
+        chart,
+        relevantCharts,
+      );
       final totalScore = (vargaScore * sambandhaScore / 20.0).clamp(5.0, 20.0);
       final category = _getVimsopakaCategory(totalScore);
 
@@ -219,7 +239,10 @@ class HouseStrengthService {
   }
 
   double _calculateVargaScore(
-      Planet planet, VedicChart chart, List<DivisionalChartType> charts) {
+    Planet planet,
+    VedicChart chart,
+    List<DivisionalChartType> charts,
+  ) {
     var totalWeight = 0.0;
     var weightedScore = 0.0;
 
@@ -227,8 +250,10 @@ class HouseStrengthService {
       final weight = chartType.vimsopakaWeight;
       if (weight <= 0) continue;
 
-      final vargaChart =
-          _divisionalChartService.calculateDivisionalChart(chart, chartType);
+      final vargaChart = _divisionalChartService.calculateDivisionalChart(
+        chart,
+        chartType,
+      );
 
       final planetInfo = vargaChart.getPlanet(planet);
       if (planetInfo == null) continue;
@@ -256,13 +281,18 @@ class HouseStrengthService {
   }
 
   double _calculateSambandhaScore(
-      Planet planet, VedicChart chart, List<DivisionalChartType> charts) {
+    Planet planet,
+    VedicChart chart,
+    List<DivisionalChartType> charts,
+  ) {
     var totalScore = 0.0;
     var count = 0;
 
     for (final chartType in charts) {
-      final vargaChart =
-          _divisionalChartService.calculateDivisionalChart(chart, chartType);
+      final vargaChart = _divisionalChartService.calculateDivisionalChart(
+        chart,
+        chartType,
+      );
 
       final planetInfo = vargaChart.getPlanet(planet);
       if (planetInfo == null) continue;
@@ -351,7 +381,8 @@ class HouseStrengthService {
   }
 
   HouseStrengthSummary getHouseStrengthSummary(
-      Map<int, EnhancedBhavaBalaResult> results) {
+    Map<int, EnhancedBhavaBalaResult> results,
+  ) {
     var totalStrength = 0.0;
     var strongest = 1;
     var weakest = 1;

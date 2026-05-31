@@ -48,21 +48,25 @@ class MuhurtaService {
     // Calculate special yogas if periods are provided
     final specialYogas = <SpecialYoga>[];
     if (tithiPeriods != null && nakshatraPeriods != null) {
-      specialYogas.addAll(calculateSpecialYogas(
-        date: date,
-        sunrise: sunrise,
-        tithiPeriods: tithiPeriods,
-        nakshatraPeriods: nakshatraPeriods,
-      ));
+      specialYogas.addAll(
+        calculateSpecialYogas(
+          date: date,
+          sunrise: sunrise,
+          tithiPeriods: tithiPeriods,
+          nakshatraPeriods: nakshatraPeriods,
+        ),
+      );
     }
 
     // Get current active periods
     final currentPeriods = <MuhurtaPeriod>[
       ...horaPeriods.where((h) => h.contains(DateTime.now())),
       ...choghadiya.allPeriods.where((c) => c.contains(DateTime.now())),
-      ...specialYogas.where((y) =>
-          DateTime.now().isAfter(y.startTime) &&
-          DateTime.now().isBefore(y.endTime)),
+      ...specialYogas.where(
+        (y) =>
+            DateTime.now().isAfter(y.startTime) &&
+            DateTime.now().isBefore(y.endTime),
+      ),
     ];
 
     return Muhurta(
@@ -103,36 +107,44 @@ class MuhurtaService {
       if (start.isBefore(end)) {
         // Sarvartha Siddhi
         if (allowedNakshatras.contains(nak.$1)) {
-          yogas.add(SpecialYoga(
-            type: SpecialYogaType.sarvarthaSiddhi,
-            startTime: start,
-            endTime: end,
-          ));
+          yogas.add(
+            SpecialYoga(
+              type: SpecialYogaType.sarvarthaSiddhi,
+              startTime: start,
+              endTime: end,
+            ),
+          );
         }
 
         // Amrit Siddhi
         if (nak.$1 == amritNakshatra) {
-          yogas.add(SpecialYoga(
-            type: SpecialYogaType.amritSiddhi,
-            startTime: start,
-            endTime: end,
-          ));
+          yogas.add(
+            SpecialYoga(
+              type: SpecialYogaType.amritSiddhi,
+              startTime: start,
+              endTime: end,
+            ),
+          );
 
           // Guru Pushya special case
           if (weekday == 4 && nak.$1 == 8) {
-            yogas.add(SpecialYoga(
-              type: SpecialYogaType.guruPushya,
-              startTime: start,
-              endTime: end,
-            ));
+            yogas.add(
+              SpecialYoga(
+                type: SpecialYogaType.guruPushya,
+                startTime: start,
+                endTime: end,
+              ),
+            );
           }
           // Ravi Pushya special case
           else if (weekday == 0 && nak.$1 == 8) {
-            yogas.add(SpecialYoga(
-              type: SpecialYogaType.raviPushya,
-              startTime: start,
-              endTime: end,
-            ));
+            yogas.add(
+              SpecialYoga(
+                type: SpecialYogaType.raviPushya,
+                startTime: start,
+                endTime: end,
+              ),
+            );
           }
         }
       }
@@ -163,20 +175,24 @@ class MuhurtaService {
             if (start.isBefore(end)) {
               // Dwi Pushkar
               if (MuhurtaConstants.dwiPushkarNakshatras.contains(nak.$1)) {
-                yogas.add(SpecialYoga(
-                  type: SpecialYogaType.dwiPushkar,
-                  startTime: start,
-                  endTime: end,
-                ));
+                yogas.add(
+                  SpecialYoga(
+                    type: SpecialYogaType.dwiPushkar,
+                    startTime: start,
+                    endTime: end,
+                  ),
+                );
               }
 
               // Tri Pushkar
               if (MuhurtaConstants.triPushkarNakshatras.contains(nak.$1)) {
-                yogas.add(SpecialYoga(
-                  type: SpecialYogaType.triPushkar,
-                  startTime: start,
-                  endTime: end,
-                ));
+                yogas.add(
+                  SpecialYoga(
+                    type: SpecialYogaType.triPushkar,
+                    startTime: start,
+                    endTime: end,
+                  ),
+                );
               }
             }
           }
@@ -213,13 +229,15 @@ class MuhurtaService {
       final lord = horaSequence[(startIndex + i) % 7];
       final endTime = currentTime.add(dayHoraDuration);
 
-      periods.add(HoraPeriod(
-        startTime: currentTime,
-        endTime: endTime,
-        lord: lord,
-        hourNumber: i,
-        isDaytime: true,
-      ));
+      periods.add(
+        HoraPeriod(
+          startTime: currentTime,
+          endTime: endTime,
+          lord: lord,
+          hourNumber: i,
+          isDaytime: true,
+        ),
+      );
 
       currentTime = endTime;
     }
@@ -240,13 +258,15 @@ class MuhurtaService {
       final lord = horaSequence[(startIndex + i) % 7];
       final endTime = currentTime.add(nightHoraDuration);
 
-      periods.add(HoraPeriod(
-        startTime: currentTime,
-        endTime: endTime,
-        lord: lord,
-        hourNumber: i,
-        isDaytime: false,
-      ));
+      periods.add(
+        HoraPeriod(
+          startTime: currentTime,
+          endTime: endTime,
+          lord: lord,
+          hourNumber: i,
+          isDaytime: false,
+        ),
+      );
 
       currentTime = endTime;
     }
@@ -297,13 +317,15 @@ class MuhurtaService {
     var currentTime = sunrise;
     for (var i = 0; i < 8; i++) {
       final endTime = currentTime.add(dayChoghadiyaDuration);
-      daytimePeriods.add(Choghadiya(
-        startTime: currentTime,
-        endTime: endTime,
-        type: daytimeTypes[i],
-        isDaytime: true,
-        periodNumber: i + 1,
-      ));
+      daytimePeriods.add(
+        Choghadiya(
+          startTime: currentTime,
+          endTime: endTime,
+          type: daytimeTypes[i],
+          isDaytime: true,
+          periodNumber: i + 1,
+        ),
+      );
       currentTime = endTime;
     }
 
@@ -322,13 +344,15 @@ class MuhurtaService {
     currentTime = nightStart;
     for (var i = 0; i < 8; i++) {
       final endTime = currentTime.add(nightChoghadiyaDuration);
-      nighttimePeriods.add(Choghadiya(
-        startTime: currentTime,
-        endTime: endTime,
-        type: nighttimeTypes[i],
-        isDaytime: false,
-        periodNumber: i + 1,
-      ));
+      nighttimePeriods.add(
+        Choghadiya(
+          startTime: currentTime,
+          endTime: endTime,
+          type: nighttimeTypes[i],
+          isDaytime: false,
+          periodNumber: i + 1,
+        ),
+      );
       currentTime = endTime;
     }
 
@@ -419,11 +443,7 @@ class MuhurtaService {
     required DateTime sunrise,
     required DateTime sunset,
   }) {
-    return _calculateHoraPeriods(
-      date: date,
-      sunrise: sunrise,
-      sunset: sunset,
-    );
+    return _calculateHoraPeriods(date: date, sunrise: sunrise, sunset: sunset);
   }
 
   /// Gets Choghadiya periods for a specific date.
@@ -432,11 +452,7 @@ class MuhurtaService {
     required DateTime sunrise,
     required DateTime sunset,
   }) {
-    return _calculateChoghadiya(
-      date: date,
-      sunrise: sunrise,
-      sunset: sunset,
-    );
+    return _calculateChoghadiya(date: date, sunrise: sunrise, sunset: sunset);
   }
 
   /// Gets inauspicious periods for a specific date.
@@ -643,7 +659,7 @@ class MuhurtaService {
       18,
       16,
       24,
-      30
+      30,
     ];
 
     final index = nakshatra.number - 1;

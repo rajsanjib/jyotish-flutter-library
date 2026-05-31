@@ -99,7 +99,10 @@ class TajakaService {
   }
 
   List<TajakaYoga> _detectYogas(
-      VedicChart annualChart, Planet munthesh, Planet varshesh) {
+    VedicChart annualChart,
+    Planet munthesh,
+    Planet varshesh,
+  ) {
     final yogas = <TajakaYoga>[];
 
     if (munthesh == varshesh) return yogas;
@@ -141,23 +144,27 @@ class TajakaService {
     if (distance < 15.0) {
       // Deepthamsha/Orb overlap
       if (isApp) {
-        yogas.add(TajakaYoga(
-          type: TajakaYogaType.itthasala,
-          planet1: varshesh,
-          planet2: munthesh,
-          isApplying: true,
-          interpretation:
-              'Applying Itthasala between Annual Lord ($varshesh) and Muntha Lord ($munthesh), showing impending success.',
-        ));
+        yogas.add(
+          TajakaYoga(
+            type: TajakaYogaType.itthasala,
+            planet1: varshesh,
+            planet2: munthesh,
+            isApplying: true,
+            interpretation:
+                'Applying Itthasala between Annual Lord ($varshesh) and Muntha Lord ($munthesh), showing impending success.',
+          ),
+        );
       } else {
-        yogas.add(TajakaYoga(
-          type: TajakaYogaType.ishrafa,
-          planet1: varshesh,
-          planet2: munthesh,
-          isApplying: false,
-          interpretation:
-              'Separating Ishrafa between Annual Lord and Muntha Lord. Past efforts indicated.',
-        ));
+        yogas.add(
+          TajakaYoga(
+            type: TajakaYogaType.ishrafa,
+            planet1: varshesh,
+            planet2: munthesh,
+            isApplying: false,
+            interpretation:
+                'Separating Ishrafa between Annual Lord and Muntha Lord. Past efforts indicated.',
+          ),
+        );
       }
     }
 

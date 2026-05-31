@@ -14,7 +14,7 @@ linter:
     - prefer_const_constructors
     - prefer_final_locals
     - avoid_dynamic_calls
-    - prefer_single_quotes
+    - prefer_single_quotes: false
     - unawaited_futures
     - always_declare_return_types
     - cancel_subscriptions

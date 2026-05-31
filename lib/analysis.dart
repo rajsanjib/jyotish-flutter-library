@@ -13,3 +13,5 @@ export 'package:jyotish/src/analysis/sudarshan_chakra.dart';
 export 'package:jyotish/src/analysis/sudarshan_chakra_service.dart';
 export 'package:jyotish/src/analysis/progeny.dart';
 export 'package:jyotish/src/analysis/progeny_service.dart';
+export 'package:jyotish/src/analysis/yoga.dart';
+export 'package:jyotish/src/analysis/yoga_service.dart';

@@ -113,8 +113,11 @@ class BhavaBalaService {
       // Skip Nodes (Rahu/Ketu) for standard Bhava Drishti (some systems include them, standard usually 7 planets)
       if (Planet.lunarNodes.contains(planet)) continue;
 
-      final aspectStrength =
-          _calculateAspectStrength(planet, planetInfo.longitude, houseCusp);
+      final aspectStrength = _calculateAspectStrength(
+        planet,
+        planetInfo.longitude,
+        houseCusp,
+      );
 
       // Determine if planet is benefic or malefic
       // Bhava Bala uses Natural Benefic/Malefic for adding/subtracting strength
@@ -135,7 +138,10 @@ class BhavaBalaService {
   }
 
   double _calculateAspectStrength(
-      Planet planet, double planetLong, double objectLong) {
+    Planet planet,
+    double planetLong,
+    double objectLong,
+  ) {
     // Angle between planet and object (house cusp)
     final angle = (objectLong - planetLong + 360) % 360;
 
@@ -274,7 +280,11 @@ class BhavaBalaService {
     // Moon is generally considered Benefic in Bhava Bala unless explicitly Dark?
     // Let's stick to standard classification: Jup, Ven, Moo, Mer = Benefic. Sun, Mar, Sat = Malefic.
     // (Ideally Mercury depends on association, Moon on Paksha, but strict Natural Ben/Mal often used for this step).
-    return [Planet.jupiter, Planet.venus, Planet.moon, Planet.mercury]
-        .contains(planet);
+    return [
+      Planet.jupiter,
+      Planet.venus,
+      Planet.moon,
+      Planet.mercury,
+    ].contains(planet);
   }
 }

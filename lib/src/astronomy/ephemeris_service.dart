@@ -23,6 +23,9 @@ class EphemerisService {
   final Lock _calculationLock = Lock();
   static final Logger _log = Logger('jyotish.EphemerisService');
 
+  /// Gets the underlying Swiss Ephemeris FFI bindings.
+  SwissEphBindings get bindings => _bindings!;
+
   /// Initializes the Swiss Ephemeris service.
   ///
   /// [ephemerisPath] - Optional path to Swiss Ephemeris data files.
@@ -94,16 +97,14 @@ class EphemerisService {
         }
 
         // Convert DateTime to Julian Day
-        final julianDay =
-            _dateTimeToJulianDay(dateTime, timezoneId: location.timezone);
+        final julianDay = _dateTimeToJulianDay(
+          dateTime,
+          timezoneId: location.timezone,
+        );
 
         // Set sidereal mode and get ayanamsa for this date
         // We always use sidereal calculations for Vedic astrology
-        _bindings!.setSiderealMode(
-          flags.siderealModeConstant,
-          0.0,
-          0.0,
-        );
+        _bindings!.setSiderealMode(flags.siderealModeConstant, 0.0, 0.0);
         final ayanamsa = _bindings!.getAyanamsaUT(julianDay);
 
         // Calculate position (tropical, then we subtract ayanamsa)
@@ -229,8 +230,10 @@ class EphemerisService {
         _bindings!.setSiderealMode(mode.constant, 0.0, 0.0);
 
         // Convert DateTime to Julian Day
-        final julianDay =
-            _dateTimeToJulianDay(dateTime, timezoneId: timezoneId);
+        final julianDay = _dateTimeToJulianDay(
+          dateTime,
+          timezoneId: timezoneId,
+        );
 
         // Get ayanamsa
         return _bindings!.getAyanamsaUT(julianDay);
@@ -281,8 +284,10 @@ class EphemerisService {
     return _calculationLock.synchronized(() async {
       try {
         // Convert DateTime to Julian Day
-        final julianDay =
-            _dateTimeToJulianDay(dateTime, timezoneId: location.timezone);
+        final julianDay = _dateTimeToJulianDay(
+          dateTime,
+          timezoneId: location.timezone,
+        );
 
         // Calculate houses
         final result = _bindings!.calculateHouses(
@@ -356,8 +361,10 @@ class EphemerisService {
         } else {
           searchStart = DateTime(date.year, date.month, date.day);
         }
-        final julianDay =
-            _dateTimeToJulianDay(searchStart, timezoneId: location.timezone);
+        final julianDay = _dateTimeToJulianDay(
+          searchStart,
+          timezoneId: location.timezone,
+        );
 
         final errorBuffer = malloc<ffi.Char>(256);
         try {
@@ -683,32 +690,38 @@ class EphemerisService {
   /// Finds exact time of Syzygy (Conjunction/Opposition) on the given date.
   /// Returns (DateTime, EclipseType) or null.
   Future<(DateTime, EclipseType)?> _findSyzygy(
-      DateTime date, GeographicLocation location) async {
+    DateTime date,
+    GeographicLocation location,
+  ) async {
     // Check start and end of day
     final start = DateTime(date.year, date.month, date.day);
     final end = start.add(const Duration(days: 1));
 
     final posStartSun = await calculatePlanetPosition(
-        planet: Planet.sun,
-        dateTime: start,
-        location: location,
-        flags: CalculationFlags.defaultFlags());
+      planet: Planet.sun,
+      dateTime: start,
+      location: location,
+      flags: CalculationFlags.defaultFlags(),
+    );
     final posStartMoon = await calculatePlanetPosition(
-        planet: Planet.moon,
-        dateTime: start,
-        location: location,
-        flags: CalculationFlags.defaultFlags());
+      planet: Planet.moon,
+      dateTime: start,
+      location: location,
+      flags: CalculationFlags.defaultFlags(),
+    );
 
     final posEndSun = await calculatePlanetPosition(
-        planet: Planet.sun,
-        dateTime: end,
-        location: location,
-        flags: CalculationFlags.defaultFlags());
+      planet: Planet.sun,
+      dateTime: end,
+      location: location,
+      flags: CalculationFlags.defaultFlags(),
+    );
     final posEndMoon = await calculatePlanetPosition(
-        planet: Planet.moon,
-        dateTime: end,
-        location: location,
-        flags: CalculationFlags.defaultFlags());
+      planet: Planet.moon,
+      dateTime: end,
+      location: location,
+      flags: CalculationFlags.defaultFlags(),
+    );
 
     final double diffStart =
         (posStartMoon.longitude - posStartSun.longitude + 360) % 360;
@@ -721,7 +734,7 @@ class EphemerisService {
     if (diffStart > 330 && diffEnd < 30) {
       return (
         await _binarySearchSyzygy(start, end, location, 0),
-        EclipseType.solar
+        EclipseType.solar,
       );
     }
 
@@ -730,15 +743,19 @@ class EphemerisService {
     if (diffStart <= 180 && diffEnd >= 180) {
       return (
         await _binarySearchSyzygy(start, end, location, 180),
-        EclipseType.lunar
+        EclipseType.lunar,
       );
     }
 
     return null;
   }
 
-  Future<DateTime> _binarySearchSyzygy(DateTime start, DateTime end,
-      GeographicLocation loc, double targetDiff) async {
+  Future<DateTime> _binarySearchSyzygy(
+    DateTime start,
+    DateTime end,
+    GeographicLocation loc,
+    double targetDiff,
+  ) async {
     var low = start.millisecondsSinceEpoch;
     var high = end.millisecondsSinceEpoch;
 
@@ -748,15 +765,17 @@ class EphemerisService {
       final time = DateTime.fromMillisecondsSinceEpoch(mid);
 
       final sun = await calculatePlanetPosition(
-          planet: Planet.sun,
-          dateTime: time,
-          location: loc,
-          flags: CalculationFlags.defaultFlags());
+        planet: Planet.sun,
+        dateTime: time,
+        location: loc,
+        flags: CalculationFlags.defaultFlags(),
+      );
       final moon = await calculatePlanetPosition(
-          planet: Planet.moon,
-          dateTime: time,
-          location: loc,
-          flags: CalculationFlags.defaultFlags());
+        planet: Planet.moon,
+        dateTime: time,
+        location: loc,
+        flags: CalculationFlags.defaultFlags(),
+      );
 
       final double diff = (moon.longitude - sun.longitude + 360) % 360;
 
@@ -784,7 +803,9 @@ class EphemerisService {
 
   /// Calculates detailed local solar eclipse data using Swiss Ephemeris.
   Future<EclipseData?> _getDetailedSolarEclipse(
-      DateTime globalDate, GeographicLocation location) async {
+    DateTime globalDate,
+    GeographicLocation location,
+  ) async {
     return _calculationLock.synchronized(() async {
       final jd = _dateTimeToJulianDay(globalDate);
       final errorBuffer = malloc<ffi.Char>(256);
@@ -906,7 +927,9 @@ class EphemerisService {
   bool get isInitialized => _isInitialized;
 
   Future<EclipseData?> _getDetailedLunarEclipse(
-      DateTime date, GeographicLocation location) async {
+    DateTime date,
+    GeographicLocation location,
+  ) async {
     return _calculationLock.synchronized(() async {
       final jd = _dateTimeToJulianDay(date);
       final errorBuffer = malloc<ffi.Char>(256);

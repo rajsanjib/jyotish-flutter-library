@@ -53,21 +53,16 @@ class SwissEphBindings {
         ffi.Double,
         ffi.Int32,
       ),
-      double Function(
-        int,
-        int,
-        int,
-        double,
-        int,
-      )>('swe_julday');
+      double Function(int, int, int, double, int)>('swe_julday');
 
   late final _sweVersion = _lib.lookupFunction<
       ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>),
       ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>)>('swe_version');
 
-  late final _sweGetAyanamsaUt = _lib.lookupFunction<
-      ffi.Double Function(ffi.Double),
-      double Function(double)>('swe_get_ayanamsa_ut');
+  late final _sweGetAyanamsaUt = _lib
+      .lookupFunction<ffi.Double Function(ffi.Double), double Function(double)>(
+    'swe_get_ayanamsa_ut',
+  );
 
   late final _sweHouses = _lib.lookupFunction<
       ffi.Int32 Function(
@@ -146,6 +141,24 @@ class SwissEphBindings {
         int,
         ffi.Pointer<ffi.Char>,
       )>('swe_lun_eclipse_when');
+
+  late final _sweSolEclipseWhenGlob = _lib.lookupFunction<
+      ffi.Int32 Function(
+        ffi.Double,
+        ffi.Int32,
+        ffi.Int32,
+        ffi.Pointer<ffi.Double>,
+        ffi.Int32,
+        ffi.Pointer<ffi.Char>,
+      ),
+      int Function(
+        double,
+        int,
+        int,
+        ffi.Pointer<ffi.Double>,
+        int,
+        ffi.Pointer<ffi.Char>,
+      )>('swe_sol_eclipse_when_glob');
 
   late final _sweSolEclipseHow = _lib.lookupFunction<
       ffi.Int32 Function(
@@ -375,10 +388,7 @@ class SwissEphBindings {
       // [4] = Equatorial ascendant, [5] = Co-ascendant (Koch), etc.
       final ascmc = List.generate(10, (i) => ascmcPtr[i]);
 
-      return {
-        'cusps': cusps,
-        'ascmc': ascmc,
-      };
+      return {'cusps': cusps, 'ascmc': ascmc};
     } finally {
       malloc.free(cuspsPtr);
       malloc.free(ascmcPtr);
@@ -450,7 +460,8 @@ class SwissEphBindings {
         julianDay,
         flags,
         ffi.Pointer.fromAddress(
-            0), // geopos not used for lunar eclipse (global)
+          0,
+        ), // geopos not used for lunar eclipse (global)
         attrPtr,
         errorBuffer,
       );
@@ -480,6 +491,39 @@ class SwissEphBindings {
     final tretPtr = malloc<ffi.Double>(20);
     try {
       final returnCode = _sweLunEclipseWhen(
+        julianDay,
+        flags,
+        eclipseTypeFlags,
+        tretPtr,
+        backward ? 1 : 0,
+        errorBuffer,
+      );
+
+      if (returnCode < 0) {
+        return null;
+      }
+
+      final result = <double>[];
+      for (var i = 0; i < 20; i++) {
+        result.add(tretPtr[i]);
+      }
+      return result;
+    } finally {
+      malloc.free(tretPtr);
+    }
+  }
+
+  /// Finds the next or previous solar eclipse globally.
+  List<double>? findSolarEclipseWhenGlob({
+    required double julianDay,
+    required int flags,
+    required int eclipseTypeFlags,
+    required bool backward,
+    required ffi.Pointer<ffi.Char> errorBuffer,
+  }) {
+    final tretPtr = malloc<ffi.Double>(20);
+    try {
+      final returnCode = _sweSolEclipseWhenGlob(
         julianDay,
         flags,
         eclipseTypeFlags,

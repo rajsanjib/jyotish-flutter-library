@@ -73,7 +73,8 @@ class CalculationFlags {
   /// **Deprecated**: Use `CalculationFlags.traditionalist()` or `CalculationFlags.modernPrecision()`
   /// to explicitly declare node type choice.
   @Deprecated(
-      'Use CalculationFlags.traditionalist() for Mean Node or CalculationFlags.modernPrecision() for True Node')
+    'Use CalculationFlags.traditionalist() for Mean Node or CalculationFlags.modernPrecision() for True Node',
+  )
   factory CalculationFlags.defaultFlags() => const CalculationFlags();
 
   /// Strong default for traditional Indian astrology.
@@ -81,9 +82,8 @@ class CalculationFlags {
   /// System : **[AstrologicalSystem.traditional]**.
   /// Ayanamsa : Lahiri | House system : Whole-Sign | Node : Mean Node.
   /// Covers: Parashari, KN Rao, BPHS, Jaimini, Shadbala, all Dasha systems.
-  factory CalculationFlags.traditionalist() => const CalculationFlags(
-        system: AstrologicalSystem.traditional,
-      );
+  factory CalculationFlags.traditionalist() =>
+      const CalculationFlags(system: AstrologicalSystem.traditional);
 
   /// Precision-focused modern Vedic astrology.
   ///
@@ -286,21 +286,31 @@ enum SiderealMode {
   yukteshwar(SwissEphConstants.sidmYukteshwar, 'Yukteshwar'),
   jnBhasin(SwissEphConstants.sidmJnBhasin, 'JN Bhasin'),
   babylonianKugler1(
-      SwissEphConstants.sidmBabylonianKugler1, 'Babylonian/Kugler 1'),
+    SwissEphConstants.sidmBabylonianKugler1,
+    'Babylonian/Kugler 1',
+  ),
   babylonianKugler2(
-      SwissEphConstants.sidmBabylonianKugler2, 'Babylonian/Kugler 2'),
+    SwissEphConstants.sidmBabylonianKugler2,
+    'Babylonian/Kugler 2',
+  ),
   babylonianKugler3(
-      SwissEphConstants.sidmBabylonianKugler3, 'Babylonian/Kugler 3'),
+    SwissEphConstants.sidmBabylonianKugler3,
+    'Babylonian/Kugler 3',
+  ),
   babylonianHuber(SwissEphConstants.sidmBabylonianHuber, 'Babylonian/Huber'),
   babylonianEtpsc(SwissEphConstants.sidmBabylonianEtpsc, 'Babylonian/ETPSC'),
   aldebaran15Tau(SwissEphConstants.sidmAldebaran15Tau, 'Aldebaran at 15 Tau'),
   hipparchos(SwissEphConstants.sidmHipparchos, 'Hipparchos'),
   sassanian(SwissEphConstants.sidmSassanian, 'Sassanian'),
   galcentMulaWilhelm(
-      SwissEphConstants.sidmGalcentMulaWilhelm, 'Galactic Center Mula Wilhelm'),
+    SwissEphConstants.sidmGalcentMulaWilhelm,
+    'Galactic Center Mula Wilhelm',
+  ),
   ayanamsa(SwissEphConstants.sidmAyanamsa, 'Ayanamsa'),
   galcentCochrane(
-      SwissEphConstants.sidmGalcentCochrane, 'Galactic Center Cochrane'),
+    SwissEphConstants.sidmGalcentCochrane,
+    'Galactic Center Cochrane',
+  ),
   galequIau1958(SwissEphConstants.sidmGalequIau1958, 'Gal Eq IAU 1958'),
   galequTrue(SwissEphConstants.sidmGalequTrue, 'Gal Eq True'),
   galequMula(SwissEphConstants.sidmGalequMula, 'Gal Eq Mula'),
@@ -309,14 +319,18 @@ enum SiderealMode {
   trueRevati(SwissEphConstants.sidmTrueRevati, 'True Revati'),
   truePushya(SwissEphConstants.sidmTruePushya, 'True Pushya'),
   galcentRothers(
-      SwissEphConstants.sidmGalcentRothers, 'Galactic Center Others'),
+    SwissEphConstants.sidmGalcentRothers,
+    'Galactic Center Others',
+  ),
   galcent0Sag(SwissEphConstants.sidmGalcent0Sag, 'Galactic Center 0 Sag'),
   j2000(SwissEphConstants.sidmJ2000, 'J2000'),
   j1900(SwissEphConstants.sidmJ1900, 'J1900'),
   b1950(SwissEphConstants.sidmB1950, 'B1950'),
   suryasiddhanta(SwissEphConstants.sidmSuryasiddhanta, 'Surya Siddhanta'),
   suryasiddhantaMsun(
-      SwissEphConstants.sidmSuryasiddhantaMsun, 'Surya Siddhanta MSun'),
+    SwissEphConstants.sidmSuryasiddhantaMsun,
+    'Surya Siddhanta MSun',
+  ),
   aryabhata(SwissEphConstants.sidmAryabhata, 'Aryabhata'),
   aryabhataMsun(SwissEphConstants.sidmAryabhataMsun, 'Aryabhata MSun'),
   ssRevati(SwissEphConstants.sidmSsRevati, 'SS Revati'),
@@ -325,12 +339,16 @@ enum SiderealMode {
   trueMula(SwissEphConstants.sidmTrueMula, 'True Mula'),
   galcentMula0(SwissEphConstants.sidmGalcentMula0, 'Galactic Center Mula 0'),
   galcentMulaVerneau(
-      SwissEphConstants.sidmGalcentMulaVerneau, 'Galactic Center Mula Verneau'),
+    SwissEphConstants.sidmGalcentMulaVerneau,
+    'Galactic Center Mula Verneau',
+  ),
   valensBow(SwissEphConstants.sidmValensBow, 'Valens Bow'),
   lahiri1940(SwissEphConstants.sidmLahiri1940, 'Lahiri 1940'),
   lahiriVP285(SwissEphConstants.sidmLahiriVP285, 'Lahiri VP285'),
   krishnamurtiVP291(
-      SwissEphConstants.sidmKrishnamurtiVP291, 'Krishnamurti VP291 (KP New)'),
+    SwissEphConstants.sidmKrishnamurtiVP291,
+    'Krishnamurti VP291 (KP New)',
+  ),
   lahiriICRC(SwissEphConstants.sidmLahiriICRC, 'Lahiri ICRC'),
   khullar(SwissEphConstants.sidmKhullar, 'Khullar Ayanamsa');
 

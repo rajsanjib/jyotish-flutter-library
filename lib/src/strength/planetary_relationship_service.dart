@@ -99,8 +99,10 @@ class PlanetaryRelationshipService {
     }
 
     // 3. Compound (Panchadha Maitri)
-    final compound =
-        RelationshipCalculator.calculateCompound(natural, temporary);
+    final compound = RelationshipCalculator.calculateCompound(
+      natural,
+      temporary,
+    );
 
     return PlanetaryRelationship(
       planet: planet,

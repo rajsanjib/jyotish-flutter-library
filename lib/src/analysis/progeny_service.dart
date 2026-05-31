@@ -24,8 +24,9 @@ class ProgenyService {
     if (fifthHouseStrength.isStrong) {
       analysis.add('5th house is strong (${fifthHouseStrength.score} pts)');
     } else {
-      analysis
-          .add('5th house needs attention (${fifthHouseStrength.score} pts)');
+      analysis.add(
+        '5th house needs attention (${fifthHouseStrength.score} pts)',
+      );
     }
 
     totalScore += jupiterCondition.score;
@@ -146,7 +147,9 @@ class ProgenyService {
 
     // Check actual angular distance to the Sun for combustion (limit ~11 degrees)
     final sunInfo = chart.getPlanet(Planet.sun);
-    double diff = sunInfo != null ? (jupiterInfo.longitude - sunInfo.longitude).abs() : 0.0;
+    double diff = sunInfo != null
+        ? (jupiterInfo.longitude - sunInfo.longitude).abs()
+        : 0.0;
     while (diff > 180) {
       diff = 360 - diff;
     }
@@ -170,7 +173,9 @@ class ProgenyService {
   D7Analysis analyzeD7Chart(VedicChart chart) {
     var score = 15; // Start with a baseline score of 15 (neutral)
     final d7Chart = _divisionalChartService.calculateDivisionalChart(
-        chart, DivisionalChartType.d7);
+      chart,
+      DivisionalChartType.d7,
+    );
 
     // 1. D7 Lagna Lord placement in D7
     final d7LagnaSign = Rashi.fromLongitude(d7Chart.ascendant);
@@ -178,7 +183,12 @@ class ProgenyService {
     final d7LagnaLordInfo = d7Chart.getPlanet(d7LagnaLord);
     if (d7LagnaLordInfo != null) {
       final house = d7LagnaLordInfo.house;
-      if (house == 1 || house == 4 || house == 7 || house == 10 || house == 5 || house == 9) {
+      if (house == 1 ||
+          house == 4 ||
+          house == 7 ||
+          house == 10 ||
+          house == 5 ||
+          house == 9) {
         score += 5;
       } else if (house == 6 || house == 8 || house == 12) {
         score -= 5;
@@ -195,7 +205,12 @@ class ProgenyService {
     final d7FifthLordInfo = d7Chart.getPlanet(d7FifthLord);
     if (d7FifthLordInfo != null) {
       final house = d7FifthLordInfo.house;
-      if (house == 1 || house == 4 || house == 7 || house == 10 || house == 5 || house == 9) {
+      if (house == 1 ||
+          house == 4 ||
+          house == 7 ||
+          house == 10 ||
+          house == 5 ||
+          house == 9) {
         score += 5;
       } else if (house == 6 || house == 8 || house == 12) {
         score -= 5;
@@ -221,7 +236,12 @@ class ProgenyService {
     final jupiterD7 = d7Chart.getPlanet(Planet.jupiter);
     if (jupiterD7 != null) {
       final house = jupiterD7.house;
-      if (house == 1 || house == 4 || house == 7 || house == 10 || house == 5 || house == 9) {
+      if (house == 1 ||
+          house == 4 ||
+          house == 7 ||
+          house == 10 ||
+          house == 5 ||
+          house == 9) {
         score += 5;
       } else if (house == 6 || house == 8 || house == 12) {
         score -= 5;
@@ -249,26 +269,36 @@ class ProgenyService {
     final jupiterInfo = chart.getPlanet(Planet.jupiter);
     final planetsInFifth = chart.getPlanetsInHouse(5);
 
-    yogas.add(ChildYoga(
-      name: 'Jupiter in 5th',
-      description: 'Jupiter in the 5th house is highly auspicious for children',
-      isPresent: planetsInFifth.any((p) => p.planet == Planet.jupiter),
-    ));
+    yogas.add(
+      ChildYoga(
+        name: 'Jupiter in 5th',
+        description:
+            'Jupiter in the 5th house is highly auspicious for children',
+        isPresent: planetsInFifth.any((p) => p.planet == Planet.jupiter),
+      ),
+    );
 
-    yogas.add(ChildYoga(
-      name: 'Santanada Yoga',
-      description: 'When Jupiter aspects the 5th house or its lord',
-      isPresent: jupiterInfo != null &&
-          (_doesPlanetAspectHouse(jupiterInfo, 5) ||
-              _doesPlanetAspectHouse(jupiterInfo, chart.getPlanet(_getHouseLord(chart, 5))?.house ?? 999)),
-    ));
+    yogas.add(
+      ChildYoga(
+        name: 'Santanada Yoga',
+        description: 'When Jupiter aspects the 5th house or its lord',
+        isPresent: jupiterInfo != null &&
+            (_doesPlanetAspectHouse(jupiterInfo, 5) ||
+                _doesPlanetAspectHouse(
+                  jupiterInfo,
+                  chart.getPlanet(_getHouseLord(chart, 5))?.house ?? 999,
+                )),
+      ),
+    );
 
-    yogas.add(ChildYoga(
-      name: 'Kalyana Vimsopaka Yoga',
-      description:
-          'Venus in 5th house indicates intelligent and beautiful children',
-      isPresent: planetsInFifth.any((p) => p.planet == Planet.venus),
-    ));
+    yogas.add(
+      ChildYoga(
+        name: 'Kalyana Vimsopaka Yoga',
+        description:
+            'Venus in 5th house indicates intelligent and beautiful children',
+        isPresent: planetsInFifth.any((p) => p.planet == Planet.venus),
+      ),
+    );
 
     // Find Atmakaraka (traditional planet with highest longitude % 30)
     Planet? atmakaraka;
@@ -284,18 +314,22 @@ class ProgenyService {
     }
 
     final d9Chart = _divisionalChartService.calculateDivisionalChart(
-        chart, DivisionalChartType.d9);
+      chart,
+      DivisionalChartType.d9,
+    );
     final jupD9Info = d9Chart.getPlanet(Planet.jupiter);
 
     final bool isJupAtmakaraka = atmakaraka == Planet.jupiter;
     final bool jupIn5thRashi = jupiterInfo?.house == 5;
     final bool jupIn5thD9 = jupD9Info?.house == 5;
 
-    yogas.add(ChildYoga(
-      name: 'Putra Karaka',
-      description: 'Jupiter as Atmakaraka in 5th house or Navamsa',
-      isPresent: isJupAtmakaraka && (jupIn5thRashi || jupIn5thD9),
-    ));
+    yogas.add(
+      ChildYoga(
+        name: 'Putra Karaka',
+        description: 'Jupiter as Atmakaraka in 5th house or Navamsa',
+        isPresent: isJupAtmakaraka && (jupIn5thRashi || jupIn5thD9),
+      ),
+    );
 
     return yogas;
   }
@@ -344,8 +378,12 @@ class ProgenyService {
   }
 
   bool _isBenefic(Planet planet) {
-    return [Planet.jupiter, Planet.venus, Planet.moon, Planet.mercury]
-        .contains(planet);
+    return [
+      Planet.jupiter,
+      Planet.venus,
+      Planet.moon,
+      Planet.mercury,
+    ].contains(planet);
   }
 
   List<Planet> _getPlanetsAspectingHouse(VedicChart chart, int houseNumber) {

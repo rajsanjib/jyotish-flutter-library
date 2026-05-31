@@ -87,8 +87,9 @@ class PrashnaService {
 
       final dayDuration = sunset.difference(sunrise).inSeconds;
       partDurationSec = dayDuration / 8.0;
-      startTime = sunrise
-          .add(Duration(seconds: (partDurationSec * (saturnPart - 1)).round()));
+      startTime = sunrise.add(
+        Duration(seconds: (partDurationSec * (saturnPart - 1)).round()),
+      );
     } else {
       // Nighttime Gulika starts from 5th day lord
       // Sun night starts from Thu lord sequence
@@ -100,8 +101,9 @@ class PrashnaService {
       final nextSunrise = sunrise.add(const Duration(days: 1));
       final nightDuration = nextSunrise.difference(sunset).inSeconds;
       partDurationSec = nightDuration / 8.0;
-      startTime = sunset
-          .add(Duration(seconds: (partDurationSec * (saturnPart - 1)).round()));
+      startTime = sunset.add(
+        Duration(seconds: (partDurationSec * (saturnPart - 1)).round()),
+      );
     }
 
     // Calculate Ascendant at the Gulika start time

@@ -5,8 +5,10 @@ import 'package:jyotish/src/models/geographic_location.dart';
 
 void main() {
   final service = MuhurtaService();
-  final location =
-      GeographicLocation(latitude: 28.6139, longitude: 77.2090); // Delhi
+  final location = GeographicLocation(
+    latitude: 28.6139,
+    longitude: 77.2090,
+  ); // Delhi
 
   group('Special Yoga Calculations', () {
     test('Sarvartha Siddhi & Amrit Siddhi - Sunday + Hasta', () {
@@ -33,7 +35,9 @@ void main() {
 
       final yogas = muhurta.specialYogas;
       expect(
-          yogas.any((y) => y.type == SpecialYogaType.sarvarthaSiddhi), isTrue);
+        yogas.any((y) => y.type == SpecialYogaType.sarvarthaSiddhi),
+        isTrue,
+      );
       expect(yogas.any((y) => y.type == SpecialYogaType.amritSiddhi), isTrue);
     });
 

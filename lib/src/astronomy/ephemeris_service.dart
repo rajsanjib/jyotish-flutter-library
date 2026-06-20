@@ -159,12 +159,10 @@ class EphemerisService {
           final isRetrograde = results[3] < 0;
 
           // Adjust longitudeSpeed for sidereal frame:
-          // In the sidereal frame, speeds are slightly lower due to precession.
-          // The precession rate is ~50.3"/year = ~0.000137/day.
-          // This adjustment is negligible for most practical purposes (~0.01%),
-          // but included for professional-grade precision in Chesta Bala.
-          // Note: Retrograde status is determined from the original speed above.
-          const double precessionRatePerDay = 50.3 / 3600.0 / 365.25; // deg/day
+          // We calculate the time-varying, ayanamsa-specific precession rate per day
+          // by taking the difference between tomorrow's ayanamsa and today's.
+          final ayanamsaTomorrow = _bindings!.getAyanamsaUT(julianDay + 1.0);
+          final double precessionRatePerDay = ayanamsaTomorrow - ayanamsa;
           results[3] = results[3] - precessionRatePerDay;
 
           return PlanetPosition.fromSwissEph(
@@ -207,6 +205,34 @@ class EphemerisService {
       hour: hour,
       isGregorian: true,
     );
+  }
+
+  /// Calculates the obliquity of the ecliptic for a given Julian Day.
+  /// Returns a tuple of (trueObliquity, meanObliquity).
+  Future<(double, double)> getObliquity(double julianDay) async {
+    if (!_isInitialized || _bindings == null) {
+      throw CalculationException('EphemerisService is not initialized');
+    }
+
+    return _calculationLock.synchronized(() async {
+      final errorBuffer = malloc<ffi.Char>(256);
+      try {
+        final results = _bindings!.calculateUT(
+          julianDay: julianDay,
+          planetId: -1, // SE_ECL_NUT
+          flags: 0,
+          errorBuffer: errorBuffer,
+        );
+
+        if (results == null) {
+          return (23.44, 23.44); // Standard fallback
+        }
+
+        return (results[0], results[1]);
+      } finally {
+        malloc.free(errorBuffer);
+      }
+    });
   }
 
   /// Gets the ayanamsa (sidereal offset) for a given date and time.

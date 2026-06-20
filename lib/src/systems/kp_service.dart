@@ -133,6 +133,20 @@ class KPService {
       subEnd,
     );
 
+    // Calculate Sub-Sub-Sub-Lord
+    final (subSubStart, subSubEnd) = _calculateSubSubBoundaries(
+      longitude,
+      subLord,
+      subStart,
+      subEnd,
+    );
+    final subSubSubLord = _calculateSubSubSubLord(
+      longitude,
+      subSubLord,
+      subSubStart,
+      subSubEnd,
+    );
+
     return KPDivision(
       sign: sign,
       signLord: signLord,
@@ -140,6 +154,7 @@ class KPService {
       starLord: starLord,
       subLord: subLord,
       subSubLord: subSubLord,
+      subSubSubLord: subSubSubLord,
       subStartLongitude: subStart,
       subEndLongitude: subEnd,
     );
@@ -702,5 +717,109 @@ class KPService {
         : SiderealMode.krishnamurti;
 
     return await _ephemerisService.getAyanamsa(dateTime: dateTime, mode: mode);
+  }
+
+  /// Gets the Sub-Sub-Sub-Lord for a specific longitude.
+  Planet? getSubSubSubLord(double longitude) {
+    final division = _calculateKPDivision(longitude, null);
+    return division.subSubSubLord;
+  }
+
+  /// Calculates the boundaries of the Sub-Sub division.
+  (double, double) _calculateSubSubBoundaries(
+    double longitude,
+    Planet subLord,
+    double subStart,
+    double subEnd,
+  ) {
+    final dashaPeriods = [
+      (Planet.ketu, 7),
+      (Planet.venus, 20),
+      (Planet.sun, 6),
+      (Planet.moon, 10),
+      (Planet.mars, 7),
+      (Planet.meanNode, 18),
+      (Planet.jupiter, 16),
+      (Planet.saturn, 19),
+      (Planet.mercury, 17),
+    ];
+    const totalPeriods = 120;
+    final subSpan = subEnd - subStart;
+    final posInSub = longitude - subStart;
+
+    final subLordIndex = dashaPeriods.indexWhere(
+      (p) =>
+          (p.$1 == Planet.meanNode && subLord == Planet.meanNode) ||
+          (p.$1 == Planet.trueNode && subLord == Planet.trueNode) ||
+          p.$1 == subLord,
+    );
+
+    if (subLordIndex < 0) return (subStart, subEnd);
+
+    var cumulative = 0.0;
+    var subSubStart = subStart;
+
+    for (var i = 0; i < dashaPeriods.length; i++) {
+      final index = (subLordIndex + i) % dashaPeriods.length;
+      final (_, period) = dashaPeriods[index];
+      final subSubSpan = subSpan * (period / totalPeriods);
+      if (posInSub <= cumulative + subSubSpan) {
+        return (subSubStart, subSubStart + subSubSpan);
+      }
+      cumulative += subSubSpan;
+      subSubStart += subSubSpan;
+    }
+
+    return (subStart, subEnd);
+  }
+
+  /// Calculates the Sub-Sub-Sub-Lord for a given longitude.
+  Planet? _calculateSubSubSubLord(
+    double longitude,
+    Planet? subSubLord,
+    double subSubStart,
+    double subSubEnd,
+  ) {
+    if (subSubLord == null) return null;
+
+    final dashaPeriods = [
+      (Planet.ketu, 7),
+      (Planet.venus, 20),
+      (Planet.sun, 6),
+      (Planet.moon, 10),
+      (Planet.mars, 7),
+      (Planet.meanNode, 18),
+      (Planet.jupiter, 16),
+      (Planet.saturn, 19),
+      (Planet.mercury, 17),
+    ];
+    const totalPeriods = 120;
+    final subSubSpan = subSubEnd - subSubStart;
+    
+    // Guard rail to prevent division by zero or negative values
+    if (subSubSpan <= 0) return subSubLord;
+
+    final posInSubSub = (longitude - subSubStart) / subSubSpan;
+
+    final subSubLordIndex = dashaPeriods.indexWhere(
+      (p) =>
+          (p.$1 == Planet.meanNode && subSubLord == Planet.meanNode) ||
+          (p.$1 == Planet.trueNode && subSubLord == Planet.trueNode) ||
+          p.$1 == subSubLord,
+    );
+
+    if (subSubLordIndex < 0) return null;
+
+    var cumulative = 0.0;
+    for (var i = 0; i < dashaPeriods.length; i++) {
+      final index = (subSubLordIndex + i) % dashaPeriods.length;
+      final (_, period) = dashaPeriods[index];
+      cumulative += period / totalPeriods;
+      if (posInSubSub <= cumulative) {
+        return dashaPeriods[index].$1;
+      }
+    }
+
+    return dashaPeriods[subSubLordIndex].$1;
   }
 }

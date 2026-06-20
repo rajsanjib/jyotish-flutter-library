@@ -1143,6 +1143,8 @@ class Jyotish {
   Future<Panchanga> calculatePanchanga({
     required DateTime dateTime,
     required GeographicLocation location,
+    double atmosphericPressure = 0.0,
+    double atmosphericTemperature = 0.0,
   }) async {
     _ensureInitialized();
 
@@ -1150,6 +1152,8 @@ class Jyotish {
       return await _panchangaService!.calculatePanchanga(
         dateTime: dateTime,
         location: location,
+        atmosphericPressure: atmosphericPressure,
+        atmosphericTemperature: atmosphericTemperature,
       );
     } catch (e) {
       throw JyotishException(
@@ -1275,6 +1279,30 @@ class Jyotish {
   }) async {
     _ensureInitialized();
     return await _panchangaService!.getTithiEndTime(
+      dateTime: dateTime,
+      location: location,
+    );
+  }
+
+  /// Finds the exact end time of the current Nakshatra.
+  Future<DateTime> getNakshatraEndTime({
+    required DateTime dateTime,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+    return await _panchangaService!.getNakshatraEndTime(
+      dateTime: dateTime,
+      location: location,
+    );
+  }
+
+  /// Finds the exact end time of the current Yoga.
+  Future<DateTime> getYogaEndTime({
+    required DateTime dateTime,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+    return await _panchangaService!.getYogaEndTime(
       dateTime: dateTime,
       location: location,
     );
@@ -1768,6 +1796,12 @@ class Jyotish {
   Planet? getSubSubLord(double longitude) {
     _ensureInitialized();
     return _kpService!.getSubSubLord(longitude);
+  }
+
+  /// Gets the Sub-Sub-Sub-Lord for a specific longitude.
+  Planet? getSubSubSubLord(double longitude) {
+    _ensureInitialized();
+    return _kpService!.getSubSubSubLord(longitude);
   }
 
   /// Gets house group significators for a chart.
@@ -2873,6 +2907,34 @@ class Jyotish {
     _ensureInitialized();
     return _panchangaService!.getTithiJunction(
       targetTithiNumber: targetTithiNumber,
+      startDate: startDate,
+      location: location,
+    );
+  }
+
+  /// Gets the exact junction (change point) of a specific Nakshatra.
+  Future<DateTime> getNakshatraJunction({
+    required int targetNakshatraNumber,
+    required DateTime startDate,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+    return _panchangaService!.getNakshatraJunction(
+      targetNakshatraNumber: targetNakshatraNumber,
+      startDate: startDate,
+      location: location,
+    );
+  }
+
+  /// Gets the exact junction (change point) of a specific Yoga.
+  Future<DateTime> getYogaJunction({
+    required int targetYogaNumber,
+    required DateTime startDate,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+    return _panchangaService!.getYogaJunction(
+      targetYogaNumber: targetYogaNumber,
       startDate: startDate,
       location: location,
     );

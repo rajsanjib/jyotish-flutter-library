@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.15.0] - 2026-06-19
+
+### Added
+- **High-Precision End-Times & Junctions for Nakshatras and Yogas**:
+  - Implemented `getNakshatraEndTime`, `getYogaEndTime`, `getNakshatraJunction`, and `getYogaJunction` in [PanchangaService](file:///E:/jyotish-flutter-library-fork/lib/src/panchanga/panchanga_service.dart) using high-precision binary search.
+  - Refactored `getTithiEndTime` and `getTithiJunction` wrap-around boundary logic using signed angular differences to prevent search direction bugs near 360°/0° crossings.
+- **KP Sub-Sub-Sub-Lord (SSSL) Support**:
+  - Added the `subSubSubLord` field to the `KPDivision` class and implemented `_calculateSubSubBoundaries` and `_calculateSubSubSubLord` in [KPService](file:///E:/jyotish-flutter-library-fork/lib/src/systems/kp_service.dart) to support micro-level astrological event timing.
+- **Dynamic Obliquity of the Ecliptic in Shadbala**:
+  - Implemented dynamic obliquity calculations using Swiss Ephemeris (`SE_ECL_NUT` / planet ID `-1`) in `EphemerisService.getObliquity`.
+  - Integrated dynamic obliquity into Shadbala's `_calculateAyanaBala` to replace the static `23.45°` hardcoded constant.
+- **Time-Varying & Ayanamsa-Specific Precession Corrections**:
+  - Refactored planetary velocity corrections in `calculatePlanetPosition` to calculate the precession rate dynamically by taking the difference between tomorrow's and today's ayanamsa. This automatically accounts for both time-varying precession drift and ayanamsa-specific reference frames.
+- **Exposed Atmospheric Refraction Parameters**:
+  - Exposed `atmosphericPressure` and `atmosphericTemperature` parameters in `calculatePanchanga` to allow precise Sunrise/Sunset calculations under variable local atmospheric conditions.
+
 ## [2.14.0] - 2026-05-31
 
 ### Added

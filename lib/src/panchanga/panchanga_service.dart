@@ -28,6 +28,8 @@ class PanchangaService {
   Future<Panchanga> calculatePanchanga({
     required DateTime dateTime,
     required GeographicLocation location,
+    double atmosphericPressure = 0.0,
+    double atmosphericTemperature = 0.0,
   }) async {
     final flags = CalculationFlags.defaultFlags();
 
@@ -50,6 +52,8 @@ class PanchangaService {
     final (sunrise, sunset) = await _calculateSunriseSunset(
       dateTime: dateTime,
       location: location,
+      atmosphericPressure: atmosphericPressure,
+      atmosphericTemperature: atmosphericTemperature,
     );
 
     // Calculate Tithi
@@ -283,6 +287,8 @@ class PanchangaService {
   Future<(DateTime, DateTime)> _calculateSunriseSunset({
     required DateTime dateTime,
     required GeographicLocation location,
+    double atmosphericPressure = 0.0,
+    double atmosphericTemperature = 0.0,
   }) async {
     // Check for extreme latitudes that may have polar day/night
     final absLatitude = location.latitude.abs();
@@ -293,6 +299,8 @@ class PanchangaService {
       final (sunrise, sunset) = await _ephemerisService.getSunriseSunset(
         date: dateTime,
         location: location,
+        atpress: atmosphericPressure,
+        attemp: atmosphericTemperature,
       );
 
       // Fallback to approximation if precise calculation fails
@@ -623,23 +631,19 @@ class PanchangaService {
     final targetElongation = (currentTithi + 1) * 12.0;
 
     // 2. Binary search for target elongation within the next 48 hours
-    // Using 48 hours to account for variations in tithi length
     var start = dateTime;
     var end = dateTime + 48.hours;
 
-    // Continue searching until we meet the accuracy threshold
     var iteration = 0;
-    const maxIterations = 60; // Increased for better convergence
+    const maxIterations = 60;
 
     while (iteration < maxIterations) {
       final currentWindow = end.difference(start);
 
-      // If we're within the accuracy threshold, stop
       if (currentWindow <= accuracyThreshold) {
         break;
       }
 
-      // Adaptive mid point - use smaller steps near the target
       final mid = start + (currentWindow * 0.5);
 
       final midSun = await _ephemerisService.calculatePlanetPosition(
@@ -655,22 +659,149 @@ class PanchangaService {
         flags: flags,
       );
 
-      var midElongation = (midMoon.longitude - midSun.longitude + 360) % 360;
+      final midElongation = (midMoon.longitude - midSun.longitude + 360) % 360;
 
-      // Handle 0/360 boundary crossing
-      if (targetElongation >= 360 && midElongation < 180) {
-        midElongation += 360;
-      }
+      // Signed difference with wrap-around
+      final diff = (midElongation - targetElongation + 180) % 360 - 180;
 
-      // Check if we're very close to the target - helps with edge cases
-      final elongationDiff = (midElongation - targetElongation).abs();
-      if (elongationDiff < 0.001) {
-        // Very close to target, use this as end
+      if (diff.abs() < 0.0001) {
         end = mid;
         break;
       }
 
-      if (midElongation < targetElongation) {
+      if (diff < 0) {
+        start = mid;
+      } else {
+        end = mid;
+      }
+
+      iteration++;
+    }
+
+    return start;
+  }
+
+  /// Finds the exact end time of the current Nakshatra.
+  Future<DateTime> getNakshatraEndTime({
+    required DateTime dateTime,
+    required GeographicLocation location,
+    Duration accuracyThreshold = const Duration(seconds: 1),
+  }) async {
+    final flags = CalculationFlags.defaultFlags();
+
+    final moonPos = await _ephemerisService.calculatePlanetPosition(
+      planet: Planet.moon,
+      dateTime: dateTime,
+      location: location,
+      flags: flags,
+    );
+
+    final currentNakshatra = (moonPos.longitude / (360.0 / 27.0)).floor();
+    final targetLongitude = ((currentNakshatra + 1) * (360.0 / 27.0)) % 360;
+
+    var start = dateTime;
+    var end = dateTime + 48.hours;
+
+    var iteration = 0;
+    const maxIterations = 60;
+
+    while (iteration < maxIterations) {
+      final currentWindow = end.difference(start);
+
+      if (currentWindow <= accuracyThreshold) {
+        break;
+      }
+
+      final mid = start + (currentWindow * 0.5);
+
+      final midMoon = await _ephemerisService.calculatePlanetPosition(
+        planet: Planet.moon,
+        dateTime: mid,
+        location: location,
+        flags: flags,
+      );
+
+      final diff = (midMoon.longitude - targetLongitude + 180) % 360 - 180;
+
+      if (diff.abs() < 0.0001) {
+        end = mid;
+        break;
+      }
+
+      if (diff < 0) {
+        start = mid;
+      } else {
+        end = mid;
+      }
+
+      iteration++;
+    }
+
+    return start;
+  }
+
+  /// Finds the exact end time of the current Yoga.
+  Future<DateTime> getYogaEndTime({
+    required DateTime dateTime,
+    required GeographicLocation location,
+    Duration accuracyThreshold = const Duration(seconds: 1),
+  }) async {
+    final flags = CalculationFlags.defaultFlags();
+
+    final sunPos = await _ephemerisService.calculatePlanetPosition(
+      planet: Planet.sun,
+      dateTime: dateTime,
+      location: location,
+      flags: flags,
+    );
+    final moonPos = await _ephemerisService.calculatePlanetPosition(
+      planet: Planet.moon,
+      dateTime: dateTime,
+      location: location,
+      flags: flags,
+    );
+
+    final currentYogaValue = (sunPos.longitude + moonPos.longitude + 360) % 360;
+    final currentYoga = (currentYogaValue / (360.0 / 27.0)).floor();
+    final targetValue = ((currentYoga + 1) * (360.0 / 27.0)) % 360;
+
+    var start = dateTime;
+    var end = dateTime + 48.hours;
+
+    var iteration = 0;
+    const maxIterations = 60;
+
+    while (iteration < maxIterations) {
+      final currentWindow = end.difference(start);
+
+      if (currentWindow <= accuracyThreshold) {
+        break;
+      }
+
+      final mid = start + (currentWindow * 0.5);
+
+      final midSun = await _ephemerisService.calculatePlanetPosition(
+        planet: Planet.sun,
+        dateTime: mid,
+        location: location,
+        flags: flags,
+      );
+      final midMoon = await _ephemerisService.calculatePlanetPosition(
+        planet: Planet.moon,
+        dateTime: mid,
+        location: location,
+        flags: flags,
+      );
+
+      final midYogaValue = (midSun.longitude + midMoon.longitude + 360) % 360;
+      final diff = (midYogaValue - targetValue + 180) % 360 - 180;
+
+      if (diff.abs() < 0.0001) {
+        end = mid;
+        break;
+      }
+
+      if (diff < 0) {
         start = mid;
       } else {
         end = mid;
@@ -900,22 +1031,125 @@ class PanchangaService {
         flags: flags,
       );
 
-      var elongation = (moonPos.longitude - sunPos.longitude + 360) % 360;
+      final elongation = (moonPos.longitude - sunPos.longitude + 360) % 360;
 
-      // Handle 0/360 boundary
-      if (targetElongation < 12 && elongation > 348) {
-        elongation -= 360;
-      }
+      // Signed difference with wrap-around
+      final diff = (elongation - targetElongation + 180) % 360 - 180;
 
       // Check if we're very close to the target - helps with edge cases
-      final elongationDiff = (elongation - targetElongation).abs();
-      if (elongationDiff < 0.001) {
-        // Very close to target, use this as end
+      if (diff.abs() < 0.0001) {
         searchEnd = mid;
         break;
       }
 
-      if (elongation < targetElongation) {
+      if (diff < 0) {
+        searchStart = mid;
+      } else {
+        searchEnd = mid;
+      }
+    }
+
+    return searchStart;
+  }
+
+  /// Gets the exact junction (change point) of a specific Nakshatra.
+  Future<DateTime> getNakshatraJunction({
+    required int targetNakshatraNumber,
+    required DateTime startDate,
+    required GeographicLocation location,
+  }) async {
+    final flags = CalculationFlags.defaultFlags();
+    final targetLongitude = ((targetNakshatraNumber - 1) * (360.0 / 27.0)) % 360;
+
+    var searchStart = startDate;
+    var searchEnd = startDate.add(const Duration(hours: 48));
+
+    const maxIterations = 100;
+    const accuracyThreshold = Duration(milliseconds: 100);
+
+    for (var i = 0; i < maxIterations; i++) {
+      final window = searchEnd.difference(searchStart);
+
+      if (window <= accuracyThreshold) {
+        break;
+      }
+
+      final mid = searchStart.add(
+        Duration(milliseconds: window.inMilliseconds ~/ 2),
+      );
+
+      final moonPos = await _ephemerisService.calculatePlanetPosition(
+        planet: Planet.moon,
+        dateTime: mid,
+        location: location,
+        flags: flags,
+      );
+
+      final diff = (moonPos.longitude - targetLongitude + 180) % 360 - 180;
+
+      if (diff.abs() < 0.0001) {
+        searchEnd = mid;
+        break;
+      }
+
+      if (diff < 0) {
+        searchStart = mid;
+      } else {
+        searchEnd = mid;
+      }
+    }
+
+    return searchStart;
+  }
+
+  /// Gets the exact junction (change point) of a specific Yoga.
+  Future<DateTime> getYogaJunction({
+    required int targetYogaNumber,
+    required DateTime startDate,
+    required GeographicLocation location,
+  }) async {
+    final flags = CalculationFlags.defaultFlags();
+    final targetValue = ((targetYogaNumber - 1) * (360.0 / 27.0)) % 360;
+
+    var searchStart = startDate;
+    var searchEnd = startDate.add(const Duration(hours: 48));
+
+    const maxIterations = 100;
+    const accuracyThreshold = Duration(milliseconds: 100);
+
+    for (var i = 0; i < maxIterations; i++) {
+      final window = searchEnd.difference(searchStart);
+
+      if (window <= accuracyThreshold) {
+        break;
+      }
+
+      final mid = searchStart.add(
+        Duration(milliseconds: window.inMilliseconds ~/ 2),
+      );
+
+      final sunPos = await _ephemerisService.calculatePlanetPosition(
+        planet: Planet.sun,
+        dateTime: mid,
+        location: location,
+        flags: flags,
+      );
+      final moonPos = await _ephemerisService.calculatePlanetPosition(
+        planet: Planet.moon,
+        dateTime: mid,
+        location: location,
+        flags: flags,
+      );
+
+      final yogaValue = (sunPos.longitude + moonPos.longitude + 360) % 360;
+      final diff = (yogaValue - targetValue + 180) % 360 - 180;
+
+      if (diff.abs() < 0.0001) {
+        searchEnd = mid;
+        break;
+      }
+
+      if (diff < 0) {
         searchStart = mid;
       } else {
         searchEnd = mid;

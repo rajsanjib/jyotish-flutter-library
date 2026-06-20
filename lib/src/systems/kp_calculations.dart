@@ -50,6 +50,7 @@ class KPDivision {
     required this.starLord,
     required this.subLord,
     this.subSubLord,
+    this.subSubSubLord,
     required this.subStartLongitude,
     required this.subEndLongitude,
   });
@@ -71,6 +72,9 @@ class KPDivision {
 
   /// Sub-Sub-Lord (owner of the sub-subdivision)
   final Planet? subSubLord;
+
+  /// Sub-Sub-Sub-Lord (owner of the sub-sub-subdivision)
+  final Planet? subSubSubLord;
 
   /// Starting longitude of the sub-division
   final double subStartLongitude;

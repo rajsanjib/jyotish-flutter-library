@@ -10,7 +10,7 @@ This document serves as the technical authority for the `jyotish` library. It de
 The library utilizes the **Swiss Ephemeris** (SE) for sub-arcsecond precision.
 - **Ephemeris Type**: `SEFLG_SWIEPH` (High-precision ephemeris).
 - **Coordinate System**: Geocentric ecliptic by default. Topocentric positions (`SEFLG_TOPOCTR`) are calculated when `useTopocentric` is enabled in `CalculationFlags`.
-- **Precession Adjustment**: For sidereal speed (Chesta Bala), a 0.01% correction factor is applied to account for the difference between tropical and sidereal motion rates (~50.3" per year).
+- **Precession Adjustment**: For sidereal speed (Chesta Bala), a time-varying and ayanamsa-specific precession correction is applied dynamically: `Precession_Rate = Ayanamsa(t + 1 day) - Ayanamsa(t)`. This rate is subtracted from the tropical velocity to compute accurate sidereal velocity.
 
 ### Sidereal Conversion (Ayanamsa)
 The library converts tropical coordinates to the sidereal frame using precise ayanamsa values.
@@ -25,7 +25,7 @@ The library converts tropical coordinates to the sidereal frame using precise ay
 
 ### Tithi (Lunar Day)
 - **Mathematical Formula**: `Tithi = floor((Moon_Long - Sun_Long) / 12) + 1`.
-- **End-Time Calculation**: Determined using a high-precision binary search (1-minute resolution) to find the exact moment the elongation hits a multiple of 12°.
+- **End-Time & Junction Calculations**: Calculated using a high-precision binary search down to millisecond-level threshold. Wrap-around boundaries near 360°/0° are robustly handled by calculating signed angular differences: `diff = (elongation - targetElongation + 180) % 360 - 180`.
 - **Reference**: *Surya Siddhanta*.
 
 ### Vara (Weekday Lord)
@@ -37,10 +37,12 @@ The library converts tropical coordinates to the sidereal frame using precise ay
 ### Nakshatra (Lunar Mansion)
 - **Division**: 360° / 27 = 13°20' per Nakshatra.
 - **Formula**: `Nakshatra = floor(Moon_Sidereal_Long / (13.333333)) + 1`.
+- **End-Times & Junctions**: Similar to Tithi, high-precision binary search (with signed angular difference wrapping) finds the exact moment the Moon's longitude crosses any 13°20' boundary.
 - **Abhijit Nakshatra**: Incorporated for specific rituals and Muhurta (Brahma/Abhijit). Occupies the region between 276°40' and 280°53'20" (the last quarter of Uttarashadha).
 
 ### Yoga & Karana
 - **Yoga**: `floor((Sun_Long + Moon_Long) / 13.333333) + 1`.
+- **End-Times & Junctions**: High-precision binary search (with signed angular difference wrapping) finds the exact moment the sum of Sun and Moon longitudes crosses any 13°20' boundary.
 - **Karana**: Half a Tithi (6°). Includes 7 repeating variable karanas and 4 fixed ones (Kimstughna, Shakuni, Chatushpada, Naga) which occur at specific points in the lunar month.
 
 ---
@@ -57,7 +59,7 @@ The library implements the complex 6-fold strength system as defined in **BPHS**
 
 ### Kala Bala (Temporal Strength)
 - **Natonnata Bala**: Day and night strength. Max 60 for Moon/Mars/Saturn at midnight, 60 for Sun/Jupiter/Venus at noon.
-- **Ayana Bala**: Strength based on Declination (Kranti). Formula: `(24 ± Declination) / 48 * 60`.
+- **Ayana Bala**: Strength based on Declination (Kranti). Formula: `(Obliquity ± Declination) / (2 * Obliquity) * 60`. The obliquity of the ecliptic is dynamically calculated using Swiss Ephemeris (`SE_ECL_NUT` / planet ID `-1`) rather than a hardcoded `23.45°` constant, providing exact, time-varying results.
 - **Paksha Bala**: Lunar phase strength. Benefics gain near Full Moon; Malefics gain near New Moon.
 
 ### Chesta Bala (Motional Strength)
@@ -111,6 +113,7 @@ KP is a sub-lord based system emphasizing the "Star Lord" and "Sub-Lord" over th
 - **Houses**: **Placidus (Semi-arc)** house system is mandatory for accurate Sub-Lord boundaries.
 - **249 Sub-Divisions**: Each Nakshatra is divided proportionally to the Vimshottari Dasha years (120-year cycle). If a sub-lord boundary crosses a sign boundary (0°, 30°), it is split into two, totaling 249 divisions.
 - **Sub-Sub-Lord (SSL)**: Further refinement dividing the Sub-Lord into 9 further proportional parts.
+- **Sub-Sub-Sub-Lord (SSSL)**: Micro-level timing dividing the Sub-Sub-Lord into 9 further proportional parts using the same Vimshottari sequence.
 
 ### Significators (ABCD Grading):
 The library assigns significators for each planet/house interaction:

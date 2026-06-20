@@ -346,10 +346,11 @@ class ShadbalaService {
     final paksha = _calculatePakshaBala(planet, planetInfo, chart);
     final tribhaga = await _calculateTribhagaBala(planet, chart);
     final vmdh = await _calculateVMDHBala(planet, chart);
-    final ayana = _calculateAyanaBala(
+    final ayana = await _calculateAyanaBala(
       planet,
       planetInfo.position.longitude,
       planetInfo.position.declination,
+      chart.dateTime,
     );
     return strength + natonnata + paksha + tribhaga + vmdh + ayana;
   }
@@ -580,14 +581,22 @@ class ShadbalaService {
     }
   }
 
-  double _calculateAyanaBala(Planet planet, double longitude, double decl) {
+  Future<double> _calculateAyanaBala(
+    Planet planet,
+    double longitude,
+    double decl,
+    DateTime dateTime,
+  ) async {
     // Ayana Bala = 60 * (2327'  Kranti) / 4654'
     // Where Kranti = declination of the planet
     // Correct formula from Parashara Hora Shastra:
     // ayanabala = 60 * (2327'  kranti) / 4654' = (2327'  kranti) * 1.2793
 
-    const obliquityOfEcliptic = 23.45;
-    const denominator = 46.90; // 4654' = 46.90 degrees
+    final julianDay = _ephemerisService.dateTimeToJulianDay(dateTime);
+    final (trueObliquity, _) = await _ephemerisService.getObliquity(julianDay);
+
+    final obliquityOfEcliptic = trueObliquity;
+    final denominator = 2 * trueObliquity;
 
     if ([
       Planet.sun,

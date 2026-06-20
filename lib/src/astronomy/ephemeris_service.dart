@@ -112,7 +112,11 @@ class EphemerisService {
         try {
           // Issue 5: Ketu (ID 60) calculation fails in Swiss Ephemeris because it lacks elements.
           // We calculate Rahu (Node) and add 180 degrees to get Ketu.
-          final targetPlanet = planet == Planet.ketu ? Planet.meanNode : planet;
+          final targetPlanet = planet == Planet.ketu
+              ? (flags.nodeType == NodeType.trueNode
+                  ? Planet.trueNode
+                  : Planet.meanNode)
+              : planet;
 
           final results = _bindings!.calculateUT(
             julianDay: julianDay,

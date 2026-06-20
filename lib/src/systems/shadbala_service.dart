@@ -381,7 +381,7 @@ class ShadbalaService {
     final location = GeographicLocation(
       latitude: chart.latitude,
       longitude: chart.longitudeCoord,
-      altitude: 0,
+      altitude: chart.altitude,
     );
 
     final sunriseSunset = await _ephemerisService.getSunriseSunset(
@@ -514,7 +514,7 @@ class ShadbalaService {
     final location = GeographicLocation(
       latitude: chart.latitude,
       longitude: chart.longitudeCoord,
-      altitude: 0,
+      altitude: chart.altitude,
     );
 
     final sunriseSunset = await _ephemerisService.getSunriseSunset(
@@ -643,7 +643,7 @@ class ShadbalaService {
     final location = GeographicLocation(
       latitude: chart.latitude,
       longitude: chart.longitudeCoord,
-      altitude: 0,
+      altitude: chart.altitude,
     );
 
     final sunriseSunset = await _ephemerisService.getSunriseSunset(
@@ -693,7 +693,7 @@ class ShadbalaService {
     final location = GeographicLocation(
       latitude: chart.latitude,
       longitude: chart.longitudeCoord,
-      altitude: 0,
+      altitude: chart.altitude,
     );
 
     // Calculate the month lord dynamically
@@ -932,7 +932,7 @@ class ShadbalaService {
     final location = GeographicLocation(
       latitude: chart.latitude,
       longitude: chart.longitudeCoord,
-      altitude: 0,
+      altitude: chart.altitude,
     );
 
     // Get sunrise and sunset for accurate Hora calculation

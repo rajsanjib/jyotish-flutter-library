@@ -303,13 +303,9 @@ class PanchangaService {
         attemp: atmosphericTemperature,
       );
 
-      // Fallback to approximation if precise calculation fails
-      // (e.g., in polar regions where sun may not rise/set)
+      // Fallback to polar calculation if precise calculation fails or sun doesn't rise/set
       if (sunrise == null || sunset == null) {
-        if (isPolarRegion) {
-          // Log polar region case - could add to a debug log
-        }
-        return _calculateApproximateSunriseSunset(
+        return _calculatePolarFallback(
           dateTime: dateTime,
           location: location,
         );
@@ -321,7 +317,14 @@ class PanchangaService {
 
       return (localSunrise, localSunset);
     } catch (e) {
-      // If high-precision calculation fails, fall back to approximation
+      // If high-precision calculation fails, fall back to polar fallback for polar regions,
+      // or standard approximation
+      if (isPolarRegion) {
+        return _calculatePolarFallback(
+          dateTime: dateTime,
+          location: location,
+        );
+      }
       return _calculateApproximateSunriseSunset(
         dateTime: dateTime,
         location: location,
@@ -445,6 +448,38 @@ class PanchangaService {
     final sunset = _minutesToDateTime(baseDate, sunsetTimeUTC);
 
     return (sunrise, sunset);
+  }
+
+  /// Calculates a fallback sunrise/sunset for polar regions based on the meridian transit
+  /// (apparent solar noon) and a nominal 12-hour day/night split (6 hours before/after).
+  Future<(DateTime, DateTime)> _calculatePolarFallback({
+    required DateTime dateTime,
+    required GeographicLocation location,
+  }) async {
+    try {
+      final noon = await _ephemerisService.getMeridianTransit(
+        planet: Planet.sun,
+        date: dateTime,
+        location: location,
+        upperCulmination: true,
+      );
+
+      final localNoon = noon != null
+          ? noon.toLocal()
+          : DateTime(dateTime.year, dateTime.month, dateTime.day, 12, 0, 0);
+
+      // Split into equal 12-hour day (6 hours before and 6 hours after solar noon)
+      final sunrise = localNoon.subtract(const Duration(hours: 6));
+      final sunset = localNoon.add(const Duration(hours: 6));
+      return (sunrise, sunset);
+    } catch (_) {
+      final noon =
+          DateTime(dateTime.year, dateTime.month, dateTime.day, 12, 0, 0);
+      return (
+        noon.subtract(const Duration(hours: 6)),
+        noon.add(const Duration(hours: 6))
+      );
+    }
   }
 
   double _dateToJulianDay(int year, int month, int day) {
@@ -1059,7 +1094,8 @@ class PanchangaService {
     required GeographicLocation location,
   }) async {
     final flags = CalculationFlags.defaultFlags();
-    final targetLongitude = ((targetNakshatraNumber - 1) * (360.0 / 27.0)) % 360;
+    final targetLongitude =
+        ((targetNakshatraNumber - 1) * (360.0 / 27.0)) % 360;
 
     var searchStart = startDate;
     var searchEnd = startDate.add(const Duration(hours: 48));

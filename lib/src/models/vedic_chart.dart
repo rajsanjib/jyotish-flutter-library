@@ -378,6 +378,7 @@ class VedicChart {
     required this.location,
     required this.latitude,
     required this.longitudeCoord,
+    this.altitude = 0.0,
     required this.houses,
     required this.planets,
     required this.rahu,
@@ -396,6 +397,9 @@ class VedicChart {
 
   /// Longitude
   final double longitudeCoord;
+
+  /// Altitude (elevation) above sea level in meters
+  final double altitude;
 
   /// House system information
   final HouseSystem houses;
@@ -463,6 +467,7 @@ class VedicChart {
         'location': location,
         'latitude': latitude,
         'longitude': longitudeCoord,
+        'altitude': altitude,
         'ascendant': ascendant,
         'ascendantSign': ascendantSign,
         'houses': houses.toJson(),

@@ -95,6 +95,7 @@ import 'package:jyotish/src/muhurta/ritual_service.dart';
 import 'package:jyotish/src/muhurta/chandrabalam.dart';
 import 'package:jyotish/src/muhurta/tarabalam.dart';
 import 'package:jyotish/src/muhurta/ritual_elements.dart';
+import 'package:jyotish/src/muhurta/muhurta_scoring_service.dart';
 
 /// The main entry point for the Jyotish library.
 ///
@@ -141,6 +142,7 @@ class Jyotish {
   KPService? _kpService;
   SpecialTransitService? _specialTransitService;
   MuhurtaService? _muhurtaService;
+  MuhurtaScoringService? _muhurtaScoringService;
   ShadbalaService? _shadbalaService;
   MasaService? _masaService;
   SudarshanChakraService? _sudarshanChakraService;
@@ -284,6 +286,8 @@ class Jyotish {
       _sarvatobhadraService = SarvatobhadraService();
       _tajakaService = TajakaService();
       _panchangStrengthService = PanchangStrengthService();
+      _muhurtaScoringService =
+          MuhurtaScoringService(_panchangaService!, _panchangStrengthService!);
       _udayaLagnaService = UdayaLagnaService(_ephemerisService!);
       _ritualService = RitualService();
       _grahaYuddhaService = const GrahaYuddhaService();
@@ -2044,6 +2048,58 @@ class Jyotish {
     }
   }
 
+  /// Calculates a comprehensive suitability score (0-100) for a given date/time and location.
+  ///
+  /// If birth details are provided, includes personal factors like Tarabalam and Chandrabalam.
+  Future<MuhurtaScoreResult> calculateMuhurtaScore({
+    required DateTime dateTime,
+    required GeographicLocation location,
+    int? birthNakshatraIndex,
+    int? birthRashiIndex,
+  }) async {
+    _ensureInitialized();
+    try {
+      return await _muhurtaScoringService!.calculateMuhurtaScore(
+        dateTime: dateTime,
+        location: location,
+        birthNakshatraIndex: birthNakshatraIndex,
+        birthRashiIndex: birthRashiIndex,
+      );
+    } catch (e) {
+      throw JyotishException(
+        'Failed to calculate Muhurta suitability score: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
+  /// Scans a given time window using the specified steps to find and rank the most auspicious Muhurtas.
+  Future<List<MuhurtaScoreResult>> scanMuhurtaSuitability({
+    required DateTime startDateTime,
+    required DateTime endDateTime,
+    required GeographicLocation location,
+    required Duration step,
+    int? birthNakshatraIndex,
+    int? birthRashiIndex,
+  }) async {
+    _ensureInitialized();
+    try {
+      return await _muhurtaScoringService!.scanMuhurtaSuitability(
+        startDateTime: startDateTime,
+        endDateTime: endDateTime,
+        location: location,
+        step: step,
+        birthNakshatraIndex: birthNakshatraIndex,
+        birthRashiIndex: birthRashiIndex,
+      );
+    } catch (e) {
+      throw JyotishException(
+        'Failed to scan Muhurta suitability: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
   /// Gets Hora (planetary hour) periods for a day.
   List<HoraPeriod> getHoraPeriods({
     required DateTime date,
@@ -3689,4 +3745,5 @@ class JyotishSystems {
   PrashnaService get prashna => _jyotish._prashnaService!;
   VarshapalService get varshapal => _jyotish._varshapalService!;
   TajakaService get tajaka => _jyotish._tajakaService!;
+  MuhurtaScoringService get muhurtaScoring => _jyotish._muhurtaScoringService!;
 }

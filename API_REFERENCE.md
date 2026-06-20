@@ -3724,6 +3724,39 @@ final service = RitualService();
 
 ---
 
+### MuhurtaScoringService
+
+Auspicious Muhurtas Comprehensive Scoring Engine that calculates time suitability scores (0-100%) and scans time ranges.
+
+```dart
+final service = MuhurtaScoringService(panchangaService, panchangStrengthService);
+// Or use via Jyotish facade (preferred):
+// jyotish.calculateMuhurtaScore(...)
+// jyotish.scanMuhurtaSuitability(...)
+```
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `calculateMuhurtaScore({dateTime, location, birthNakshatraIndex?, birthRashiIndex?})` | `Future<MuhurtaScoreResult>` | Calculates overall suitability score (0-100) combining Tithi, Nakshatra, Weekday (Vara), Yoga, Karana, and optional native Tarabalam/Chandrabalam factors. |
+| `scanMuhurtaSuitability({startDateTime, endDateTime, location, step, birthNakshatraIndex?, birthRashiIndex?})` | `Future<List<MuhurtaScoreResult>>` | Scans a time window for the best times, returning results sorted descending by score. |
+
+**MuhurtaScoreResult properties:**
+
+| Property | Type | Description |
+|---|---|---|
+| `dateTime` | `DateTime` | Date and time evaluated |
+| `panchanga` | `Panchanga` | Raw Panchanga data for the time |
+| `tithiScore` | `double` | Score contributed by Tithi (max 20) |
+| `nakshatraScore` | `double` | Score contributed by Nakshatra (max 20) |
+| `varaScore` | `double` | Score contributed by Vara/Weekday (max 15) |
+| `yogaScore` | `double` | Score contributed by Yoga (max 10) |
+| `karanaScore` | `double` | Score contributed by Karana (max 10) |
+| `tarabalamScore` | `double?` | Score contributed by native Tarabalam (max 15, null if not provided) |
+| `chandrabalamScore` | `double?` | Score contributed by native Chandrabalam (max 10, null if not provided) |
+| `finalScore` | `double` | Final combined percentage score (0.0 - 100.0) |
+
+---
+
 ### AstrologyTimeService
 
 High-precision historical timezone conversion using the IANA/Olson database. All methods are **static** — no instantiation required.

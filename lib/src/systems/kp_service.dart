@@ -112,22 +112,25 @@ class KPService {
   /// [longitude] - The longitude in degrees (0-360)
   /// [planet] - Optional planet (for reference)
   KPDivision _calculateKPDivision(double longitude, Planet? planet) {
+    // Snap longitude to closest sign/star boundary to prevent transition issues
+    final snappedLong = _snapKPLongitude(longitude);
+
     // Get sign information
-    final sign = (longitude / 30).floor() + 1;
+    final sign = (snappedLong / 30).floor() + 1;
     final signLord = KPPlanetOwnership.getSignLord(sign);
 
     // Get star information
-    final starLongitude = longitude % 360;
+    final starLongitude = snappedLong % 360;
     final star = (starLongitude / (360 / 27)).floor() + 1;
     final starLord = KPPlanetOwnership.getStarLord(star);
 
     // Calculate Sub-Lord and boundaries
-    final subLord = _calculateSubLord(longitude, star);
-    final (subStart, subEnd) = _calculateSubBoundaries(longitude, star);
+    final subLord = _calculateSubLord(snappedLong, star);
+    final (subStart, subEnd) = _calculateSubBoundaries(snappedLong, star);
 
     // Calculate Sub-Sub-Lord using sub-lord boundaries
     final subSubLord = _calculateSubSubLord(
-      longitude,
+      snappedLong,
       subLord,
       subStart,
       subEnd,
@@ -135,13 +138,13 @@ class KPService {
 
     // Calculate Sub-Sub-Sub-Lord
     final (subSubStart, subSubEnd) = _calculateSubSubBoundaries(
-      longitude,
+      snappedLong,
       subLord,
       subStart,
       subEnd,
     );
     final subSubSubLord = _calculateSubSubSubLord(
-      longitude,
+      snappedLong,
       subSubLord,
       subSubStart,
       subSubEnd,
@@ -196,7 +199,7 @@ class KPService {
 
     for (final (planet, period) in dashaPeriods) {
       cumulative += period / totalPeriods;
-      if (posInStar <= cumulative) {
+      if (posInStar <= cumulative - 1e-11) {
         return planet;
       }
     }
@@ -250,7 +253,7 @@ class KPService {
       final index = (subLordIndex + i) % dashaPeriods.length;
       final (_, period) = dashaPeriods[index];
       cumulative += period / totalPeriods;
-      if (posInSub <= cumulative) {
+      if (posInSub <= cumulative - 1e-11) {
         return dashaPeriods[index].$1;
       }
     }
@@ -289,7 +292,7 @@ class KPService {
 
     for (final period in dashaPeriods) {
       final subSpan = starSpan * (period / totalPeriods);
-      if (posInStar <= cumulative + subSpan) {
+      if (posInStar <= cumulative + subSpan - 1e-11) {
         return (subStart, subStart + subSpan);
       }
       cumulative += subSpan;
@@ -763,7 +766,7 @@ class KPService {
       final index = (subLordIndex + i) % dashaPeriods.length;
       final (_, period) = dashaPeriods[index];
       final subSubSpan = subSpan * (period / totalPeriods);
-      if (posInSub <= cumulative + subSubSpan) {
+      if (posInSub <= cumulative + subSubSpan - 1e-11) {
         return (subSubStart, subSubStart + subSubSpan);
       }
       cumulative += subSubSpan;
@@ -795,7 +798,7 @@ class KPService {
     ];
     const totalPeriods = 120;
     final subSubSpan = subSubEnd - subSubStart;
-    
+
     // Guard rail to prevent division by zero or negative values
     if (subSubSpan <= 0) return subSubLord;
 
@@ -815,11 +818,34 @@ class KPService {
       final index = (subSubLordIndex + i) % dashaPeriods.length;
       final (_, period) = dashaPeriods[index];
       cumulative += period / totalPeriods;
-      if (posInSubSub <= cumulative) {
+      if (posInSubSub <= cumulative - 1e-11) {
         return dashaPeriods[index].$1;
       }
     }
 
     return dashaPeriods[subSubLordIndex].$1;
+  }
+
+  /// Snaps longitude to closest sign/star boundary to prevent float transitions errors.
+  double _snapKPLongitude(double longitude) {
+    var normalized = longitude % 360.0;
+    if (normalized < 0) normalized += 360.0;
+
+    // Check sign boundaries (every 30 degrees)
+    final closestSignIdx = (normalized / 30.0).round();
+    final closestSignBoundary = closestSignIdx * 30.0;
+    if ((normalized - closestSignBoundary).abs() < 1e-11) {
+      return closestSignBoundary % 360.0;
+    }
+
+    // Check star boundaries (every 13.333333333333334 degrees)
+    const starSpan = 360.0 / 27.0;
+    final closestStarIdx = (normalized / starSpan).round();
+    final closestStarBoundary = closestStarIdx * starSpan;
+    if ((normalized - closestStarBoundary).abs() < 1e-11) {
+      return closestStarBoundary % 360.0;
+    }
+
+    return normalized;
   }
 }

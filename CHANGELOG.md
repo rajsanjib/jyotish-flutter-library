@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.16.0] - 2026-06-20
+
+### Added
+- **Auspicious Muhurtas Comprehensive Scoring Engine**:
+  - Implemented `MuhurtaScoringService` to evaluate time suitability on a 0-100% scale using weighted scores for Tithis, Nakshatras, Weekdays (Varas), Yogas, and Karanas, along with optional native Tarabalam/Chandrabalam factors.
+  - Added `scanMuhurtaSuitability` to scan and identify the most auspicious Muhurtas over a specified window.
+- **Specialized Jaimini & Nakshatra Dasha Systems**:
+  - Exposed and fully tested Jaimini Chara Dasha, Narayana Dasha, and Kalachakra Dasha engines via `Jyotish` core and facade APIs, supporting sub-period sequences and balance calculations.
+- **Double-Precision Junction Guardrails**:
+  - Added coordinate snapping (`_adjustJunctionBoundary` and `_snapKPLongitude`) with a `1e-11` precision margin in `DivisionalChartService` and `KPService` to protect division and sign boundaries from floating-point representation errors.
+  - Applied epsilon subtraction guardrails to Vimshottari dasha sub-lord division boundaries to eliminate edge-case errors.
+- **Polar Region Sunrise/Sunset Fallbacks**:
+  - Implemented a robust polar region fallback in `PanchangaService`. When Swiss Ephemeris returns `null` for sunrise/sunset (during polar day/night), it calculates apparent solar noon (meridian transit) and splits the day/night into equal 12-hour segments to prevent downstream service crashes.
+- **Rahu/Ketu Node Type Consistency**:
+  - Updated Ketu calculation logic in `EphemerisService` to check `CalculationFlags.nodeType` and resolve dynamically from either `Planet.trueNode` or `Planet.meanNode` matching Rahu, preventing node alignment mismatch.
+- **Altitude Propagation**:
+  - Propagated observer elevation/altitude to `VedicChart` and all local astronomical sub-services (Shadbala, Prashna, Muhurtas, etc.) to replace sea-level defaults and improve precision.
+
 ## [2.15.0] - 2026-06-19
 
 ### Added

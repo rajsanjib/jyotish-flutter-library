@@ -156,6 +156,7 @@ class DivisionalChartService {
       location: rashiChart.location,
       latitude: rashiChart.latitude,
       longitudeCoord: rashiChart.longitudeCoord,
+      altitude: rashiChart.altitude,
       houses: dHouses,
       planets: finalPlanets,
       rahu: finalRahu,
@@ -176,8 +177,10 @@ class DivisionalChartService {
     double? vSubSpan;
 
     if (type == DivisionalChartType.d249) {
-      final signIndex = (originalInfo.longitude / 30).floor();
-      final degreeInSign = originalInfo.longitude % 30;
+      // Snapping to 30-degree sign boundaries for D249
+      final normalizedLong = _adjustJunctionBoundary(originalInfo.longitude, 1);
+      final signIndex = (normalizedLong / 30).floor();
+      final degreeInSign = normalizedLong % 30;
       final isOdd = (signIndex + 1) % 2 != 0;
       final details = _calculateD249Details(signIndex, degreeInSign, isOdd);
       newLongitude = details.longitude;
@@ -400,9 +403,14 @@ class DivisionalChartService {
     DivisionalChartType type, {
     VargaConfiguration? config,
   }) {
+    final parts = type.divisions;
+
+    // Apply double-precision junction guardrail to avoid floating-point boundary issues
+    final normalized = _adjustJunctionBoundary(longitude, parts);
+
     // 1. Get current sign and position in sign
-    final signIndex = (longitude / 30).floor(); // 0-11
-    final degreeInSign = longitude % 30;
+    final signIndex = (normalized / 30).floor(); // 0-11
+    final degreeInSign = normalized % 30;
 
     // 2. Determine the "Varga Sign Index" (0-11)
     final vargaSignIndex = _getVargaSign(
@@ -414,10 +422,30 @@ class DivisionalChartService {
 
     // 3. Determine degrees in the new sign
     // Typically: (degreeInSign * N) % 30
-    final parts = type.divisions;
     final degreesInNewSign = (degreeInSign * parts) % 30;
 
-    return (vargaSignIndex * 30) + degreesInNewSign;
+    // Apply guardrail to degrees in new sign too
+    var finalDegrees = degreesInNewSign;
+    if (finalDegrees < 1e-11) finalDegrees = 0.0;
+    if ((finalDegrees - 30.0).abs() < 1e-11) finalDegrees = 0.0;
+
+    return ((vargaSignIndex * 30) + finalDegrees) % 360.0;
+  }
+
+  /// Adjusts longitude near division boundaries to prevent floating-point inaccuracies
+  /// from triggering incorrect division/sign floor transitions.
+  double _adjustJunctionBoundary(double longitude, int divisions) {
+    var normalized = longitude % 360.0;
+    if (normalized < 0) normalized += 360.0;
+
+    final divisionSpan = 30.0 / divisions;
+    final closestIndex = (normalized / divisionSpan).round();
+    final closestBoundary = closestIndex * divisionSpan;
+
+    if ((normalized - closestBoundary).abs() < 1e-11) {
+      return closestBoundary % 360.0;
+    }
+    return normalized;
   }
 
   int _getVargaSign(
@@ -775,7 +803,8 @@ class DivisionalChartService {
     for (var cycle = 0; cycle < 27; cycle++) {
       for (var i = 0; i < 9; i++) {
         final span = dashaData[i].degrees;
-        if (degreeInSign < cumulativeDegrees + span) {
+        // Subtract epsilon 1e-11 to prevent boundary errors
+        if (degreeInSign < cumulativeDegrees + span - 1e-11) {
           final subIndex = cycle * 9 + i;
           final posPercent = (degreeInSign - cumulativeDegrees) / span;
           final vargaSignIndex = (startSign + subIndex) % 12;
@@ -792,7 +821,8 @@ class DivisionalChartService {
 
     for (var i = 0; i < 6; i++) {
       final span = dashaData[i].degrees;
-      if (degreeInSign < cumulativeDegrees + span) {
+      // Subtract epsilon 1e-11 to prevent boundary errors
+      if (degreeInSign < cumulativeDegrees + span - 1e-11) {
         final subIndex = 243 + i;
         final posPercent = (degreeInSign - cumulativeDegrees) / span;
         final vargaSignIndex = (startSign + subIndex) % 12;
@@ -827,24 +857,24 @@ class DivisionalChartService {
 
     if (isOdd) {
       // 0-5: Mars (Aries)
-      if (degree < 5) return 0;
+      if (degree < 5 - 1e-11) return 0;
       // 5-10: Saturn (Aquarius)
-      if (degree < 10) return 10;
+      if (degree < 10 - 1e-11) return 10;
       // 10-18: Jupiter (Sagittarius)
-      if (degree < 18) return 8;
+      if (degree < 18 - 1e-11) return 8;
       // 18-25: Mercury (Gemini)
-      if (degree < 25) return 2;
+      if (degree < 25 - 1e-11) return 2;
       // 25-30: Venus (Libra)
       return 6;
     } else {
       // 0-5: Venus (Taurus)
-      if (degree < 5) return 1;
+      if (degree < 5 - 1e-11) return 1;
       // 5-12: Mercury (Virgo)
-      if (degree < 12) return 5;
+      if (degree < 12 - 1e-11) return 5;
       // 12-20: Jupiter (Pisces)
-      if (degree < 20) return 11;
+      if (degree < 20 - 1e-11) return 11;
       // 20-25: Saturn (Capricorn)
-      if (degree < 25) return 9;
+      if (degree < 25 - 1e-11) return 9;
       // 25-30: Mars (Scorpio)
       return 7;
     }

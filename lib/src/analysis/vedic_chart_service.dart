@@ -130,6 +130,7 @@ class VedicChartService {
             '${location.latitude.toStringAsFixed(4)}N, ${location.longitude.toStringAsFixed(4)}E',
         latitude: location.latitude,
         longitudeCoord: location.longitude,
+        altitude: location.altitude,
         houses: houses,
         planets: vedicPlanets,
         rahu: rahuInfo,

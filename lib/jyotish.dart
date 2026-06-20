@@ -102,6 +102,7 @@ export 'package:jyotish/src/muhurta/ritual_elements.dart';
 export 'package:jyotish/src/muhurta/ritual_service.dart';
 export 'package:jyotish/src/muhurta/vedic_time.dart';
 export 'package:jyotish/src/muhurta/vedic_clock.dart';
+export 'package:jyotish/src/muhurta/muhurta_scoring_service.dart';
 
 // Transit
 export 'package:jyotish/src/transit/transit.dart';

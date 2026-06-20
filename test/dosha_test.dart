@@ -35,7 +35,8 @@ void main() {
         house: 1,
         dignity: PlanetaryDignity.neutralSign,
       );
-      final ketu = KetuPosition(rahuPosition: rahuPos); // Ketu is in Libra (House 7, Sign index 6)
+      final ketu = KetuPosition(
+          rahuPosition: rahuPos); // Ketu is in Libra (House 7, Sign index 6)
 
       // Place all traditional planets in houses 1 to 7 (Aries to Libra)
       // Aries (1): Sun (10.0), Moon (20.0)

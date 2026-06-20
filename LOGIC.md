@@ -9,8 +9,9 @@ This document serves as the technical authority for the `jyotish` library. It de
 ### Swiss Ephemeris Integration
 The library utilizes the **Swiss Ephemeris** (SE) for sub-arcsecond precision.
 - **Ephemeris Type**: `SEFLG_SWIEPH` (High-precision ephemeris).
-- **Coordinate System**: Geocentric ecliptic by default. Topocentric positions (`SEFLG_TOPOCTR`) are calculated when `useTopocentric` is enabled in `CalculationFlags`.
+- **Coordinate System**: Geocentric ecliptic by default. Topocentric positions (`SEFLG_TOPOCTR`) are calculated when `useTopocentric` is enabled in `CalculationFlags`. The observer's elevation/altitude is propagated to the Swiss Ephemeris calculations and all local astronomical sub-services (Shadbala, Prashna, Muhurtas, etc.) to ensure precise local coordinate mapping.
 - **Precession Adjustment**: For sidereal speed (Chesta Bala), a time-varying and ayanamsa-specific precession correction is applied dynamically: `Precession_Rate = Ayanamsa(t + 1 day) - Ayanamsa(t)`. This rate is subtracted from the tropical velocity to compute accurate sidereal velocity.
+- **Node Type Consistency**: Rahu and Ketu calculations dynamically align with `CalculationFlags.nodeType`. Ketu resolves dynamically from either `Planet.trueNode` or `Planet.meanNode` matching Rahu, preventing alignment mismatch.
 
 ### Sidereal Conversion (Ayanamsa)
 The library converts tropical coordinates to the sidereal frame using precise ayanamsa values.
@@ -87,6 +88,7 @@ The `DivisionalChartService` calculates fractional vargas (D1 to D60) and Nadi A
 - **Trimsamsa (D30)**: Uneven mapping per BPHS. Odd signs: 0-5° Mars, 5-10° Saturn, 10-18° Jupiter, 18-25° Mercury, 25-30° Venus. Even signs: reverse order and lords adjusted.
 - **Shashtiamsa (D60)**: 0.5° segments. Odd signs: forward count from current. Even signs: forward count from 9th sign.
 - **Nadi Amsa (D150)**: 150 divisions per sign. Odd signs: forward from Aries; Even signs: backward from Pisces.
+- **Junction Guardrails**: Epsilon-based snapping is applied in `_calculateVargaLongitude` using `_adjustJunctionBoundary` with a `1e-11` precision margin. If a planet's longitude is within `1e-11` of a sign or division boundary, it snaps to the exact boundary coordinate, preventing floating-point representation errors from shifting planets at `0°` or `30°` boundaries into incorrect signs.
 
 ---
 
@@ -114,6 +116,7 @@ KP is a sub-lord based system emphasizing the "Star Lord" and "Sub-Lord" over th
 - **249 Sub-Divisions**: Each Nakshatra is divided proportionally to the Vimshottari Dasha years (120-year cycle). If a sub-lord boundary crosses a sign boundary (0°, 30°), it is split into two, totaling 249 divisions.
 - **Sub-Sub-Lord (SSL)**: Further refinement dividing the Sub-Lord into 9 further proportional parts.
 - **Sub-Sub-Sub-Lord (SSSL)**: Micro-level timing dividing the Sub-Sub-Lord into 9 further proportional parts using the same Vimshottari sequence.
+- **Junction Snapping**: To prevent floating-point boundary errors in sub-lord division boundaries, KP longitudes are snapped (`_snapKPLongitude`) to the nearest sign and star boundaries if within a `1e-11` margin. Furthermore, the `<=` comparisons in Vimshottari dasha sub-lord division boundaries subtract `1e-11` (e.g., `posInStar <= cumulative - 1e-11`) to prevent edge-case boundary errors.
 
 ### Significators (ABCD Grading):
 The library assigns significators for each planet/house interaction:
@@ -147,6 +150,9 @@ This section details the newly implemented extended Panchang features, ensuring 
     - *Weak*: 4th, 8th, 12th.
 - **Tarabalam**: Calculated as `(Current_Nakshatra - Birth_Nakshatra + 27) % 9`. 
     - Resulting index maps to 9 Tara types (Janma, Sampat, Vipat, etc).
+- **Polar Region Sunrise/Sunset Fallback**: If Swiss Ephemeris returns `null` for sunrise or sunset (due to polar day or night), the library falls back to the apparent solar noon (meridian transit) and splits the day/night into equal 12-hour segments (6 hours before and after solar noon) to prevent downstream service crashes (Choghadiya, Hora, Vara).
+- **Muhurtas Suitability Scoring Engine**: Evaluates a time suitability score (0-100%) by scoring Tithi (20% weight, Rikta = 5, Amavasya = 0, Auspicious = 20), Nakshatra (20% weight, Auspicious = 20, Inauspicious = 5), Weekday/Vara (15% weight, Auspicious = 15, Inauspicious = 5), Yoga (10% weight, Auspicious = 10, Inauspicious = 2), Karana (10% weight, Auspicious = 10, Inauspicious = 2), and optional native factors: Tarabalam (15% weight, Auspicious = 15, Janma = 8, Inauspicious = 0) and Chandrabalam (10% weight, Strong = 10, Moderate = 6, Weak = 0).
+- **Specialized Jaimini Dashas**: Provides full multi-level sequence engines for Jaimini Chara Dasha (96-year cycle, sign sequence matches Lagna's odd/even direct/reverse order), Narayana Dasha (120-year cycle, using reverse count for even rashis), and Kalachakra Dasha (100-year cycle, balancing first dasha from Moon's pada).
 
 ### Ritual Elements
 - **Krishna Paksha Offset**: For ceremonial modulo math, Krishna Paksha Tithis (1-15) are mathematically treated as **16-30** to align with Drik Panchang and textual standards.

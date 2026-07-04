@@ -1,4 +1,5 @@
 import 'package:jyotish/src/models/geographic_location.dart';
+import 'package:jyotish/src/astronomy/astrology_time_service.dart';
 
 /// Represents time divided according to the traditional Vedic system.
 ///
@@ -167,8 +168,10 @@ class VedicTime {
       vighati: vighati.clamp(0, 59),
       lipta: lipta.clamp(0, 59),
       prana: prana.clamp(0, 5),
-      currentSunrise: currentSunrise.toLocal(),
-      nextSunrise: nextSunrise.toLocal(),
+      currentSunrise: AstrologyTimeService.utcToLocal(
+          currentSunrise, location.timezone ?? 'UTC'),
+      nextSunrise: AstrologyTimeService.utcToLocal(
+          nextSunrise, location.timezone ?? 'UTC'),
       totalGhatis: totalGhatis,
     );
   }

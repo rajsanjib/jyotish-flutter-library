@@ -23,6 +23,42 @@ class EphemerisService {
   final Lock _calculationLock = Lock();
   static final Logger _log = Logger('jyotish.EphemerisService');
 
+  // Calculation Caches
+  final Map<String, PlanetPosition> _planetPositionCache = {};
+  final Map<String, (DateTime? sunrise, DateTime? sunset)> _sunriseSunsetCache =
+      {};
+  final Map<String, Map<String, List<double>>> _housesCache = {};
+  static const int _maxCacheSize = 5000;
+
+  void _putInPlanetPositionCache(String key, PlanetPosition value) {
+    if (_planetPositionCache.length >= _maxCacheSize) {
+      _planetPositionCache.remove(_planetPositionCache.keys.first);
+    }
+    _planetPositionCache[key] = value;
+  }
+
+  void _putInSunriseSunsetCache(
+      String key, (DateTime? sunrise, DateTime? sunset) value) {
+    if (_sunriseSunsetCache.length >= _maxCacheSize) {
+      _sunriseSunsetCache.remove(_sunriseSunsetCache.keys.first);
+    }
+    _sunriseSunsetCache[key] = value;
+  }
+
+  void _putInHousesCache(String key, Map<String, List<double>> value) {
+    if (_housesCache.length >= _maxCacheSize) {
+      _housesCache.remove(_housesCache.keys.first);
+    }
+    _housesCache[key] = value;
+  }
+
+  /// Clears all calculation caches.
+  void clearCache() {
+    _planetPositionCache.clear();
+    _sunriseSunsetCache.clear();
+    _housesCache.clear();
+  }
+
   /// Gets the underlying Swiss Ephemeris FFI bindings.
   SwissEphBindings get bindings => _bindings!;
 
@@ -85,7 +121,13 @@ class EphemerisService {
       throw CalculationException('EphemerisService is not initialized');
     }
 
-    return _calculationLock.synchronized(() async {
+    final cacheKey =
+        '${planet.name}_${dateTime.millisecondsSinceEpoch}_${location.latitude.toStringAsFixed(6)}_${location.longitude.toStringAsFixed(6)}_${location.altitude.toStringAsFixed(2)}_${flags.hashCode}';
+    if (_planetPositionCache.containsKey(cacheKey)) {
+      return _planetPositionCache[cacheKey]!;
+    }
+
+    final result = await _calculationLock.synchronized(() async {
       try {
         // Set topocentric position if required
         if (flags.useTopocentric) {
@@ -187,6 +229,9 @@ class EphemerisService {
         );
       }
     });
+
+    _putInPlanetPositionCache(cacheKey, result);
+    return result;
   }
 
   /// Converts a DateTime to Julian Day number.
@@ -311,7 +356,13 @@ class EphemerisService {
       }
     }
 
-    return _calculationLock.synchronized(() async {
+    final cacheKey =
+        '${dateTime.millisecondsSinceEpoch}_${location.latitude.toStringAsFixed(6)}_${location.longitude.toStringAsFixed(6)}_${location.altitude.toStringAsFixed(2)}_${houseSystem}';
+    if (_housesCache.containsKey(cacheKey)) {
+      return _housesCache[cacheKey]!;
+    }
+
+    final result = await _calculationLock.synchronized(() async {
       try {
         // Convert DateTime to Julian Day
         final julianDay = _dateTimeToJulianDay(
@@ -340,6 +391,9 @@ class EphemerisService {
         );
       }
     });
+
+    _putInHousesCache(cacheKey, result);
+    return result;
   }
 
   /// Calculates high-precision rise or set time for a planet.
@@ -448,6 +502,12 @@ class EphemerisService {
     double atpress = 0.0,
     double attemp = 0.0,
   }) async {
+    final cacheKey =
+        '${date.millisecondsSinceEpoch}_${location.latitude.toStringAsFixed(6)}_${location.longitude.toStringAsFixed(6)}_${location.altitude.toStringAsFixed(2)}_${atpress.toStringAsFixed(2)}_${attemp.toStringAsFixed(2)}';
+    if (_sunriseSunsetCache.containsKey(cacheKey)) {
+      return _sunriseSunsetCache[cacheKey]!;
+    }
+
     final sunrise = await getRiseSet(
       planet: Planet.sun,
       date: date,
@@ -466,7 +526,9 @@ class EphemerisService {
       attemp: attemp,
     );
 
-    return (sunrise, sunset);
+    final result = (sunrise, sunset);
+    _putInSunriseSunsetCache(cacheKey, result);
+    return result;
   }
 
   /// Gets rise and set times for any planet.

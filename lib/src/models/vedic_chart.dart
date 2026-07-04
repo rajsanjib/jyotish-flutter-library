@@ -430,7 +430,30 @@ class VedicChart {
   double get ascendant => houses.ascendant;
 
   /// Gets a planet's information
-  VedicPlanetInfo? getPlanet(Planet planet) => planets[planet];
+  VedicPlanetInfo? getPlanet(Planet planet) {
+    if (planet == Planet.meanNode || planet == Planet.trueNode) {
+      return rahu;
+    }
+    if (planet == Planet.ketu) {
+      return VedicPlanetInfo(
+        position: PlanetPosition(
+          planet: Planet.ketu,
+          dateTime: ketu.dateTime,
+          longitude: ketu.longitude,
+          latitude: ketu.latitude,
+          distance: ketu.distance,
+          longitudeSpeed: ketu.longitudeSpeed,
+          latitudeSpeed: 0.0,
+          distanceSpeed: 0.0,
+          declination: 0.0,
+          isRetrograde: true,
+        ),
+        house: houses.getHouseForLongitude(ketu.longitude),
+        dignity: PlanetaryDignity.neutralSign,
+      );
+    }
+    return planets[planet];
+  }
 
   /// Gets all planets in a specific house
   List<VedicPlanetInfo> getPlanetsInHouse(int houseNumber) {

@@ -388,32 +388,49 @@ class AshtakavargaService {
   ///
   /// This implements the traditional Shodhya Pinda calculation.
   Map<Planet, PindaResult> calculatePinda(Ashtakavarga ashtakavarga) {
+    // 1. Get signs occupied by all traditional planets in the natal chart
+    final planetSigns = <Planet, int>{};
+    for (final p in Planet.traditionalPlanets) {
+      final info = ashtakavarga.natalChart.getPlanet(p);
+      if (info != null) {
+        planetSigns[p] = (info.longitude / 30).floor() % 12;
+      }
+    }
+
     final pindaResults = ashtakavarga.bhinnashtakavarga.keys.associateWith((
       planet,
     ) {
       final bav = ashtakavarga.bhinnashtakavarga[planet]!;
 
+      // Calculate Rashi Pinda
       var totalRashiPinda = 0.0;
-      var totalGrahaPinda = 0.0;
       final signPindas = <int, double>{};
-      final grahaPindas = <int, double>{};
-
       for (var signIndex = 0; signIndex < 12; signIndex++) {
         final bindus = bav.bindus[signIndex];
-
-        // Rashi (Sign) Pinda - traditional sign-based multipliers
         final rashiMultiplier = _pindaMultipliers[signIndex];
         final rashiPinda = bindus * rashiMultiplier;
-
-        // Graha Pinda - multiply by planetary multiplier based on sign lord
-        final signLord = _getSignLord(signIndex);
-        final grahaMultiplier = _grahaPindaMultipliers[signLord] ?? 1.0;
-        final grahaPinda = bindus * grahaMultiplier;
-
         signPindas[signIndex] = rashiPinda;
-        grahaPindas[signIndex] = grahaPinda;
         totalRashiPinda += rashiPinda;
-        totalGrahaPinda += grahaPinda;
+      }
+
+      // Calculate Graha Pinda based on sign occupancy
+      var totalGrahaPinda = 0.0;
+      final grahaPindas = <int, double>{};
+      for (var i = 0; i < 12; i++) {
+        grahaPindas[i] = 0.0;
+      }
+
+      for (final p in Planet.traditionalPlanets) {
+        final occupiedSign = planetSigns[p];
+        if (occupiedSign != null) {
+          final bindus = bav.bindus[occupiedSign];
+          final grahaMultiplier = _grahaPindaMultipliers[p] ?? 0.0;
+          final grahaPindaValue = bindus * grahaMultiplier;
+
+          grahaPindas[occupiedSign] =
+              (grahaPindas[occupiedSign] ?? 0.0) + grahaPindaValue;
+          totalGrahaPinda += grahaPindaValue;
+        }
       }
 
       // Combined Pinda (Rashi + Graha)
@@ -616,18 +633,18 @@ class AshtakavargaService {
   // Signs with odd foot
   static const _oddFootSigns = [0, 1, 2, 6, 7, 8]; // Aries to Sagittarius
 
-  // Pinda multipliers for each sign
+  // Pinda multipliers for each sign (Rashi Gunakara)
   static const _pindaMultipliers = [
-    1.0, // Aries
-    2.0, // Taurus
-    3.0, // Gemini
+    7.0, // Aries
+    10.0, // Taurus
+    8.0, // Gemini
     4.0, // Cancer
-    5.0, // Leo
-    6.0, // Virgo
+    10.0, // Leo
+    5.0, // Virgo
     7.0, // Libra
     8.0, // Scorpio
     9.0, // Sagittarius
-    10.0, // Capricorn
+    5.0, // Capricorn
     11.0, // Aquarius
     12.0, // Pisces
   ];
@@ -786,16 +803,13 @@ const _traditionalYogaPindaMultipliers = [
   1.0, // Pisces
 ];
 
-// Graha (Planetary) Pinda multipliers based on sign lord
-// Traditional: multiply by planet's natural strength factor
+// Graha (Planetary) Pinda multipliers (Graha Gunakara)
 const _grahaPindaMultipliers = {
-  Planet.sun: 1.0,
-  Planet.moon: 1.0,
-  Planet.mars: 1.0,
-  Planet.mercury: 1.0,
-  Planet.jupiter: 1.0,
-  Planet.venus: 1.0,
-  Planet.saturn: 1.0,
-  Planet.meanNode: 0.5, // Nodes get reduced weight
-  Planet.ketu: 0.5,
+  Planet.sun: 5.0,
+  Planet.moon: 5.0,
+  Planet.mars: 8.0,
+  Planet.mercury: 5.0,
+  Planet.jupiter: 10.0,
+  Planet.venus: 7.0,
+  Planet.saturn: 5.0,
 };

@@ -108,7 +108,7 @@ class PrashnaService {
 
     // Calculate Ascendant at the Gulika start time
     final gulikaChart = await _chartService.calculateChart(
-      dateTime: startTime.toLocal(),
+      dateTime: startTime,
       location: location,
     );
 

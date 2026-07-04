@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.17.0] - 2026-07-04
+
+### Added
+- **Calculation Caching & Memoization**:
+  - Implemented memory-bounded in-memory caching (max 5,000 items) inside `EphemerisService` for high-precision Swiss Ephemeris FFI calls, covering planetary positions, house systems, and sunrise/sunset timings.
+  - Exposed `clearCache()` on the `Jyotish` core facade.
+- **Astro-Chart Rendering Engine**:
+  - Added a new `chart_renderer.dart` module providing high-fidelity SVG exports (`VedicChart.toSVG()`) for both South Indian (grid-based) and North Indian (diamond-based) chart styles.
+  - Exposed Flutter `CustomPainter` canvas painter classes (`SouthIndianChartPainter` and `NorthIndianChartPainter`) to natively draw astrological charts in Flutter widgets.
+- **Dynamic Timezone Database Loading**:
+  - Added `loadTimezoneDatabase(List<int> bytes)` to allow developers to dynamically load newer IANA `.tzf` timezone databases at runtime without needing library updates.
+- **Lazy Dasha Streams**:
+  - Implemented `streamVimshottariDasha()` yielding nested Dasha periods lazily as a Dart stream to prevent memory bloat when scanning micro-periods.
+- **Ashtakavarga Reductions (Shodhana) & Shodhya Pinda Corrections**:
+  - Corrected sign multipliers (Rashi Gunakara) and planetary multipliers (Graha Gunakara) in `AshtakavargaService` to match classical Parashari values.
+  - Corrected Graha Pinda calculation to evaluate only occupied signs in the birth chart using the occupying planet's multiplier.
+- **Vimshopaka Bala Point Scale Corrections**:
+  - Updated dignity points in `_getVimshopakaPoints` to align with the classical Parashari 20-point scale.
+
 ## [2.16.0] - 2026-06-20
 
 ### Added

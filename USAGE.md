@@ -934,6 +934,95 @@ class MyAstrologyDashboard extends StatelessWidget {
 
 ---
 
+## Calculation Caching
+
+To optimize CPU performance and eliminate duplicate calls to the Swiss Ephemeris FFI layers during transit scans, Solar Returns, or Ashtakavarga reductions, the library caches calculations automatically in `EphemerisService`. 
+
+To clear this cache manually (e.g., for memory management or after timezone database changes):
+```dart
+final jyotish = Jyotish();
+// Clears all in-memory caches (planet positions, houses, rise/set times)
+jyotish.clearCache();
+```
+
+---
+
+## Astro-Chart Rendering Engine
+
+You can render beautiful South Indian or North Indian astrological charts using SVG vector formats or native Flutter widgets.
+
+### Exporting to SVG
+```dart
+final chart = await jyotish.calculateVedicChart(dateTime: birthDate, location: location);
+
+// South Indian (grid-based clockwise sign layout)
+final String southIndianSvg = chart.toSVG(
+  style: ChartStyle.southIndian,
+  width: 500,
+  height: 500,
+  darkTheme: true,
+);
+
+// North Indian (diamond-based house layout)
+final String northIndianSvg = chart.toSVG(
+  style: ChartStyle.northIndian,
+  width: 500,
+  height: 500,
+);
+```
+
+### Painting Natively in Flutter
+```dart
+class MyChartWidget extends StatelessWidget {
+  final VedicChart chart;
+
+  const MyChartWidget({Key? key, required this.chart}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: const Size(400, 400),
+      painter: SouthIndianChartPainter(
+        chart: chart,
+        darkTheme: true,
+      ),
+    );
+  }
+}
+```
+
+---
+
+## Dynamic Timezone Updates
+
+To load newer timezone databases (`.tzf` zoneinfo binary files) dynamically at runtime without updating the package version:
+
+```dart
+final List<int> tzfBytes = await fetchNewTzDatabaseBytes();
+// Dynamically initialize the internal timezone database with the new definitions
+Jyotish.loadTimezoneDatabase(tzfBytes);
+```
+
+---
+
+## Lazy Dasha Streams
+
+To prevent memory heap utilisation spikes when scanning deep dasha levels (down to Prana or Deha), use streams to retrieve periods lazily:
+
+```dart
+final dashaStream = jyotish.systems.dasha.streamVimshottariDasha(
+  moonLongitude: moonLng,
+  birthDateTime: birthDt,
+  maxLevel: 4, // Calculate down to Sookshma/Prana level
+);
+
+await for (final period in dashaStream) {
+  print('Mahadasha: ${period.mahadasha}, Antardasha: ${period.antardasha}');
+}
+```
+
+---
+
 ## Additional Resources
 
 - [API Reference](API_REFERENCE.md) - Complete API documentation

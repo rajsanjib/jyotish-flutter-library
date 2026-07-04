@@ -189,6 +189,13 @@ await jyotish.initialize({String? ephemerisPath});
 |----------|------|-------------|
 | `isInitialized` | `bool` | Whether the library has been initialized |
 
+#### Configuration & Caching Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `clearCache()` | `void` | Clears all cached Swiss Ephemeris FFI calculations (planetary positions, houses, rise/set times) |
+| `loadTimezoneDatabase(bytes)` | `static void` | Dynamically loads a newer IANA zoneinfo database at runtime |
+
 #### Planetary Position Methods
 
 | Method | Returns | Description |
@@ -929,6 +936,7 @@ final service = DashaService();
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `calculateVimshottariDasha({moonLongitude, birthDateTime, levels?, birthTimeUncertainty?})` | `DashaResult` | Vimshottari (120-year) dasha |
+| `streamVimshottariDasha({moonLongitude, birthDateTime, maxLevel?, yearLength?})` | `Stream<DashaPeriod>` | Memory-efficient lazy Vimshottari stream |
 | `calculateYoginiDasha({moonLongitude, birthDateTime, levels?, birthTimeUncertainty?})` | `DashaResult` | Yogini (36-year) dasha ΓÇö durations computed in **milliseconds** for precision |
 | `calculateCharaDasha(rashiChart, {levels?})` | `CharaDashaResult` | Chara (Jaimini) dasha |
 | `getNarayanaDasha(rashiChart, {levels?})` | `NarayanaDashaResult` | Jaimini sign-based dasha ΓÇö uses reverse count for even signs |
@@ -1062,8 +1070,8 @@ final service = AshtakavargaService();
 | `getBinduDetailsForSign(ashtakavarga, signIndex)` | `Map<Planet, int>` | Bindus per planet |
 | `applyTrikonaShodhana(ashtakavarga)` | `Ashtakavarga` | Apply trine reduction |
 | `applyEkadhipatiShodhana(ashtakavarga)` | `Ashtakavarga` | Apply lordship reduction |
-| `calculatePinda(ashtakavarga)` | `Map<Planet, double>` | Planetary strength |
-| `calculateYogaPinda(ashtakavarga)` | `Map<Planet, double>` | Auspicious strength |
+| `calculatePinda(ashtakavarga)` | `Map<Planet, PindaResult>` | Rashi + Graha Pinda strength |
+| `calculateYogaPinda(ashtakavarga)` | `Map<Planet, YogaPindaResult>` | Auspicious Yoga Pinda |
 | `calculateShodhyaPinda(ashtakavarga)` | `ShodhyaPindaResult` | Reduced strength |
 | `calculateHousePinda(ashtakavarga, houseNumber)` | `double` | House strength |
 | `calculateAllHousesPinda(ashtakavarga)` | `Map<int, double>` | All house strengths |
@@ -1768,6 +1776,7 @@ Complete Vedic astrology chart data.
 |--------|---------|-------------|
 | `getPlanet(planet)` | `VedicPlanetInfo?` | Get planet info |
 | `getPlanetsInHouse(houseNumber)` | `List<VedicPlanetInfo>` | Planets in house |
+| `toSVG({style, width, height, darkTheme})` | `String` | Exports chart as SVG vector string (South/North Indian styles) |
 
 ---
 

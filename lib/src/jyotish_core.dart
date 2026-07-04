@@ -223,6 +223,18 @@ class Jyotish {
   static List<String> get availableTimezones =>
       AstrologyTimeService.availableTimezones;
 
+  /// Loads custom/updated timezone database bytes at runtime.
+  ///
+  /// A convenience proxy for [AstrologyTimeService.loadDatabase].
+  /// No initialization required — this is a static utility.
+  static void loadTimezoneDatabase(List<int> databaseBytes) =>
+      AstrologyTimeService.loadDatabase(databaseBytes);
+
+  /// Clears all calculation caches in the ephemeris service.
+  void clearCache() {
+    _ephemerisService?.clearCache();
+  }
+
   /// Initializes the Swiss Ephemeris library.
   ///
   /// [ephemerisPath] - Optional custom path to Swiss Ephemeris data files.

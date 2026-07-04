@@ -56,6 +56,12 @@ This fork significantly extends the original library with high-level astrologica
 - **🌑 Eclipse Prediction**: Forward prediction of solar and lunar eclipses, globally or locally visible, with contact timings and magnitude data.
 - **🧘 Natal & Raja Yogas (PyJHora Parity)**: Implementation of a comprehensive, high-precision yoga detection engine covering over 280+ standard solar, lunar, Nabhasa (Aasraya, Dala, Aakriti, Sankhya), and Raja/Vipareetha/Neecha-Bhanga yogas at par with PyJHora.
 - **⏰ Vedic Clocks**: Conversion of Gregorian time to Ghati, Vighati, Lipta, and Prana units since Sunrise, with interactive digital and CustomPainter-based analog Flutter clock widgets.
+- **⚡ FFI Caching**: Memory-bounded (max 5,000 items) in-memory caching for FFI calls (planetary positions, house systems, rise/set times) inside `EphemerisService` to prevent CPU bottlenecks. Exposes `clearCache()` facade API.
+- **🎨 Custom Chart Rendering**: Dynamic SVG vector generation (`toSVG()`) and CustomPainter canvas widgets for rendering North and South Indian style charts.
+- **🌐 Runtime Timezone Updates**: Allows dynamic loading of IANA timezone database files (.tzf) via `Jyotish.loadTimezoneDatabase(bytes)` at runtime.
+- **🌊 Lazy Dasha Streams**: Refactored Dasha calculations to support `streamVimshottariDasha` for memory-efficient streaming of micro-periods.
+- **📊 Ashtakavarga Reductions & Shodhya Pinda Corrections**: Fixed sign/planet multipliers (Rashi/Graha Gunakara) and occupant-only Graha Pinda calculations to conform with classical Parashari principles.
+- **⚖️ Vimshopaka Bala Corrections**: Updated dignity points in Vimshopaka strength calculation to align with the classical Parashari 20-point scale.
 
 ### Muhurta
 - **⏰ Hora**: Planetary hours calculations.

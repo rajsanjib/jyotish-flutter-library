@@ -75,6 +75,11 @@ final chart = await jyotish.calculateVedicChart(
 | **Dosha Detection** | `jyotish.checkNatalDoshas(chart)` / `DoshaService().calculateFullDoshaReport(chart)` |
 | **Manglik Raman Check** | `jyotish.checkManglikDoshaWithRamanExceptions(chart)` |
 | **Eclipse Predictions** | `EclipseService().getLunarEclipses(startYear: s, endYear: e)` / `getSolarEclipses(...)` |
+| **Clear Caches** | `jyotish.clearCache()` / `ephemerisService.clearCache()` |
+| **SVG Chart Export** | `chart.toSVG(style: ChartStyle.southIndian)` |
+| **Flutter Chart Widget** | Paint with `SouthIndianChartPainter(chart: chart)` or `NorthIndianChartPainter(chart: chart)` |
+| **Lazy Dasha Stream** | `jyotish.systems.dasha.streamVimshottariDasha(moonLongitude: ml, birthDateTime: dt, maxLevel: lvl)` |
+| **Dynamic Timezone Load**| `Jyotish.loadTimezoneDatabase(bytes)` |
 
 ## 5. System Differentiator: Traditional vs KP
 Crucial for v2.5.0+:
@@ -107,5 +112,5 @@ Crucial for v2.5.0+:
 - **House Systems**: 'W' (Whole Sign - Default), 'P' (Placidus - Mandatory for KP).
 
 ---
-*This skill file was last updated for API_REFERENCE.md v2.14.0 — includes DoshaService, FullDoshaReport, and all 8 natal doshas.*
+*This skill file was last updated for API_REFERENCE.md v2.17.0 — includes caching, custom chart rendering (SVG & CustomPainter), lazy dasha streams, dynamic timezone loading, corrected Ashtakavarga Shodhya Pinda calculations, and Vimshopaka Bala point scale.*
 

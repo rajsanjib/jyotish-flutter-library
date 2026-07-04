@@ -245,6 +245,23 @@ class CalculationFlags {
       nodeType: nodeType ?? this.nodeType,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CalculationFlags &&
+          runtimeType == other.runtimeType &&
+          system == other.system &&
+          useSwissEphemeris == other.useSwissEphemeris &&
+          calculateSpeed == other.calculateSpeed &&
+          siderealMode == other.siderealMode &&
+          useTopocentric == other.useTopocentric &&
+          useEquatorial == other.useEquatorial &&
+          nodeType == other.nodeType;
+
+  @override
+  int get hashCode => Object.hash(system, useSwissEphemeris, calculateSpeed,
+      siderealMode, useTopocentric, useEquatorial, nodeType);
 }
 
 /// Lunar node type for Rahu/Ketu calculations.

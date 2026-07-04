@@ -17,6 +17,14 @@ class AstrologyTimeService {
     _isInitialized = true;
   }
 
+  /// Loads custom/updated timezone database bytes at runtime.
+  ///
+  /// [databaseBytes] - Raw bytes of a timezone/zoneinfo database file (.tzf).
+  static void loadDatabase(List<int> databaseBytes) {
+    tz.initializeDatabase(databaseBytes);
+    _isInitialized = true;
+  }
+
   /// Converts a local date and time to UTC using a specific IANA timezone ID.
   ///
   /// [localDt] - The date and time in the local timezone.

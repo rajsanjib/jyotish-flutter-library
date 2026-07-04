@@ -173,14 +173,14 @@ class ShadbalaService {
   double _getVimshopakaPoints(PlanetaryDignity dignity) {
     return switch (dignity) {
       PlanetaryDignity.exalted => 20.0,
-      PlanetaryDignity.ownSign => 18.0,
-      PlanetaryDignity.greatFriend => 15.0,
-      PlanetaryDignity.friendSign => 10.0,
-      PlanetaryDignity.neutralSign => 7.0,
-      PlanetaryDignity.enemySign => 5.0,
+      PlanetaryDignity.moolaTrikona => 18.0,
+      PlanetaryDignity.ownSign => 15.0,
+      PlanetaryDignity.greatFriend => 10.0,
+      PlanetaryDignity.friendSign => 7.0,
+      PlanetaryDignity.neutralSign => 5.0,
+      PlanetaryDignity.enemySign => 4.0,
       PlanetaryDignity.greatEnemy => 2.0,
       PlanetaryDignity.debilitated => 0.0,
-      PlanetaryDignity.moolaTrikona => 18.0,
     };
   }
 

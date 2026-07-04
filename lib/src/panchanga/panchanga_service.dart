@@ -6,6 +6,7 @@ import 'package:jyotish/src/panchanga/panchanga.dart';
 import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/astronomy/planet_position.dart';
 import 'package:jyotish/src/astronomy/ephemeris_service.dart';
+import 'package:jyotish/src/astronomy/astrology_time_service.dart';
 import 'package:dartx/dartx.dart';
 
 /// Service for calculating Panchanga (five limbs) elements.
@@ -69,7 +70,7 @@ class PanchangaService {
     final karana = _calculateKarana(sunPos, moonPos);
 
     // Calculate Vara (Day Lord) using sunrise boundary
-    final vara = _calculateVara(dateTime, sunrise);
+    final vara = _calculateVara(dateTime, sunrise, location.timezone ?? 'UTC');
 
     // Calculate Moonrise and Moonset
     final (moonriseUtc, moonsetUtc) = await _ephemerisService.getPlanetRiseSet(
@@ -78,8 +79,14 @@ class PanchangaService {
       location: location,
     );
 
-    final moonrise = moonriseUtc?.toLocal();
-    final moonset = moonsetUtc?.toLocal();
+    final moonrise = moonriseUtc != null
+        ? AstrologyTimeService.utcToLocal(
+            moonriseUtc, location.timezone ?? 'UTC')
+        : null;
+    final moonset = moonsetUtc != null
+        ? AstrologyTimeService.utcToLocal(
+            moonsetUtc, location.timezone ?? 'UTC')
+        : null;
 
     return Panchanga(
       dateTime: dateTime,
@@ -254,15 +261,24 @@ class PanchangaService {
   /// Calculates the Vara (weekday with planetary lord).
   ///
   /// In Vedic astrology, the day begins at sunrise.
-  VaraInfo _calculateVara(DateTime dateTime, DateTime sunrise) {
-    // If before sunrise, it belongs to the previous day lord
-    var checkDate = dateTime;
-    if (dateTime < sunrise) {
-      checkDate = dateTime - 1.days;
+  VaraInfo _calculateVara(
+      DateTime dateTime, DateTime sunrise, String timezoneId) {
+    // Convert both to UTC to ensure correct chronological comparison
+    final utcDateTime = dateTime.isUtc
+        ? dateTime
+        : AstrologyTimeService.localToUtc(dateTime, timezoneId);
+
+    final utcSunrise = AstrologyTimeService.localToUtc(sunrise, timezoneId);
+
+    var checkDate = utcDateTime;
+    if (utcDateTime.isBefore(utcSunrise)) {
+      checkDate = utcDateTime.subtract(const Duration(days: 1));
     }
 
-    // Get weekday (0 = Sunday, 6 = Saturday)
-    final weekday = checkDate.weekday % 7;
+    // Convert checkDate back to local timezone to find local weekday
+    final localCheckDate =
+        AstrologyTimeService.utcToLocal(checkDate, timezoneId);
+    final weekday = localCheckDate.weekday % 7;
 
     return VaraInfo(
       weekday: weekday,
@@ -311,9 +327,11 @@ class PanchangaService {
         );
       }
 
-      // Convert UTC results to local timezone
-      final localSunrise = sunrise.toLocal();
-      final localSunset = sunset.toLocal();
+      // Convert UTC results to local timezone of the location
+      final localSunrise =
+          AstrologyTimeService.utcToLocal(sunrise, location.timezone ?? 'UTC');
+      final localSunset =
+          AstrologyTimeService.utcToLocal(sunset, location.timezone ?? 'UTC');
 
       return (localSunrise, localSunset);
     } catch (e) {
@@ -444,8 +462,10 @@ class PanchangaService {
     final sunriseTimeUTC = 720 - 4 * (longitude + ha) - eqOfTime;
     final sunsetTimeUTC = 720 - 4 * (longitude - ha) - eqOfTime;
 
-    final sunrise = _minutesToDateTime(baseDate, sunriseTimeUTC);
-    final sunset = _minutesToDateTime(baseDate, sunsetTimeUTC);
+    final sunrise = _minutesToDateTime(
+        baseDate, sunriseTimeUTC, location.timezone ?? 'UTC');
+    final sunset =
+        _minutesToDateTime(baseDate, sunsetTimeUTC, location.timezone ?? 'UTC');
 
     return (sunrise, sunset);
   }
@@ -465,7 +485,7 @@ class PanchangaService {
       );
 
       final localNoon = noon != null
-          ? noon.toLocal()
+          ? AstrologyTimeService.utcToLocal(noon, location.timezone ?? 'UTC')
           : DateTime(dateTime.year, dateTime.month, dateTime.day, 12, 0, 0);
 
       // Split into equal 12-hour day (6 hours before and 6 hours after solar noon)
@@ -499,7 +519,8 @@ class PanchangaService {
   double _degToRad(double deg) => deg * math.pi / 180.0;
   double _radToDeg(double rad) => rad * 180.0 / math.pi;
 
-  DateTime _minutesToDateTime(DateTime date, double minutesUtc) {
+  DateTime _minutesToDateTime(
+      DateTime date, double minutesUtc, String timezoneId) {
     var mins = minutesUtc;
     // Handle day wrap around
     int dayOffset = 0;
@@ -516,14 +537,16 @@ class PanchangaService {
     final minute = (mins % 60).floor();
     final second = ((mins - (hour * 60 + minute)) * 60).round();
 
-    return DateTime.utc(
+    final utcTime = DateTime.utc(
       date.year,
       date.month,
       date.day,
       hour,
       minute,
       second,
-    ).add(Duration(days: dayOffset)).toLocal();
+    ).add(Duration(days: dayOffset));
+
+    return AstrologyTimeService.utcToLocal(utcTime, timezoneId);
   }
 
   /// Gets the Tithi for a specific date.
@@ -607,7 +630,7 @@ class PanchangaService {
       dateTime: dateTime,
       location: location,
     );
-    return _calculateVara(dateTime, sunrise);
+    return _calculateVara(dateTime, sunrise, location.timezone ?? 'UTC');
   }
 
   /// Gets the Nakshatra for a specific date/location.

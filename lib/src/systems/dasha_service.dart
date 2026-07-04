@@ -1134,4 +1134,233 @@ class DashaService {
     }
     return ak;
   }
+
+  /// Generates a stream of nested dasha periods lazily to minimize memory footprint.
+  /// This is highly useful for scanning or iterating over extremely fine sub-periods
+  /// (e.g., down to Pratyantar, Sookshma, or Prana levels) without building a massive
+  /// tree in memory.
+  ///
+  /// [moonLongitude] - The natal Moon longitude.
+  /// [birthDateTime] - The birth date and time.
+  /// [maxLevel] - The deepest level to generate (0 = Mahadasha, 1 = Antardasha, 2 = Pratyantardasha, etc.).
+  /// [yearLength] - Year length in days (default: 365.242199).
+  Stream<DashaPeriod> streamVimshottariDasha({
+    required double moonLongitude,
+    required DateTime birthDateTime,
+    int maxLevel = 3,
+    double yearLength = defaultYearLength,
+  }) async* {
+    const nakshatraWidth = 360.0 / 27;
+    final nakshatraIndex = (moonLongitude / nakshatraWidth).floor() % 27;
+    final positionInNakshatra = moonLongitude % nakshatraWidth;
+    final startingLordIndex = _nakshatraDashaLordIndex[nakshatraIndex];
+    final portionTraversed = positionInNakshatra / nakshatraWidth;
+    final portionRemaining = 1.0 - portionTraversed;
+    final firstDashaYears = _vimshottariPlanets[startingLordIndex].years;
+    final balanceDays = firstDashaYears * yearLength * portionRemaining;
+
+    var currentDate = birthDateTime;
+
+    for (var cycle = 0; cycle < 2; cycle++) {
+      for (var i = 0; i < 9; i++) {
+        final lordIndex = (startingLordIndex + i) % 9;
+        final planetInfo = _vimshottariPlanets[lordIndex];
+        final durationDays = (cycle == 0 && i == 0)
+            ? balanceDays
+            : planetInfo.years * yearLength;
+        final durationMs = (durationDays * 86400000).round();
+        final duration = Duration(milliseconds: durationMs);
+        final endDate = currentDate + duration;
+
+        final mahaPeriod = DashaPeriod(
+          lord: planetInfo.planet,
+          lordName: planetInfo.name,
+          startDate: currentDate,
+          endDate: endDate,
+          duration: duration,
+          level: 0,
+        );
+
+        yield mahaPeriod;
+
+        if (maxLevel >= 1) {
+          yield* _streamAntardashas(
+            parent: mahaPeriod,
+            mahadashaDays: durationDays,
+            startingLordIndex: lordIndex,
+            maxLevel: maxLevel,
+            yearLength: yearLength,
+          );
+        }
+
+        currentDate = endDate;
+      }
+    }
+  }
+
+  Stream<DashaPeriod> _streamAntardashas({
+    required DashaPeriod parent,
+    required double mahadashaDays,
+    required int startingLordIndex,
+    required int maxLevel,
+    required double yearLength,
+  }) async* {
+    var currentDate = parent.startDate;
+    const double totalVimshottariYears = 120.0;
+
+    for (var i = 0; i < 9; i++) {
+      final lordIndex = (startingLordIndex + i) % 9;
+      final planetInfo = _vimshottariPlanets[lordIndex];
+      final durationDays =
+          (mahadashaDays * planetInfo.years) / totalVimshottariYears;
+      final durationMs = (durationDays * 86400000).round();
+      final duration = Duration(milliseconds: durationMs);
+      final endDate = currentDate + duration;
+
+      final antarPeriod = DashaPeriod(
+        lord: planetInfo.planet,
+        lordName: planetInfo.name,
+        startDate: currentDate,
+        endDate: endDate,
+        duration: duration,
+        level: 1,
+        parent: parent,
+      );
+
+      yield antarPeriod;
+
+      if (maxLevel >= 2) {
+        yield* _streamPratyantardashas(
+          parent: antarPeriod,
+          antardashaDays: durationDays,
+          startingLordIndex: lordIndex,
+          maxLevel: maxLevel,
+          yearLength: yearLength,
+        );
+      }
+
+      currentDate = endDate;
+    }
+  }
+
+  Stream<DashaPeriod> _streamPratyantardashas({
+    required DashaPeriod parent,
+    required double antardashaDays,
+    required int startingLordIndex,
+    required int maxLevel,
+    required double yearLength,
+  }) async* {
+    var currentDate = parent.startDate;
+    const double totalVimshottariYears = 120.0;
+
+    for (var i = 0; i < 9; i++) {
+      final lordIndex = (startingLordIndex + i) % 9;
+      final planetInfo = _vimshottariPlanets[lordIndex];
+      final durationDays =
+          (antardashaDays * planetInfo.years) / totalVimshottariYears;
+      final durationMs = (durationDays * 86400000).round();
+      final duration = Duration(milliseconds: durationMs);
+      final endDate = currentDate + duration;
+
+      final pratyantarPeriod = DashaPeriod(
+        lord: planetInfo.planet,
+        lordName: planetInfo.name,
+        startDate: currentDate,
+        endDate: endDate,
+        duration: duration,
+        level: 2,
+        parent: parent,
+      );
+
+      yield pratyantarPeriod;
+
+      if (maxLevel >= 3) {
+        yield* _streamSookshmadashas(
+          parent: pratyantarPeriod,
+          pratyantardashaDays: durationDays,
+          startingLordIndex: lordIndex,
+          maxLevel: maxLevel,
+          yearLength: yearLength,
+        );
+      }
+
+      currentDate = endDate;
+    }
+  }
+
+  Stream<DashaPeriod> _streamSookshmadashas({
+    required DashaPeriod parent,
+    required double pratyantardashaDays,
+    required int startingLordIndex,
+    required int maxLevel,
+    required double yearLength,
+  }) async* {
+    var currentDate = parent.startDate;
+    const double totalVimshottariYears = 120.0;
+
+    for (var i = 0; i < 9; i++) {
+      final lordIndex = (startingLordIndex + i) % 9;
+      final planetInfo = _vimshottariPlanets[lordIndex];
+      final durationDays =
+          (pratyantardashaDays * planetInfo.years) / totalVimshottariYears;
+      final durationMs = (durationDays * 86400000).round();
+      final duration = Duration(milliseconds: durationMs);
+      final endDate = currentDate + duration;
+
+      final sookshmaPeriod = DashaPeriod(
+        lord: planetInfo.planet,
+        lordName: planetInfo.name,
+        startDate: currentDate,
+        endDate: endDate,
+        duration: duration,
+        level: 3,
+        parent: parent,
+      );
+
+      yield sookshmaPeriod;
+
+      if (maxLevel >= 4) {
+        yield* _streamPranadashas(
+          parent: sookshmaPeriod,
+          sookshmadashaDays: durationDays,
+          startingLordIndex: lordIndex,
+          yearLength: yearLength,
+        );
+      }
+
+      currentDate = endDate;
+    }
+  }
+
+  Stream<DashaPeriod> _streamPranadashas({
+    required DashaPeriod parent,
+    required double sookshmadashaDays,
+    required int startingLordIndex,
+    required double yearLength,
+  }) async* {
+    var currentDate = parent.startDate;
+    const double totalVimshottariYears = 120.0;
+
+    for (var i = 0; i < 9; i++) {
+      final lordIndex = (startingLordIndex + i) % 9;
+      final planetInfo = _vimshottariPlanets[lordIndex];
+      final durationDays =
+          (sookshmadashaDays * planetInfo.years) / totalVimshottariYears;
+      final durationMs = (durationDays * 86400000).round();
+      final duration = Duration(milliseconds: durationMs);
+      final endDate = currentDate + duration;
+
+      yield DashaPeriod(
+        lord: planetInfo.planet,
+        lordName: planetInfo.name,
+        startDate: currentDate,
+        endDate: endDate,
+        duration: duration,
+        level: 4,
+        parent: parent,
+      );
+
+      currentDate = endDate;
+    }
+  }
 }

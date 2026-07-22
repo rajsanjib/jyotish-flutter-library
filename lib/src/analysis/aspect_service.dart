@@ -91,14 +91,13 @@ class AspectService {
     }
 
     // Remove duplicate aspects and filter by minimum strength
-    return aspects
-        .filter((a) => a.strength >= config.minimumStrength)
-        .distinctBy((a) {
+    final seen = <String>{};
+    return aspects.where((a) => a.strength >= config.minimumStrength).where((a) {
       // Sort planets to handle bidirectional duplicates
       final p1 = a.aspectingPlanet.index;
       final p2 = a.aspectedPlanet.index;
       final sortedPlanets = p1 < p2 ? '$p1-$p2' : '$p2-$p1';
-      return '$sortedPlanets-${a.type}';
+      return seen.add('$sortedPlanets-${a.type}');
     }).toList();
   }
 

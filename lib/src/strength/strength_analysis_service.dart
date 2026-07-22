@@ -5,6 +5,7 @@ import 'package:jyotish/src/models/vedic_chart.dart';
 import 'package:jyotish/src/analysis/divisional_chart_service.dart';
 import 'package:dartx/dartx.dart';
 
+
 /// Service for advanced strength and analysis calculations.
 ///
 /// This service provides specialized APIs for:

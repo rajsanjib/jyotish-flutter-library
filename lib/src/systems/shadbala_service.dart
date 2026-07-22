@@ -6,6 +6,7 @@ import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
 import 'package:jyotish/src/analysis/divisional_chart_service.dart';
 import 'package:jyotish/src/astronomy/ephemeris_service.dart';
+import 'package:logging/logging.dart';
 import 'package:dartx/dartx.dart';
 
 /// Service for calculating Shadbala (Six-fold Strength) of planets.

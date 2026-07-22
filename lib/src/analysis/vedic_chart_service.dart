@@ -1,3 +1,4 @@
+import 'package:logging/logging.dart';
 import '../exceptions/jyotish_exception.dart';
 import 'package:jyotish/src/models/calculation_flags.dart';
 import 'package:jyotish/src/models/geographic_location.dart';
@@ -11,6 +12,7 @@ import 'package:jyotish/src/astronomy/ephemeris_service.dart';
 class VedicChartService {
   VedicChartService(this._ephemerisService);
   final EphemerisService _ephemerisService;
+  static final Logger _log = Logger('jyotish.VedicChartService');
 
   /// Calculates a complete Vedic astrology chart.
   ///
@@ -27,11 +29,13 @@ class VedicChartService {
     CalculationFlags? flags,
   }) async {
     try {
+      _log.fine('Calculating chart for $dateTime at (${location.latitude}, ${location.longitude})');
       // Use provided flags or default Lahiri ayanamsa (sidereal is now default)
       flags ??= CalculationFlags.traditionalist();
 
       // Automate house system selection for KP (v2.5.0)
       if (flags.isKP) {
+        _log.fine('KP system active: enforcing Placidus house system');
         houseSystem = 'P'; // Placidus is mandatory for KP
       }
 

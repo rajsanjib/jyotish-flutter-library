@@ -230,6 +230,57 @@ class PlanetPosition {
     };
   }
 
+  /// Creates a position from a JSON map.
+  factory PlanetPosition.fromJson(Map<String, dynamic> json) {
+    final planetName = json['planet'] as String;
+    final planet = Planet.values.firstWhere(
+      (p) => p.displayName == planetName || p.name == planetName,
+      orElse: () => Planet.sun,
+    );
+    return PlanetPosition(
+      planet: planet,
+      dateTime: DateTime.parse(json['dateTime'] as String),
+      longitude: (json['longitude'] as num).toDouble(),
+      latitude: (json['latitude'] as num).toDouble(),
+      distance: (json['distance'] as num).toDouble(),
+      longitudeSpeed: (json['longitudeSpeed'] as num).toDouble(),
+      latitudeSpeed: (json['latitudeSpeed'] as num).toDouble(),
+      distanceSpeed: (json['distanceSpeed'] as num).toDouble(),
+      declination: (json['declination'] as num?)?.toDouble() ?? 0.0,
+      isCombust: json['isCombust'] as bool? ?? false,
+      isRetrograde: json['isRetrograde'] as bool?,
+    );
+  }
+
+  /// Creates a copy of this position with replaced fields.
+  PlanetPosition copyWith({
+    Planet? planet,
+    DateTime? dateTime,
+    double? longitude,
+    double? latitude,
+    double? distance,
+    double? longitudeSpeed,
+    double? latitudeSpeed,
+    double? distanceSpeed,
+    double? declination,
+    bool? isCombust,
+    bool? isRetrograde,
+  }) {
+    return PlanetPosition(
+      planet: planet ?? this.planet,
+      dateTime: dateTime ?? this.dateTime,
+      longitude: longitude ?? this.longitude,
+      latitude: latitude ?? this.latitude,
+      distance: distance ?? this.distance,
+      longitudeSpeed: longitudeSpeed ?? this.longitudeSpeed,
+      latitudeSpeed: latitudeSpeed ?? this.latitudeSpeed,
+      distanceSpeed: distanceSpeed ?? this.distanceSpeed,
+      declination: declination ?? this.declination,
+      isCombust: isCombust ?? this.isCombust,
+      isRetrograde: isRetrograde ?? this.isRetrograde,
+    );
+  }
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;

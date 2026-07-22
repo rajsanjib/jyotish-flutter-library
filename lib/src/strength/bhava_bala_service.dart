@@ -5,6 +5,7 @@ import 'package:jyotish/src/models/vedic_chart.dart';
 import 'package:jyotish/src/systems/shadbala_service.dart';
 import 'package:dartx/dartx.dart';
 
+
 /// Service for calculating Bhava Bala (House Strength).
 class BhavaBalaService {
   BhavaBalaService(this._shadbalaService);

@@ -1023,6 +1023,34 @@ await for (final period in dashaStream) {
 
 ---
 
+## Model Serialization & Immutability (`toJson`, `fromJson`, `copyWith`)
+
+All core data models (`VedicChart`, `PlanetPosition`, `DashaPeriod`, `DashaResult`, `GeographicLocation`, `HouseSystem`, `VedicPlanetInfo`) support full 2-way JSON serialization (`toJson()` / `fromJson()`) and immutable updates via `copyWith()`.
+
+### JSON Serialization Example
+
+```dart
+// Serialize a chart to JSON map or string
+final chart = await jyotish.calculateChart(dateTime: birthDt, location: loc);
+final Map<String, dynamic> jsonMap = chart.toJson();
+
+// Deserialize back into a VedicChart object
+final VedicChart restoredChart = VedicChart.fromJson(jsonMap);
+
+// Store or transfer easily via REST/GraphQL APIs or local databases
+print('Restored chart location: ${restoredChart.location}');
+```
+
+### Immutability with `copyWith`
+
+```dart
+// Create a modified copy without mutating the original model
+final updatedChart = chart.copyWith(location: 'Mumbai, India');
+final updatedPos = position.copyWith(isCombust: true);
+```
+
+---
+
 ## Additional Resources
 
 - [API Reference](API_REFERENCE.md) - Complete API documentation

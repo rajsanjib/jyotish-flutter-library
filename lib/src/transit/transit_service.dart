@@ -302,7 +302,7 @@ class TransitService {
         }
       }
 
-      currentDate += config.intervalDays.days;
+      currentDate = currentDate.add(Duration(days: config.intervalDays));
     }
 
     // Sort by date and remove duplicates
@@ -311,12 +311,12 @@ class TransitService {
   }
 
   List<TransitEvent> _deduplicateEvents(List<TransitEvent> events) {
-    return events
-        .distinctBy(
-          (e) =>
-              '${e.transitPlanet}-${e.natalPlanet}-${e.aspectType}-${(e.exactDate.millisecondsSinceEpoch / (1000 * 60 * 60 * 24 * 7)).floor()}',
-        )
-        .toList();
+    final seen = <String>{};
+    return events.where((e) {
+      final key =
+          '${e.transitPlanet}-${e.natalPlanet}-${e.aspectType}-${(e.exactDate.millisecondsSinceEpoch / (1000 * 60 * 60 * 24 * 7)).floor()}';
+      return seen.add(key);
+    }).toList();
   }
 
   String _generateTransitDescription(AspectInfo aspect, bool isRetrograde) {

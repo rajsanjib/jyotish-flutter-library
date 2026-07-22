@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.18.0] - 2026-07-22
+
+### Added
+- **Data Model Serialization & Immutability (`toJson`, `fromJson`, `copyWith`)**:
+  - Implemented 2-way JSON serialization (`toJson()` / `fromJson()`) and `copyWith()` state manipulation across core models (`VedicChart`, `PlanetPosition`, `VedicPlanetInfo`, `HouseSystem`, `DashaPeriod`, `DashaResult`).
+- **Dependency Optimization & Cleanup**:
+  - Moved `intl` to `dev_dependencies` (used strictly in test verification).
+  - Explicitly pinned `test: ^1.24.0` in `dev_dependencies` for `package:test` test suites.
+  - Enhanced `swisseph_bindings` and `ephemeris_service` with `package:path` for robust cross-platform path building and normalization.
+- **Structured Service Logging**:
+  - Integrated `Logger` from `package:logging` across core services (`VedicChartService`, `PanchangaService`, `DashaService`, `ShadbalaService`) for calculation diagnostics and warning reporting.
+- **Documentation & Unit Tests**:
+  - Added [test/serialization_test.dart](file:///D:/jyotish-flutter-library-fork/test/serialization_test.dart) covering JSON serialization and `copyWith` state manipulation.
+  - Updated `USAGE.md` and `API_REFERENCE.md` with new model API signatures and serialization usage guides.
+
 ## [2.17.0] - 2026-07-04
 
 ### Added

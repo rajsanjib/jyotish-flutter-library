@@ -80,6 +80,31 @@ class HouseSystem {
         'cusps': cusps,
       };
 
+  /// Creates a HouseSystem instance from a JSON map.
+  factory HouseSystem.fromJson(Map<String, dynamic> json) {
+    return HouseSystem(
+      system: json['system'] as String? ?? 'W',
+      ascendant: (json['ascendant'] as num).toDouble(),
+      midheaven: (json['midheaven'] as num).toDouble(),
+      cusps: (json['cusps'] as List).map((e) => (e as num).toDouble()).toList(),
+    );
+  }
+
+  /// Creates a copy of this HouseSystem with replaced fields.
+  HouseSystem copyWith({
+    String? system,
+    double? ascendant,
+    double? midheaven,
+    List<double>? cusps,
+  }) {
+    return HouseSystem(
+      system: system ?? this.system,
+      ascendant: ascendant ?? this.ascendant,
+      midheaven: midheaven ?? this.midheaven,
+      cusps: cusps ?? this.cusps,
+    );
+  }
+
   /// Gets a list of all 12 houses as [House] models.
   List<House> get individualHouses {
     return List.generate(12, (index) {
@@ -369,6 +394,49 @@ class VedicPlanetInfo {
         'debilitationDegree': debilitationDegree,
         'position': position.toJson(),
       };
+
+  /// Creates a VedicPlanetInfo instance from a JSON map.
+  factory VedicPlanetInfo.fromJson(Map<String, dynamic> json) {
+    final posMap = json['position'] as Map<String, dynamic>;
+    final pos = PlanetPosition.fromJson(posMap);
+    final house = json['house'] as int;
+    final dignityStr = json['dignity'] as String?;
+    final dignity = PlanetaryDignity.values.firstWhere(
+      (d) => d.english == dignityStr || d.name == dignityStr,
+      orElse: () => PlanetaryDignity.neutralSign,
+    );
+    return VedicPlanetInfo(
+      position: pos,
+      house: house,
+      dignity: dignity,
+      isCombust: json['isCombust'] as bool? ?? false,
+      exaltationDegree: (json['exaltationDegree'] as num?)?.toDouble(),
+      debilitationDegree: (json['debilitationDegree'] as num?)?.toDouble(),
+    );
+  }
+
+  /// Creates a copy of this VedicPlanetInfo with replaced fields.
+  VedicPlanetInfo copyWith({
+    PlanetPosition? position,
+    int? house,
+    PlanetaryDignity? dignity,
+    bool? isCombust,
+    double? exaltationDegree,
+    double? debilitationDegree,
+    double? positionInSign,
+    double? subSpan,
+  }) {
+    return VedicPlanetInfo(
+      position: position ?? this.position,
+      house: house ?? this.house,
+      dignity: dignity ?? this.dignity,
+      isCombust: isCombust ?? this.isCombust,
+      exaltationDegree: exaltationDegree ?? this.exaltationDegree,
+      debilitationDegree: debilitationDegree ?? this.debilitationDegree,
+      positionInSign: positionInSign ?? this.positionInSign,
+      subSpan: subSpan ?? this.subSpan,
+    );
+  }
 }
 
 /// Complete Vedic astrology chart data.
@@ -500,6 +568,66 @@ class VedicChart {
         'rahu': rahu.toJson(),
         'ketu': ketu.toJson(),
       };
+
+  /// Creates a VedicChart instance from a JSON map.
+  factory VedicChart.fromJson(Map<String, dynamic> json) {
+    final dateTime = DateTime.parse(json['dateTime'] as String);
+    final location = json['location'] as String;
+    final latitude = (json['latitude'] as num).toDouble();
+    final longitudeCoord = (json['longitude'] as num).toDouble();
+    final altitude = (json['altitude'] as num?)?.toDouble() ?? 0.0;
+    final houses = HouseSystem.fromJson(json['houses'] as Map<String, dynamic>);
+
+    final planetsJson = json['planets'] as Map<String, dynamic>;
+    final planets = <Planet, VedicPlanetInfo>{};
+    planetsJson.forEach((key, val) {
+      final planet = Planet.values.firstWhere(
+        (p) => p.displayName == key || p.name == key,
+        orElse: () => Planet.sun,
+      );
+      planets[planet] = VedicPlanetInfo.fromJson(val as Map<String, dynamic>);
+    });
+
+    final rahuInfo = VedicPlanetInfo.fromJson(json['rahu'] as Map<String, dynamic>);
+    final ketuInfo = KetuPosition(rahuPosition: rahuInfo.position);
+
+    return VedicChart(
+      dateTime: dateTime,
+      location: location,
+      latitude: latitude,
+      longitudeCoord: longitudeCoord,
+      altitude: altitude,
+      houses: houses,
+      planets: planets,
+      rahu: rahuInfo,
+      ketu: ketuInfo,
+    );
+  }
+
+  /// Creates a copy of this VedicChart with replaced fields.
+  VedicChart copyWith({
+    DateTime? dateTime,
+    String? location,
+    double? latitude,
+    double? longitudeCoord,
+    double? altitude,
+    HouseSystem? houses,
+    Map<Planet, VedicPlanetInfo>? planets,
+    VedicPlanetInfo? rahu,
+    KetuPosition? ketu,
+  }) {
+    return VedicChart(
+      dateTime: dateTime ?? this.dateTime,
+      location: location ?? this.location,
+      latitude: latitude ?? this.latitude,
+      longitudeCoord: longitudeCoord ?? this.longitudeCoord,
+      altitude: altitude ?? this.altitude,
+      houses: houses ?? this.houses,
+      planets: planets ?? this.planets,
+      rahu: rahu ?? this.rahu,
+      ketu: ketu ?? this.ketu,
+    );
+  }
 
   /// Gets the zodiac sign index (0-11) for any planet in the chart.
   int? getPlanetSignIndex(Planet planet) {

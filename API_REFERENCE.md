@@ -1777,6 +1777,9 @@ Complete Vedic astrology chart data.
 | `getPlanet(planet)` | `VedicPlanetInfo?` | Get planet info |
 | `getPlanetsInHouse(houseNumber)` | `List<VedicPlanetInfo>` | Planets in house |
 | `toSVG({style, width, height, darkTheme})` | `String` | Exports chart as SVG vector string (South/North Indian styles) |
+| `toJson()` | `Map<String, dynamic>` | Converts chart to JSON map |
+| `VedicChart.fromJson(json)` | `VedicChart` | Creates chart instance from JSON map |
+| `copyWith(...)` | `VedicChart` | Creates modified copy of chart |
 
 ---
 
@@ -1787,7 +1790,7 @@ Calculated position of a celestial body.
 | Property | Type | Description |
 |----------|------|-------------|
 | `planet` | `Planet` | The planet |
-| `longitude` | `double` | Ecliptic longitude (0-360┬░) |
+| `longitude` | `double` | Ecliptic longitude (0-360°) |
 | `latitude` | `double` | Ecliptic latitude |
 | `distance` | `double` | Distance from Earth (AU) |
 | `longitudeSpeed` | `double` | Speed (degrees/day) |
@@ -1800,6 +1803,12 @@ Calculated position of a celestial body.
 | `isRetrograde` | `bool` | Retrograde motion |
 | `isCombust` | `bool` | Combustion status |
 | `formattedPosition` | `String` | Human-readable position |
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `toJson()` | `Map<String, dynamic>` | Converts position to JSON map |
+| `PlanetPosition.fromJson(json)` | `PlanetPosition` | Creates position instance from JSON map |
+| `copyWith(...)` | `PlanetPosition` | Creates modified copy of position |
 
 ---
 
@@ -1818,6 +1827,12 @@ Extended Vedic planetary information.
 | `dignity` | `PlanetaryDignity` | Dignity status |
 | `isRetrograde` | `bool` | Retrograde status |
 | `isCombust` | `bool` | Combustion status |
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `toJson()` | `Map<String, dynamic>` | Converts info to JSON map |
+| `VedicPlanetInfo.fromJson(json)` | `VedicPlanetInfo` | Creates info instance from JSON map |
+| `copyWith(...)` | `VedicPlanetInfo` | Creates modified copy of info |
 
 ---
 

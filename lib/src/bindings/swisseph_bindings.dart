@@ -2,6 +2,7 @@ import 'dart:ffi' as ffi;
 import 'dart:io';
 import 'package:ffi/ffi.dart';
 import 'package:logging/logging.dart';
+import 'package:path/path.dart' as p;
 
 /// FFI bindings for Swiss Ephemeris C library.
 ///
@@ -202,18 +203,19 @@ class SwissEphBindings {
     final customPath = Platform.environment['SWISSEPH_LIB_PATH'];
     if (customPath != null && customPath.isNotEmpty) {
       try {
-        return ffi.DynamicLibrary.open(customPath);
+        final normalizedPath = p.normalize(customPath);
+        return ffi.DynamicLibrary.open(normalizedPath);
       } catch (e) {
         // Silently fail if custom path is invalid, will try next option
         _log.warning('Custom library path $customPath failed to load: $e');
       }
     }
 
-    // Try development/local paths
+    // Try development/local relative paths using path package
     if (Platform.isMacOS) {
       final devPaths = [
-        '/Users/sanjibacharya/Developer/jyotish/native/swisseph/swisseph-master/libswisseph.dylib',
-        '/usr/local/lib/libswisseph.dylib',
+        p.join(Directory.current.path, 'native', 'swisseph', 'libswisseph.dylib'),
+        p.join('/usr', 'local', 'lib', 'libswisseph.dylib'),
         'libswisseph.dylib',
       ];
 
@@ -244,7 +246,8 @@ class SwissEphBindings {
 
   /// Sets the path to Swiss Ephemeris data files.
   void setEphemerisPath(String path) {
-    final pathPtr = path.toNativeUtf8();
+    final normalizedPath = p.normalize(path);
+    final pathPtr = normalizedPath.toNativeUtf8();
     try {
       _sweSetEphePath(pathPtr.cast());
     } finally {

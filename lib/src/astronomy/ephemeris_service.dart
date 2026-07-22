@@ -9,6 +9,7 @@ import 'package:jyotish/src/models/calculation_flags.dart';
 import 'package:jyotish/src/models/geographic_location.dart';
 import 'package:jyotish/src/models/planet.dart';
 import 'package:logging/logging.dart';
+import 'package:path/path.dart' as p;
 import 'package:synchronized/synchronized.dart';
 import 'package:jyotish/src/astronomy/planet_position.dart';
 import 'package:jyotish/src/astronomy/astrology_time_service.dart';
@@ -78,8 +79,9 @@ class EphemerisService {
 
       // Set ephemeris path if provided
       if (ephemerisPath != null) {
-        _log.info('Setting ephemeris path to $ephemerisPath');
-        _bindings!.setEphemerisPath(ephemerisPath);
+        final normalizedPath = p.normalize(ephemerisPath);
+        _log.info('Setting ephemeris path to $normalizedPath');
+        _bindings!.setEphemerisPath(normalizedPath);
       }
 
       // Test that the library is working

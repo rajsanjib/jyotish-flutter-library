@@ -27,7 +27,11 @@ class DoshaService {
   /// Determines type (Anant, Kulik, etc.) based on Rahu's house position.
   KalaSarpaDoshaResult checkKalaSarpaDosha(VedicChart chart) {
     final node = chart.calculationFlags?.nodeType.planet ?? Planet.meanNode;
-    final rahuHouse = getHouseOfPlanet(chart, node);
+    final rahuHouse = getHouseOfPlanet(chart, node) != 0
+        ? getHouseOfPlanet(chart, node)
+        : (getHouseOfPlanet(chart, Planet.trueNode) != 0
+            ? getHouseOfPlanet(chart, Planet.trueNode)
+            : getHouseOfPlanet(chart, Planet.meanNode));
     final ketuHouse = getHouseOfPlanet(chart, Planet.ketu);
 
     final traditionalPlanets = [

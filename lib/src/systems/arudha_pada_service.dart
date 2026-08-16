@@ -155,10 +155,15 @@ class ArudhaPadaService {
     if (rashi == Rashi.scorpio) {
       return _getStrongerLord(chart, Planet.mars, Planet.ketu, rashi);
     } else if (rashi == Rashi.aquarius) {
+      final rahuPlanet = chart.getPlanet(Planet.meanNode) != null
+          ? Planet.meanNode
+          : (chart.getPlanet(Planet.trueNode) != null
+              ? Planet.trueNode
+              : Planet.meanNode);
       return _getStrongerLord(
         chart,
         Planet.saturn,
-        Planet.meanNode,
+        rahuPlanet,
         rashi,
       ); // Rahu
     } else {
@@ -182,8 +187,12 @@ class ArudhaPadaService {
     Rashi ownSign,
   ) {
     final info1 = chart.getPlanet(p1);
-    final info2 = chart.getPlanet(p2);
+    var info2 = chart.getPlanet(p2);
 
+    if (info1 == null && info2 == null) {
+      if (p2 == Planet.meanNode) info2 = chart.getPlanet(Planet.trueNode);
+      if (p2 == Planet.trueNode) info2 = chart.getPlanet(Planet.meanNode);
+    }
     if (info1 == null && info2 == null) throw Exception('Lords not found');
     if (info1 == null) return Rashi.fromLongitude(info2!.longitude);
     if (info2 == null) return Rashi.fromLongitude(info1.longitude);

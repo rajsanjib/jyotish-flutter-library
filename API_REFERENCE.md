@@ -3807,3 +3807,98 @@ final offset = AstrologyTimeService.getOffset(date, 'America/New_York');
 
 > **Important:** The `getOffset` parameter order is `(DateTime date, String zoneId)` — `DateTime` first, then the zone ID string. The Jyotish proxy method is named `getTimezoneOffset` to distinguish it from other offset APIs.
 
+---
+
+### JyotishSystems Facade (`jyotish.systems`)
+
+Access all specialized domain services directly via the `systems` getter on the initialized `Jyotish` singleton:
+
+```dart
+final jyotish = Jyotish();
+await jyotish.initialize();
+
+// Access specialized services directly:
+final dashaService = jyotish.systems.dasha;
+final kpService = jyotish.systems.kp;
+final shadbalaService = jyotish.systems.shadbala;
+final doshaService = jyotish.systems.dosha;
+final yogaService = jyotish.systems.yoga;
+final grahaYuddha = jyotish.systems.grahaYuddha;
+final gocharaVedha = jyotish.systems.gocharaVedha;
+final ashtakavarga = jyotish.systems.ashtakavarga;
+final varshapal = jyotish.systems.varshapal;
+final jaimini = jyotish.systems.jaimini;
+final sarvatobhadra = jyotish.systems.sarvatobhadra;
+final nadi = jyotish.systems.nadi;
+```
+
+| Getter | Type | Description |
+|---|---|---|
+| `jyotish.systems.dasha` | `DashaService` | Vimshottari, Yogini, Ashtottari, and Kalachakra dasha calculation |
+| `jyotish.systems.kp` | `KPService` | Krishnamurti Padhdhati Sub-Lords, Sub-Sub-Lords, and ABCD significators |
+| `jyotish.systems.shadbala` | `ShadbalaService` | Complete 6-fold Shadbala & Bhava Bala strength calculation |
+| `jyotish.systems.dosha` | `DoshaService` | Comprehensive natal dosha engine (Kala Sarpa, Manglik, Pitru, Guru Chandala, etc.) |
+| `jyotish.systems.yoga` | `YogaService` | 280+ Raja, Dhana, Nabhasa, and Parivartana yoga detection engine |
+| `jyotish.systems.grahaYuddha` | `GrahaYuddhaService` | Planetary war conjunction detection, magnitude, and declination winner evaluation |
+| `jyotish.systems.gocharaVedha` | `GocharaVedhaService` | Classical Gochara Vedha house pairs & Vipareeta Vedha non-obstruction rules |
+| `jyotish.systems.ashtakavarga` | `AshtakavargaService` | BAV/SAV grids, classical BPHS Ekadhipatya & Trikona Shodhana reductions |
+| `jyotish.systems.varshapal` | `VarshapalService` | Tajika solar return chart, Muntha, Varsha Lord, Sahams, and Patyayini/Mudda dashas |
+| `jyotish.systems.jaimini` | `JaiminiService` | 7 & 8 Chara Karakas, Atmakaraka, Karakamsa, and Arudha Pada evaluations |
+| `jyotish.systems.sarvatobhadra` | `SarvatobhadraService` | 81-square Sarvatobhadra transit vedha analysis |
+| `jyotish.systems.nadi` | `NadiService` | Nadi amsha lookup and interactions (150 nadis per sign) |
+| `jyotish.systems.progeny` | `ProgenyService` | Kshetra/Beeja Sphuta and Saptamsha D7 child analysis |
+| `jyotish.systems.careerAnalysis` | `CareerAnalysisService` | Dashamsha D10 career strength and vocational indicators |
+| `jyotish.systems.compatibility` | `CompatibilityService` | 36 Guna Milan, Ashtakoota, and Manglik matching |
+| `jyotish.systems.muhurta` | `MuhurtaService` | Auspicious time selection, Hora, Choghadiya, and inauspicious periods |
+| `jyotish.systems.muhurtaScoring` | `MuhurtaScoringService` | 0-100% composite muhurta scoring engine |
+| `jyotish.systems.panchanga` | `PanchangaService` | Tithi, Nakshatra, Yoga, Karana, and Vara astronomical calculations |
+| `jyotish.systems.ephemeris` | `EphemerisService` | Direct high-precision Swiss Ephemeris calculation engine |
+| `jyotish.systems.eclipse` | `EclipseService` | Global and local solar/lunar eclipse predictions |
+
+---
+
+### GrahaYuddhaService
+
+Scans for Planetary Wars (*Graha Yuddha*) occurring between true planets (Mars, Mercury, Jupiter, Venus, Saturn) when separated by less than $1^\circ$ in ecliptic longitude.
+
+```dart
+final war = jyotish.checkGrahaYuddha(chart);
+// Or via service:
+final war = jyotish.systems.grahaYuddha.checkGrahaYuddha(chart);
+
+if (war != null) {
+  print('War between ${war.planet1.displayName} and ${war.planet2.displayName}');
+  print('Winner: ${war.winnerId.displayName}');
+  print('Longitude difference: ${war.longitudeDifference.toStringAsFixed(2)}°');
+  print('Planet 1 Declination: ${war.planet1Declination}');
+  print('Planet 2 Declination: ${war.planet2Declination}');
+}
+```
+
+---
+
+### ChartRenderer & VedicChartView
+
+Vector SVG generation and Flutter CustomPainter widget for rendering North Indian (diamond) and South Indian (grid) Vedic charts.
+
+```dart
+import 'package:jyotish/jyotish.dart';
+
+// 1. Generate standalone SVG string:
+final svgString = chart.toSVG(
+  style: ChartStyle.northIndian, // or ChartStyle.southIndian
+  width: 500,
+  height: 500,
+  darkTheme: true,
+);
+
+// 2. Or use the Flutter Widget directly in your UI tree:
+VedicChartView(
+  chart: chart,
+  style: ChartStyle.northIndian,
+  darkTheme: true,
+  size: const Size(350, 350),
+)
+```
+
+

@@ -7,7 +7,6 @@ import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/astronomy/planet_position.dart';
 import 'package:jyotish/src/astronomy/ephemeris_service.dart';
 import 'package:jyotish/src/astronomy/astrology_time_service.dart';
-import 'package:logging/logging.dart';
 import 'package:dartx/dartx.dart';
 
 /// Service for calculating Panchanga (five limbs) elements.
@@ -221,34 +220,28 @@ class PanchangaService {
     // Fixed karanas: Bava(2), Balava(3), Kaulava(4), Taitila(5), Garaja(6), Vanija(7), Vishti(8)
     // Variable: Shakuni(9), Chatushpada(10), Naga(11), Kimstughna(12)
 
-    // Check for variable karanas first (Shakuni, Chatushpada, Naga, Kimstughna)
-    // - Karana 1: Kimstughna (fixed) - at start of Shukla Paksha
+    // Sthira (Fixed) Karanas: Kimstughna, Shakuni, Chatushpada, Naga
+    // - Karana 1: Kimstughna (Sthira) - at start of Shukla Paksha
     if (karanaNumber == 1) {
       name = KaranaInfo.variableKaranaNames[3]; // Kimstughna
-      isFixed = false;
+      isFixed = true;
     }
-    // - Karanas 58-60: Shakuni, Chatushpada, Naga (variable) at the end of the 60 cycle
+    // - Karanas 58-60: Shakuni, Chatushpada, Naga (Sthira) at the end of the 60-karana cycle
     else if (karanaNumber == 58) {
       name = KaranaInfo.variableKaranaNames[0]; // Shakuni
-      isFixed = false;
+      isFixed = true;
     } else if (karanaNumber == 59) {
       name = KaranaInfo.variableKaranaNames[1]; // Chatushpada
-      isFixed = false;
+      isFixed = true;
     } else if (karanaNumber == 60) {
       name = KaranaInfo.variableKaranaNames[2]; // Naga
-      isFixed = false;
+      isFixed = true;
     }
-    // Fixed karanas: Bava(2), Balava(3), Kaulava(4), Taitila(5), Garaja(6), Vanija(7), Vishti(8)
-    else if (karanaNumber >= 2 && karanaNumber <= 8) {
+    // Chara (Repeating/Movable) karanas: Bava, Balava, Kaulava, Taitila, Garaja, Vanija, Vishti
+    else {
       final index = (karanaNumber - 2) % 7;
       name = KaranaInfo.fixedKaranaNames[index];
-      isFixed = true;
-    }
-    // Repeating fixed karanas from position 9 onwards up to 57
-    else {
-      final fixedIndex = (karanaNumber - 9) % 7;
-      name = KaranaInfo.fixedKaranaNames[fixedIndex];
-      isFixed = true;
+      isFixed = false;
     }
 
     return KaranaInfo(

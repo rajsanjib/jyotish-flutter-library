@@ -51,42 +51,26 @@ class KPService {
     bool useNewAyanamsa = true,
   }) async {
     _assertKPSystem(natalChart.flags, 'calculateKPData');
-    // Calculate KP ayanamsa using precise time-varying formula from Swiss Ephemeris
     final kpAyanamsa = await _calculateKPAyanamsa(
       natalChart.dateTime,
       useNewAyanamsa: useNewAyanamsa,
     );
-
-    // Get the Lahiri ayanamsa (default used in chart calculation)
-    final lahiriAyanamsa = await _ephemerisService.getAyanamsa(
-      dateTime: natalChart.dateTime,
-      mode: SiderealMode.lahiri,
-    );
-
-    // Calculate the difference to adjust positions
-    // Positive diff means KP ayanamsa is larger, so we need to subtract more from tropical
-    // Since chart is already in Lahiri sidereal, we subtract the difference
-    final ayanamsaDiff = kpAyanamsa - lahiriAyanamsa;
-
-    // Calculate Sub-Lords for planets with adjusted positions
+    // Calculate Sub-Lords for planets directly (chart is already in KP ayanamsa)
     final planetDivisions = <Planet, KPDivision>{};
     for (final entry in natalChart.planets.entries) {
-      // Adjust planet longitude from Lahiri to KP ayanamsa
-      final adjustedLongitude =
-          (entry.value.position.longitude - ayanamsaDiff + 360) % 360;
       planetDivisions[entry.key] = _calculateKPDivision(
-        adjustedLongitude,
+        entry.value.position.longitude,
         entry.key,
       );
     }
 
-    // Calculate Sub-Lords for house cusps with adjusted positions
+    // Calculate Sub-Lords for house cusps directly
     final houseDivisions = <int, KPDivision>{};
     for (var house = 1; house <= 12; house++) {
-      // Adjust cusp longitude from Lahiri to KP ayanamsa
-      final adjustedCusp =
-          (natalChart.houses.cusps[house - 1] - ayanamsaDiff + 360) % 360;
-      houseDivisions[house] = _calculateKPDivision(adjustedCusp, null);
+      houseDivisions[house] = _calculateKPDivision(
+        natalChart.houses.cusps[house - 1],
+        null,
+      );
     }
 
     // Calculate ABCD significators

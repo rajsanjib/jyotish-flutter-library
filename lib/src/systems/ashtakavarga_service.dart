@@ -321,39 +321,65 @@ class AshtakavargaService {
 
   /// Applies Ekadhipati Shodhana (Reduction for Same Lordship).
   ///
-  /// Ekadhipati Shodhana is applied to signs owned by the same planet
-  /// (e.g., both Gemini and Virgo are owned by Mercury).
-  ///
-  /// Traditional rules:
-  /// - For signs with odd foot: If both have bindus, subtract smaller from larger
-  /// - For signs with even foot: Keep the smaller value
-  ///
-  /// Note: This is a simplified version. Traditional method also considers
-  /// whether planets are actually in the signs or lords are in own signs.
+  /// Implements classical BPHS Chapter 67 rules based on planetary occupancy:
+  /// 1. Both signs unoccupied: if bindus equal, both become 0; if unequal, larger equals smaller.
+  /// 2. Both signs occupied: no reduction (both keep bindus).
+  /// 3. One occupied, one empty:
+  ///    - If empty has more bindus than occupied: empty is reduced to occupied's bindus.
+  ///    - If empty has fewer or equal bindus: empty becomes 0, occupied keeps its bindus.
   Ashtakavarga applyEkadhipatiShodhana(Ashtakavarga ashtakavarga) {
+    // 1. Identify which signs are occupied by planets in the natal chart
+    final occupiedSigns = <int>{};
+    for (final p in Planet.traditionalPlanets) {
+      final info = ashtakavarga.natalChart.getPlanet(p);
+      if (info != null) {
+        final sign = (info.longitude / 30).floor() % 12;
+        occupiedSigns.add(sign);
+      }
+    }
+
     final reducedBhinnashtakavarga =
         ashtakavarga.bhinnashtakavarga.keys.associateWith((planet) {
       final bav = ashtakavarga.bhinnashtakavarga[planet]!;
       final reducedBindus = List<int>.from(bav.bindus);
 
-      // Apply reduction to each planet's dual signs
+      // Apply classical BPHS reduction to each planet's dual signs
       for (final signPair in _dualSigns) {
         final sign1 = signPair[0];
         final sign2 = signPair[1];
-        final bindu1 = bav.bindus[sign1];
-        final bindu2 = bav.bindus[sign2];
+        final bindu1 = reducedBindus[sign1];
+        final bindu2 = reducedBindus[sign2];
 
-        if (bindu1 > 0 && bindu2 > 0) {
-          final isOddFoot = _oddFootSigns.contains(sign1);
-          final diff = (bindu1 - bindu2).abs();
+        final occ1 = occupiedSigns.contains(sign1);
+        final occ2 = occupiedSigns.contains(sign2);
 
-          if (isOddFoot) {
-            reducedBindus[sign1] = bindu1 > bindu2 ? diff : 0;
-            reducedBindus[sign2] = bindu2 > bindu1 ? diff : 0;
+        // Case 1: Both signs unoccupied
+        if (!occ1 && !occ2) {
+          if (bindu1 == bindu2) {
+            reducedBindus[sign1] = 0;
+            reducedBindus[sign2] = 0;
           } else {
             final minBindu = bindu1 < bindu2 ? bindu1 : bindu2;
             reducedBindus[sign1] = minBindu;
             reducedBindus[sign2] = minBindu;
+          }
+        }
+        // Case 2: Both signs occupied -> No reduction
+        else if (occ1 && occ2) {
+          // Keep unchanged
+        }
+        // Case 3: One sign occupied, one unoccupied
+        else if (occ1 && !occ2) {
+          if (bindu2 > bindu1) {
+            reducedBindus[sign2] = bindu1;
+          } else {
+            reducedBindus[sign2] = 0;
+          }
+        } else if (!occ1 && occ2) {
+          if (bindu1 > bindu2) {
+            reducedBindus[sign1] = bindu2;
+          } else {
+            reducedBindus[sign1] = 0;
           }
         }
       }
@@ -445,25 +471,6 @@ class AshtakavargaService {
     });
 
     return pindaResults;
-  }
-
-  /// Gets the lord of a sign (traditional mapping)
-  Planet _getSignLord(int signIndex) {
-    const signLords = [
-      Planet.mars, // Aries
-      Planet.venus, // Taurus
-      Planet.mercury, // Gemini
-      Planet.moon, // Cancer
-      Planet.sun, // Leo
-      Planet.mercury, // Virgo
-      Planet.venus, // Libra
-      Planet.mars, // Scorpio
-      Planet.jupiter, // Sagittarius
-      Planet.saturn, // Capricorn
-      Planet.saturn, // Aquarius
-      Planet.jupiter, // Pisces
-    ];
-    return signLords[signIndex];
   }
 
   /// Calculates Yoga Pinda (auspicious strength) from Ashtakavarga.
@@ -629,9 +636,6 @@ class AshtakavargaService {
     [8, 11], // Sagittarius, Pisces (Jupiter)
     [9, 10], // Capricorn, Aquarius (Saturn)
   ];
-
-  // Signs with odd foot
-  static const _oddFootSigns = [0, 1, 2, 6, 7, 8]; // Aries to Sagittarius
 
   // Pinda multipliers for each sign (Rashi Gunakara)
   static const _pindaMultipliers = [

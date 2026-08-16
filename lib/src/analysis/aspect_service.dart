@@ -4,7 +4,6 @@ import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/astronomy/planet_position.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
 import 'package:jyotish/src/systems/jaimini_service.dart';
-import 'package:dartx/dartx.dart';
 
 /// Service for calculating Vedic planetary aspects (Graha Drishti).
 ///

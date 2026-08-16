@@ -17,19 +17,16 @@ class CompatibilityService {
     final doshaCheck = checkDoshas(boyChart, girlChart);
     final dashaCompatibility = calculateDashaCompatibility(boyChart, girlChart);
 
-    var totalScore = gunaScores.total;
+    final totalScore = gunaScores.total;
     final analysis = <String>[];
 
     if (doshaCheck.hasNadiDosha) {
-      totalScore -= 8;
       analysis.add('Nadi Dosha reduces compatibility');
     }
     if (doshaCheck.hasBhakootDosha) {
-      totalScore -= 7;
       analysis.add('Bhakoot Dosha present');
     }
     if (doshaCheck.hasManglikDosha) {
-      totalScore -= doshaCheck.manglikSeverity == 'High' ? 5 : 3;
       analysis.add('Manglik Dosha needs consideration');
     }
 

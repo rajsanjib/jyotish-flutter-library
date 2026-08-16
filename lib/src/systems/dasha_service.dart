@@ -3,7 +3,6 @@ import 'package:jyotish/src/systems/dasha.dart';
 import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/models/rashi.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
-import 'package:logging/logging.dart';
 import 'package:dartx/dartx.dart';
 
 /// Internal helper class for Vimshottari planet info.
@@ -150,18 +149,21 @@ class DashaService {
       for (var i = 0; i < 9; i++) {
         final lordIndex = (startingLordIndex + i) % 9;
         final planetInfo = _vimshottariPlanets[lordIndex];
-        final durationDays = (cycle == 0 && i == 0)
-            ? balanceDays
-            : planetInfo.years * yearLength;
+        final fullMahadashaDays = planetInfo.years * yearLength;
+        final isFirstDasha = (cycle == 0 && i == 0);
+        final durationDays = isFirstDasha ? balanceDays : fullMahadashaDays;
         final durationMs = (durationDays * 86400000).round();
         final duration = Duration(milliseconds: durationMs);
         final endDate = currentDate + duration;
 
         List<DashaPeriod> subPeriods = [];
         if (levels >= 2) {
+          final elapsedDays =
+              isFirstDasha ? (fullMahadashaDays - balanceDays) : 0.0;
           subPeriods = _calculateAntardashas(
             mahadashaStart: currentDate,
-            mahadashaDays: durationDays,
+            fullMahadashaDays: fullMahadashaDays,
+            elapsedDays: elapsedDays,
             startingLordIndex: lordIndex,
             levels: levels,
             yearLength: yearLength,
@@ -187,20 +189,37 @@ class DashaService {
 
   List<DashaPeriod> _calculateAntardashas({
     required DateTime mahadashaStart,
-    required double mahadashaDays,
+    required double fullMahadashaDays,
+    required double elapsedDays,
     required int startingLordIndex,
     required int levels,
     double yearLength = defaultYearLength,
   }) {
     final antardashas = <DashaPeriod>[];
     var currentDate = mahadashaStart;
+    var accumulatedDays = 0.0;
 
     for (var i = 0; i < 9; i++) {
       final lordIndex = (startingLordIndex + i) % 9;
       final planetInfo = _vimshottariPlanets[lordIndex];
-      final durationDays = mahadashaDays * (planetInfo.years / 120.0);
+      final antarFullDays = fullMahadashaDays * (planetInfo.years / 120.0);
+      final antarStart = accumulatedDays;
+      final antarEnd = accumulatedDays + antarFullDays;
+      accumulatedDays = antarEnd;
+
+      if (antarEnd <= elapsedDays) {
+        continue;
+      }
+
+      final isRunningAtStart =
+          antarStart <= elapsedDays && antarEnd > elapsedDays;
+      final remainingDays =
+          isRunningAtStart ? (antarEnd - elapsedDays) : antarFullDays;
+      final elapsedInThisAntar =
+          isRunningAtStart ? (elapsedDays - antarStart) : 0.0;
+
       final duration = Duration(
-        milliseconds: (durationDays * 86400000).round(),
+        milliseconds: (remainingDays * 86400000).round(),
       );
       final endDate = currentDate + duration;
 
@@ -208,7 +227,8 @@ class DashaService {
       if (levels >= 3) {
         subPeriods = _calculatePratyantardashas(
           antardashaStart: currentDate,
-          antardashaDays: durationDays,
+          fullAntardashaDays: antarFullDays,
+          elapsedDays: elapsedInThisAntar,
           startingLordIndex: lordIndex,
           levels: levels,
         );
@@ -232,19 +252,37 @@ class DashaService {
 
   List<DashaPeriod> _calculatePratyantardashas({
     required DateTime antardashaStart,
-    required double antardashaDays,
+    required double fullAntardashaDays,
+    required double elapsedDays,
     required int startingLordIndex,
     required int levels,
   }) {
     final pratyantardashas = <DashaPeriod>[];
     var currentDate = antardashaStart;
+    var accumulatedDays = 0.0;
 
     for (var i = 0; i < 9; i++) {
       final lordIndex = (startingLordIndex + i) % 9;
       final planetInfo = _vimshottariPlanets[lordIndex];
-      final durationDays = antardashaDays * (planetInfo.years / 120.0);
+      final pratyantharFullDays =
+          fullAntardashaDays * (planetInfo.years / 120.0);
+      final pratStart = accumulatedDays;
+      final pratEnd = accumulatedDays + pratyantharFullDays;
+      accumulatedDays = pratEnd;
+
+      if (pratEnd <= elapsedDays) {
+        continue;
+      }
+
+      final isRunningAtStart =
+          pratStart <= elapsedDays && pratEnd > elapsedDays;
+      final remainingDays =
+          isRunningAtStart ? (pratEnd - elapsedDays) : pratyantharFullDays;
+      final elapsedInThisPrat =
+          isRunningAtStart ? (elapsedDays - pratStart) : 0.0;
+
       final duration = Duration(
-        milliseconds: (durationDays * 86400000).round(),
+        milliseconds: (remainingDays * 86400000).round(),
       );
       final endDate = currentDate + duration;
 
@@ -252,7 +290,8 @@ class DashaService {
       if (levels >= 4) {
         subPeriods = _calculateSookshmadashas(
           pratyantharStart: currentDate,
-          pratyantharDays: durationDays,
+          fullPratyantharDays: pratyantharFullDays,
+          elapsedDays: elapsedInThisPrat,
           startingLordIndex: lordIndex,
           levels: levels,
         );
@@ -276,19 +315,37 @@ class DashaService {
 
   List<DashaPeriod> _calculateSookshmadashas({
     required DateTime pratyantharStart,
-    required double pratyantharDays,
+    required double fullPratyantharDays,
+    required double elapsedDays,
     required int startingLordIndex,
     required int levels,
   }) {
     final sookshmadashas = <DashaPeriod>[];
     var currentDate = pratyantharStart;
+    var accumulatedDays = 0.0;
 
     for (var i = 0; i < 9; i++) {
       final lordIndex = (startingLordIndex + i) % 9;
       final planetInfo = _vimshottariPlanets[lordIndex];
-      final durationDays = pratyantharDays * (planetInfo.years / 120.0);
+      final sookshmaFullDays =
+          fullPratyantharDays * (planetInfo.years / 120.0);
+      final sookStart = accumulatedDays;
+      final sookEnd = accumulatedDays + sookshmaFullDays;
+      accumulatedDays = sookEnd;
+
+      if (sookEnd <= elapsedDays) {
+        continue;
+      }
+
+      final isRunningAtStart =
+          sookStart <= elapsedDays && sookEnd > elapsedDays;
+      final remainingDays =
+          isRunningAtStart ? (sookEnd - elapsedDays) : sookshmaFullDays;
+      final elapsedInThisSook =
+          isRunningAtStart ? (elapsedDays - sookStart) : 0.0;
+
       final duration = Duration(
-        milliseconds: (durationDays * 86400000).round(),
+        milliseconds: (remainingDays * 86400000).round(),
       );
       final endDate = currentDate + duration;
 
@@ -296,7 +353,8 @@ class DashaService {
       if (levels >= 5) {
         subPeriods = _calculatePranadashas(
           sookshmaStart: currentDate,
-          sookshmaDays: durationDays,
+          fullSookshmaDays: sookshmaFullDays,
+          elapsedDays: elapsedInThisSook,
           startingLordIndex: lordIndex,
         );
       }
@@ -319,18 +377,33 @@ class DashaService {
 
   List<DashaPeriod> _calculatePranadashas({
     required DateTime sookshmaStart,
-    required double sookshmaDays,
+    required double fullSookshmaDays,
+    required double elapsedDays,
     required int startingLordIndex,
   }) {
     final pranadashas = <DashaPeriod>[];
     var currentDate = sookshmaStart;
+    var accumulatedDays = 0.0;
 
     for (var i = 0; i < 9; i++) {
       final lordIndex = (startingLordIndex + i) % 9;
       final planetInfo = _vimshottariPlanets[lordIndex];
-      final durationDays = sookshmaDays * (planetInfo.years / 120.0);
+      final pranaFullDays = fullSookshmaDays * (planetInfo.years / 120.0);
+      final pranaStart = accumulatedDays;
+      final pranaEnd = accumulatedDays + pranaFullDays;
+      accumulatedDays = pranaEnd;
+
+      if (pranaEnd <= elapsedDays) {
+        continue;
+      }
+
+      final isRunningAtStart =
+          pranaStart <= elapsedDays && pranaEnd > elapsedDays;
+      final remainingDays =
+          isRunningAtStart ? (pranaEnd - elapsedDays) : pranaFullDays;
+
       final duration = Duration(
-        milliseconds: (durationDays * 86400000).round(),
+        milliseconds: (remainingDays * 86400000).round(),
       );
       final endDate = currentDate + duration;
 

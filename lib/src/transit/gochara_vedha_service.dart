@@ -26,34 +26,84 @@ class GocharaVedhaService {
     Planet.saturn: [3, 6, 11],
   };
 
-  /// Vedha (obstruction) relationships between planets.
-  ///
-  /// When two planets are transiting favorable houses simultaneously,
-  /// they can obstruct each other's results according to these rules:
-  /// - Sun and Saturn obstruct each other
-  /// - Moon and Mercury obstruct each other
-  /// - Mars and Venus obstruct each other
-  /// - Jupiter has no Vedha (no obstruction)
-  static const Map<Planet, List<Planet>> vedhaRelationships = {
-    Planet.sun: [Planet.saturn],
-    Planet.saturn: [Planet.sun],
-    Planet.moon: [Planet.mercury],
-    Planet.mercury: [Planet.moon],
-    Planet.mars: [Planet.venus],
-    Planet.venus: [Planet.mars],
-    Planet.jupiter: [], // Jupiter has no Vedha
+  /// Classical Gochara Vedha pairs (Phaladeepika Ch. 26).
+  /// Maps each planet -> (Favorable House -> Obstructing Vedha House).
+  static const Map<Planet, Map<int, int>> gocharaVedhaPairs = {
+    Planet.sun: {
+      3: 9,
+      6: 12,
+      10: 4,
+      11: 5,
+    },
+    Planet.moon: {
+      1: 5,
+      3: 9,
+      6: 12,
+      7: 2,
+      10: 4,
+      11: 8,
+    },
+    Planet.mars: {
+      3: 12,
+      6: 9,
+      11: 5,
+    },
+    Planet.mercury: {
+      2: 5,
+      4: 3,
+      6: 9,
+      8: 1,
+      10: 8,
+      11: 12,
+    },
+    Planet.jupiter: {
+      2: 12,
+      5: 4,
+      7: 3,
+      9: 10,
+      11: 8,
+    },
+    Planet.venus: {
+      1: 8,
+      2: 7,
+      3: 1,
+      4: 10,
+      5: 9,
+      8: 5,
+      9: 11,
+      11: 6,
+      12: 3,
+    },
+    Planet.saturn: {
+      3: 12,
+      6: 9,
+      11: 5,
+    },
   };
+
+  /// Checks if two planets have a Vipareeta Vedha exception (Father-Son non-obstruction).
+  static bool isVipareetaVedhaException(
+    Planet transitPlanet,
+    Planet obstructingPlanet,
+  ) {
+    if ((transitPlanet == Planet.sun && obstructingPlanet == Planet.saturn) ||
+        (transitPlanet == Planet.saturn && obstructingPlanet == Planet.sun)) {
+      return true;
+    }
+    if ((transitPlanet == Planet.moon && obstructingPlanet == Planet.mercury) ||
+        (transitPlanet == Planet.mercury && obstructingPlanet == Planet.moon)) {
+      return true;
+    }
+    return false;
+  }
 
   /// Nakshatra-based Vedha positions.
   ///
   /// Certain nakshatras create Vedha when planets transit through them
   /// in specific relationships to the Moon's nakshatra.
   static const Map<int, List<int>> nakshatraVedha = {
-    // Ashwini (1) is obstructed by...
-    1: [10, 19], // Magha (10), Mula (19)
-    // Bharani (2) is obstructed by...
+    1: [10, 19],
     2: [11, 20],
-    // Continue for all 27 nakshatras...
   };
 
   /// Calculates Gochara Vedha for a specific transit.
@@ -73,22 +123,24 @@ class GocharaVedhaService {
     // Check if transit planet is in favorable house
     final isFavorable = _isFavorablePosition(transitPlanet, houseFromMoon);
 
-    // Find planets causing Vedha
     final vedhaPlanets = <Planet>[];
     final obstructionDetails = <String>[];
 
-    // 1. Check house-based Vedha
-    final obstructingPlanets = vedhaRelationships[transitPlanet] ?? [];
-    for (final obstructingPlanet in obstructingPlanets) {
-      if (otherTransits.containsKey(obstructingPlanet)) {
-        final otherHouse = otherTransits[obstructingPlanet]!;
+    // Check classical house-paired Vedha
+    final vedhaPairsForPlanet = gocharaVedhaPairs[transitPlanet] ?? {};
+    final expectedVedhaHouse = vedhaPairsForPlanet[houseFromMoon];
 
-        // Check if the obstructing planet is also in a favorable house
-        if (_isFavorablePosition(obstructingPlanet, otherHouse)) {
-          vedhaPlanets.add(obstructingPlanet);
-          obstructionDetails.add(
-            '${obstructingPlanet.displayName} in house $otherHouse from Moon',
-          );
+    if (isFavorable && expectedVedhaHouse != null) {
+      for (final entry in otherTransits.entries) {
+        final otherPlanet = entry.key;
+        final otherHouse = entry.value;
+        if (otherHouse == expectedVedhaHouse) {
+          if (!isVipareetaVedhaException(transitPlanet, otherPlanet)) {
+            vedhaPlanets.add(otherPlanet);
+            obstructionDetails.add(
+              '${otherPlanet.displayName} in house $otherHouse from Moon causes Vedha to ${transitPlanet.displayName} in house $houseFromMoon',
+            );
+          }
         }
       }
     }
@@ -172,14 +224,12 @@ class GocharaVedhaService {
     final p2Favorable = _isFavorablePosition(planet2, house2);
 
     if (!p1Favorable || !p2Favorable) return false;
+    if (isVipareetaVedhaException(planet1, planet2)) return false;
 
-    // Check if they obstruct each other
-    final p1ObstructsP2 =
-        vedhaRelationships[planet1]?.contains(planet2) ?? false;
-    final p2ObstructsP1 =
-        vedhaRelationships[planet2]?.contains(planet1) ?? false;
+    final v1 = gocharaVedhaPairs[planet1]?[house1];
+    final v2 = gocharaVedhaPairs[planet2]?[house2];
 
-    return p1ObstructsP2 && p2ObstructsP1;
+    return v1 == house2 && v2 == house1;
   }
 
   /// Finds the best transit periods without Vedha.

@@ -359,7 +359,7 @@ class EphemerisService {
     }
 
     final cacheKey =
-        '${dateTime.millisecondsSinceEpoch}_${location.latitude.toStringAsFixed(6)}_${location.longitude.toStringAsFixed(6)}_${location.altitude.toStringAsFixed(2)}_${houseSystem}';
+        '${dateTime.millisecondsSinceEpoch}_${location.latitude.toStringAsFixed(6)}_${location.longitude.toStringAsFixed(6)}_${location.altitude.toStringAsFixed(2)}_$houseSystem';
     if (_housesCache.containsKey(cacheKey)) {
       return _housesCache[cacheKey]!;
     }

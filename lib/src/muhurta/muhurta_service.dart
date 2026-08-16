@@ -90,7 +90,7 @@ class MuhurtaService {
         nakshatraPeriods,
   }) {
     final yogas = <SpecialYoga>[];
-    final weekday = date.weekday % 7;
+    final weekday = _getVedicWeekday(date, sunrise);
     final nextSunrise = sunrise.add(const Duration(days: 1));
 
     // 1. Sarvartha Siddhi & Amrit Siddhi (Weekday + Nakshatra)
@@ -203,6 +203,18 @@ class MuhurtaService {
     return yogas;
   }
 
+  /// Helper to calculate the Vedic weekday (day begins at local sunrise).
+  int _getVedicWeekday(DateTime date, DateTime sunrise) {
+    final isDateOnly = date.hour == 0 &&
+        date.minute == 0 &&
+        date.second == 0 &&
+        date.millisecond == 0;
+    if (!isDateOnly && date.isBefore(sunrise)) {
+      return (date.subtract(const Duration(days: 1)).weekday) % 7;
+    }
+    return date.weekday % 7;
+  }
+
   /// Calculates Hora (planetary hour) periods.
   List<HoraPeriod> _calculateHoraPeriods({
     required DateTime date,
@@ -210,7 +222,7 @@ class MuhurtaService {
     required DateTime sunset,
   }) {
     final periods = <HoraPeriod>[];
-    final weekday = date.weekday % 7;
+    final weekday = _getVedicWeekday(date, sunrise);
 
     // Calculate daytime duration
     final dayDuration = sunset.difference(sunrise);
@@ -303,7 +315,7 @@ class MuhurtaService {
     required DateTime sunrise,
     required DateTime sunset,
   }) {
-    final weekday = date.weekday % 7;
+    final weekday = _getVedicWeekday(date, sunrise);
 
     // Calculate daytime Choghadiya
     final dayDuration = sunset.difference(sunrise);
@@ -369,7 +381,7 @@ class MuhurtaService {
     required DateTime sunset,
     bool useSouthIndianMethodForDurMuhurta = false,
   }) {
-    final weekday = date.weekday % 7;
+    final weekday = _getVedicWeekday(date, sunrise);
 
     // Calculate Rahukalam
     final rahuKalam = _calculateTimePeriod(
@@ -421,18 +433,8 @@ class MuhurtaService {
     final startEighth = periods.$1 - 1;
     final endEighth = periods.$2 - 1;
 
-    DateTime startTime;
-    DateTime endTime;
-
-    if (startEighth < endEighth) {
-      // Normal case
-      startTime = sunrise.add(eighthDuration * startEighth);
-      endTime = sunrise.add(eighthDuration * endEighth);
-    } else {
-      // Wraps around (like Saturday Rahukalam)
-      startTime = sunrise.add(eighthDuration * startEighth);
-      endTime = sunrise.add(eighthDuration * (endEighth + 8));
-    }
+    final startTime = sunrise.add(eighthDuration * startEighth);
+    final endTime = sunrise.add(eighthDuration * endEighth);
 
     return TimePeriod(start: startTime, end: endTime);
   }
@@ -502,7 +504,7 @@ class MuhurtaService {
 
   /// Gets the Hora lord for a specific hour of the day.
   Planet getHoraLordForHour(DateTime dateTime, DateTime sunrise) {
-    final weekday = dateTime.weekday % 7;
+    final weekday = _getVedicWeekday(dateTime, sunrise);
     final dayStartLord = _getDayStartLord(weekday);
     const horaSequence = MuhurtaConstants.horaLordsSequence;
     final startIndex = horaSequence.indexOf(dayStartLord);
@@ -524,7 +526,7 @@ class MuhurtaService {
     required DateTime sunset,
     bool useSouthIndianMethod = false,
   }) {
-    final weekday = date.weekday % 7;
+    final weekday = _getVedicWeekday(date, sunrise);
     final dayDurationMs = sunset.difference(sunrise).inMilliseconds;
     final periods = <TimePeriod>[];
 

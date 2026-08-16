@@ -162,6 +162,18 @@ void main() {
     test('exports ProgenyService', () {
       expect(analysis.ProgenyService, isNotNull);
     });
+
+    test('exports DoshaService', () {
+      expect(analysis.DoshaService, isNotNull);
+    });
+
+    test('exports GrahaYuddhaService', () {
+      expect(analysis.GrahaYuddhaService, isNotNull);
+    });
+
+    test('exports ChartStyle', () {
+      expect(analysis.ChartStyle.northIndian, isNotNull);
+    });
   });
 
   group('Tree Shaking - Astronomy Module (astronomy.dart)', () {
@@ -548,7 +560,7 @@ void main() {
     });
 
     test('analysis.dart has expected number of exports', () {
-      // analysis.dart exports 15 files
+      // analysis.dart exports 18 files
       final types = [
         analysis.VedicChartService,
         analysis.DivisionalChartService,
@@ -565,8 +577,11 @@ void main() {
         analysis.SudarshanChakraService,
         analysis.ProgenyResult,
         analysis.ProgenyService,
+        analysis.DoshaService,
+        analysis.GrahaYuddhaService,
+        analysis.ChartStyle,
       ];
-      expect(types.length, 15);
+      expect(types.length, 18);
     });
 
     test('astronomy.dart has expected number of exports', () {

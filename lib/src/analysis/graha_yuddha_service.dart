@@ -49,9 +49,13 @@ class GrahaYuddhaService {
           final mag1 = _calculateMagnitude(p1, elon1);
           final mag2 = _calculateMagnitude(p2, elon2);
 
-          // 2. Latitudes (declination proxy)
-          final lat1 = p1Info.position.latitude;
-          final lat2 = p2Info.position.latitude;
+          // 2. Declinations / Northern Latitudes
+          final decl1 = p1Info.position.declination != 0.0
+              ? p1Info.position.declination
+              : p1Info.position.latitude;
+          final decl2 = p2Info.position.declination != 0.0
+              ? p2Info.position.declination
+              : p2Info.position.latitude;
 
           // 3. Determine winner
           Planet winner;
@@ -64,9 +68,9 @@ class GrahaYuddhaService {
             if ((mag1 - mag2).abs() > 0.05) {
               winner = mag1 < mag2 ? p1 : p2;
             } else {
-              // If brightness is very similar, the one with greater northern latitude wins
-              if ((lat1 - lat2).abs() > 0.01) {
-                winner = lat1 > lat2 ? p1 : p2;
+              // If brightness is very similar, the one with greater northern declination wins
+              if ((decl1 - decl2).abs() > 0.01) {
+                winner = decl1 > decl2 ? p1 : p2;
               } else {
                 // Otherwise, the planet with lower longitude wins
                 winner = lon1 < lon2 ? p1 : p2;
@@ -79,8 +83,8 @@ class GrahaYuddhaService {
             planet2: p2,
             planet1Magnitude: mag1,
             planet2Magnitude: mag2,
-            planet1Declination: lat1,
-            planet2Declination: lat2,
+            planet1Declination: decl1,
+            planet2Declination: decl2,
             longitudeDifference: diff,
             winnerId: winner,
           );

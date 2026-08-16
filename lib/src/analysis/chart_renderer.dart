@@ -177,18 +177,18 @@ extension VedicChartRenderer on VedicChart {
 
     // Define center points for each of the 12 houses to place text
     final centers = [
-      Offset(250.0, 120.0), // House 1
-      Offset(120.0, 60.0), // House 2
-      Offset(60.0, 120.0), // House 3
-      Offset(125.0, 250.0), // House 4
-      Offset(60.0, 380.0), // House 5
-      Offset(120.0, 440.0), // House 6
-      Offset(250.0, 380.0), // House 7
-      Offset(380.0, 440.0), // House 8
-      Offset(440.0, 380.0), // House 9
-      Offset(375.0, 250.0), // House 10
-      Offset(440.0, 120.0), // House 11
-      Offset(380.0, 60.0), // House 12
+      const Offset(250.0, 120.0), // House 1
+      const Offset(120.0, 60.0), // House 2
+      const Offset(60.0, 120.0), // House 3
+      const Offset(125.0, 250.0), // House 4
+      const Offset(60.0, 380.0), // House 5
+      const Offset(120.0, 440.0), // House 6
+      const Offset(250.0, 380.0), // House 7
+      const Offset(380.0, 440.0), // House 8
+      const Offset(440.0, 380.0), // House 9
+      const Offset(375.0, 250.0), // House 10
+      const Offset(440.0, 120.0), // House 11
+      const Offset(380.0, 60.0), // House 12
     ];
 
     final ascSign = (ascendant / 30).floor() % 12;

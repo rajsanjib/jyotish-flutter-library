@@ -357,7 +357,7 @@ class MuhurtaConstants {
   /// Rahu Kalam periods by weekday (in 8ths of daytime)
   /// Format: (start 8th, end 8th)
   static const Map<int, (int, int)> rahuKalamByWeekday = {
-    0: (8, 1), // Sunday: 8th portion
+    0: (8, 9), // Sunday: 8th portion
     1: (2, 3), // Monday: 2nd portion
     2: (7, 8), // Tuesday: 7th portion
     3: (5, 6), // Wednesday: 5th portion

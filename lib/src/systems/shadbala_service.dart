@@ -6,7 +6,6 @@ import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
 import 'package:jyotish/src/analysis/divisional_chart_service.dart';
 import 'package:jyotish/src/astronomy/ephemeris_service.dart';
-import 'package:logging/logging.dart';
 import 'package:dartx/dartx.dart';
 
 /// Service for calculating Shadbala (Six-fold Strength) of planets.
@@ -51,13 +50,25 @@ class ShadbalaService {
     final sthanaBala = _calculateSthanaBala(planet, planetInfo, chart);
 
     // 2. Dig Bala (Directional Strength)
-    final digBala = _calculateDigBala(planet, planetInfo);
+    final digBala = _calculateDigBala(planet, planetInfo, chart);
 
     // 3. Kala Bala (Temporal Strength)
     final kalaBala = await _calculateKalaBala(planet, planetInfo, chart);
 
-    // 4. Chesta Bala (Motional Strength)
-    final chestaBala = _calculateChestaBala(planet, planetInfo);
+    // 4. Chesta Bala (Motional Strength - per BPHS 27:42-43: Sun = Ayana Bala, Moon = Paksha Bala)
+    final double chestaBala;
+    if (planet == Planet.sun) {
+      chestaBala = await _calculateAyanaBala(
+        planet,
+        planetInfo.position.longitude,
+        planetInfo.position.declination,
+        chart.dateTime,
+      );
+    } else if (planet == Planet.moon) {
+      chestaBala = _calculatePakshaBala(planet, planetInfo, chart);
+    } else {
+      chestaBala = _calculateChestaBala(planet, planetInfo);
+    }
 
     // 5. Naisargika Bala (Natural Strength)
     final naisargikaBala = _calculateNaisargikaBala(planet);
@@ -287,6 +298,7 @@ class ShadbalaService {
 
     final isFemale = [Planet.moon, Planet.venus].contains(planet);
     final isMale = [Planet.sun, Planet.mars, Planet.jupiter].contains(planet);
+    final isNeuter = [Planet.mercury, Planet.saturn].contains(planet);
 
     var strength = 0.0;
     if (isMale) {
@@ -295,6 +307,9 @@ class ShadbalaService {
     } else if (isFemale) {
       if (!rashiIsOdd) strength += 15.0;
       if (!navamsaIsOdd) strength += 15.0;
+    } else if (isNeuter) {
+      if (!rashiIsOdd) strength += 15.0;
+      if (navamsaIsOdd) strength += 15.0;
     }
 
     return strength;
@@ -321,19 +336,24 @@ class ShadbalaService {
     return 15.0;
   }
 
-  double _calculateDigBala(Planet planet, VedicPlanetInfo planetInfo) {
-    final house = planetInfo.house;
-    final optimalHouse = switch (planet) {
-      Planet.sun || Planet.mars => 10,
-      Planet.saturn => 7,
-      Planet.moon || Planet.venus => 4,
-      Planet.mercury || Planet.jupiter => 1,
-      _ => 1,
+  double _calculateDigBala(
+    Planet planet,
+    VedicPlanetInfo planetInfo,
+    VedicChart chart,
+  ) {
+    final ascendant = chart.ascendant;
+    final optimalLongitude = switch (planet) {
+      Planet.mercury || Planet.jupiter => ascendant,
+      Planet.moon || Planet.venus => (ascendant + 90.0) % 360.0,
+      Planet.saturn => (ascendant + 180.0) % 360.0,
+      Planet.sun || Planet.mars => (ascendant + 270.0) % 360.0,
+      _ => ascendant,
     };
 
-    var distance = (house - optimalHouse).abs();
-    if (distance > 6) distance = 12 - distance;
-    final strength = 60.0 * (1.0 - (distance / 6.0));
+    var distance =
+        (planetInfo.position.longitude - optimalLongitude).abs() % 360.0;
+    if (distance > 180.0) distance = 360.0 - distance;
+    final strength = (180.0 - distance) / 180.0 * 60.0;
     return strength.clamp(0.0, 60.0);
   }
 
@@ -504,11 +524,11 @@ class ShadbalaService {
   }
 
   Future<double> _calculateTribhagaBala(Planet planet, VedicChart chart) async {
-    // Mercury always gets 60 points
-    if (planet == Planet.mercury) return 60.0;
+    // Per BPHS: Jupiter is all-time powerful and always gets 60 virupas
+    if (planet == Planet.jupiter) return 60.0;
 
     // Assignment:
-    // Day (Sunrise-Sunset): 1st 1/3 Jupiter, 2nd 1/3 Sun, 3rd 1/3 Saturn
+    // Day (Sunrise-Sunset): 1st 1/3 Mercury, 2nd 1/3 Sun, 3rd 1/3 Saturn
     // Night (Sunset-Sunrise): 1st 1/3 Moon, 2nd 1/3 Venus, 3rd 1/3 Mars
 
     final date = chart.dateTime;
@@ -539,7 +559,7 @@ class ShadbalaService {
             2,
           );
 
-      final lords = [Planet.jupiter, Planet.sun, Planet.saturn];
+      final lords = [Planet.mercury, Planet.sun, Planet.saturn];
       return planet == lords[partIndex] ? 60.0 : 0.0;
     } else {
       // Find previous sunset and next sunrise for accurate night division
@@ -1302,7 +1322,7 @@ class ShadbalaService {
         aspectedLong: planetInfo.longitude,
       );
 
-      return _applyAspectNature(otherPlanet, aspectStrength);
+      return _applyAspectNature(otherPlanet, aspectStrength, chart: chart);
     }).sum();
 
     return netVirupas.clamp(-60.0, 60.0);
@@ -1310,23 +1330,61 @@ class ShadbalaService {
 
   /// Applies aspect nature (benefic adds, malefic subtracts).
   ///
-  /// Benefic planets: Jupiter, Venus, Mercury, Moon
-  /// Malefic planets: Sun, Mars, Saturn
+  /// Benefic planets: Jupiter, Venus, Waxing Moon, Unafflicted Mercury
+  /// Malefic planets: Sun, Mars, Saturn, Waning Moon, Afflicted Mercury
   /// Aspect strength is divided by 4 as per Parashara
-  double _applyAspectNature(Planet aspectingPlanet, double aspectStrength) {
-    // Determine planet nature
-    final isBenefic = [
-      Planet.jupiter,
-      Planet.venus,
-      Planet.mercury,
-      Planet.moon,
-    ].contains(aspectingPlanet);
+  double _applyAspectNature(
+    Planet aspectingPlanet,
+    double aspectStrength, {
+    VedicChart? chart,
+  }) {
+    bool isBenefic = false;
+    bool isMalefic = false;
 
-    final isMalefic = [
-      Planet.sun,
-      Planet.mars,
-      Planet.saturn,
-    ].contains(aspectingPlanet);
+    if (aspectingPlanet == Planet.jupiter || aspectingPlanet == Planet.venus) {
+      isBenefic = true;
+    } else if (aspectingPlanet == Planet.sun ||
+        aspectingPlanet == Planet.mars ||
+        aspectingPlanet == Planet.saturn) {
+      isMalefic = true;
+    } else if (aspectingPlanet == Planet.moon) {
+      if (chart != null) {
+        final moonInfo = chart.getPlanet(Planet.moon);
+        if (moonInfo != null) {
+          final pakshaBala = _calculatePakshaBala(Planet.moon, moonInfo, chart);
+          isBenefic = pakshaBala >= 30.0;
+          isMalefic = pakshaBala < 30.0;
+        } else {
+          isBenefic = true;
+        }
+      } else {
+        isBenefic = true;
+      }
+    } else if (aspectingPlanet == Planet.mercury) {
+      if (chart != null) {
+        final mercInfo = chart.getPlanet(Planet.mercury);
+        if (mercInfo != null) {
+          // Check if Mercury is conjunct a natural malefic (within 10 degrees)
+          final hasMaleficConjunct = [
+            Planet.sun,
+            Planet.mars,
+            Planet.saturn,
+          ].any((m) {
+            final mInfo = chart.getPlanet(m);
+            if (mInfo == null) return false;
+            var dist = (mInfo.longitude - mercInfo.longitude).abs() % 360.0;
+            if (dist > 180.0) dist = 360.0 - dist;
+            return dist <= 10.0;
+          });
+          isBenefic = !hasMaleficConjunct;
+          isMalefic = hasMaleficConjunct;
+        } else {
+          isBenefic = true;
+        }
+      } else {
+        isBenefic = true;
+      }
+    }
 
     // Apply Parashara's rule: divide by 4
     final virupas = aspectStrength / 4.0;

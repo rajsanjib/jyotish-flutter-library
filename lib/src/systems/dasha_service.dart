@@ -3,7 +3,6 @@ import 'package:jyotish/src/systems/dasha.dart';
 import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/models/rashi.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
-import 'package:dartx/dartx.dart';
 
 /// Internal helper class for Vimshottari planet info.
 class _VimshottariPlanetInfo {
@@ -154,7 +153,7 @@ class DashaService {
         final durationDays = isFirstDasha ? balanceDays : fullMahadashaDays;
         final durationMs = (durationDays * 86400000).round();
         final duration = Duration(milliseconds: durationMs);
-        final endDate = currentDate + duration;
+        final endDate = currentDate.add(duration);
 
         List<DashaPeriod> subPeriods = [];
         if (levels >= 2) {
@@ -221,7 +220,7 @@ class DashaService {
       final duration = Duration(
         milliseconds: (remainingDays * 86400000).round(),
       );
-      final endDate = currentDate + duration;
+      final endDate = currentDate.add(duration);
 
       List<DashaPeriod> subPeriods = [];
       if (levels >= 3) {
@@ -284,7 +283,7 @@ class DashaService {
       final duration = Duration(
         milliseconds: (remainingDays * 86400000).round(),
       );
-      final endDate = currentDate + duration;
+      final endDate = currentDate.add(duration);
 
       List<DashaPeriod> subPeriods = [];
       if (levels >= 4) {
@@ -347,7 +346,7 @@ class DashaService {
       final duration = Duration(
         milliseconds: (remainingDays * 86400000).round(),
       );
-      final endDate = currentDate + duration;
+      final endDate = currentDate.add(duration);
 
       List<DashaPeriod> subPeriods = [];
       if (levels >= 5) {
@@ -405,7 +404,7 @@ class DashaService {
       final duration = Duration(
         milliseconds: (remainingDays * 86400000).round(),
       );
-      final endDate = currentDate + duration;
+      final endDate = currentDate.add(duration);
 
       pranadashas.add(
         DashaPeriod(
@@ -449,7 +448,7 @@ class DashaService {
             (cycle == 0 && i == 0) ? balanceDays : yogini.years * 365.25;
         final durationMs = (durationDays * 86400000).round();
         final duration = Duration(milliseconds: durationMs);
-        final endDate = currentDate + duration;
+        final endDate = currentDate.add(duration);
 
         List<DashaPeriod> subPeriods = [];
         if (levels >= 2) {
@@ -772,8 +771,8 @@ class DashaService {
       final duration = Duration(
         milliseconds: (totalDuration.inMilliseconds * proportion).round(),
       );
-      final endDate = currentDate + duration;
-      if (endDate > mahadashaEnd) break;
+      final endDate = currentDate.add(duration);
+      if (endDate.isAfter(mahadashaEnd)) break;
 
       subPeriods.add(
         DashaPeriod(
@@ -878,7 +877,9 @@ class DashaService {
       final planet = ashtottariSequence[lordIdx];
       final years = ashtottariYears[planet] ?? 6.0;
       final durationDays = i == 0 ? balanceDays : years * 365.25;
-      final endDate = currentDate + durationDays.days;
+      final duration =
+          Duration(milliseconds: (durationDays * 86400000).round());
+      final endDate = currentDate.add(duration);
 
       final subPeriods = levels >= 2
           ? _calculateAshtottariAntardashas(
@@ -1244,7 +1245,7 @@ class DashaService {
             : planetInfo.years * yearLength;
         final durationMs = (durationDays * 86400000).round();
         final duration = Duration(milliseconds: durationMs);
-        final endDate = currentDate + duration;
+        final endDate = currentDate.add(duration);
 
         final mahaPeriod = DashaPeriod(
           lord: planetInfo.planet,
@@ -1289,7 +1290,7 @@ class DashaService {
           (mahadashaDays * planetInfo.years) / totalVimshottariYears;
       final durationMs = (durationDays * 86400000).round();
       final duration = Duration(milliseconds: durationMs);
-      final endDate = currentDate + duration;
+      final endDate = currentDate.add(duration);
 
       final antarPeriod = DashaPeriod(
         lord: planetInfo.planet,
@@ -1334,7 +1335,7 @@ class DashaService {
           (antardashaDays * planetInfo.years) / totalVimshottariYears;
       final durationMs = (durationDays * 86400000).round();
       final duration = Duration(milliseconds: durationMs);
-      final endDate = currentDate + duration;
+      final endDate = currentDate.add(duration);
 
       final pratyantarPeriod = DashaPeriod(
         lord: planetInfo.planet,
@@ -1379,7 +1380,7 @@ class DashaService {
           (pratyantardashaDays * planetInfo.years) / totalVimshottariYears;
       final durationMs = (durationDays * 86400000).round();
       final duration = Duration(milliseconds: durationMs);
-      final endDate = currentDate + duration;
+      final endDate = currentDate.add(duration);
 
       final sookshmaPeriod = DashaPeriod(
         lord: planetInfo.planet,
@@ -1422,7 +1423,7 @@ class DashaService {
           (sookshmadashaDays * planetInfo.years) / totalVimshottariYears;
       final durationMs = (durationDays * 86400000).round();
       final duration = Duration(milliseconds: durationMs);
-      final endDate = currentDate + duration;
+      final endDate = currentDate.add(duration);
 
       yield DashaPeriod(
         lord: planetInfo.planet,

@@ -3,7 +3,6 @@ import 'package:jyotish/src/models/rashi.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
 import 'package:jyotish/src/models/compatibility_report.dart';
 import 'package:jyotish/src/analysis/compatibility.dart';
-import 'package:dartx/dartx.dart';
 
 
 class CompatibilityService {

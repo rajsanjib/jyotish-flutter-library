@@ -1,7 +1,5 @@
-import 'package:test/test.dart';
-import 'package:jyotish/src/muhurta/muhurta.dart';
-import 'package:jyotish/src/muhurta/muhurta_service.dart';
-import 'package:jyotish/src/models/geographic_location.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:jyotish/jyotish.dart';
 
 void main() {
   final service = MuhurtaService();

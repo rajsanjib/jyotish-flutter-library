@@ -7,7 +7,6 @@ import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/astronomy/planet_position.dart';
 import 'package:jyotish/src/astronomy/ephemeris_service.dart';
 import 'package:jyotish/src/astronomy/astrology_time_service.dart';
-import 'package:dartx/dartx.dart';
 
 /// Service for calculating Panchanga (five limbs) elements.
 ///
@@ -684,7 +683,7 @@ class PanchangaService {
 
     // 2. Binary search for target elongation within the next 48 hours
     var start = dateTime;
-    var end = dateTime + 48.hours;
+    var end = dateTime.add(const Duration(hours: 48));
 
     var iteration = 0;
     const maxIterations = 60;
@@ -696,7 +695,9 @@ class PanchangaService {
         break;
       }
 
-      final mid = start + (currentWindow * 0.5);
+      final mid = start.add(
+        Duration(milliseconds: (currentWindow.inMilliseconds * 0.5).round()),
+      );
 
       final midSun = await _ephemerisService.calculatePlanetPosition(
         planet: Planet.sun,
@@ -752,7 +753,7 @@ class PanchangaService {
     final targetLongitude = ((currentNakshatra + 1) * (360.0 / 27.0)) % 360;
 
     var start = dateTime;
-    var end = dateTime + 48.hours;
+    var end = dateTime.add(const Duration(hours: 48));
 
     var iteration = 0;
     const maxIterations = 60;
@@ -764,7 +765,9 @@ class PanchangaService {
         break;
       }
 
-      final mid = start + (currentWindow * 0.5);
+      final mid = start.add(
+        Duration(milliseconds: (currentWindow.inMilliseconds * 0.5).round()),
+      );
 
       final midMoon = await _ephemerisService.calculatePlanetPosition(
         planet: Planet.moon,
@@ -818,7 +821,7 @@ class PanchangaService {
     final targetValue = ((currentYoga + 1) * (360.0 / 27.0)) % 360;
 
     var start = dateTime;
-    var end = dateTime + 48.hours;
+    var end = dateTime.add(const Duration(hours: 48));
 
     var iteration = 0;
     const maxIterations = 60;
@@ -830,7 +833,9 @@ class PanchangaService {
         break;
       }
 
-      final mid = start + (currentWindow * 0.5);
+      final mid = start.add(
+        Duration(milliseconds: (currentWindow.inMilliseconds * 0.5).round()),
+      );
 
       final midSun = await _ephemerisService.calculatePlanetPosition(
         planet: Planet.sun,
@@ -936,7 +941,7 @@ class PanchangaService {
     );
 
     // Get PREVIOUS day's sunset  night runs from yesterday-sunset to today-sunrise
-    final previousDay = date - 1.days;
+    final previousDay = date.subtract(const Duration(days: 1));
     final (_, previousSunset) = await _calculateSunriseSunset(
       dateTime: previousDay,
       location: location,
@@ -952,7 +957,7 @@ class PanchangaService {
       milliseconds: (nightDuration.inMilliseconds / 15).round(),
     );
 
-    final brahmaStart = sunrise - brahmaDuration;
+    final brahmaStart = sunrise.subtract(brahmaDuration);
     final brahmaEnd = sunrise;
 
     return BrahmaMuhurta(

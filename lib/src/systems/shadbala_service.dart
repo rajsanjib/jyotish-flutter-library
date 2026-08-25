@@ -6,7 +6,6 @@ import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
 import 'package:jyotish/src/analysis/divisional_chart_service.dart';
 import 'package:jyotish/src/astronomy/ephemeris_service.dart';
-import 'package:dartx/dartx.dart';
 
 /// Service for calculating Shadbala (Six-fold Strength) of planets.
 ///
@@ -1311,7 +1310,7 @@ class ShadbalaService {
     VedicChart chart,
   ) {
     final netVirupas = Planet.traditionalPlanets
-        .filter((otherPlanet) => otherPlanet != planet)
+        .where((otherPlanet) => otherPlanet != planet)
         .map((otherPlanet) {
       final otherInfo = chart.getPlanet(otherPlanet);
       if (otherInfo == null) return 0.0;
@@ -1323,7 +1322,7 @@ class ShadbalaService {
       );
 
       return _applyAspectNature(otherPlanet, aspectStrength, chart: chart);
-    }).sum();
+    }).fold<double>(0.0, (sum, v) => sum + v);
 
     return netVirupas.clamp(-60.0, 60.0);
   }

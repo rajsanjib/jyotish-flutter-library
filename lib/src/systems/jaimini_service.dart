@@ -2,7 +2,6 @@ import 'package:jyotish/src/systems/jaimini.dart';
 import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/models/rashi.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
-import 'package:dartx/dartx.dart';
 
 /// Service for Jaimini astrology calculations (Karakamsa, Rashi Drishti).
 class JaiminiService {
@@ -197,7 +196,7 @@ class JaiminiService {
 
   List<Planet> _getPlanetsInSign(VedicChart chart, Rashi sign) {
     return chart.planets.entries
-        .filter((e) => Rashi.fromLongitude(e.value.longitude) == sign)
+        .where((e) => Rashi.fromLongitude(e.value.longitude) == sign)
         .map((e) => e.key)
         .toList();
   }

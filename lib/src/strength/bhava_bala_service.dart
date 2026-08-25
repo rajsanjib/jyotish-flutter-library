@@ -3,7 +3,6 @@ import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/models/rashi.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
 import 'package:jyotish/src/systems/shadbala_service.dart';
-import 'package:dartx/dartx.dart';
 
 
 /// Service for calculating Bhava Bala (House Strength).
@@ -14,28 +13,31 @@ class BhavaBalaService {
   /// Calculates Bhava Bala for all 12 houses.
   Future<Map<int, BhavaBalaResult>> calculateBhavaBala(VedicChart chart) async {
     final planetShadbala = await _shadbalaService.calculateShadbala(chart);
-    return IntRange(1, 12).associateWith((h) {
-      // 1. Bhava Adhipati Bala (Shadbala of the house lord)
-      final lord = _getHouseLord(chart, h);
-      final lordBala = planetShadbala[lord]?.totalBala ?? 0.0;
+    return <int, BhavaBalaResult>{
+      for (var h = 1; h <= 12; h++)
+        h: () {
+          // 1. Bhava Adhipati Bala (Shadbala of the house lord)
+          final lord = _getHouseLord(chart, h);
+          final lordBala = planetShadbala[lord]?.totalBala ?? 0.0;
 
-      // 2. Bhava Dig Bala
-      final digBala = _calculateBhavaDigBala(h, chart.ascendant);
+          // 2. Bhava Dig Bala
+          final digBala = _calculateBhavaDigBala(h, chart.ascendant);
 
-      // 3. Bhava Drishti Bala (Simplified)
-      final drishtiBala = _calculateBhavaDrishtiBala(h, chart);
+          // 3. Bhava Drishti Bala (Simplified)
+          final drishtiBala = _calculateBhavaDrishtiBala(h, chart);
 
-      final totalBala = lordBala + digBala + drishtiBala;
+          final totalBala = lordBala + digBala + drishtiBala;
 
-      return BhavaBalaResult(
-        houseNumber: h,
-        strength: totalBala,
-        lordStrength: lordBala,
-        digBala: digBala,
-        aspectStrength: drishtiBala,
-        category: _getBhavaStrengthCategory(totalBala),
-      );
-    });
+          return BhavaBalaResult(
+            houseNumber: h,
+            strength: totalBala,
+            lordStrength: lordBala,
+            digBala: digBala,
+            aspectStrength: drishtiBala,
+            category: _getBhavaStrengthCategory(totalBala),
+          );
+        }(),
+    };
   }
 
   BhavaStrengthCategory _getBhavaStrengthCategory(double strength) {

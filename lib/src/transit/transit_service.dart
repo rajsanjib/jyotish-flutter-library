@@ -6,7 +6,6 @@ import 'package:jyotish/src/astronomy/planet_position.dart';
 import 'package:jyotish/src/transit/transit.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
 import 'package:jyotish/src/astronomy/ephemeris_service.dart';
-import 'package:dartx/dartx.dart';
 
 /// Service for calculating planetary transits.
 ///
@@ -288,8 +287,10 @@ class TransitService {
               natalPlanet: aspect.aspectedPlanet,
               aspectType: aspect.type,
               exactDate: currentDate,
-              startDate: currentDate.subtract(config.intervalDays.days * 3),
-              endDate: currentDate.add(config.intervalDays.days * 3),
+              startDate:
+                  currentDate.subtract(Duration(days: config.intervalDays * 3)),
+              endDate:
+                  currentDate.add(Duration(days: config.intervalDays * 3)),
               isRetrograde: transit.isRetrograde,
               description: _generateTransitDescription(
                 aspect,

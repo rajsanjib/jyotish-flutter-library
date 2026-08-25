@@ -3222,6 +3222,33 @@ class Jyotish {
     return _compatibilityService!.calculateVashya(boyChart, girlChart);
   }
 
+  /// Calculates Yoni compatibility score (0-4 pts) between two Nakshatras.
+  int calculateYoni(String boyNakshatra, String girlNakshatra) {
+    _ensureInitialized();
+    return _compatibilityService!.calculateYoni(boyNakshatra, girlNakshatra);
+  }
+
+  /// Calculates Dasha compatibility between two charts.
+  DashaCompatibility calculateDashaCompatibility(
+    VedicChart boyChart,
+    VedicChart girlChart,
+  ) {
+    _ensureInitialized();
+    return _compatibilityService!.calculateDashaCompatibility(
+      boyChart,
+      girlChart,
+    );
+  }
+
+  /// Checks for all doshas (Nadi, Bhakoot, Manglik) between two charts.
+  DoshaCheck checkDoshas(
+    VedicChart boyChart,
+    VedicChart girlChart,
+  ) {
+    _ensureInitialized();
+    return _compatibilityService!.checkDoshas(boyChart, girlChart);
+  }
+
   /// Calculates Guna Milan (Ashtakoota) scores.
   GunaScores calculateGunaMilan(VedicChart boyChart, VedicChart girlChart) {
     _ensureInitialized();

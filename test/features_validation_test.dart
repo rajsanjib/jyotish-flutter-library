@@ -106,5 +106,38 @@ void main() {
         expect(score >= 0.0 && score <= 20.0, isTrue);
       }
     });
+
+    test('4. SamvatInfo, Ayana, and Pravishte facade calculations', () async {
+      final jyotish = Jyotish();
+
+      // Test SamvatInfo
+      final samvat = await jyotish.getSamvatInfo(
+        dateTime: birthDate,
+        location: location,
+      );
+      expect(samvat, isNotNull);
+      expect(samvat.vikramSamvat > 2000, isTrue);
+      expect(samvat.shakaSamvat > 1900, isTrue);
+      expect(samvat.gujaratiSamvat > 2000, isTrue);
+      expect(samvat.samvatsaraName.isNotEmpty, isTrue);
+      expect(samvat.samvatsaraNumber >= 0 && samvat.samvatsaraNumber < 60, isTrue);
+
+      // Test Ayana
+      final ayana = await jyotish.getAyana(
+        dateTime: birthDate,
+        location: location,
+      );
+      expect(ayana, isNotNull);
+      expect(ayana == Ayana.dakshinayana || ayana == Ayana.uttarayana, isTrue);
+
+      // Test Pravishte
+      final pravishte = await jyotish.getPravishte(
+        dateTime: birthDate,
+        location: location,
+      );
+      expect(pravishte, isNotNull);
+      expect(pravishte.day >= 1 && pravishte.day <= 32, isTrue);
+      expect(pravishte.monthName.isNotEmpty, isTrue);
+    });
   });
 }

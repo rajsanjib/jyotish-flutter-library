@@ -2729,6 +2729,78 @@ class Jyotish {
     }
   }
 
+  /// Gets Samvat information (Vikram Samvat, Shaka Samvat, Gujarati Samvat, Samvatsara).
+  ///
+  /// [dateTime] - The date to calculate for
+  /// [location] - Geographic location
+  Future<SamvatInfo> getSamvatInfo({
+    required DateTime dateTime,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+
+    try {
+      return await _masaService!.getSamvatInfo(
+        dateTime: dateTime,
+        location: location,
+      );
+    } catch (e) {
+      if (e is JyotishException) rethrow;
+      throw JyotishException(
+        'Failed to get Samvat info: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
+  /// Gets the solar half-year (Ayana: Uttarayana or Dakshinayana).
+  ///
+  /// [dateTime] - The date to calculate for
+  /// [location] - Geographic location
+  Future<Ayana> getAyana({
+    required DateTime dateTime,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+
+    try {
+      return await _masaService!.getAyana(
+        dateTime: dateTime,
+        location: location,
+      );
+    } catch (e) {
+      if (e is JyotishException) rethrow;
+      throw JyotishException(
+        'Failed to get Ayana: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
+  /// Gets the solar date (Pravishte / Gata - solar day and solar sign month).
+  ///
+  /// [dateTime] - The date to calculate for
+  /// [location] - Geographic location
+  Future<PravishteInfo> getPravishte({
+    required DateTime dateTime,
+    required GeographicLocation location,
+  }) async {
+    _ensureInitialized();
+
+    try {
+      return await _masaService!.getPravishte(
+        dateTime: dateTime,
+        location: location,
+      );
+    } catch (e) {
+      if (e is JyotishException) rethrow;
+      throw JyotishException(
+        'Failed to get Pravishte: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
   /// Gets a list of all lunar months for a given year.
   ///
   /// Useful for generating a lunar calendar or displaying month transitions.

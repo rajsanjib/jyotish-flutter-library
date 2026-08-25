@@ -85,6 +85,10 @@ A comprehensive API reference for the Jyotish Flutter library - production-ready
   - [PlanetPosition](#planetposition)
   - [VedicPlanetInfo](#vedicplanetinfo)
   - [Panchanga](#panchanga)
+  - [MasaInfo](#masainfo)
+  - [SamvatInfo](#samvatinfo)
+  - [Ayana](#ayana)
+  - [PravishteInfo](#pravishteinfo)
   - [DashaResult](#dasharesult)
   - [Varshapal](#varshapal)
   - [VarshapalPeriod](#varshapaperiod)
@@ -387,6 +391,9 @@ await jyotish.initialize({String? ephemerisPath});
 | `getAmantaMasa({required dateTime, required location})` | `Future<MasaInfo>` | Amanta system |
 | `getPurnimantaMasa({required dateTime, required location})` | `Future<MasaInfo>` | Purnimanta system |
 | `getSamvatsara({required dateTime, required location})` | `Future<String>` | 60-year Jovian cycle name |
+| `getSamvatInfo({required dateTime, required location})` | `Future<SamvatInfo>` | Vikram/Shaka/Gujarati Samvat and Samvatsara number |
+| `getAyana({required dateTime, required location})` | `Future<Ayana>` | Uttarayana or Dakshinayana |
+| `getPravishte({required dateTime, required location})` | `Future<PravishteInfo>` | Solar day (1-31) and solar Rashi month |
 | `getMasaListForYear({required year, required location, type = MasaType.amanta})` | `Future<List<MasaInfo>>` | All months in year |
 | `getRitu(masaInfo)` | `Ritu` | Hindu season |
 | `getRituDetails({required dateTime, required location})` | `Future<RituInfo>` | Detailed season info |
@@ -1842,6 +1849,58 @@ Complete Panchanga (five limbs) data.
 | `vara` | `VaraInfo` | Weekday/lord |
 | `sunrise` | `DateTime` | Sunrise time |
 | `sunset` | `DateTime` | Sunset time |
+
+---
+
+### MasaInfo
+
+Lunar month calculation result.
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `month` | `LunarMonth` | The lunar month enum |
+| `monthNumber` | `int` | Month number (1-12) |
+| `type` | `MasaType` | Amanta or Purnimanta system |
+| `adhikaType` | `AdhikaMasaType` | None, Adhika, or Nija |
+| `sunLongitude` | `double` | Sun's longitude |
+| `tithiInfo` | `TithiInfo` | Current Tithi details |
+| `displayName` | `String` | Formatted display name (with Adhika prefix) |
+
+---
+
+### SamvatInfo
+
+Information about Hindu calendar eras and 60-year Jovian cycles.
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `vikramSamvat` | `int` | Vikram Samvat year (epoch 57 BCE) |
+| `shakaSamvat` | `int` | Shaka Samvat year (epoch 78 CE) |
+| `gujaratiSamvat` | `int` | Gujarati Samvat year (starts Kartika) |
+| `samvatsaraName` | `String` | Name of 60-year Jovian cycle year |
+| `samvatsaraNumber` | `int` | Index in 60-year cycle (0-59) |
+
+---
+
+### Ayana
+
+Solar half-year enum (`uttarayana` or `dakshinayana`).
+
+| Value | Sanskrit | Description |
+|---|---|---|
+| `uttarayana` | Uttarayana | Northern course of the Sun (Makara Sankranti to Karka Sankranti) |
+| `dakshinayana` | Dakshinayana | Southern course of the Sun (Karka Sankranti to Makara Sankranti) |
+
+---
+
+### PravishteInfo
+
+Solar date information (Gata / Pravishte).
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `day` | `int` | Solar day number within the solar month (1-31) |
+| `monthName` | `String` | Solar month name based on Sun's Rashi (e.g. Mesha, Vrishabha) |
 
 ---
 

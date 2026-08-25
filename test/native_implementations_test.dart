@@ -55,36 +55,30 @@ void main() {
     test('3. Deep Exaltation & Debilitation Degrees', () {
       // Expose and test param uchha / param neecha orbs
       final sunInfo = chart.getPlanet(Planet.sun);
-      if (sunInfo != null) {
-        // Sun deep exaltation is at 10 degrees Aries.
-        expect(sunInfo.isDeepExalted(360.0), isTrue);
-        expect(sunInfo.isDeepDebilitated(360.0), isTrue);
-        expect(
-          sunInfo.isDeepExalted(0.0001),
-          isFalse,
-        ); // Sun in mid-May is in Taurus, not Aries 10
-      }
+      expect(sunInfo, isNotNull);
+      // Sun deep exaltation is at 10 degrees Aries (10° longitude).
+      // Sun deep debilitation is at 10 degrees Libra (190° longitude).
+      // For May 15 chart, Sun is in Taurus (~30.5°), so with fine orb it is neither.
+      expect(sunInfo!.isDeepExalted(0.0001), isFalse);
+      expect(sunInfo.isDeepDebilitated(0.0001), isFalse);
     });
 
     test('4. Planet-Specific Combustion (Kopa) Ranges', () {
       // Verify combustion distance limits
       final moonInfo = chart.getPlanet(Planet.moon);
-      if (moonInfo != null) {
-        expect(moonInfo.combustionDistance, equals(12.0));
-      }
+      expect(moonInfo, isNotNull);
+      expect(moonInfo!.combustionDistance, equals(12.0));
 
       final marsInfo = chart.getPlanet(Planet.mars);
-      if (marsInfo != null) {
-        expect(marsInfo.combustionDistance, equals(17.0));
-      }
+      expect(marsInfo, isNotNull);
+      expect(marsInfo!.combustionDistance, equals(17.0));
 
       final mercuryInfo = chart.getPlanet(Planet.mercury);
-      if (mercuryInfo != null) {
-        if (mercuryInfo.isRetrograde) {
-          expect(mercuryInfo.combustionDistance, equals(12.0));
-        } else {
-          expect(mercuryInfo.combustionDistance, equals(14.0));
-        }
+      expect(mercuryInfo, isNotNull);
+      if (mercuryInfo!.isRetrograde) {
+        expect(mercuryInfo.combustionDistance, equals(12.0));
+      } else {
+        expect(mercuryInfo.combustionDistance, equals(14.0));
       }
     });
 

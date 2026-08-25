@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:ffi/ffi.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
+import 'package:synchronized/synchronized.dart';
+import 'package:jyotish/src/constants/planet_constants.dart';
 
 /// FFI bindings for Swiss Ephemeris C library.
 ///
@@ -13,6 +15,9 @@ class SwissEphBindings {
   }
   late final ffi.DynamicLibrary _lib;
   static final Logger _log = Logger('jyotish.SwissEphBindings');
+
+  /// Shared lock for process-global Swiss Ephemeris C state synchronization.
+  final Lock lock = Lock();
 
   // Function signatures
   late final _sweSetEphePath = _lib.lookupFunction<
@@ -236,7 +241,15 @@ class SwissEphBindings {
     } else if (Platform.isIOS || Platform.isMacOS) {
       return ffi.DynamicLibrary.open('libswisseph.dylib');
     } else if (Platform.isLinux) {
-      return ffi.DynamicLibrary.open('libswisseph.so');
+      try {
+        return ffi.DynamicLibrary.open('libswisseph.so');
+      } catch (_) {
+        try {
+          return ffi.DynamicLibrary.open('libswe.so');
+        } catch (_) {
+          return ffi.DynamicLibrary.open('libswe.so.0');
+        }
+      }
     } else if (Platform.isWindows) {
       return ffi.DynamicLibrary.open('swisseph.dll');
     } else {
@@ -286,7 +299,13 @@ class SwissEphBindings {
       }
 
       // If it falls back to Moshier (4) instead of Swiss (2), or has warnings
-      if (returnCode != flags && returnCode != 2) {
+      if (returnCode != flags && (returnCode & SwissEphConstants.moshier) != 0) {
+        final msg = errorBuffer.cast<Utf8>().toDartString();
+        _log.warning(
+          'SwissEph precision fallback to Moshier for Planet $planetId: '
+          '${msg.isNotEmpty ? msg : "ephemeris files missing, using low-precision analytical model"}',
+        );
+      } else if (returnCode != flags && returnCode != 2) {
         final msg = errorBuffer.cast<Utf8>().toDartString();
         if (msg.isNotEmpty) {
           _log.warning('SwissEph Warning (Planet $planetId): $msg');
@@ -507,7 +526,7 @@ class SwissEphBindings {
       }
 
       final result = <double>[];
-      for (var i = 0; i < 20; i++) {
+      for (var i = 0; i < 10; i++) {
         result.add(tretPtr[i]);
       }
       return result;
@@ -540,7 +559,7 @@ class SwissEphBindings {
       }
 
       final result = <double>[];
-      for (var i = 0; i < 20; i++) {
+      for (var i = 0; i < 10; i++) {
         result.add(tretPtr[i]);
       }
       return result;
@@ -558,7 +577,7 @@ class SwissEphBindings {
     required int flags,
     required ffi.Pointer<ffi.Char> errorBuffer,
   }) {
-    final geoposPtr = malloc<ffi.Double>(3);
+    final geoposPtr = malloc<ffi.Double>(10);
     final attrPtr = malloc<ffi.Double>(20);
     try {
       geoposPtr[0] = longitude;
@@ -599,8 +618,8 @@ class SwissEphBindings {
     required ffi.Pointer<ffi.Char> errorBuffer,
   }) {
     final geoposPtr = calloc<ffi.Double>(10); // zero-initialized array
-    final tretPtr = calloc<ffi.Double>(30); // zero-initialized
-    final attrPtr = calloc<ffi.Double>(30); // zero-initialized
+    final tretPtr = calloc<ffi.Double>(20); // zero-initialized
+    final attrPtr = calloc<ffi.Double>(20); // zero-initialized
     try {
       geoposPtr[0] = longitude;
       geoposPtr[1] = latitude;

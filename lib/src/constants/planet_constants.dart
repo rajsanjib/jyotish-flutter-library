@@ -36,6 +36,7 @@ class SwissEphConstants {
 
   // Calculation flags
   static const int swissEph = 2; // Use Swiss Ephemeris
+  static const int moshier = 4; // Moshier analytical ephemeris fallback
   static const int speed = 256; // Calculate speed
   static const int sidereal = 64; // Sidereal calculation
   static const int tropical = 0; // Tropical calculation (default)

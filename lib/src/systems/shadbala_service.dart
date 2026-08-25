@@ -1485,10 +1485,11 @@ class ShadbalaService {
   /// Full aspects (180) get full 60 virupas, partial aspects get reduced.
   double _getAspectStrengthMultiplier(double aspectAngle) {
     // Full 7th aspect
-    if (aspectAngle == 180.0) return 1.0;
+    if ((aspectAngle - 180.0).abs() < 1e-4) return 1.0;
 
     // Special aspects (Mars 4th/8th, Jupiter 5th/9th, Saturn 3rd/10th)
-    if ([90.0, 120.0, 210.0, 240.0, 60.0, 270.0].contains(aspectAngle)) {
+    const specialAngles = [90.0, 120.0, 210.0, 240.0, 60.0, 270.0];
+    if (specialAngles.any((a) => (a - aspectAngle).abs() < 1e-4)) {
       return 1.0; // Full strength for special aspects
     }
 
@@ -1533,12 +1534,13 @@ class ShadbalaService {
   /// Gets maximum orb allowance for different aspect types.
   double _getMaxOrbForAspect(Planet planet, double aspectAngle) {
     // Full aspects (7th house) get 30 orb for all planets
-    if (aspectAngle == 180.0) {
+    if ((aspectAngle - 180.0).abs() < 1e-4) {
       return 30.0;
     }
 
     // Special aspects get 15 orb
-    if ([90.0, 210.0, 120.0, 240.0, 60.0, 270.0].contains(aspectAngle)) {
+    const specialAngles = [90.0, 210.0, 120.0, 240.0, 60.0, 270.0];
+    if (specialAngles.any((a) => (a - aspectAngle).abs() < 1e-4)) {
       return 15.0;
     }
 

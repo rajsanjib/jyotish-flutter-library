@@ -12,7 +12,7 @@ import 'package:jyotish/src/astronomy/ephemeris_service.dart'; // To reuse Eclip
 /// local predictions (eclipses visible at a specific geographic location).
 class EclipseService {
   final SwissEphBindings _bindings;
-  final _lock = Lock();
+  Lock get _lock => _bindings.lock;
 
   EclipseService(this._bindings);
 
@@ -96,6 +96,7 @@ class EclipseService {
 
           // Advance past current eclipse (at least 15 days forward)
           currentJd = tret[0] + 15.0;
+          await Future<void>.delayed(Duration.zero);
         }
       } finally {
         malloc.free(errorBuffer);
@@ -171,6 +172,7 @@ class EclipseService {
             );
 
             currentJd = tret[0] + 15.0;
+            await Future<void>.delayed(Duration.zero);
           }
         } else {
           // Global solar eclipses
@@ -220,6 +222,7 @@ class EclipseService {
             );
 
             currentJd = tret[0] + 15.0;
+            await Future<void>.delayed(Duration.zero);
           }
         }
       } finally {

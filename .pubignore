@@ -1,31 +1,41 @@
-# Exclude large Swiss Ephemeris files from pub.dev package
-native/swisseph/master.zip
-native/swisseph/swisseph-master/ephe/
-native/swisseph/swisseph-master/contrib/
-native/swisseph/swisseph-master/doc/
-native/swisseph/swisseph-master/setest/
-native/swisseph/swisseph-master/windows/
-native/swisseph/swisseph-master/bin/
-native/swisseph/swisseph-master/lib/
-native/swisseph/swisseph-master/*.c
-native/swisseph/swisseph-master/*.h
-native/swisseph/swisseph-master/*.txt
-native/swisseph/swisseph-master/*.jpg
-native/swisseph/swisseph-master/*.pdf
-
-# Exclude build artifacts
+# Exclude build and binary artifacts
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+*.o
 build/
-example/build/
+android/.gradle/
 .dart_tool/
 .DS_Store
 
-# Exclude development scripts
+# Exclude generated docs and logs
+doc/api/
+*.log
+test_output.log
+test_ephe.log
+
+# Exclude Swiss Ephemeris data files from pub package
+ephe/
+**/ephe/
+
+# Exclude internal / development scripts & configs
 build_app.sh
 prepare_package.sh
+.github/
+.antigravitycli/
+.desloppify/
+.desloppy/
+subjective_import.json
+test.json
 
-# Exclude documentation that's not needed for pub.dev
+# Exclude internal documentation not needed on pub.dev
 MOBILE_APP_QUICKSTART.md
 PROJECT_SUMMARY.md
 PUBLISHING_GUIDE.md
 SETUP.md
 CONTRIBUTING.md
+SKILL.md
+comparision.md
+pyjhora_yogas.md

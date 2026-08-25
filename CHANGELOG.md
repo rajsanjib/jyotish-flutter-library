@@ -6,6 +6,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.19.0] - 2026-08-25
+
+### Added
+- **macOS Platform Support**:
+  - Added `macos/jyotish.podspec` and macOS FFI plugin headers/stubs to support macOS desktop builds out of the box.
+- **Continuous Integration**:
+  - Added GitHub Actions CI workflow (`.github/workflows/ci.yml`) covering code formatting, static analysis (`flutter analyze`), and unit test suite execution (`flutter test`).
+
+### Changed & Breaking Changes
+- **Facade Exception Contract**:
+  - The `Jyotish` facade now rethrows specific `JyotishException` subclasses (`CalculationException`, `PolarRegionException`, `InitializationException`, `ValidationException`, `AyanamsaMismatchException`) directly, ensuring `on CalculationException` and `on PolarRegionException` catch blocks work as documented.
+- **Obliquity & Rise/Set Exception Propagation**:
+  - `EphemerisService.getObliquity()` now throws `CalculationException` when Swiss Ephemeris C fails instead of returning a hardcoded `23.44°`. Callers in extreme conditions should handle `on CalculationException`.
+  - `EphemerisService.getRiseSet()` now only returns `null` for legitimate circumpolar / polar region events and throws `CalculationException` on calculation failures.
+- **Cache Key Timezone Awareness & LRU Eviction**:
+  - Added `location.timezone` to cache keys in `EphemerisService` (`_planetPositionCache`, `_housesCache`, `_sunriseSunsetCache`) to prevent incorrect cache hits when calculating for identical timestamps in different timezones. Cache eviction updated to true LRU.
+- **Process-Global C Concurrency Lock & Ephemeris Singleton**:
+  - Unified Swiss Ephemeris synchronization under `SwissEphBindings.lock` across `EphemerisService` and `EclipseService` to prevent native C state corruption.
+  - `EphemerisService()` now returns a shared singleton instance by default, with `EphemerisService.standalone()` available for isolated lifecycles.
+  - Added event loop yields (`await Future.delayed(Duration.zero)`) inside `EclipseService` batch prediction loops to prevent UI frame starvation.
+- **Shadbala Aspect Precision**:
+  - Replaced strict floating-point equality (`== 180.0`) with epsilon tolerance (`< 1e-4`) in `_getAspectStrengthMultiplier()` and `_getMaxOrbForAspect()`.
+- **SDK Floor Bump**:
+  - Bumped minimum Dart SDK constraint in `pubspec.yaml` to `sdk: ">=3.8.0 <4.0.0"` for compatibility with `flutter_lints: ^6.0.0`.
+- **Packaging & Repository Hygiene**:
+  - Excluded `ephe/` data files, compiled binaries (`.dll`, `.so`, `.dylib`), and `doc/api/` from pub packaging via `.pubignore`.
+  - Untracked committed Gradle cache files in `android/.gradle/`.
+  - Harmonized `.github/CONTRIBUTING.md` with `CONTRIBUTING.md`.
+
+---
+
 ## [2.18.0] - 2026-07-22
 
 ### Added
@@ -18,7 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Structured Service Logging**:
   - Integrated `Logger` from `package:logging` across core services (`VedicChartService`, `PanchangaService`, `DashaService`, `ShadbalaService`) for calculation diagnostics and warning reporting.
 - **Documentation & Unit Tests**:
-  - Added [test/serialization_test.dart](file:///D:/jyotish-flutter-library-fork/test/serialization_test.dart) covering JSON serialization and `copyWith` state manipulation.
+  - Added `test/serialization_test.dart` covering JSON serialization and `copyWith` state manipulation.
   - Updated `USAGE.md` and `API_REFERENCE.md` with new model API signatures and serialization usage guides.
 
 ## [2.17.0] - 2026-07-04
@@ -116,6 +147,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Mudda Dasha**: Scaled annual Vimshottari periods based on the annual Moon's Nakshatra, adjusting start balance and cycling through all planetary periods.
 
 ---
+
+## [2.11.0] - 2026-05-25
+
+### Added
+- **Calculation Stability & Concurrency**:
+  - Enhanced thread-safety and shared locking across background astronomical calculations.
+  - Improved Julian Day translation accuracy for boundary dates.
+
+---
+
 ## [2.10.0] - 2026-05-18
 
 ### Added
@@ -176,11 +217,18 @@ Implemented high-precision calculation of specialized Vedic auspicious and repet
 
 ---
 
+## [2.7.0] - 2026-04-10
+
+### Added
+- **Astronomical Precision Updates**:
+  - Fine-tuned topocentric parallax corrections for lunar and planetary rise/set times.
+  - Enhanced twilight and diurnal circle approximations for non-polar regions.
+
+---
+
 ## [2.6.0] - 2026-02-25
 
-
-### [2.6.0] - High-Precision Eclipse & API Completeness
-### **Major Eclipse Enhancements (Solar & Lunar)**
+### Added — High-Precision Eclipse & API Completeness
 We have vastly improved the calculation of solar and lunar eclipses by exposing and integrating explicit local visibility functions from the underlying Swiss Ephemeris C-library (`swe_sol_eclipse_when_loc`, `swe_lun_eclipse_when`, etc.). 
 
 - **Local Solar Eclipse Precision**: `EphemerisService.getEclipseData()` now accurately determines if a solar eclipse is visible at the provided `GeographicLocation`. It no longer defaults to global visibility, but instead accurately computes local obscuration magnitudes, contact times, and duration.
@@ -679,6 +727,21 @@ All eight Kootas are now calculated per standard Vedic texts:
 - JSON serialization support
 - Proper resource management
 
+[2.19.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.19.0
+[2.18.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.18.0
+[2.17.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.17.0
+[2.16.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.16.0
+[2.15.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.15.0
+[2.14.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.14.0
+[2.13.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.13.0
+[2.12.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.12.0
+[2.11.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.11.0
+[2.10.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.10.0
+[2.9.1]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.9.1
+[2.9.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.9.0
+[2.8.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.8.0
+[2.7.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.7.0
+[2.6.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.6.0
 [1.1.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v1.1.0
 [1.0.1]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v1.0.1
 [1.0.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v1.0.0

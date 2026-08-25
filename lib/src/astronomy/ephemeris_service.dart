@@ -19,9 +19,20 @@ import 'package:jyotish/src/astronomy/astrology_time_service.dart';
 /// This service provides high-level methods for astronomical calculations
 /// using the Swiss Ephemeris library.
 class EphemerisService {
+  static final EphemerisService _sharedInstance = EphemerisService._internal();
+
+  /// Returns the shared [EphemerisService] instance to coordinate FFI state and caches.
+  factory EphemerisService() => _sharedInstance;
+
+  EphemerisService._internal();
+
+  /// Creates a standalone [EphemerisService] instance for isolated lifecycles.
+  EphemerisService.standalone();
+
   SwissEphBindings? _bindings;
   bool _isInitialized = false;
-  final Lock _calculationLock = Lock();
+  final Lock _fallbackLock = Lock();
+  Lock get _calculationLock => _bindings?.lock ?? _fallbackLock;
   static final Logger _log = Logger('jyotish.EphemerisService');
 
   // Calculation Caches
@@ -32,7 +43,9 @@ class EphemerisService {
   static const int _maxCacheSize = 5000;
 
   void _putInPlanetPositionCache(String key, PlanetPosition value) {
-    if (_planetPositionCache.length >= _maxCacheSize) {
+    if (_planetPositionCache.containsKey(key)) {
+      _planetPositionCache.remove(key);
+    } else if (_planetPositionCache.length >= _maxCacheSize) {
       _planetPositionCache.remove(_planetPositionCache.keys.first);
     }
     _planetPositionCache[key] = value;
@@ -40,14 +53,18 @@ class EphemerisService {
 
   void _putInSunriseSunsetCache(
       String key, (DateTime? sunrise, DateTime? sunset) value) {
-    if (_sunriseSunsetCache.length >= _maxCacheSize) {
+    if (_sunriseSunsetCache.containsKey(key)) {
+      _sunriseSunsetCache.remove(key);
+    } else if (_sunriseSunsetCache.length >= _maxCacheSize) {
       _sunriseSunsetCache.remove(_sunriseSunsetCache.keys.first);
     }
     _sunriseSunsetCache[key] = value;
   }
 
   void _putInHousesCache(String key, Map<String, List<double>> value) {
-    if (_housesCache.length >= _maxCacheSize) {
+    if (_housesCache.containsKey(key)) {
+      _housesCache.remove(key);
+    } else if (_housesCache.length >= _maxCacheSize) {
       _housesCache.remove(_housesCache.keys.first);
     }
     _housesCache[key] = value;
@@ -71,6 +88,12 @@ class EphemerisService {
   /// Throws [InitializationException] if initialization fails.
   Future<void> initialize({String? ephemerisPath}) async {
     if (_isInitialized) {
+      if (ephemerisPath != null && _bindings != null) {
+        final normalizedPath = p.normalize(ephemerisPath);
+        _log.info('Updating ephemeris path to $normalizedPath');
+        _bindings!.setEphemerisPath(normalizedPath);
+        clearCache();
+      }
       return;
     }
 
@@ -124,9 +147,11 @@ class EphemerisService {
     }
 
     final cacheKey =
-        '${planet.name}_${dateTime.millisecondsSinceEpoch}_${location.latitude.toStringAsFixed(6)}_${location.longitude.toStringAsFixed(6)}_${location.altitude.toStringAsFixed(2)}_${flags.hashCode}';
+        '${planet.name}_${dateTime.millisecondsSinceEpoch}_${location.timezone}_${location.latitude.toStringAsFixed(6)}_${location.longitude.toStringAsFixed(6)}_${location.altitude.toStringAsFixed(2)}_${flags.hashCode}';
     if (_planetPositionCache.containsKey(cacheKey)) {
-      return _planetPositionCache[cacheKey]!;
+      final cached = _planetPositionCache.remove(cacheKey)!;
+      _planetPositionCache[cacheKey] = cached;
+      return cached;
     }
 
     final result = await _calculationLock.synchronized(() async {
@@ -276,7 +301,10 @@ class EphemerisService {
         );
 
         if (results == null) {
-          return (23.44, 23.44); // Standard fallback
+          final errorMsg = errorBuffer.cast<Utf8>().toDartString();
+          throw CalculationException(
+            'Failed to calculate obliquity for Julian Day $julianDay: $errorMsg',
+          );
         }
 
         return (results[0], results[1]);
@@ -359,9 +387,11 @@ class EphemerisService {
     }
 
     final cacheKey =
-        '${dateTime.millisecondsSinceEpoch}_${location.latitude.toStringAsFixed(6)}_${location.longitude.toStringAsFixed(6)}_${location.altitude.toStringAsFixed(2)}_$houseSystem';
+        '${dateTime.millisecondsSinceEpoch}_${location.timezone}_${location.latitude.toStringAsFixed(6)}_${location.longitude.toStringAsFixed(6)}_${location.altitude.toStringAsFixed(2)}_$houseSystem';
     if (_housesCache.containsKey(cacheKey)) {
-      return _housesCache[cacheKey]!;
+      final cached = _housesCache.remove(cacheKey)!;
+      _housesCache[cacheKey] = cached;
+      return cached;
     }
 
     final result = await _calculationLock.synchronized(() async {
@@ -467,12 +497,17 @@ class EphemerisService {
 
           if (result == null) {
             final error = errorBuffer.cast<Utf8>().toDartString();
-            if (error.isNotEmpty) {
-              // Some errors are expected (e.g., polar regions where sun doesn't rise/set)
-              // Return null in such cases
+            final isCircumpolar = error.toLowerCase().contains('circumpolar') ||
+                error.toLowerCase().contains('always') ||
+                error.toLowerCase().contains('no rise') ||
+                error.toLowerCase().contains('no set') ||
+                error.isEmpty;
+            if (isCircumpolar || location.latitude.abs() >= 60.0) {
               return null;
             }
-            return null;
+            throw CalculationException(
+              'Failed to calculate rise/set for planet ${planet.name}: $error',
+            );
           }
 
           // Convert Julian Day back to DateTime
@@ -505,9 +540,11 @@ class EphemerisService {
     double attemp = 0.0,
   }) async {
     final cacheKey =
-        '${date.millisecondsSinceEpoch}_${location.latitude.toStringAsFixed(6)}_${location.longitude.toStringAsFixed(6)}_${location.altitude.toStringAsFixed(2)}_${atpress.toStringAsFixed(2)}_${attemp.toStringAsFixed(2)}';
+        '${date.millisecondsSinceEpoch}_${location.timezone}_${location.latitude.toStringAsFixed(6)}_${location.longitude.toStringAsFixed(6)}_${location.altitude.toStringAsFixed(2)}_${atpress.toStringAsFixed(2)}_${attemp.toStringAsFixed(2)}';
     if (_sunriseSunsetCache.containsKey(cacheKey)) {
-      return _sunriseSunsetCache[cacheKey]!;
+      final cached = _sunriseSunsetCache.remove(cacheKey)!;
+      _sunriseSunsetCache[cacheKey] = cached;
+      return cached;
     }
 
     final sunrise = await getRiseSet(
@@ -760,7 +797,7 @@ class EphemerisService {
           type == EclipseType.lunarTotal ||
           type == EclipseType.lunarPartial ||
           type == EclipseType.lunarPenumbral) {
-        return _getDetailedLunarEclipse(time, location);
+        return await _getDetailedLunarEclipse(time, location);
       }
 
       // For Solar Eclipses, use the local Swiss Ephemeris built-in functions
@@ -768,7 +805,7 @@ class EphemerisService {
           type == EclipseType.solarTotal ||
           type == EclipseType.solarPartial ||
           type == EclipseType.solarAnnular) {
-        return _getDetailedSolarEclipse(time, location);
+        return await _getDetailedSolarEclipse(time, location);
       }
 
       return null;
@@ -1014,6 +1051,7 @@ class EphemerisService {
     if (_isInitialized && _bindings != null) {
       _bindings!.close();
       _isInitialized = false;
+      clearCache();
     }
   }
 

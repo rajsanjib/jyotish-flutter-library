@@ -315,7 +315,7 @@ class PanchangaService {
 
       // Fallback to polar calculation if precise calculation fails or sun doesn't rise/set
       if (sunrise == null || sunset == null) {
-        return _calculatePolarFallback(
+        return await _calculatePolarFallback(
           dateTime: dateTime,
           location: location,
         );

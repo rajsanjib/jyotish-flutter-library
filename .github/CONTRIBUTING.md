@@ -1,159 +1,189 @@
 # Contributing to Jyotish
 
-Thank you for your interest in contributing to the Jyotish Flutter library! This document provides guidelines for contributing to this Vedic astrology library.
+Thank you for your interest in contributing to Jyotish! This document provides guidelines for contributing to the project.
+
+## Code of Conduct
+
+- Be respectful and inclusive
+- Welcome newcomers and help them get started
+- Focus on constructive feedback
+- Assume good intentions
 
 ## How to Contribute
 
 ### Reporting Bugs
 
-1. **Check existing issues** first to avoid duplicates
-2. **Use the bug report template** when creating a new issue
-3. **Include minimal reproduction code** that demonstrates the problem
-4. **Specify your environment** (OS, Flutter version, etc.)
+Before creating a bug report:
 
-### Requesting Features
+1. Check if the bug has already been reported
+2. Verify you're using the latest version
+3. Check the SETUP.md guide to ensure proper configuration
 
-1. **Use the feature request template** for new feature ideas
-2. **Explain the Vedic astrology use case** you're trying to solve
-3. **Reference traditional sources** if applicable
-4. **Consider implementation complexity** and compatibility
+When reporting bugs, include:
 
-### Contributing Code
+- Clear description of the issue
+- Steps to reproduce
+- Expected vs actual behavior
+- Platform and version information
+- Code samples (if applicable)
+- Error messages and stack traces
 
-1. **Fork the repository**
-2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
-3. **Write tests** for your new functionality
-4. **Ensure all tests pass** (`flutter test`)
-5. **Follow the existing code style** (`dart format .`)
-6. **Update documentation** if needed
-7. **Create a pull request**
+### Suggesting Features
 
-## Development Setup
+Feature requests are welcome! Please:
 
-### Prerequisites
+- Check if the feature has already been requested
+- Provide clear use cases
+- Explain why this feature would be useful
+- Consider whether it fits the library's scope
 
-- Flutter SDK (>=3.0.0)
-- Dart SDK (>=3.0.0)
-- Swiss Ephemeris library (see SETUP.md)
+### Pull Requests
 
-### Getting Started
+1. **Fork the repository** and create your branch from `main`
 
-```bash
-# Clone the repository
-git clone https://github.com/rajsanjib/jyotish-flutter-library.git
-cd jyotish-flutter-library
+2. **Setup your development environment**:
 
-# Get dependencies
-flutter pub get
+   ```bash
+   git clone https://github.com/rajsanjib/jyotish-flutter-library.git
+   cd jyotish-flutter-library
+   flutter pub get
+   ```
 
-# Run tests
-flutter test
+3. **Make your changes**:
 
-# Run the example app
-cd example
-flutter run
-```
+   - Write clear, readable code
+   - Follow Dart style guidelines
+   - Add tests for new functionality
+   - Update documentation as needed
 
-### Swiss Ephemeris Setup
+4. **Test your changes**:
 
-Follow the instructions in `SETUP.md` to compile and install the Swiss Ephemeris library for your platform.
+   ```bash
+   # Run tests
+   flutter test
 
-## Code Guidelines
+   # Run analysis
+   flutter analyze
+
+   # Format code
+   dart format .
+   ```
+
+5. **Commit your changes**:
+
+   - Use clear, descriptive commit messages
+   - Reference related issues
+
+6. **Submit a pull request**:
+   - Provide a clear description of changes
+   - Link to any related issues
+   - Include screenshots for UI changes
+
+## Development Guidelines
 
 ### Code Style
 
-- Use `dart format .` to format code
-- Follow Dart naming conventions
-- Write descriptive commit messages
-- Add documentation comments for public APIs
+- Follow [Effective Dart](https://dart.dev/guides/language/effective-dart)
+- Use `dart format` for consistent formatting
+- Write self-documenting code with clear names
+- Add comments for complex logic
 
 ### Testing
 
 - Write unit tests for all new functionality
-- Test with real astronomical data when possible
-- Include integration tests for Swiss Ephemeris calculations
-- Verify accuracy against known ephemeris values
+- Maintain or improve code coverage
+- Test edge cases and error conditions
+- Use descriptive test names
 
 ### Documentation
 
+- Add dartdoc comments for public APIs
+- Include usage examples
 - Update README.md for significant changes
-- Add examples for new features
-- Document any breaking changes in CHANGELOG.md
-- Include Vedic astrology references where relevant
+- Keep CHANGELOG.md up to date
 
-## Vedic Astrology Guidelines
+### Commit Messages
 
-### Accuracy Requirements
+Format: `type(scope): description`
 
-- All calculations must use **sidereal zodiac** (not tropical)
-- Default to **Lahiri ayanamsa** unless specified otherwise
-- Verify calculations against traditional sources
-- Include references to classical texts when possible
+Types:
 
-### Traditional Sources
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `test`: Test additions or changes
+- `refactor`: Code refactoring
+- `perf`: Performance improvements
+- `chore`: Maintenance tasks
 
-When implementing new features, consider referencing:
+Examples:
 
-- **Brihat Parashara Hora Shastra** - Classical foundational text
-- **Saravali** by Kalyana Varma - Comprehensive classical work
-- **Jataka Parijata** - Classical text on birth chart interpretation
-- **Modern authorities** like B.V. Raman, K.S. Krishnamurti
+```
+feat(calculations): add house calculation support
+fix(position): correct nakshatra pada calculation
+docs(readme): update installation instructions
+```
 
-### Supported Calculations
+## Project Structure
 
-Current scope includes:
+```
+jyotish/
+├── lib/
+│   ├── jyotish.dart              # Main export file
+│   └── src/
+│       ├── jyotish_core.dart     # Core API
+│       ├── bindings/             # FFI bindings
+│       ├── models/               # Data models
+│       ├── services/             # Business logic
+│       ├── constants/            # Constants
+│       └── exceptions/           # Exception classes
+├── test/                         # Tests
+└── docs/                         # Additional documentation
+```
 
-- ✅ Planetary positions (9 planets + Rahu/Ketu)
-- ✅ House cusps and Ascendant
-- ✅ Nakshatras and padas
-- ✅ Planetary dignities
-- ✅ Combustion detection
+## Testing Locally
 
-Future scope may include:
+### Unit Tests
 
-- 🔄 Dasha (planetary periods)
-- 🔄 Transits and predictions
-- 🔄 Divisional charts (Navamsa, etc.)
-- 🔄 Ashtakavarga
-- 🔄 Yoga detection
+```bash
+flutter test
+```
 
-## Pull Request Process
+## Areas for Contribution
 
-1. **Create descriptive PR title** and description
-2. **Link related issues** using "Fixes #123" syntax
-3. **Ensure CI passes** (tests, analysis, formatting)
-4. **Request review** from maintainers
-5. **Address feedback** promptly
-6. **Squash commits** if requested before merging
+### High Priority
 
-## Code Review Criteria
+- House calculations
+- Aspect calculations
+- More comprehensive tests
+- Performance optimizations
+- Additional platform support
 
-Reviewers will check for:
+### Documentation
 
-- **Correctness**: Do calculations match Vedic astrology principles?
-- **Accuracy**: Are results verified against known values?
-- **Testing**: Are there adequate tests with good coverage?
-- **Documentation**: Is the code well-documented?
-- **Performance**: Are calculations efficient?
-- **Compatibility**: Does it work across supported platforms?
+- More usage examples
+- Video tutorials
+- API reference improvements
+- Translation to other languages
 
-## Questions or Help?
+### Features
 
-- **Library usage questions**: Create a GitHub Discussion
-- **Bug reports**: Use the bug report template
-- **Feature requests**: Use the feature request template
-- **Security issues**: Email maintainers directly
+- Dasha system calculations
+- Transit calculations
+- Chart drawing utilities
+- Additional ayanamsa systems
+- Heliocentric calculations
+
+## Questions?
+
+- Open a GitHub issue
+- Start a discussion
+- Check existing documentation
 
 ## License
 
 By contributing, you agree that your contributions will be licensed under the MIT License.
 
-## Recognition
+---
 
-Contributors will be acknowledged in:
-
-- CHANGELOG.md for significant contributions
-- README.md contributors section
-- GitHub repository insights
-
-Thank you for helping make Vedic astrology calculations accessible to Flutter developers! 🙏
+Thank you for contributing to Jyotish! 🙏

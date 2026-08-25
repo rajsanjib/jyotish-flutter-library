@@ -4,6 +4,14 @@ analyzer:
   errors:
     unused_import: warning
     empty_catches: warning
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
 
 linter:
   rules:
@@ -23,7 +31,6 @@ linter:
     - control_flow_in_finally
     - empty_statements
     - implementation_imports
-    - package_api_docs
     - test_types_in_equals
     - throw_in_finally
     - valid_regexps

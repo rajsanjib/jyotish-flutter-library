@@ -601,3 +601,79 @@ class NorthIndianChartPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
+
+/// A convenient Flutter [Widget] for rendering Vedic astrology charts.
+class VedicChartView extends StatelessWidget {
+  /// The Vedic chart data.
+  final VedicChart chart;
+
+  /// Rendering style (North Indian diamond or South Indian grid).
+  final ChartStyle style;
+
+  /// Whether to render using dark theme colors.
+  final bool darkTheme;
+
+  /// Size of the chart widget.
+  final Size size;
+
+  /// Line and border paint color override.
+  final Color? strokeColor;
+
+  /// Text color for signs and planet names override.
+  final Color? textColor;
+
+  /// Text color for labels/sign titles override.
+  final Color? labelColor;
+
+  /// Color used to highlight the Ascendant override.
+  final Color? ascendantColor;
+
+  const VedicChartView({
+    super.key,
+    required this.chart,
+    this.style = ChartStyle.northIndian,
+    this.darkTheme = false,
+    this.size = const Size(350, 350),
+    this.strokeColor,
+    this.textColor,
+    this.labelColor,
+    this.ascendantColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final effectiveStroke = strokeColor ??
+        (darkTheme ? const Color(0xFFFFFFFF) : const Color(0xFF1E293B));
+    final effectiveText = textColor ??
+        (darkTheme ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A));
+    final effectiveLabel = labelColor ??
+        (darkTheme ? const Color(0xFF94A3B8) : const Color(0xFF64748B));
+    final effectiveAsc = ascendantColor ?? const Color(0xFFF59E0B);
+
+    final painter = style == ChartStyle.northIndian
+        ? NorthIndianChartPainter(
+            chart: chart,
+            strokeColor: effectiveStroke,
+            textColor: effectiveText,
+            labelColor: effectiveLabel,
+            ascendantColor: effectiveAsc,
+          )
+        : SouthIndianChartPainter(
+            chart: chart,
+            strokeColor: effectiveStroke,
+            textColor: effectiveText,
+            labelColor: effectiveLabel,
+            ascendantColor: effectiveAsc,
+          );
+
+    return SizedBox(
+      width: size.width,
+      height: size.height,
+      child: CustomPaint(
+        painter: painter,
+        size: size,
+      ),
+    );
+  }
+}
+

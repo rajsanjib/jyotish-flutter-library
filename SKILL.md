@@ -69,13 +69,13 @@ final chart = await jyotish.calculateVedicChart(
 | **Graha Yuddha** | `jyotish.checkGrahaYuddha(chart)` (Evaluates conjunction <= 1°, magnitude, and declination) |
 | **Prastara Grid** | `jyotish.calculatePrastaraAshtakavarga(chart, planet)` |
 | **Ashtakavarga Shodhana** | `jyotish.applyEkadhipatiShodhana(ashtakavarga)` (Canonical BPHS Ch. 67 planetary occupancy rules) |
-| **Special Lagnas** | `jyotish.calculateSpecialLagnas(chart, sunrise)` (Hora Lagna, Ghati Lagna, Sree Lagna) |
+| **Special Lagnas** | `jyotish.calculateSpecialLagnas(chart)` (Hora Lagna, Ghati Lagna, Sree Lagna, Varnada, Pranapada, Indu) |
 | **Compatibility Report** | `jyotish.calculateCompatibilityReport(boyChart, girlChart)` (36 Guna Milan without double penalty) |
-| **Gochara Vedha** | `jyotish.systems.gocharaVedha.calculateVedha(...)` (Classical house pairs & Vipareeta Vedha) |
-| **Sarvatobhadra Chakra**| `jyotish.analyzeSarvatobhadra(natalChart: chart, transitDateTime: dt)` (81-square Vedha analysis) |
-| **Special Transits** | `jyotish.getSpecialTransits(chart, transitDate)` (Sade Sati, Dhaiya, Ashtama Shani, Panchak) |
-| **Event Timing** | `jyotish.analyzeEventTiming(chart, category: EventCategory.marriage)` |
-| **Career D10 Analysis** | `jyotish.analyzeCareerD10(chart)` |
+| **Gochara Vedha** | `jyotish.calculateGocharaVedha(...)` / `jyotish.systems.gocharaVedha.calculateVedha(...)` |
+| **Sarvatobhadra Chakra**| `jyotish.analyzeSarvatobhadra(natalChart: chart, transitPositions: positions)` (81-square Vedha analysis) |
+| **Special Transits** | `jyotish.calculateSpecialTransits(natalChart: chart, location: loc, checkDate: dt)` (Sade Sati, Dhaiya, Ashtama Shani, Panchak) |
+| **Event Timing** | `jyotish.findEventTimingWindows(EventTimingRequest(natalChart: chart, category: EventCategory.marriage))` |
+| **Career D10 Analysis** | `jyotish.getD10CareerAnalysis(natalChart: chart)` |
 | **Progeny D7 Analysis** | `jyotish.analyzeProgeny(chart)` (Kshetra/Beeja Sphuta & Saptamsha D7) |
 | **Sudarshan Chakra** | `jyotish.calculateSudarshanChakra(chart)` (Lagna, Surya, Chandra triple perspective) |
 | **Brahma Muhurta** | `jyotish.calculateBrahmaMuhurta(date: dt, location: loc)` (14th Muhurta of night) |
@@ -83,9 +83,9 @@ final chart = await jyotish.calculateVedicChart(
 | **Special Yogas**| Access `muhurta.specialYogas` for Sarvartha Siddhi, Guru Pushya, etc. |
 | **Gowri Panchangam** | `jyotish.getCurrentGowriPanchangam(dateTime: dt, location: loc)` |
 | **Ritual Elements** | `jyotish.calculateRitualElements(panchanga: p)` (Homahuti, Agnivasa, Shivavasa, Kumbha Chakra) |
-| **Nadi Astrology** | `jyotish.getNadiInfo(planet: p, longitude: lon)` (150 Nadi amshas per sign) |
-| **KP Sub-Lords** | `jyotish.calculateKPData(natalChart: chart)` (Sub-Lords, Sub-Sub-Lords, ABCD significators) |
-| **Jaimini Karakas** | `jyotish.getCharaKarakas(chart)` / `jyotish.getAtmakaraka(chart)` / `jyotish.getKarakamsa(chart)` |
+| **Nadi Astrology** | `jyotish.getNadiFromLongitude(lon)` / `jyotish.calculateNadiChart(chart)` (150 Nadi amshas per sign) |
+| **KP Sub-Lords** | `await jyotish.calculateKPData(chart)` (Sub-Lords, Sub-Sub-Lords, ABCD significators) |
+| **Jaimini Karakas** | `jyotish.getCharaKarakas(chart)` / `jyotish.getAtmakaraka(chart)` / `jyotish.getKarakamsa(rashiChart: d1, navamsaChart: d9)` |
 | **Arudha Padas** | `jyotish.getArudhaPadas(chart)` / `jyotish.getArudhaLagna(chart)` / `jyotish.getUpapada(chart)` |
 | **Argala & Virodha** | `jyotish.getAllArgalas(chart)` |
 | **Julian Day** | `ephemerisService.dateTimeToJulianDay(dateTime, timezoneId: tz)` |
@@ -98,16 +98,16 @@ final chart = await jyotish.calculateVedicChart(
 | **True Solar Return** | `varshapalService.calculateSolarReturn(birthDateTime: dt, targetYear: yr, location: loc)` |
 | **Panchavargiya Bala** | `varshapalService.calculatePanchavargiyaBala(planet, chart)` |
 | **Varshesh Determination** | `varshapalService.determineVarshesh(natalChart: nc, annualChart: ac, balaMap: bm, varshaDateTime: vdt, birthDateTime: bdt)` |
-| **Mudda Dasha** | `varshapalService.calculateMuddaDasha(birthDateTime: bdt, varshaDateTime: vdt, annualChart: ac, location: loc, flags: f)` |
+| **Mudda Dasha** | `varshapalService.calculateMuddaDasha(birthDateTime: bdt, varshaDateTime: vdt, annualChart: ac, location: loc, flags: f)` (flags required) |
 | **Gregorian to Vedic Time** | `VedicTime.calculate(time: dt, location: loc, getSunriseSunset: fn)` |
 | **Vedic Time to Gregorian** | `vt.toDateTime()` |
 | **Yoga Detection** | `YogaService().detectNatalYogas(chart)` |
 | **Dosha Detection** | `jyotish.checkNatalDoshas(chart)` / `DoshaService().calculateFullDoshaReport(chart)` |
 | **Manglik Raman Check** | `jyotish.checkManglikDoshaWithRamanExceptions(chart)` |
-| **Eclipse Predictions** | `EclipseService().getLunarEclipses(startYear: s, endYear: e)` / `getSolarEclipses(...)` |
+| **Eclipse Predictions** | `jyotish.systems.eclipse.predictLunarEclipses(startDate: dt, count: 5)` / `predictSolarEclipses(...)` |
 | **Clear Caches** | `jyotish.clearCache()` / `ephemerisService.clearCache()` |
 | **SVG Chart Export** | `chart.toSVG(style: ChartStyle.northIndian)` |
-| **Flutter Chart Widget** | `VedicChartView(chart: chart, style: ChartStyle.northIndian)` |
+| **Flutter Chart Widget** | `VedicChartView(chart: chart, style: ChartStyle.northIndian)` / `NorthIndianChartPainter` / `SouthIndianChartPainter` |
 | **Lazy Dasha Stream** | `jyotish.systems.dasha.streamVimshottariDasha(moonLongitude: ml, birthDateTime: dt, maxLevel: lvl)` |
 | **Dynamic Timezone Load**| `Jyotish.loadTimezoneDatabase(bytes)` |
 
@@ -131,14 +131,14 @@ Crucial for v2.5.0+:
   - `package:jyotish/nadi.dart` (nadi prediction services)
 
 ## 7. Common Gotchas for Agents
-- **Brahma Muhurta**: Depends on the *previous day's* sunset and today's sunrise (14th Muhurta of night = 2 muhurtas / 96 minutes before sunrise). Use `jyotish.calculateBrahmaMuhurta(date: d, location: loc)`.
-- **Abhijit Muhurta**: The 8th Muhurta of the daytime (midday). Inauspicious on Wednesdays. Use `jyotish.calculateAbhijitMuhurta(date: d, location: loc)`.
+- **Brahma Muhurta**: Depends on the *previous day's* sunset and today's sunrise (14th Muhurta of night = 1 muhurta duration = nightDuration/15 ~48 minutes ending at sunrise). Use `jyotish.calculateBrahmaMuhurta(date: d, location: loc)`.
+- **Abhijit Muhurta**: The 8th Muhurta of daytime (7 * daylightDuration / 15 around solar noon). Use `jyotish.calculateAbhijitMuhurta(date: d, location: loc)`.
 - **Moon Illumination**: v2.1.0 corrected the formula. 0% = New Moon (Amavasya), 100% = Full Moon (Purnima).
 - **Vedic Weekday & Sunrise**: Day transitions at local sunrise. For date-only parameters `DateTime(year, month, day)`, the day belongs to that day's sunrise.
 - **Karanas**: 4 Sthira Karanas (Kimstughna, Shakuni, Chatushpada, Naga) have `isFixed: true`; the 7 Chara Karanas (Bava through Vishti) have `isFixed: false`.
 - **Shadbala Sun/Moon Chesta Bala**: Sun Chesta Bala is Ayana Bala; Moon Chesta Bala is Paksha Bala per classical BPHS.
 - **Special Yogas**: Requires Tithi and Nakshatra periods to be passed to `calculateMuhurta` for accurate intersection calculation.
-- **Positional Records**: In `calculateMuhurta` parameters, use `(int, DateTime, DateTime)` records. Access fields as `$1`, `$2`, `$3`.
+- **Named Records**: In `calculateMuhurta` parameters, use `({int tithiNumber, DateTime start, DateTime end})` named records. Access fields as `.tithiNumber`, `.start`, `.end`.
 
 ## 8. Reference Data
 - **Weekday Numbers**: 0=Sunday, 1=Monday, ..., 6=Saturday.
@@ -146,5 +146,5 @@ Crucial for v2.5.0+:
 - **House Systems**: 'W' (Whole Sign - Default), 'P' (Placidus - Mandatory for KP).
 
 ---
-*This skill file was last updated for API_REFERENCE.md v2.18.0 — includes JyotishSystems facade exposure, classical BPHS Shadbala & Ashtakavarga reductions, Gochara Vedha pairs, and Graha Yuddha evaluation.*
+*This skill file was last updated for API_REFERENCE.md v2.19.0 — includes JyotishSystems facade exposure, classical BPHS Shadbala & Ashtakavarga reductions, Gochara Vedha pairs, and Graha Yuddha evaluation.*
 

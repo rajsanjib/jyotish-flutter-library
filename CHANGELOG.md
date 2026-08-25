@@ -9,10 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.19.0] - 2026-08-25
 
 ### Added
+- **Public API & Facade Expansion**:
+  - Added `getSamvatInfo({required dateTime, required location})` on `Jyotish` facade for Vikram, Shaka, Gujarati Samvat and 60-year Jovian Samvatsara calculations.
+  - Added `getAyana({required dateTime, required location})` on `Jyotish` facade for Uttarayana and Dakshinayana solar course determinations.
+  - Added `getPravishte({required dateTime, required location})` on `Jyotish` facade for solar day (1–31) and solar sign month calculations.
+  - Added `calculateYoni(boyNakshatra, girlNakshatra)` on `Jyotish` facade for classical 14x14 animal matrix compatibility scoring.
+  - Added `calculateDashaCompatibility(boyChart, girlChart)` and `checkDoshas(boyChart, girlChart)` forwarding methods to the `Jyotish` facade.
+  - Added `VedicChartView` Flutter widget in `chart_renderer.dart` wrapping `NorthIndianChartPainter` and `SouthIndianChartPainter` for declarative UI chart rendering.
 - **macOS Platform Support**:
   - Added `macos/jyotish.podspec` and macOS FFI plugin headers/stubs to support macOS desktop builds out of the box.
 - **Continuous Integration**:
   - Added GitHub Actions CI workflow (`.github/workflows/ci.yml`) covering code formatting, static analysis (`flutter analyze`), and unit test suite execution (`flutter test`).
+
+### Refactored & Optimized
+- **Dependency Streamlining**:
+  - Removed `dartx` from `dependencies` and migrated all 9 import sites across `lib/` to standard, idiomatic Dart collections, Map comprehensions, and `DateTime` methods.
+  - Dropped 32 transitive dependencies (`analyzer`, `args`, `shelf`, `yaml`, `crypto`, etc.) from downstream consumer application bundles.
+  - Removed `test` from `dev_dependencies` and migrated all test suites to `package:flutter_test`.
+- **Documentation & AI Agent Skills Alignment**:
+  - Fully repaired `API_REFERENCE.md`: corrected signature drifts, documented 16 previously omitted facade methods, removed phantom duplicate model blocks, and added model documentation for `SamvatInfo`, `Ayana`, `PravishteInfo`, `MasaInfo`, and `SpecialYoga`.
+  - Synchronized `SKILL.md` with active codebase method signatures, record syntax (`.tithiNumber`, `.start`, `.end`), and calculation gotchas (Brahma Muhurta, Abhijit Muhurta).
 
 ### Changed & Breaking Changes
 - **Facade Exception Contract**:

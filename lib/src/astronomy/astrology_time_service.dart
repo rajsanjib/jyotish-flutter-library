@@ -17,6 +17,14 @@ class AstrologyTimeService {
     _isInitialized = true;
   }
 
+  /// Loads custom/updated timezone database bytes at runtime.
+  ///
+  /// [databaseBytes] - Raw bytes of a timezone/zoneinfo database file (.tzf).
+  static void loadDatabase(List<int> databaseBytes) {
+    tz.initializeDatabase(databaseBytes);
+    _isInitialized = true;
+  }
+
   /// Converts a local date and time to UTC using a specific IANA timezone ID.
   ///
   /// [localDt] - The date and time in the local timezone.
@@ -27,7 +35,15 @@ class AstrologyTimeService {
     _ensureInitialized();
     try {
       final location = tz.getLocation(zoneId);
-      final tzDt = tz.TZDateTime.from(localDt, location);
+      final tzDt = tz.TZDateTime(
+        location,
+        localDt.year,
+        localDt.month,
+        localDt.day,
+        localDt.hour,
+        localDt.minute,
+        localDt.second,
+      );
       return tzDt.toUtc();
     } catch (e) {
       // Fallback to UTC if zone is not found
@@ -42,10 +58,40 @@ class AstrologyTimeService {
     _ensureInitialized();
     try {
       final location = tz.getLocation(zoneId);
-      final tzDt = tz.TZDateTime.from(date, location);
+      final tzDt = tz.TZDateTime(
+        location,
+        date.year,
+        date.month,
+        date.day,
+        date.hour,
+        date.minute,
+        date.second,
+      );
       return Duration(milliseconds: tzDt.timeZoneOffset.inMilliseconds);
     } catch (e) {
       return Duration.zero;
+    }
+  }
+
+  /// Converts a UTC date and time to a local date and time using a specific IANA timezone ID.
+  static DateTime utcToLocal(DateTime utcDt, String zoneId) {
+    _ensureInitialized();
+    try {
+      final location = tz.getLocation(zoneId);
+      final tzDt = tz.TZDateTime.from(utcDt, location);
+      return DateTime(
+        tzDt.year,
+        tzDt.month,
+        tzDt.day,
+        tzDt.hour,
+        tzDt.minute,
+        tzDt.second,
+        tzDt.millisecond,
+        tzDt.microsecond,
+      );
+    } catch (e) {
+      // Fallback
+      return utcDt.toLocal();
     }
   }
 

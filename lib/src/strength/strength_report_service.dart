@@ -112,10 +112,13 @@ class StrengthReportService {
 
   /// Extracts a detailed PlanetStrengthReport for a specific planet.
   Future<PlanetStrengthReport> getPlanetReport(
-      Planet planet, VedicChart chart) async {
+    Planet planet,
+    VedicChart chart,
+  ) async {
     if (Planet.lunarNodes.contains(planet)) {
       throw ArgumentError(
-          'Strength report is only available for 7 main planets');
+        'Strength report is only available for 7 main planets',
+      );
     }
     final report = await generateChartReport(chart);
     return report.byPlanet[planet]!;

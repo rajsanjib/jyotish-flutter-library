@@ -25,7 +25,7 @@ class PlanetStrengthReport {
 
   final Planet planet;
   final PlanetaryDignity dignity;
-  
+
   // Shadbala Metrics
   final double shadbalaTotalRupas;
   final ShadbalaStrength shadbalaCategory;
@@ -52,7 +52,7 @@ class PlanetStrengthReport {
     final rkStr = '#$shadbalaRank';
     final combustStr = isCombust ? ' (Combust)' : '';
     final retroStr = isRetrograde ? ' (Retrograde)' : '';
-    
+
     return '${planet.displayName}: $sbStr ($rkStr), $dignStr, Vimshopak: $vimStr$combustStr$retroStr';
   }
 }

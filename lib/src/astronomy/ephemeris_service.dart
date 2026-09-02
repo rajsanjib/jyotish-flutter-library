@@ -8,6 +8,9 @@ import '../exceptions/jyotish_exception.dart';
 import 'package:jyotish/src/models/calculation_flags.dart';
 import 'package:jyotish/src/models/geographic_location.dart';
 import 'package:jyotish/src/models/planet.dart';
+import 'package:logging/logging.dart';
+import 'package:path/path.dart' as p;
+import 'package:synchronized/synchronized.dart';
 import 'package:jyotish/src/astronomy/planet_position.dart';
 import 'package:jyotish/src/astronomy/astrology_time_service.dart';
 
@@ -16,8 +19,66 @@ import 'package:jyotish/src/astronomy/astrology_time_service.dart';
 /// This service provides high-level methods for astronomical calculations
 /// using the Swiss Ephemeris library.
 class EphemerisService {
+  static final EphemerisService _sharedInstance = EphemerisService._internal();
+
+  /// Returns the shared [EphemerisService] instance to coordinate FFI state and caches.
+  factory EphemerisService() => _sharedInstance;
+
+  EphemerisService._internal();
+
+  /// Creates a standalone [EphemerisService] instance for isolated lifecycles.
+  EphemerisService.standalone();
+
   SwissEphBindings? _bindings;
   bool _isInitialized = false;
+  final Lock _fallbackLock = Lock();
+  Lock get _calculationLock => _bindings?.lock ?? _fallbackLock;
+  static final Logger _log = Logger('jyotish.EphemerisService');
+
+  // Calculation Caches
+  final Map<String, PlanetPosition> _planetPositionCache = {};
+  final Map<String, (DateTime? sunrise, DateTime? sunset)> _sunriseSunsetCache =
+      {};
+  final Map<String, Map<String, List<double>>> _housesCache = {};
+  static const int _maxCacheSize = 5000;
+
+  void _putInPlanetPositionCache(String key, PlanetPosition value) {
+    if (_planetPositionCache.containsKey(key)) {
+      _planetPositionCache.remove(key);
+    } else if (_planetPositionCache.length >= _maxCacheSize) {
+      _planetPositionCache.remove(_planetPositionCache.keys.first);
+    }
+    _planetPositionCache[key] = value;
+  }
+
+  void _putInSunriseSunsetCache(
+      String key, (DateTime? sunrise, DateTime? sunset) value) {
+    if (_sunriseSunsetCache.containsKey(key)) {
+      _sunriseSunsetCache.remove(key);
+    } else if (_sunriseSunsetCache.length >= _maxCacheSize) {
+      _sunriseSunsetCache.remove(_sunriseSunsetCache.keys.first);
+    }
+    _sunriseSunsetCache[key] = value;
+  }
+
+  void _putInHousesCache(String key, Map<String, List<double>> value) {
+    if (_housesCache.containsKey(key)) {
+      _housesCache.remove(key);
+    } else if (_housesCache.length >= _maxCacheSize) {
+      _housesCache.remove(_housesCache.keys.first);
+    }
+    _housesCache[key] = value;
+  }
+
+  /// Clears all calculation caches.
+  void clearCache() {
+    _planetPositionCache.clear();
+    _sunriseSunsetCache.clear();
+    _housesCache.clear();
+  }
+
+  /// Gets the underlying Swiss Ephemeris FFI bindings.
+  SwissEphBindings get bindings => _bindings!;
 
   /// Initializes the Swiss Ephemeris service.
   ///
@@ -27,6 +88,12 @@ class EphemerisService {
   /// Throws [InitializationException] if initialization fails.
   Future<void> initialize({String? ephemerisPath}) async {
     if (_isInitialized) {
+      if (ephemerisPath != null && _bindings != null) {
+        final normalizedPath = p.normalize(ephemerisPath);
+        _log.info('Updating ephemeris path to $normalizedPath');
+        _bindings!.setEphemerisPath(normalizedPath);
+        clearCache();
+      }
       return;
     }
 
@@ -35,7 +102,9 @@ class EphemerisService {
 
       // Set ephemeris path if provided
       if (ephemerisPath != null) {
-        _bindings!.setEphemerisPath(ephemerisPath);
+        final normalizedPath = p.normalize(ephemerisPath);
+        _log.info('Setting ephemeris path to $normalizedPath');
+        _bindings!.setEphemerisPath(normalizedPath);
       }
 
       // Test that the library is working
@@ -43,12 +112,18 @@ class EphemerisService {
 
       _isInitialized = true;
     } catch (e, stackTrace) {
+      _log.severe('Failed to initialize Swiss Ephemeris', e, stackTrace);
       throw InitializationException(
         'Failed to initialize Swiss Ephemeris: ${e.toString()}',
         originalError: e,
         stackTrace: stackTrace,
       );
     }
+  }
+
+  /// Converts a DateTime to Julian Day number.
+  double dateTimeToJulianDay(DateTime dateTime, {String? timezoneId}) {
+    return _dateTimeToJulianDay(dateTime, timezoneId: timezoneId);
   }
 
   /// Calculates the position of a planet.
@@ -71,101 +146,125 @@ class EphemerisService {
       throw CalculationException('EphemerisService is not initialized');
     }
 
-    try {
-      // Set topocentric position if required
-      if (flags.useTopocentric) {
-        _bindings!.setTopocentric(
-          location.longitude,
-          location.latitude,
-          location.altitude,
-        );
-      }
+    final cacheKey =
+        '${planet.name}_${dateTime.millisecondsSinceEpoch}_${location.timezone}_${location.latitude.toStringAsFixed(6)}_${location.longitude.toStringAsFixed(6)}_${location.altitude.toStringAsFixed(2)}_${flags.hashCode}';
+    if (_planetPositionCache.containsKey(cacheKey)) {
+      final cached = _planetPositionCache.remove(cacheKey)!;
+      _planetPositionCache[cacheKey] = cached;
+      return cached;
+    }
 
-      // Convert DateTime to Julian Day
-      final julianDay = _dateTimeToJulianDay(dateTime);
-
-      // Set sidereal mode and get ayanamsa for this date
-      // We always use sidereal calculations for Vedic astrology
-      _bindings!.setSiderealMode(
-        flags.siderealModeConstant,
-        0.0,
-        0.0,
-      );
-      final ayanamsa = _bindings!.getAyanamsaUT(julianDay);
-
-      // Calculate position (tropical, then we subtract ayanamsa)
-      final errorBuffer = malloc<ffi.Char>(256);
+    final result = await _calculationLock.synchronized(() async {
       try {
-        final results = _bindings!.calculateUT(
-          julianDay: julianDay,
-          planetId: planet.swissEphId,
-          flags: flags.toSwissEphFlag(),
-          errorBuffer: errorBuffer,
-        );
-
-        if (results == null) {
-          final error = errorBuffer.cast<Utf8>().toDartString();
-          throw JyotishException(
-            'Failed to calculate position for ${planet.displayName}: $error',
+        // Set topocentric position if required
+        if (flags.useTopocentric) {
+          _bindings!.setTopocentric(
+            location.longitude,
+            location.latitude,
+            location.altitude,
           );
         }
 
-        // Fetch Declination (Equatorial Latitude)
-        // We need an additional call with SEFLG_EQUATORIAL flag
-        // SEFLG_EQUATORIAL = 2048 (0x800)
-        final eqResults = _bindings!.calculateUT(
-          julianDay: julianDay,
-          planetId: planet.swissEphId,
-          flags: flags.toSwissEphFlag() | 0x800,
-          errorBuffer: errorBuffer,
+        // Convert DateTime to Julian Day
+        final julianDay = _dateTimeToJulianDay(
+          dateTime,
+          timezoneId: location.timezone,
         );
 
-        if (eqResults != null) {
-          results.add(eqResults[1]); // results[6] is now declination
-        } else {
-          results.add(0.0);
+        // Set sidereal mode and get ayanamsa for this date
+        // We always use sidereal calculations for Vedic astrology
+        _bindings!.setSiderealMode(flags.siderealModeConstant, 0.0, 0.0);
+        final ayanamsa = _bindings!.getAyanamsaUT(julianDay);
+
+        // Calculate position (tropical, then we subtract ayanamsa)
+        final errorBuffer = malloc<ffi.Char>(256);
+        try {
+          // Issue 5: Ketu (ID 60) calculation fails in Swiss Ephemeris because it lacks elements.
+          // We calculate Rahu (Node) and add 180 degrees to get Ketu.
+          final targetPlanet = planet == Planet.ketu
+              ? (flags.nodeType == NodeType.trueNode
+                  ? Planet.trueNode
+                  : Planet.meanNode)
+              : planet;
+
+          final results = _bindings!.calculateUT(
+            julianDay: julianDay,
+            planetId: targetPlanet.swissEphId,
+            flags: flags.toSwissEphFlag(),
+            errorBuffer: errorBuffer,
+          );
+
+          if (results == null) {
+            final error = errorBuffer.cast<Utf8>().toDartString();
+            throw JyotishException(
+              'Failed to calculate position for ${planet.displayName}: $error',
+            );
+          }
+
+          // Fetch Declination (Equatorial Latitude)
+          final eqResults = _bindings!.calculateUT(
+            julianDay: julianDay,
+            planetId: targetPlanet.swissEphId,
+            flags: flags.toSwissEphFlag() | 0x800,
+            errorBuffer: errorBuffer,
+          );
+
+          if (eqResults != null) {
+            results.add(eqResults[1]); // results[6] is now declination
+          } else {
+            results.add(0.0);
+          }
+
+          // Convert tropical to sidereal by subtracting ayanamsa
+          results[0] = (results[0] - ayanamsa + 360) % 360;
+
+          // Apply Ketu offset
+          if (planet == Planet.ketu) {
+            results[0] = (results[0] + 180) % 360;
+            results[1] = -results[1]; // Opposite latitude
+            results[6] = -results[6]; // Opposite declination
+            // Velocity (results[3]) remains the same for node pairs
+          }
+
+          // Determine retrograde status BEFORE adjusting speed
+          // The precession adjustment is very small (~0.000137/day) but could
+          // theoretically affect edge cases near zero velocity
+          final isRetrograde = results[3] < 0;
+
+          // Adjust longitudeSpeed for sidereal frame:
+          // We calculate the time-varying, ayanamsa-specific precession rate per day
+          // by taking the difference between tomorrow's ayanamsa and today's.
+          final ayanamsaTomorrow = _bindings!.getAyanamsaUT(julianDay + 1.0);
+          final double precessionRatePerDay = ayanamsaTomorrow - ayanamsa;
+          results[3] = results[3] - precessionRatePerDay;
+
+          return PlanetPosition.fromSwissEph(
+            planet: planet,
+            dateTime: dateTime,
+            results: results,
+            isRetrograde: isRetrograde,
+          );
+        } finally {
+          malloc.free(errorBuffer);
         }
-
-        // Convert tropical to sidereal by subtracting ayanamsa
-        results[0] = (results[0] - ayanamsa + 360) % 360;
-
-        // Determine retrograde status BEFORE adjusting speed
-        // The precession adjustment is very small (~0.000137/day) but could
-        // theoretically affect edge cases near zero velocity
-        final isRetrograde = results[3] < 0;
-
-        // Adjust longitudeSpeed for sidereal frame:
-        // In the sidereal frame, speeds are slightly lower due to precession.
-        // The precession rate is ~50.3"/year = ~0.000137/day.
-        // This adjustment is negligible for most practical purposes (~0.01%),
-        // but included for professional-grade precision in Chesta Bala.
-        // Note: Retrograde status is determined from the original speed above.
-        const double precessionRatePerDay = 50.3 / 3600.0 / 365.25; // deg/day
-        results[3] = results[3] - precessionRatePerDay;
-
-        return PlanetPosition.fromSwissEph(
-          planet: planet,
-          dateTime: dateTime,
-          results: results,
-          isRetrograde: isRetrograde,
+      } catch (e, stackTrace) {
+        if (e is CalculationException) rethrow;
+        throw CalculationException(
+          'Error calculating planet position: ${e.toString()}',
+          originalError: e,
+          stackTrace: stackTrace,
         );
-      } finally {
-        malloc.free(errorBuffer);
       }
-    } catch (e, stackTrace) {
-      if (e is CalculationException) rethrow;
-      throw CalculationException(
-        'Error calculating planet position: ${e.toString()}',
-        originalError: e,
-        stackTrace: stackTrace,
-      );
-    }
+    });
+
+    _putInPlanetPositionCache(cacheKey, result);
+    return result;
   }
 
   /// Converts a DateTime to Julian Day number.
   double _dateTimeToJulianDay(DateTime dateTime, {String? timezoneId}) {
     // Convert to UTC
-    final utc = timezoneId != null
+    final utc = (timezoneId != null && !dateTime.isUtc)
         ? AstrologyTimeService.localToUtc(dateTime, timezoneId)
         : dateTime.toUtc();
 
@@ -184,6 +283,37 @@ class EphemerisService {
     );
   }
 
+  /// Calculates the obliquity of the ecliptic for a given Julian Day.
+  /// Returns a tuple of (trueObliquity, meanObliquity).
+  Future<(double, double)> getObliquity(double julianDay) async {
+    if (!_isInitialized || _bindings == null) {
+      throw CalculationException('EphemerisService is not initialized');
+    }
+
+    return _calculationLock.synchronized(() async {
+      final errorBuffer = malloc<ffi.Char>(256);
+      try {
+        final results = _bindings!.calculateUT(
+          julianDay: julianDay,
+          planetId: -1, // SE_ECL_NUT
+          flags: 0,
+          errorBuffer: errorBuffer,
+        );
+
+        if (results == null) {
+          final errorMsg = errorBuffer.cast<Utf8>().toDartString();
+          throw CalculationException(
+            'Failed to calculate obliquity for Julian Day $julianDay: $errorMsg',
+          );
+        }
+
+        return (results[0], results[1]);
+      } finally {
+        malloc.free(errorBuffer);
+      }
+    });
+  }
+
   /// Gets the ayanamsa (sidereal offset) for a given date and time.
   ///
   /// [dateTime] - The date and time to calculate for.
@@ -199,22 +329,27 @@ class EphemerisService {
       throw CalculationException('EphemerisService is not initialized');
     }
 
-    try {
-      // Set sidereal mode
-      _bindings!.setSiderealMode(mode.constant, 0.0, 0.0);
+    return _calculationLock.synchronized(() async {
+      try {
+        // Set sidereal mode
+        _bindings!.setSiderealMode(mode.constant, 0.0, 0.0);
 
-      // Convert DateTime to Julian Day
-      final julianDay = _dateTimeToJulianDay(dateTime, timezoneId: timezoneId);
+        // Convert DateTime to Julian Day
+        final julianDay = _dateTimeToJulianDay(
+          dateTime,
+          timezoneId: timezoneId,
+        );
 
-      // Get ayanamsa
-      return _bindings!.getAyanamsaUT(julianDay);
-    } catch (e, stackTrace) {
-      throw CalculationException(
-        'Error calculating ayanamsa: ${e.toString()}',
-        originalError: e,
-        stackTrace: stackTrace,
-      );
-    }
+        // Get ayanamsa
+        return _bindings!.getAyanamsaUT(julianDay);
+      } catch (e, stackTrace) {
+        throw CalculationException(
+          'Error calculating ayanamsa: ${e.toString()}',
+          originalError: e,
+          stackTrace: stackTrace,
+        );
+      }
+    });
   }
 
   /// Calculates house cusps and ascendant/midheaven.
@@ -243,7 +378,7 @@ class EphemerisService {
       const arcticCircle = 66.5;
       if (absLat >= arcticCircle) {
         throw PolarRegionException(
-          'House system "$houseSystem" is mathematically unstable/undefined above ${arcticCircle} latitude ($absLat requested). '
+          'House system "$houseSystem" is mathematically unstable/undefined above $arcticCircle latitude ($absLat requested). '
           'Switch to Whole Sign ("W"), Campanus ("C"), or Equal ("E").',
           latitude: location.latitude,
           houseSystem: houseSystem,
@@ -251,31 +386,46 @@ class EphemerisService {
       }
     }
 
-    try {
-      // Convert DateTime to Julian Day
-      final julianDay =
-          _dateTimeToJulianDay(dateTime, timezoneId: location.timezone);
-
-      // Calculate houses
-      final result = _bindings!.calculateHouses(
-        julianDay: julianDay,
-        latitude: location.latitude,
-        longitude: location.longitude,
-        houseSystem: houseSystem,
-      );
-
-      if (result == null) {
-        throw CalculationException('Failed to calculate houses');
-      }
-
-      return result;
-    } catch (e, stackTrace) {
-      throw CalculationException(
-        'Error calculating houses: ${e.toString()}',
-        originalError: e,
-        stackTrace: stackTrace,
-      );
+    final cacheKey =
+        '${dateTime.millisecondsSinceEpoch}_${location.timezone}_${location.latitude.toStringAsFixed(6)}_${location.longitude.toStringAsFixed(6)}_${location.altitude.toStringAsFixed(2)}_$houseSystem';
+    if (_housesCache.containsKey(cacheKey)) {
+      final cached = _housesCache.remove(cacheKey)!;
+      _housesCache[cacheKey] = cached;
+      return cached;
     }
+
+    final result = await _calculationLock.synchronized(() async {
+      try {
+        // Convert DateTime to Julian Day
+        final julianDay = _dateTimeToJulianDay(
+          dateTime,
+          timezoneId: location.timezone,
+        );
+
+        // Calculate houses
+        final result = _bindings!.calculateHouses(
+          julianDay: julianDay,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          houseSystem: houseSystem,
+        );
+
+        if (result == null) {
+          throw CalculationException('Failed to calculate houses');
+        }
+
+        return result;
+      } catch (e, stackTrace) {
+        throw CalculationException(
+          'Error calculating houses: ${e.toString()}',
+          originalError: e,
+          stackTrace: stackTrace,
+        );
+      }
+    });
+
+    _putInHousesCache(cacheKey, result);
+    return result;
   }
 
   /// Calculates high-precision rise or set time for a planet.
@@ -316,54 +466,63 @@ class EphemerisService {
       // Return null with a log message (could add logging here if needed)
     }
 
-    try {
-      // By default search from beginning of the day in UTC.
-      // When searchFromExactTime is true, use the exact DateTime provided so
-      // that callers can locate the NEXT rise/set after a known event.
-      final DateTime searchStart;
-      if (searchFromExactTime) {
-        searchStart = date.isUtc ? date : date.toUtc();
-      } else {
-        searchStart = DateTime.utc(date.year, date.month, date.day);
-      }
-      final julianDay =
-          _dateTimeToJulianDay(searchStart, timezoneId: location.timezone);
-
-      final errorBuffer = malloc<ffi.Char>(256);
+    return _calculationLock.synchronized(() async {
       try {
-        final result = _bindings!.calculateRiseSet(
-          julianDay: julianDay,
-          planetId: planet.swissEphId,
-          rsmi: rsmi,
-          latitude: location.latitude,
-          longitude: location.longitude,
-          errorBuffer: errorBuffer,
-          atpress: atpress,
-          attemp: attemp,
+        // By default search from beginning of the day in UTC.
+        // When searchFromExactTime is true, use the exact DateTime provided so
+        // that callers can locate the NEXT rise/set after a known event.
+        final DateTime searchStart;
+        if (searchFromExactTime) {
+          searchStart = date.isUtc ? date : date.toUtc();
+        } else {
+          searchStart = DateTime(date.year, date.month, date.day);
+        }
+        final julianDay = _dateTimeToJulianDay(
+          searchStart,
+          timezoneId: location.timezone,
         );
 
-        if (result == null) {
-          final error = errorBuffer.cast<Utf8>().toDartString();
-          if (error.isNotEmpty) {
-            // Some errors are expected (e.g., polar regions where sun doesn't rise/set)
-            // Return null in such cases
-            return null;
-          }
-          return null;
-        }
+        final errorBuffer = malloc<ffi.Char>(256);
+        try {
+          final result = _bindings!.calculateRiseSet(
+            julianDay: julianDay,
+            planetId: planet.swissEphId,
+            rsmi: rsmi,
+            latitude: location.latitude,
+            longitude: location.longitude,
+            errorBuffer: errorBuffer,
+            atpress: atpress,
+            attemp: attemp,
+          );
 
-        // Convert Julian Day back to DateTime
-        return _julianDayToDateTime(result);
-      } finally {
-        malloc.free(errorBuffer);
+          if (result == null) {
+            final error = errorBuffer.cast<Utf8>().toDartString();
+            final isCircumpolar = error.toLowerCase().contains('circumpolar') ||
+                error.toLowerCase().contains('always') ||
+                error.toLowerCase().contains('no rise') ||
+                error.toLowerCase().contains('no set') ||
+                error.isEmpty;
+            if (isCircumpolar || location.latitude.abs() >= 60.0) {
+              return null;
+            }
+            throw CalculationException(
+              'Failed to calculate rise/set for planet ${planet.name}: $error',
+            );
+          }
+
+          // Convert Julian Day back to DateTime
+          return _julianDayToDateTime(result);
+        } finally {
+          malloc.free(errorBuffer);
+        }
+      } catch (e, stackTrace) {
+        throw CalculationException(
+          'Error calculating rise/set: ${e.toString()}',
+          originalError: e,
+          stackTrace: stackTrace,
+        );
       }
-    } catch (e, stackTrace) {
-      throw CalculationException(
-        'Error calculating rise/set: ${e.toString()}',
-        originalError: e,
-        stackTrace: stackTrace,
-      );
-    }
+    });
   }
 
   /// Gets high-precision sunrise and sunset times for a date.
@@ -380,6 +539,14 @@ class EphemerisService {
     double atpress = 0.0,
     double attemp = 0.0,
   }) async {
+    final cacheKey =
+        '${date.millisecondsSinceEpoch}_${location.timezone}_${location.latitude.toStringAsFixed(6)}_${location.longitude.toStringAsFixed(6)}_${location.altitude.toStringAsFixed(2)}_${atpress.toStringAsFixed(2)}_${attemp.toStringAsFixed(2)}';
+    if (_sunriseSunsetCache.containsKey(cacheKey)) {
+      final cached = _sunriseSunsetCache.remove(cacheKey)!;
+      _sunriseSunsetCache[cacheKey] = cached;
+      return cached;
+    }
+
     final sunrise = await getRiseSet(
       planet: Planet.sun,
       date: date,
@@ -398,7 +565,9 @@ class EphemerisService {
       attemp: attemp,
     );
 
-    return (sunrise, sunset);
+    final result = (sunrise, sunset);
+    _putInSunriseSunsetCache(cacheKey, result);
+    return result;
   }
 
   /// Gets rise and set times for any planet.
@@ -628,7 +797,7 @@ class EphemerisService {
           type == EclipseType.lunarTotal ||
           type == EclipseType.lunarPartial ||
           type == EclipseType.lunarPenumbral) {
-        return _getDetailedLunarEclipse(time, location);
+        return await _getDetailedLunarEclipse(time, location);
       }
 
       // For Solar Eclipses, use the local Swiss Ephemeris built-in functions
@@ -636,7 +805,7 @@ class EphemerisService {
           type == EclipseType.solarTotal ||
           type == EclipseType.solarPartial ||
           type == EclipseType.solarAnnular) {
-        return _getDetailedSolarEclipse(time, location);
+        return await _getDetailedSolarEclipse(time, location);
       }
 
       return null;
@@ -652,36 +821,43 @@ class EphemerisService {
   /// Finds exact time of Syzygy (Conjunction/Opposition) on the given date.
   /// Returns (DateTime, EclipseType) or null.
   Future<(DateTime, EclipseType)?> _findSyzygy(
-      DateTime date, GeographicLocation location) async {
+    DateTime date,
+    GeographicLocation location,
+  ) async {
     // Check start and end of day
     final start = DateTime(date.year, date.month, date.day);
-    final end = start.add(Duration(days: 1));
+    final end = start.add(const Duration(days: 1));
 
     final posStartSun = await calculatePlanetPosition(
-        planet: Planet.sun,
-        dateTime: start,
-        location: location,
-        flags: CalculationFlags.defaultFlags());
+      planet: Planet.sun,
+      dateTime: start,
+      location: location,
+      flags: CalculationFlags.defaultFlags(),
+    );
     final posStartMoon = await calculatePlanetPosition(
-        planet: Planet.moon,
-        dateTime: start,
-        location: location,
-        flags: CalculationFlags.defaultFlags());
+      planet: Planet.moon,
+      dateTime: start,
+      location: location,
+      flags: CalculationFlags.defaultFlags(),
+    );
 
     final posEndSun = await calculatePlanetPosition(
-        planet: Planet.sun,
-        dateTime: end,
-        location: location,
-        flags: CalculationFlags.defaultFlags());
+      planet: Planet.sun,
+      dateTime: end,
+      location: location,
+      flags: CalculationFlags.defaultFlags(),
+    );
     final posEndMoon = await calculatePlanetPosition(
-        planet: Planet.moon,
-        dateTime: end,
-        location: location,
-        flags: CalculationFlags.defaultFlags());
+      planet: Planet.moon,
+      dateTime: end,
+      location: location,
+      flags: CalculationFlags.defaultFlags(),
+    );
 
-    double diffStart =
+    final double diffStart =
         (posStartMoon.longitude - posStartSun.longitude + 360) % 360;
-    double diffEnd = (posEndMoon.longitude - posEndSun.longitude + 360) % 360;
+    final double diffEnd =
+        (posEndMoon.longitude - posEndSun.longitude + 360) % 360;
 
     // Check for New Moon (crossing 0/360)
     // If diff goes from ~350 to ~10, or 355 to 5.
@@ -689,7 +865,7 @@ class EphemerisService {
     if (diffStart > 330 && diffEnd < 30) {
       return (
         await _binarySearchSyzygy(start, end, location, 0),
-        EclipseType.solar
+        EclipseType.solar,
       );
     }
 
@@ -698,15 +874,19 @@ class EphemerisService {
     if (diffStart <= 180 && diffEnd >= 180) {
       return (
         await _binarySearchSyzygy(start, end, location, 180),
-        EclipseType.lunar
+        EclipseType.lunar,
       );
     }
 
     return null;
   }
 
-  Future<DateTime> _binarySearchSyzygy(DateTime start, DateTime end,
-      GeographicLocation loc, double targetDiff) async {
+  Future<DateTime> _binarySearchSyzygy(
+    DateTime start,
+    DateTime end,
+    GeographicLocation loc,
+    double targetDiff,
+  ) async {
     var low = start.millisecondsSinceEpoch;
     var high = end.millisecondsSinceEpoch;
 
@@ -716,17 +896,19 @@ class EphemerisService {
       final time = DateTime.fromMillisecondsSinceEpoch(mid);
 
       final sun = await calculatePlanetPosition(
-          planet: Planet.sun,
-          dateTime: time,
-          location: loc,
-          flags: CalculationFlags.defaultFlags());
+        planet: Planet.sun,
+        dateTime: time,
+        location: loc,
+        flags: CalculationFlags.defaultFlags(),
+      );
       final moon = await calculatePlanetPosition(
-          planet: Planet.moon,
-          dateTime: time,
-          location: loc,
-          flags: CalculationFlags.defaultFlags());
+        planet: Planet.moon,
+        dateTime: time,
+        location: loc,
+        flags: CalculationFlags.defaultFlags(),
+      );
 
-      double diff = (moon.longitude - sun.longitude + 360) % 360;
+      final double diff = (moon.longitude - sun.longitude + 360) % 360;
 
       if (targetDiff == 0) {
         // New Moon
@@ -752,86 +934,88 @@ class EphemerisService {
 
   /// Calculates detailed local solar eclipse data using Swiss Ephemeris.
   Future<EclipseData?> _getDetailedSolarEclipse(
-      DateTime globalDate, GeographicLocation location) async {
-    final jd = _dateTimeToJulianDay(globalDate);
-    final errorBuffer = malloc<ffi.Char>(256);
+    DateTime globalDate,
+    GeographicLocation location,
+  ) async {
+    return _calculationLock.synchronized(() async {
+      final jd = _dateTimeToJulianDay(globalDate);
+      final errorBuffer = malloc<ffi.Char>(256);
 
-    try {
-      print('Calling findSolarEclipseWhenLoc...');
-      // 1. Get precise local maximum and contact times using swe_sol_eclipse_when_loc.
-      // We search from 1 day before the global syzygy date.
-      final result = _bindings!.findSolarEclipseWhenLoc(
-        julianDay: jd - 1.0,
-        latitude: location.latitude,
-        longitude: location.longitude,
-        altitude: location.altitude,
-        flags: 0,
-        backward: false,
-        errorBuffer: errorBuffer,
-      );
-      print('findSolarEclipseWhenLoc returned successfully.');
+      try {
+        // 1. Get precise local maximum and contact times using swe_sol_eclipse_when_loc.
+        // We search from 1 day before the global syzygy date.
+        final result = _bindings!.findSolarEclipseWhenLoc(
+          julianDay: jd - 1.0,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          altitude: location.altitude,
+          flags: 0,
+          backward: false,
+          errorBuffer: errorBuffer,
+        );
 
-      if (result == null) return null;
+        if (result == null) return null;
 
-      // Unpack the unified tret + attr array (30 elements)
-      final tret = result.sublist(0, 10);
-      final attr = result.sublist(10, 30);
+        // Unpack the unified tret + attr array (30 elements)
+        final tret = result.sublist(0, 10);
+        final attr = result.sublist(10, 30);
 
-      // tret[0] = time of maximum eclipse
-      // tret[1] = first contact (partial start)
-      // tret[2] = second contact (total/annular start)
-      // tret[3] = third contact (total/annular end)
-      // tret[4] = fourth contact (partial end)
-      // tret[5] = sunrise/sunset
-      final maxTime = _julianDayToDateTime(tret[0]);
+        // tret[0] = time of maximum eclipse
+        // tret[1] = first contact (partial start)
+        // tret[2] = second contact (total/annular start)
+        // tret[3] = third contact (total/annular end)
+        // tret[4] = fourth contact (partial end)
+        // tret[5] = sunrise/sunset
+        final maxTime = _julianDayToDateTime(tret[0]);
 
-      // Since findSolarEclipseWhenLoc searches forward, if this syzygy is not an eclipse,
-      // it will return the NEXT eclipse (months/years later).
-      // We must check if the returned eclipse is close to the syzygy date.
-      if (maxTime.difference(globalDate).inDays.abs() > 2) {
-        return null; // The found eclipse is for a future syzygy, not this one
+        // Since findSolarEclipseWhenLoc searches forward, if this syzygy is not an eclipse,
+        // it will return the NEXT eclipse (months/years later).
+        // We must check if the returned eclipse is close to the syzygy date.
+        if (maxTime.difference(globalDate).inDays.abs() > 2) {
+          return null; // The found eclipse is for a future syzygy, not this one
+        }
+
+        final c1 = tret[1] > 0 ? _julianDayToDateTime(tret[1]) : null;
+        final c2 = tret[2] > 0 ? _julianDayToDateTime(tret[2]) : null;
+        final c3 = tret[3] > 0 ? _julianDayToDateTime(tret[3]) : null;
+        final c4 = tret[4] > 0 ? _julianDayToDateTime(tret[4]) : null;
+
+        // attr[0] = fraction of solar diameter covered by moon (magnitude)
+        // attr[1] = ratio of lunar diameter to solar one
+        // attr[2] = fraction of solar disc covered (obscuration)
+        final localMagnitude = attr[0];
+
+        if (localMagnitude <= 0) {
+          return null; // Not visible at this specific observer location
+        }
+
+        EclipseType type = EclipseType.solarPartial;
+        if (attr[1] >= 1.0 && c2 != null && c3 != null) {
+          type = EclipseType.solarTotal;
+        } else if (attr[1] < 1.0 && c2 != null && c3 != null) {
+          type = EclipseType.solarAnnular;
+        }
+
+        return EclipseData(
+          date: maxTime,
+          eclipseType: type,
+          magnitude: localMagnitude,
+          isVisible: true,
+          maxEclipseTime: maxTime,
+          startTime: c1,
+          endTime: c4,
+          partialStartTime: c1,
+          partialEndTime: c4,
+          totalStartTime: c2,
+          totalEndTime: c3,
+          duration: c4 != null && c1 != null ? c4.difference(c1) : null,
+          description:
+              '${type.name} Eclipse (Local Mag: ${localMagnitude.toStringAsFixed(3)})',
+        );
+      } finally {
+        malloc.free(errorBuffer);
       }
-
-      final c1 = tret[1] > 0 ? _julianDayToDateTime(tret[1]) : null;
-      final c2 = tret[2] > 0 ? _julianDayToDateTime(tret[2]) : null;
-      final c3 = tret[3] > 0 ? _julianDayToDateTime(tret[3]) : null;
-      final c4 = tret[4] > 0 ? _julianDayToDateTime(tret[4]) : null;
-
-      // attr[0] = fraction of solar diameter covered by moon (magnitude)
-      // attr[1] = ratio of lunar diameter to solar one
-      // attr[2] = fraction of solar disc covered (obscuration)
-      final localMagnitude = attr[0];
-
-      if (localMagnitude <= 0) {
-        return null; // Not visible at this specific observer location
-      }
-
-      EclipseType type = EclipseType.solarPartial;
-      if (attr[1] >= 1.0 && c2 != null && c3 != null) {
-        type = EclipseType.solarTotal;
-      } else if (attr[1] < 1.0 && c2 != null && c3 != null) {
-        type = EclipseType.solarAnnular;
-      }
-
-      return EclipseData(
-        date: maxTime,
-        eclipseType: type,
-        magnitude: localMagnitude,
-        isVisible: true,
-        maxEclipseTime: maxTime,
-        startTime: c1,
-        endTime: c4,
-        partialStartTime: c1,
-        partialEndTime: c4,
-        totalStartTime: c2,
-        totalEndTime: c3,
-        duration: c4 != null && c1 != null ? c4.difference(c1) : null,
-        description:
-            '${type.name} Eclipse (Local Mag: ${localMagnitude.toStringAsFixed(3)})',
-      );
-    } finally {
-      malloc.free(errorBuffer);
-    }
+    });
   }
 
   /// Converts DateTime to Julian Day.
@@ -867,120 +1051,124 @@ class EphemerisService {
     if (_isInitialized && _bindings != null) {
       _bindings!.close();
       _isInitialized = false;
+      clearCache();
     }
   }
 
   /// Gets whether the service is initialized.
   bool get isInitialized => _isInitialized;
 
-  /// Calculates detailed lunar eclipse data using Swiss Ephemeris.
   Future<EclipseData?> _getDetailedLunarEclipse(
-      DateTime date, GeographicLocation location) async {
-    final jd = _dateTimeToJulianDay(date);
-    final errorBuffer = malloc<ffi.Char>(256);
+    DateTime date,
+    GeographicLocation location,
+  ) async {
+    return _calculationLock.synchronized(() async {
+      final jd = _dateTimeToJulianDay(date);
+      final errorBuffer = malloc<ffi.Char>(256);
 
-    try {
-      // 1. Get detailed magnitude and attribute info at moment of maximum.
-      final attr = _bindings!.calculateLunarEclipseHow(
-        julianDay: jd,
-        flags: 0,
-        errorBuffer: errorBuffer,
-      );
-
-      if (attr == null) return null;
-
-      // attr[0] = umbral magnitude
-      // attr[1] = penumbral magnitude
-      final umbralMag = attr[0];
-      final penumbralMag = attr[1];
-
-      if (penumbralMag <= 0) return null; // Not even penumbral
-
-      // 2. Get all contact times.
-      // Search from 1 day BEFORE the syzygy date so we capture all 7 times
-      // including P4 which may fall a day after the date passed in.
-      final tret = _bindings!.findLunarEclipseWhen(
-        julianDay: jd - 1.0,
-        flags: 0,
-        eclipseTypeFlags: 14, // SE_ECL_ALLTYPES_LUNAR
-        backward: false,
-        errorBuffer: errorBuffer,
-      );
-
-      if (tret == null) return null;
-
-      // Verified Swiss Ephemeris tret mapping for swe_lun_eclipse_when:
-      // tret[0] = maximum eclipse
-      // tret[2] = beginning of partial phase  Umbral first contact (U1)
-      // tret[3] = end of partial phase  Umbral last contact (U4)
-      // tret[4] = beginning of total phase (U2)
-      // tret[5] = end of total phase (U3)
-      // tret[6] = beginning of penumbral phase (P1)
-      // tret[7] = end of penumbral phase (P4)
-      // (tret[1], tret[8], tret[9] are unused / zero for lunar eclipses)
-      final maxTime = _julianDayToDateTime(tret[0]);
-      final u1 = tret[2] > 0 ? _julianDayToDateTime(tret[2]) : null;
-      final u4 = tret[3] > 0 ? _julianDayToDateTime(tret[3]) : null;
-      final u2 = tret[4] > 0 ? _julianDayToDateTime(tret[4]) : null;
-      final u3 = tret[5] > 0 ? _julianDayToDateTime(tret[5]) : null;
-      final p1 = tret[6] > 0 ? _julianDayToDateTime(tret[6]) : null;
-      final p4 = tret[7] > 0 ? _julianDayToDateTime(tret[7]) : null;
-
-      // 3. Get moonrise at the observer's location.
-      // PenumbralStartTime (P1) is the earliest relevant time; start from
-      // the day containing P1 so we get the correct evening moonrise.
-      final searchDate = p1 ?? maxTime;
-      final moonrise = await getRiseSet(
-        planet: Planet.moon,
-        date: searchDate,
-        location: location,
-        rsmi: SwissEphConstants.calcRise,
-      );
-
-      // 4. Get moonset AFTER moonrise (not the previous night's moonset).
-      // Pass moonriseTime as the start if available, otherwise searchDate.
-      DateTime? moonset;
-      if (moonrise != null) {
-        moonset = await getRiseSet(
-          planet: Planet.moon,
-          date: moonrise, // start searching from moonrise onward
-          location: location,
-          rsmi: SwissEphConstants.calcSet,
-          searchFromExactTime: true, // use exact moonrise time, not midnight
+      try {
+        // 1. Get detailed magnitude and attribute info at moment of maximum.
+        final attr = _bindings!.calculateLunarEclipseHow(
+          julianDay: jd,
+          flags: 0,
+          errorBuffer: errorBuffer,
         );
-      }
 
-      EclipseType type = EclipseType.lunarPenumbral;
-      if (umbralMag >= 1.0) {
-        type = EclipseType.lunarTotal;
-      } else if (umbralMag > 0) {
-        type = EclipseType.lunarPartial;
-      }
+        if (attr == null) return null;
 
-      return EclipseData(
-        date: maxTime,
-        eclipseType: type,
-        magnitude: umbralMag,
-        penumbralMagnitude: penumbralMag,
-        isVisible: true,
-        description:
-            '${type.name} Eclipse (Mag: ${umbralMag.toStringAsFixed(3)})',
-        maxEclipseTime: maxTime,
-        startTime: u1 ?? p1,
-        endTime: u4 ?? p4,
-        partialStartTime: u1,
-        partialEndTime: u4,
-        totalStartTime: u2,
-        totalEndTime: u3,
-        penumbralStartTime: p1,
-        penumbralEndTime: p4,
-        duration: u4 != null && u1 != null ? u4.difference(u1) : null,
-        moonrise: moonrise,
-        moonset: moonset,
-      );
-    } finally {
-      malloc.free(errorBuffer);
-    }
+        // attr[0] = umbral magnitude
+        // attr[1] = penumbral magnitude
+        final umbralMag = attr[0];
+        final penumbralMag = attr[1];
+
+        if (penumbralMag <= 0) return null; // Not even penumbral
+
+        // 2. Get all contact times.
+        // Search from 1 day BEFORE the syzygy date so we capture all 7 times
+        // including P4 which may fall a day after the date passed in.
+        final tret = _bindings!.findLunarEclipseWhen(
+          julianDay: jd - 1.0,
+          flags: 0,
+          eclipseTypeFlags: 14, // SE_ECL_ALLTYPES_LUNAR
+          backward: false,
+          errorBuffer: errorBuffer,
+        );
+
+        if (tret == null) return null;
+
+        // Verified Swiss Ephemeris tret mapping for swe_lun_eclipse_when:
+        // tret[0] = maximum eclipse
+        // tret[2] = beginning of partial phase  Umbral first contact (U1)
+        // tret[3] = end of partial phase  Umbral last contact (U4)
+        // tret[4] = beginning of total phase (U2)
+        // tret[5] = end of total phase (U3)
+        // tret[6] = beginning of penumbral phase (P1)
+        // tret[7] = end of penumbral phase (P4)
+        // (tret[1], tret[8], tret[9] are unused / zero for lunar eclipses)
+        final maxTime = _julianDayToDateTime(tret[0]);
+        final u1 = tret[2] > 0 ? _julianDayToDateTime(tret[2]) : null;
+        final u4 = tret[3] > 0 ? _julianDayToDateTime(tret[3]) : null;
+        final u2 = tret[4] > 0 ? _julianDayToDateTime(tret[4]) : null;
+        final u3 = tret[5] > 0 ? _julianDayToDateTime(tret[5]) : null;
+        final p1 = tret[6] > 0 ? _julianDayToDateTime(tret[6]) : null;
+        final p4 = tret[7] > 0 ? _julianDayToDateTime(tret[7]) : null;
+
+        // 3. Get moonrise at the observer's location.
+        // PenumbralStartTime (P1) is the earliest relevant time; start from
+        // the day containing P1 so we get the correct evening moonrise.
+        final searchDate = p1 ?? maxTime;
+        final moonrise = await getRiseSet(
+          planet: Planet.moon,
+          date: searchDate,
+          location: location,
+          rsmi: SwissEphConstants.calcRise,
+        );
+
+        // 4. Get moonset AFTER moonrise (not the previous night's moonset).
+        // Pass moonriseTime as the start if available, otherwise searchDate.
+        DateTime? moonset;
+        if (moonrise != null) {
+          moonset = await getRiseSet(
+            planet: Planet.moon,
+            date: moonrise, // start searching from moonrise onward
+            location: location,
+            rsmi: SwissEphConstants.calcSet,
+            searchFromExactTime: true, // use exact moonrise time, not midnight
+          );
+        }
+
+        EclipseType type = EclipseType.lunarPenumbral;
+        if (umbralMag >= 1.0) {
+          type = EclipseType.lunarTotal;
+        } else if (umbralMag > 0) {
+          type = EclipseType.lunarPartial;
+        }
+
+        return EclipseData(
+          date: maxTime,
+          eclipseType: type,
+          magnitude: umbralMag,
+          penumbralMagnitude: penumbralMag,
+          isVisible: true,
+          description:
+              '${type.name} Eclipse (Mag: ${umbralMag.toStringAsFixed(3)})',
+          maxEclipseTime: maxTime,
+          startTime: u1 ?? p1,
+          endTime: u4 ?? p4,
+          partialStartTime: u1,
+          partialEndTime: u4,
+          totalStartTime: u2,
+          totalEndTime: u3,
+          penumbralStartTime: p1,
+          penumbralEndTime: p4,
+          duration: u4 != null && u1 != null ? u4.difference(u1) : null,
+          moonrise: moonrise,
+          moonset: moonset,
+        );
+      } finally {
+        malloc.free(errorBuffer);
+      }
+    });
   }
 }
 

@@ -150,20 +150,6 @@ jyotish/
 flutter test
 ```
 
-### Integration Tests
-
-```bash
-cd example
-flutter test integration_test/
-```
-
-### Run Example App
-
-```bash
-cd example
-flutter run
-```
-
 ## Areas for Contribution
 
 ### High Priority

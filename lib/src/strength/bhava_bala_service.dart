@@ -4,6 +4,7 @@ import 'package:jyotish/src/models/rashi.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
 import 'package:jyotish/src/systems/shadbala_service.dart';
 
+
 /// Service for calculating Bhava Bala (House Strength).
 class BhavaBalaService {
   BhavaBalaService(this._shadbalaService);
@@ -11,35 +12,32 @@ class BhavaBalaService {
 
   /// Calculates Bhava Bala for all 12 houses.
   Future<Map<int, BhavaBalaResult>> calculateBhavaBala(VedicChart chart) async {
-    final results = <int, BhavaBalaResult>{};
-
-    // First, get Shadbala for all planets (needed for Bhava Adhipati Bala)
     final planetShadbala = await _shadbalaService.calculateShadbala(chart);
+    return <int, BhavaBalaResult>{
+      for (var h = 1; h <= 12; h++)
+        h: () {
+          // 1. Bhava Adhipati Bala (Shadbala of the house lord)
+          final lord = _getHouseLord(chart, h);
+          final lordBala = planetShadbala[lord]?.totalBala ?? 0.0;
 
-    for (var h = 1; h <= 12; h++) {
-      // 1. Bhava Adhipati Bala (Shadbala of the house lord)
-      final lord = _getHouseLord(chart, h);
-      final lordBala = planetShadbala[lord]?.totalBala ?? 0.0;
+          // 2. Bhava Dig Bala
+          final digBala = _calculateBhavaDigBala(h, chart.ascendant);
 
-      // 2. Bhava Dig Bala
-      final digBala = _calculateBhavaDigBala(h, chart.ascendant);
+          // 3. Bhava Drishti Bala (Simplified)
+          final drishtiBala = _calculateBhavaDrishtiBala(h, chart);
 
-      // 3. Bhava Drishti Bala (Simplified)
-      final drishtiBala = _calculateBhavaDrishtiBala(h, chart);
+          final totalBala = lordBala + digBala + drishtiBala;
 
-      final totalBala = lordBala + digBala + drishtiBala;
-
-      results[h] = BhavaBalaResult(
-        houseNumber: h,
-        strength: totalBala,
-        lordStrength: lordBala,
-        digBala: digBala,
-        aspectStrength: drishtiBala,
-        category: _getBhavaStrengthCategory(totalBala),
-      );
-    }
-
-    return results;
+          return BhavaBalaResult(
+            houseNumber: h,
+            strength: totalBala,
+            lordStrength: lordBala,
+            digBala: digBala,
+            aspectStrength: drishtiBala,
+            category: _getBhavaStrengthCategory(totalBala),
+          );
+        }(),
+    };
   }
 
   BhavaStrengthCategory _getBhavaStrengthCategory(double strength) {
@@ -118,8 +116,11 @@ class BhavaBalaService {
       // Skip Nodes (Rahu/Ketu) for standard Bhava Drishti (some systems include them, standard usually 7 planets)
       if (Planet.lunarNodes.contains(planet)) continue;
 
-      final aspectStrength =
-          _calculateAspectStrength(planet, planetInfo.longitude, houseCusp);
+      final aspectStrength = _calculateAspectStrength(
+        planet,
+        planetInfo.longitude,
+        houseCusp,
+      );
 
       // Determine if planet is benefic or malefic
       // Bhava Bala uses Natural Benefic/Malefic for adding/subtracting strength
@@ -140,9 +141,12 @@ class BhavaBalaService {
   }
 
   double _calculateAspectStrength(
-      Planet planet, double planetLong, double objectLong) {
+    Planet planet,
+    double planetLong,
+    double objectLong,
+  ) {
     // Angle between planet and object (house cusp)
-    var angle = (objectLong - planetLong + 360) % 360;
+    final angle = (objectLong - planetLong + 360) % 360;
 
     // Standard Drig Bala (Aspect Strength) Formulas (Parashara/Raman):
     // 1. Special Aspects happen check first?
@@ -191,18 +195,21 @@ class BhavaBalaService {
       // B.V. Raman: "For Mars: add 15 to the ordinary values at 4th (90) and 8th (210)?"
       // Simpler Implementation:
       // If within range of special aspect, return 60 (Full).
-      if ((angle >= 80 && angle <= 100) || (angle >= 200 && angle <= 220))
+      if ((angle >= 80 && angle <= 100) || (angle >= 200 && angle <= 220)) {
         return 60.0;
+      }
     }
 
     if (planet == Planet.jupiter) {
-      if ((angle >= 110 && angle <= 130) || (angle >= 230 && angle <= 250))
+      if ((angle >= 110 && angle <= 130) || (angle >= 230 && angle <= 250)) {
         return 60.0;
+      }
     }
 
     if (planet == Planet.saturn) {
-      if ((angle >= 50 && angle <= 70) || (angle >= 260 && angle <= 280))
+      if ((angle >= 50 && angle <= 70) || (angle >= 260 && angle <= 280)) {
         return 60.0;
+      }
     }
 
     // Standard Aspect Formulas
@@ -276,7 +283,11 @@ class BhavaBalaService {
     // Moon is generally considered Benefic in Bhava Bala unless explicitly Dark?
     // Let's stick to standard classification: Jup, Ven, Moo, Mer = Benefic. Sun, Mar, Sat = Malefic.
     // (Ideally Mercury depends on association, Moon on Paksha, but strict Natural Ben/Mal often used for this step).
-    return [Planet.jupiter, Planet.venus, Planet.moon, Planet.mercury]
-        .contains(planet);
+    return [
+      Planet.jupiter,
+      Planet.venus,
+      Planet.moon,
+      Planet.mercury,
+    ].contains(planet);
   }
 }

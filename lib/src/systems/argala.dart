@@ -29,11 +29,17 @@ class ArgalaInfo {
   /// The house receiving the Argala.
   final int targetHouse;
 
+  /// Alias for [targetHouse] for legacy tests.
+  int get house => targetHouse;
+
   /// Type of Argala.
   final ArgalaType type;
 
   /// Planets causing the Argala.
   final List<Planet> causingPlanets;
+
+  /// Alias for [causingPlanets] for legacy tests.
+  List<Planet> get planets => causingPlanets;
 
   /// Whether this Argala is obstructed (Virodha Argala).
   final bool isObstructed;

@@ -1,4 +1,4 @@
-import 'dart:math' as Math;
+import 'dart:math' as math;
 import 'package:jyotish/src/models/calculation_flags.dart';
 import 'package:jyotish/src/models/geographic_location.dart';
 import 'package:jyotish/src/panchanga/nakshatra.dart';
@@ -6,6 +6,7 @@ import 'package:jyotish/src/panchanga/panchanga.dart';
 import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/astronomy/planet_position.dart';
 import 'package:jyotish/src/astronomy/ephemeris_service.dart';
+import 'package:jyotish/src/astronomy/astrology_time_service.dart';
 
 /// Service for calculating Panchanga (five limbs) elements.
 ///
@@ -27,6 +28,8 @@ class PanchangaService {
   Future<Panchanga> calculatePanchanga({
     required DateTime dateTime,
     required GeographicLocation location,
+    double atmosphericPressure = 0.0,
+    double atmosphericTemperature = 0.0,
   }) async {
     final flags = CalculationFlags.defaultFlags();
 
@@ -49,6 +52,8 @@ class PanchangaService {
     final (sunrise, sunset) = await _calculateSunriseSunset(
       dateTime: dateTime,
       location: location,
+      atmosphericPressure: atmosphericPressure,
+      atmosphericTemperature: atmosphericTemperature,
     );
 
     // Calculate Tithi
@@ -64,14 +69,23 @@ class PanchangaService {
     final karana = _calculateKarana(sunPos, moonPos);
 
     // Calculate Vara (Day Lord) using sunrise boundary
-    final vara = _calculateVara(dateTime, sunrise);
+    final vara = _calculateVara(dateTime, sunrise, location.timezone ?? 'UTC');
 
     // Calculate Moonrise and Moonset
-    final (moonrise, moonset) = await _ephemerisService.getPlanetRiseSet(
+    final (moonriseUtc, moonsetUtc) = await _ephemerisService.getPlanetRiseSet(
       planet: Planet.moon,
       date: dateTime,
       location: location,
     );
+
+    final moonrise = moonriseUtc != null
+        ? AstrologyTimeService.utcToLocal(
+            moonriseUtc, location.timezone ?? 'UTC')
+        : null;
+    final moonset = moonsetUtc != null
+        ? AstrologyTimeService.utcToLocal(
+            moonsetUtc, location.timezone ?? 'UTC')
+        : null;
 
     return Panchanga(
       dateTime: dateTime,
@@ -165,11 +179,7 @@ class PanchangaService {
     final nameIndex = yogaNumber - 1;
     final name = YogaInfo.yogaNames[nameIndex];
 
-    return YogaInfo(
-      number: yogaNumber,
-      name: name,
-      elapsed: elapsed,
-    );
+    return YogaInfo(number: yogaNumber, name: name, elapsed: elapsed);
   }
 
   /// Calculates the Karana.
@@ -209,34 +219,28 @@ class PanchangaService {
     // Fixed karanas: Bava(2), Balava(3), Kaulava(4), Taitila(5), Garaja(6), Vanija(7), Vishti(8)
     // Variable: Shakuni(9), Chatushpada(10), Naga(11), Kimstughna(12)
 
-    // Check for variable karanas first (Shakuni, Chatushpada, Naga, Kimstughna)
-    // - Karana 1: Kimstughna (fixed) - at start of Shukla Paksha
+    // Sthira (Fixed) Karanas: Kimstughna, Shakuni, Chatushpada, Naga
+    // - Karana 1: Kimstughna (Sthira) - at start of Shukla Paksha
     if (karanaNumber == 1) {
       name = KaranaInfo.variableKaranaNames[3]; // Kimstughna
-      isFixed = false;
+      isFixed = true;
     }
-    // - Karanas 58-60: Shakuni, Chatushpada, Naga (variable) at the end of the 60 cycle
+    // - Karanas 58-60: Shakuni, Chatushpada, Naga (Sthira) at the end of the 60-karana cycle
     else if (karanaNumber == 58) {
       name = KaranaInfo.variableKaranaNames[0]; // Shakuni
-      isFixed = false;
+      isFixed = true;
     } else if (karanaNumber == 59) {
       name = KaranaInfo.variableKaranaNames[1]; // Chatushpada
-      isFixed = false;
+      isFixed = true;
     } else if (karanaNumber == 60) {
       name = KaranaInfo.variableKaranaNames[2]; // Naga
-      isFixed = false;
+      isFixed = true;
     }
-    // Fixed karanas: Bava(2), Balava(3), Kaulava(4), Taitila(5), Garaja(6), Vanija(7), Vishti(8)
-    else if (karanaNumber >= 2 && karanaNumber <= 8) {
+    // Chara (Repeating/Movable) karanas: Bava, Balava, Kaulava, Taitila, Garaja, Vanija, Vishti
+    else {
       final index = (karanaNumber - 2) % 7;
       name = KaranaInfo.fixedKaranaNames[index];
-      isFixed = true;
-    }
-    // Repeating fixed karanas from position 9 onwards up to 57
-    else {
-      final fixedIndex = (karanaNumber - 9) % 7;
-      name = KaranaInfo.fixedKaranaNames[fixedIndex];
-      isFixed = true;
+      isFixed = false;
     }
 
     return KaranaInfo(
@@ -250,15 +254,24 @@ class PanchangaService {
   /// Calculates the Vara (weekday with planetary lord).
   ///
   /// In Vedic astrology, the day begins at sunrise.
-  VaraInfo _calculateVara(DateTime dateTime, DateTime sunrise) {
-    // If before sunrise, it belongs to the previous day lord
-    var checkDate = dateTime;
-    if (dateTime.isBefore(sunrise)) {
-      checkDate = dateTime.subtract(const Duration(days: 1));
+  VaraInfo _calculateVara(
+      DateTime dateTime, DateTime sunrise, String timezoneId) {
+    // Convert both to UTC to ensure correct chronological comparison
+    final utcDateTime = dateTime.isUtc
+        ? dateTime
+        : AstrologyTimeService.localToUtc(dateTime, timezoneId);
+
+    final utcSunrise = AstrologyTimeService.localToUtc(sunrise, timezoneId);
+
+    var checkDate = utcDateTime;
+    if (utcDateTime.isBefore(utcSunrise)) {
+      checkDate = utcDateTime.subtract(const Duration(days: 1));
     }
 
-    // Get weekday (0 = Sunday, 6 = Saturday)
-    final weekday = checkDate.weekday % 7;
+    // Convert checkDate back to local timezone to find local weekday
+    final localCheckDate =
+        AstrologyTimeService.utcToLocal(checkDate, timezoneId);
+    final weekday = localCheckDate.weekday % 7;
 
     return VaraInfo(
       weekday: weekday,
@@ -283,6 +296,8 @@ class PanchangaService {
   Future<(DateTime, DateTime)> _calculateSunriseSunset({
     required DateTime dateTime,
     required GeographicLocation location,
+    double atmosphericPressure = 0.0,
+    double atmosphericTemperature = 0.0,
   }) async {
     // Check for extreme latitudes that may have polar day/night
     final absLatitude = location.latitude.abs();
@@ -293,27 +308,34 @@ class PanchangaService {
       final (sunrise, sunset) = await _ephemerisService.getSunriseSunset(
         date: dateTime,
         location: location,
+        atpress: atmosphericPressure,
+        attemp: atmosphericTemperature,
       );
 
-      // Fallback to approximation if precise calculation fails
-      // (e.g., in polar regions where sun may not rise/set)
+      // Fallback to polar calculation if precise calculation fails or sun doesn't rise/set
       if (sunrise == null || sunset == null) {
-        if (isPolarRegion) {
-          // Log polar region case - could add to a debug log
-        }
-        return _calculateApproximateSunriseSunset(
+        return await _calculatePolarFallback(
           dateTime: dateTime,
           location: location,
         );
       }
 
-      // Convert UTC results to local timezone
-      final localSunrise = sunrise.toLocal();
-      final localSunset = sunset.toLocal();
+      // Convert UTC results to local timezone of the location
+      final localSunrise =
+          AstrologyTimeService.utcToLocal(sunrise, location.timezone ?? 'UTC');
+      final localSunset =
+          AstrologyTimeService.utcToLocal(sunset, location.timezone ?? 'UTC');
 
       return (localSunrise, localSunset);
     } catch (e) {
-      // If high-precision calculation fails, fall back to approximation
+      // If high-precision calculation fails, fall back to polar fallback for polar regions,
+      // or standard approximation
+      if (isPolarRegion) {
+        return _calculatePolarFallback(
+          dateTime: dateTime,
+          location: location,
+        );
+      }
       return _calculateApproximateSunriseSunset(
         dateTime: dateTime,
         location: location,
@@ -341,7 +363,7 @@ class PanchangaService {
     final julianCentury = (jd - 2451545.0) / 36525.0;
 
     // Geometric Mean Longitude Sun (deg)
-    var geomMeanLongSun = (280.46646 +
+    final geomMeanLongSun = (280.46646 +
             julianCentury * (36000.76983 + julianCentury * 0.0003032)) %
         360;
 
@@ -354,11 +376,11 @@ class PanchangaService {
         julianCentury * (0.000042037 + 0.0000001267 * julianCentury);
 
     // Sun Equation of Center
-    final sunEqOfCtr = Math.sin(_degToRad(geomMeanAnomSun)) *
+    final sunEqOfCtr = math.sin(_degToRad(geomMeanAnomSun)) *
             (1.914602 - julianCentury * (0.004817 + 0.000014 * julianCentury)) +
-        Math.sin(_degToRad(2 * geomMeanAnomSun)) *
+        math.sin(_degToRad(2 * geomMeanAnomSun)) *
             (0.019993 - 0.000101 * julianCentury) +
-        Math.sin(_degToRad(3 * geomMeanAnomSun)) * 0.000289;
+        math.sin(_degToRad(3 * geomMeanAnomSun)) * 0.000289;
 
     // Sun True Longitude (deg)
     final sunTrueLong = geomMeanLongSun + sunEqOfCtr;
@@ -366,7 +388,7 @@ class PanchangaService {
     // Sun Apparent Longitude (deg)
     final sunAppLong = sunTrueLong -
         0.00569 -
-        0.00478 * Math.sin(_degToRad(125.04 - 1934.136 * julianCentury));
+        0.00478 * math.sin(_degToRad(125.04 - 1934.136 * julianCentury));
 
     // Mean Obliquity of Ecliptic (deg)
     final meanObliqEcliptic = 23 +
@@ -381,57 +403,96 @@ class PanchangaService {
 
     // Obliquity Correction (deg)
     final obliqCorr = meanObliqEcliptic +
-        0.00256 * Math.cos(_degToRad(125.04 - 1934.136 * julianCentury));
+        0.00256 * math.cos(_degToRad(125.04 - 1934.136 * julianCentury));
 
     // Sun Declination (deg)
-    final sunDeclin = _radToDeg(Math.asin(
-        Math.sin(_degToRad(obliqCorr)) * Math.sin(_degToRad(sunAppLong))));
+    final sunDeclin = _radToDeg(
+      math.asin(
+        math.sin(_degToRad(obliqCorr)) * math.sin(_degToRad(sunAppLong)),
+      ),
+    );
 
     // Equation of Time (minutes)
     final varY =
-        Math.tan(_degToRad(obliqCorr / 2)) * Math.tan(_degToRad(obliqCorr / 2));
+        math.tan(_degToRad(obliqCorr / 2)) * math.tan(_degToRad(obliqCorr / 2));
     final eqOfTime = 4 *
-        _radToDeg(varY * Math.sin(2 * _degToRad(geomMeanLongSun)) -
-            2 * eccentEarthOrbit * Math.sin(_degToRad(geomMeanAnomSun)) +
-            4 *
-                eccentEarthOrbit *
-                varY *
-                Math.sin(_degToRad(geomMeanAnomSun)) *
-                Math.cos(2 * _degToRad(geomMeanLongSun)) -
-            0.5 * varY * varY * Math.sin(4 * _degToRad(geomMeanLongSun)) -
-            1.25 *
-                eccentEarthOrbit *
-                eccentEarthOrbit *
-                Math.sin(2 * _degToRad(geomMeanAnomSun)));
+        _radToDeg(
+          varY * math.sin(2 * _degToRad(geomMeanLongSun)) -
+              2 * eccentEarthOrbit * math.sin(_degToRad(geomMeanAnomSun)) +
+              4 *
+                  eccentEarthOrbit *
+                  varY *
+                  math.sin(_degToRad(geomMeanAnomSun)) *
+                  math.cos(2 * _degToRad(geomMeanLongSun)) -
+              0.5 * varY * varY * math.sin(4 * _degToRad(geomMeanLongSun)) -
+              1.25 *
+                  eccentEarthOrbit *
+                  eccentEarthOrbit *
+                  math.sin(2 * _degToRad(geomMeanAnomSun)),
+        );
 
     // Hour Angle Calculation (deg)
     // Zenith for sunrise/sunset is 90.833 degrees (90 + 50' refraction/sun size)
     const zenith = 90.833;
-    final haArg = (Math.cos(_degToRad(zenith)) /
-            (Math.cos(_degToRad(latitude)) * Math.cos(_degToRad(sunDeclin)))) -
-        (Math.tan(_degToRad(latitude)) * Math.tan(_degToRad(sunDeclin)));
+    final haArg = (math.cos(_degToRad(zenith)) /
+            (math.cos(_degToRad(latitude)) * math.cos(_degToRad(sunDeclin)))) -
+        (math.tan(_degToRad(latitude)) * math.tan(_degToRad(sunDeclin)));
 
     // Check for polar day/night
     if (haArg > 1.0 || haArg < -1.0) {
       // Fallback to coarse approximation if NOAA calc fails (extreme latitudes)
-      var sunriseHour = 6.0;
-      var sunsetHour = 18.0;
+      const sunriseHour = 6.0;
+      const sunsetHour = 18.0;
 
       final sunrise = baseDate.add(Duration(hours: sunriseHour.toInt()));
       final sunset = baseDate.add(Duration(hours: sunsetHour.toInt()));
       return (sunrise, sunset);
     }
 
-    final ha = _radToDeg(Math.acos(haArg));
+    final ha = _radToDeg(math.acos(haArg));
 
     // Sunrise/Sunset Time (UTC minutes from midnight)
     final sunriseTimeUTC = 720 - 4 * (longitude + ha) - eqOfTime;
     final sunsetTimeUTC = 720 - 4 * (longitude - ha) - eqOfTime;
 
-    final sunrise = _minutesToDateTime(baseDate, sunriseTimeUTC);
-    final sunset = _minutesToDateTime(baseDate, sunsetTimeUTC);
+    final sunrise = _minutesToDateTime(
+        baseDate, sunriseTimeUTC, location.timezone ?? 'UTC');
+    final sunset =
+        _minutesToDateTime(baseDate, sunsetTimeUTC, location.timezone ?? 'UTC');
 
     return (sunrise, sunset);
+  }
+
+  /// Calculates a fallback sunrise/sunset for polar regions based on the meridian transit
+  /// (apparent solar noon) and a nominal 12-hour day/night split (6 hours before/after).
+  Future<(DateTime, DateTime)> _calculatePolarFallback({
+    required DateTime dateTime,
+    required GeographicLocation location,
+  }) async {
+    try {
+      final noon = await _ephemerisService.getMeridianTransit(
+        planet: Planet.sun,
+        date: dateTime,
+        location: location,
+        upperCulmination: true,
+      );
+
+      final localNoon = noon != null
+          ? AstrologyTimeService.utcToLocal(noon, location.timezone ?? 'UTC')
+          : DateTime(dateTime.year, dateTime.month, dateTime.day, 12, 0, 0);
+
+      // Split into equal 12-hour day (6 hours before and 6 hours after solar noon)
+      final sunrise = localNoon.subtract(const Duration(hours: 6));
+      final sunset = localNoon.add(const Duration(hours: 6));
+      return (sunrise, sunset);
+    } catch (_) {
+      final noon =
+          DateTime(dateTime.year, dateTime.month, dateTime.day, 12, 0, 0);
+      return (
+        noon.subtract(const Duration(hours: 6)),
+        noon.add(const Duration(hours: 6))
+      );
+    }
   }
 
   double _dateToJulianDay(int year, int month, int day) {
@@ -448,10 +509,11 @@ class PanchangaService {
         1524.5;
   }
 
-  double _degToRad(double deg) => deg * Math.pi / 180.0;
-  double _radToDeg(double rad) => rad * 180.0 / Math.pi;
+  double _degToRad(double deg) => deg * math.pi / 180.0;
+  double _radToDeg(double rad) => rad * 180.0 / math.pi;
 
-  DateTime _minutesToDateTime(DateTime date, double minutesUtc) {
+  DateTime _minutesToDateTime(
+      DateTime date, double minutesUtc, String timezoneId) {
     var mins = minutesUtc;
     // Handle day wrap around
     int dayOffset = 0;
@@ -468,9 +530,16 @@ class PanchangaService {
     final minute = (mins % 60).floor();
     final second = ((mins - (hour * 60 + minute)) * 60).round();
 
-    return DateTime.utc(date.year, date.month, date.day, hour, minute, second)
-        .add(Duration(days: dayOffset))
-        .toLocal();
+    final utcTime = DateTime.utc(
+      date.year,
+      date.month,
+      date.day,
+      hour,
+      minute,
+      second,
+    ).add(Duration(days: dayOffset));
+
+    return AstrologyTimeService.utcToLocal(utcTime, timezoneId);
   }
 
   /// Gets the Tithi for a specific date.
@@ -554,7 +623,7 @@ class PanchangaService {
       dateTime: dateTime,
       location: location,
     );
-    return _calculateVara(dateTime, sunrise);
+    return _calculateVara(dateTime, sunrise, location.timezone ?? 'UTC');
   }
 
   /// Gets the Nakshatra for a specific date/location.
@@ -613,26 +682,22 @@ class PanchangaService {
     final targetElongation = (currentTithi + 1) * 12.0;
 
     // 2. Binary search for target elongation within the next 48 hours
-    // Using 48 hours to account for variations in tithi length
     var start = dateTime;
     var end = dateTime.add(const Duration(hours: 48));
 
-    // Continue searching until we meet the accuracy threshold
     var iteration = 0;
-    const maxIterations = 60; // Increased for better convergence
+    const maxIterations = 60;
 
     while (iteration < maxIterations) {
       final currentWindow = end.difference(start);
 
-      // If we're within the accuracy threshold, stop
       if (currentWindow <= accuracyThreshold) {
         break;
       }
 
-      // Adaptive mid point - use smaller steps near the target
-      final mid = start.add(Duration(
-        milliseconds: currentWindow.inMilliseconds ~/ 2,
-      ));
+      final mid = start.add(
+        Duration(milliseconds: (currentWindow.inMilliseconds * 0.5).round()),
+      );
 
       final midSun = await _ephemerisService.calculatePlanetPosition(
         planet: Planet.sun,
@@ -647,22 +712,153 @@ class PanchangaService {
         flags: flags,
       );
 
-      var midElongation = (midMoon.longitude - midSun.longitude + 360) % 360;
+      final midElongation = (midMoon.longitude - midSun.longitude + 360) % 360;
 
-      // Handle 0/360 boundary crossing
-      if (targetElongation >= 360 && midElongation < 180) {
-        midElongation += 360;
-      }
+      // Signed difference with wrap-around
+      final diff = (midElongation - targetElongation + 180) % 360 - 180;
 
-      // Check if we're very close to the target - helps with edge cases
-      final elongationDiff = (midElongation - targetElongation).abs();
-      if (elongationDiff < 0.001) {
-        // Very close to target, use this as end
+      if (diff.abs() < 0.0001) {
         end = mid;
         break;
       }
 
-      if (midElongation < targetElongation) {
+      if (diff < 0) {
+        start = mid;
+      } else {
+        end = mid;
+      }
+
+      iteration++;
+    }
+
+    return start;
+  }
+
+  /// Finds the exact end time of the current Nakshatra.
+  Future<DateTime> getNakshatraEndTime({
+    required DateTime dateTime,
+    required GeographicLocation location,
+    Duration accuracyThreshold = const Duration(seconds: 1),
+  }) async {
+    final flags = CalculationFlags.defaultFlags();
+
+    final moonPos = await _ephemerisService.calculatePlanetPosition(
+      planet: Planet.moon,
+      dateTime: dateTime,
+      location: location,
+      flags: flags,
+    );
+
+    final currentNakshatra = (moonPos.longitude / (360.0 / 27.0)).floor();
+    final targetLongitude = ((currentNakshatra + 1) * (360.0 / 27.0)) % 360;
+
+    var start = dateTime;
+    var end = dateTime.add(const Duration(hours: 48));
+
+    var iteration = 0;
+    const maxIterations = 60;
+
+    while (iteration < maxIterations) {
+      final currentWindow = end.difference(start);
+
+      if (currentWindow <= accuracyThreshold) {
+        break;
+      }
+
+      final mid = start.add(
+        Duration(milliseconds: (currentWindow.inMilliseconds * 0.5).round()),
+      );
+
+      final midMoon = await _ephemerisService.calculatePlanetPosition(
+        planet: Planet.moon,
+        dateTime: mid,
+        location: location,
+        flags: flags,
+      );
+
+      final diff = (midMoon.longitude - targetLongitude + 180) % 360 - 180;
+
+      if (diff.abs() < 0.0001) {
+        end = mid;
+        break;
+      }
+
+      if (diff < 0) {
+        start = mid;
+      } else {
+        end = mid;
+      }
+
+      iteration++;
+    }
+
+    return start;
+  }
+
+  /// Finds the exact end time of the current Yoga.
+  Future<DateTime> getYogaEndTime({
+    required DateTime dateTime,
+    required GeographicLocation location,
+    Duration accuracyThreshold = const Duration(seconds: 1),
+  }) async {
+    final flags = CalculationFlags.defaultFlags();
+
+    final sunPos = await _ephemerisService.calculatePlanetPosition(
+      planet: Planet.sun,
+      dateTime: dateTime,
+      location: location,
+      flags: flags,
+    );
+    final moonPos = await _ephemerisService.calculatePlanetPosition(
+      planet: Planet.moon,
+      dateTime: dateTime,
+      location: location,
+      flags: flags,
+    );
+
+    final currentYogaValue = (sunPos.longitude + moonPos.longitude + 360) % 360;
+    final currentYoga = (currentYogaValue / (360.0 / 27.0)).floor();
+    final targetValue = ((currentYoga + 1) * (360.0 / 27.0)) % 360;
+
+    var start = dateTime;
+    var end = dateTime.add(const Duration(hours: 48));
+
+    var iteration = 0;
+    const maxIterations = 60;
+
+    while (iteration < maxIterations) {
+      final currentWindow = end.difference(start);
+
+      if (currentWindow <= accuracyThreshold) {
+        break;
+      }
+
+      final mid = start.add(
+        Duration(milliseconds: (currentWindow.inMilliseconds * 0.5).round()),
+      );
+
+      final midSun = await _ephemerisService.calculatePlanetPosition(
+        planet: Planet.sun,
+        dateTime: mid,
+        location: location,
+        flags: flags,
+      );
+      final midMoon = await _ephemerisService.calculatePlanetPosition(
+        planet: Planet.moon,
+        dateTime: mid,
+        location: location,
+        flags: flags,
+      );
+
+      final midYogaValue = (midSun.longitude + midMoon.longitude + 360) % 360;
+      final diff = (midYogaValue - targetValue + 180) % 360 - 180;
+
+      if (diff.abs() < 0.0001) {
+        end = mid;
+        break;
+      }
+
+      if (diff < 0) {
         start = mid;
       } else {
         end = mid;
@@ -864,8 +1060,9 @@ class PanchangaService {
 
     // High-precision binary search
     const maxIterations = 100;
-    const accuracyThreshold =
-        Duration(milliseconds: 100); // 0.1 second precision
+    const accuracyThreshold = Duration(
+      milliseconds: 100,
+    ); // 0.1 second precision
 
     for (var i = 0; i < maxIterations; i++) {
       final window = searchEnd.difference(searchStart);
@@ -874,9 +1071,9 @@ class PanchangaService {
         break;
       }
 
-      final mid = searchStart.add(Duration(
-        milliseconds: window.inMilliseconds ~/ 2,
-      ));
+      final mid = searchStart.add(
+        Duration(milliseconds: window.inMilliseconds ~/ 2),
+      );
 
       final sunPos = await _ephemerisService.calculatePlanetPosition(
         planet: Planet.sun,
@@ -891,22 +1088,126 @@ class PanchangaService {
         flags: flags,
       );
 
-      var elongation = (moonPos.longitude - sunPos.longitude + 360) % 360;
+      final elongation = (moonPos.longitude - sunPos.longitude + 360) % 360;
 
-      // Handle 0/360 boundary
-      if (targetElongation < 12 && elongation > 348) {
-        elongation -= 360;
-      }
+      // Signed difference with wrap-around
+      final diff = (elongation - targetElongation + 180) % 360 - 180;
 
       // Check if we're very close to the target - helps with edge cases
-      final elongationDiff = (elongation - targetElongation).abs();
-      if (elongationDiff < 0.001) {
-        // Very close to target, use this as end
+      if (diff.abs() < 0.0001) {
         searchEnd = mid;
         break;
       }
 
-      if (elongation < targetElongation) {
+      if (diff < 0) {
+        searchStart = mid;
+      } else {
+        searchEnd = mid;
+      }
+    }
+
+    return searchStart;
+  }
+
+  /// Gets the exact junction (change point) of a specific Nakshatra.
+  Future<DateTime> getNakshatraJunction({
+    required int targetNakshatraNumber,
+    required DateTime startDate,
+    required GeographicLocation location,
+  }) async {
+    final flags = CalculationFlags.defaultFlags();
+    final targetLongitude =
+        ((targetNakshatraNumber - 1) * (360.0 / 27.0)) % 360;
+
+    var searchStart = startDate;
+    var searchEnd = startDate.add(const Duration(hours: 48));
+
+    const maxIterations = 100;
+    const accuracyThreshold = Duration(milliseconds: 100);
+
+    for (var i = 0; i < maxIterations; i++) {
+      final window = searchEnd.difference(searchStart);
+
+      if (window <= accuracyThreshold) {
+        break;
+      }
+
+      final mid = searchStart.add(
+        Duration(milliseconds: window.inMilliseconds ~/ 2),
+      );
+
+      final moonPos = await _ephemerisService.calculatePlanetPosition(
+        planet: Planet.moon,
+        dateTime: mid,
+        location: location,
+        flags: flags,
+      );
+
+      final diff = (moonPos.longitude - targetLongitude + 180) % 360 - 180;
+
+      if (diff.abs() < 0.0001) {
+        searchEnd = mid;
+        break;
+      }
+
+      if (diff < 0) {
+        searchStart = mid;
+      } else {
+        searchEnd = mid;
+      }
+    }
+
+    return searchStart;
+  }
+
+  /// Gets the exact junction (change point) of a specific Yoga.
+  Future<DateTime> getYogaJunction({
+    required int targetYogaNumber,
+    required DateTime startDate,
+    required GeographicLocation location,
+  }) async {
+    final flags = CalculationFlags.defaultFlags();
+    final targetValue = ((targetYogaNumber - 1) * (360.0 / 27.0)) % 360;
+
+    var searchStart = startDate;
+    var searchEnd = startDate.add(const Duration(hours: 48));
+
+    const maxIterations = 100;
+    const accuracyThreshold = Duration(milliseconds: 100);
+
+    for (var i = 0; i < maxIterations; i++) {
+      final window = searchEnd.difference(searchStart);
+
+      if (window <= accuracyThreshold) {
+        break;
+      }
+
+      final mid = searchStart.add(
+        Duration(milliseconds: window.inMilliseconds ~/ 2),
+      );
+
+      final sunPos = await _ephemerisService.calculatePlanetPosition(
+        planet: Planet.sun,
+        dateTime: mid,
+        location: location,
+        flags: flags,
+      );
+      final moonPos = await _ephemerisService.calculatePlanetPosition(
+        planet: Planet.moon,
+        dateTime: mid,
+        location: location,
+        flags: flags,
+      );
+
+      final yogaValue = (sunPos.longitude + moonPos.longitude + 360) % 360;
+      final diff = (yogaValue - targetValue + 180) % 360 - 180;
+
+      if (diff.abs() < 0.0001) {
+        searchEnd = mid;
+        break;
+      }
+
+      if (diff < 0) {
         searchStart = mid;
       } else {
         searchEnd = mid;
@@ -952,7 +1253,7 @@ class PanchangaService {
 
     // Calculate percent illumination using correct cosine formula:
     // New Moon (0) = 0%, Full Moon (180) = 100%
-    final illumination = ((1 - Math.cos(elongation * Math.pi / 180)) / 2) * 100;
+    final illumination = ((1 - math.cos(elongation * math.pi / 180)) / 2) * 100;
 
     // Waxing: elongation 0180 (Shukla Paksha), Waning: 180360 (Krishna Paksha)
     final isWaxing = elongation < 180;
@@ -1047,10 +1348,7 @@ class BrahmaMuhurta {
 
 /// Represents a generic time period for Panchanga calculations.
 class PanchangaTimePeriod {
-  const PanchangaTimePeriod({
-    required this.start,
-    required this.end,
-  });
+  const PanchangaTimePeriod({required this.start, required this.end});
 
   final DateTime start;
   final DateTime end;

@@ -18,7 +18,7 @@ class KPService {
 
   final EphemerisService _ephemerisService;
 
-  //  Guard-rail 
+  //  Guard-rail
 
   /// Throws [StateError] if [flags] do not declare [AstrologicalSystem.kp].
   ///
@@ -45,49 +45,30 @@ class KPService {
   ///
   /// Returns [KPCalculations] with Sub-Lords and significators.
   ///
-  /// Throws [StateError] if [natalChart.flags] is not [AstrologicalSystem.kp].
+  /// Throws [StateError] if `natalChart.flags` is not [AstrologicalSystem.kp].
   Future<KPCalculations> calculateKPData(
     VedicChart natalChart, {
     bool useNewAyanamsa = true,
   }) async {
     _assertKPSystem(natalChart.flags, 'calculateKPData');
-    // Calculate KP ayanamsa using precise time-varying formula from Swiss Ephemeris
     final kpAyanamsa = await _calculateKPAyanamsa(
       natalChart.dateTime,
       useNewAyanamsa: useNewAyanamsa,
     );
-
-    // Get the Lahiri ayanamsa (default used in chart calculation)
-    final lahiriAyanamsa = await _ephemerisService.getAyanamsa(
-      dateTime: natalChart.dateTime,
-      mode: SiderealMode.lahiri,
-    );
-
-    // Calculate the difference to adjust positions
-    // Positive diff means KP ayanamsa is larger, so we need to subtract more from tropical
-    // Since chart is already in Lahiri sidereal, we subtract the difference
-    final ayanamsaDiff = kpAyanamsa - lahiriAyanamsa;
-
-    // Calculate Sub-Lords for planets with adjusted positions
+    // Calculate Sub-Lords for planets directly (chart is already in KP ayanamsa)
     final planetDivisions = <Planet, KPDivision>{};
     for (final entry in natalChart.planets.entries) {
-      // Adjust planet longitude from Lahiri to KP ayanamsa
-      final adjustedLongitude =
-          (entry.value.position.longitude - ayanamsaDiff + 360) % 360;
       planetDivisions[entry.key] = _calculateKPDivision(
-        adjustedLongitude,
+        entry.value.position.longitude,
         entry.key,
       );
     }
 
-    // Calculate Sub-Lords for house cusps with adjusted positions
+    // Calculate Sub-Lords for house cusps directly
     final houseDivisions = <int, KPDivision>{};
     for (var house = 1; house <= 12; house++) {
-      // Adjust cusp longitude from Lahiri to KP ayanamsa
-      final adjustedCusp =
-          (natalChart.houses.cusps[house - 1] - ayanamsaDiff + 360) % 360;
       houseDivisions[house] = _calculateKPDivision(
-        adjustedCusp,
+        natalChart.houses.cusps[house - 1],
         null,
       );
     }
@@ -115,22 +96,43 @@ class KPService {
   /// [longitude] - The longitude in degrees (0-360)
   /// [planet] - Optional planet (for reference)
   KPDivision _calculateKPDivision(double longitude, Planet? planet) {
+    // Snap longitude to closest sign/star boundary to prevent transition issues
+    final snappedLong = _snapKPLongitude(longitude);
+
     // Get sign information
-    final sign = (longitude / 30).floor() + 1;
+    final sign = (snappedLong / 30).floor() + 1;
     final signLord = KPPlanetOwnership.getSignLord(sign);
 
     // Get star information
-    final starLongitude = longitude % 360;
+    final starLongitude = snappedLong % 360;
     final star = (starLongitude / (360 / 27)).floor() + 1;
     final starLord = KPPlanetOwnership.getStarLord(star);
 
     // Calculate Sub-Lord and boundaries
-    final subLord = _calculateSubLord(longitude, star);
-    final (subStart, subEnd) = _calculateSubBoundaries(longitude, star);
+    final subLord = _calculateSubLord(snappedLong, star);
+    final (subStart, subEnd) = _calculateSubBoundaries(snappedLong, star);
 
     // Calculate Sub-Sub-Lord using sub-lord boundaries
-    final subSubLord =
-        _calculateSubSubLord(longitude, subLord, subStart, subEnd);
+    final subSubLord = _calculateSubSubLord(
+      snappedLong,
+      subLord,
+      subStart,
+      subEnd,
+    );
+
+    // Calculate Sub-Sub-Sub-Lord
+    final (subSubStart, subSubEnd) = _calculateSubSubBoundaries(
+      snappedLong,
+      subLord,
+      subStart,
+      subEnd,
+    );
+    final subSubSubLord = _calculateSubSubSubLord(
+      snappedLong,
+      subSubLord,
+      subSubStart,
+      subSubEnd,
+    );
 
     return KPDivision(
       sign: sign,
@@ -139,6 +141,7 @@ class KPService {
       starLord: starLord,
       subLord: subLord,
       subSubLord: subSubLord,
+      subSubSubLord: subSubSubLord,
       subStartLongitude: subStart,
       subEndLongitude: subEnd,
     );
@@ -180,7 +183,7 @@ class KPService {
 
     for (final (planet, period) in dashaPeriods) {
       cumulative += period / totalPeriods;
-      if (posInStar <= cumulative) {
+      if (posInStar <= cumulative - 1e-11) {
         return planet;
       }
     }
@@ -193,7 +196,11 @@ class KPService {
   /// The Sub-Sub-Lord divides each Sub-Lord into 9 parts using the same
   /// Vimshottari sequence (120 years total).
   Planet? _calculateSubSubLord(
-      double longitude, Planet subLord, double subStart, double subEnd) {
+    double longitude,
+    Planet subLord,
+    double subStart,
+    double subEnd,
+  ) {
     // Full Vimshottari sequence
     final dashaPeriods = [
       (Planet.ketu, 7), // Ketu
@@ -214,10 +221,12 @@ class KPService {
     final posInSub = (longitude - subStart) / subSpan;
 
     // Find the starting planet in the sequence
-    final subLordIndex = dashaPeriods.indexWhere((p) =>
-        (p.$1 == Planet.meanNode && subLord == Planet.meanNode) ||
-        (p.$1 == Planet.trueNode && subLord == Planet.trueNode) ||
-        p.$1 == subLord);
+    final subLordIndex = dashaPeriods.indexWhere(
+      (p) =>
+          (p.$1 == Planet.meanNode && subLord == Planet.meanNode) ||
+          (p.$1 == Planet.trueNode && subLord == Planet.trueNode) ||
+          p.$1 == subLord,
+    );
 
     if (subLordIndex < 0) return null;
 
@@ -228,7 +237,7 @@ class KPService {
       final index = (subLordIndex + i) % dashaPeriods.length;
       final (_, period) = dashaPeriods[index];
       cumulative += period / totalPeriods;
-      if (posInSub <= cumulative) {
+      if (posInSub <= cumulative - 1e-11) {
         return dashaPeriods[index].$1;
       }
     }
@@ -267,7 +276,7 @@ class KPService {
 
     for (final period in dashaPeriods) {
       final subSpan = starSpan * (period / totalPeriods);
-      if (posInStar <= cumulative + subSpan) {
+      if (posInStar <= cumulative + subSpan - 1e-11) {
         return (subStart, subStart + subSpan);
       }
       cumulative += subSpan;
@@ -299,12 +308,16 @@ class KPService {
     );
 
     // C Significators: Houses OWNED by the planet (cusp-based, not Aries Lagna)
-    final cSignificators =
-        KPPlanetOwnership.getOwnedHousesFromChart(planet, natalChart);
+    final cSignificators = KPPlanetOwnership.getOwnedHousesFromChart(
+      planet,
+      natalChart,
+    );
 
     // D Significators: Houses OWNED by the planet's sign lord (cusp-based)
     final dSignificators = KPPlanetOwnership.getOwnedHousesFromChart(
-        division.signLord, natalChart);
+      division.signLord,
+      natalChart,
+    );
 
     return KPSignificators(
       planet: planet,
@@ -425,7 +438,7 @@ class KPService {
   ///
   /// [natalKP] - The birth chart's KP data from [calculateKPData].
   /// [transitDivisions] - Transit KP divisions from [calculateTransitKPDivisions].
-  /// [natalSignificators] - Optional: if omitted, A+B significators are used.
+  /// `natalSignificators` - Optional: if omitted, A+B significators are used.
   ///
   /// Returns a sorted list, strongest matches first.
   List<KPTransitComparison> compareTransitToNatal({
@@ -469,14 +482,16 @@ class KPService {
       final commonHouses = natalHouses.intersection(transitHouses).toList()
         ..sort();
 
-      comparisons.add(KPTransitComparison(
-        planet: planet,
-        transitDivision: transitDiv,
-        natalDivision: natalDiv,
-        starLordMatches: starLordMatches,
-        subLordMatches: subLordMatches,
-        commonNatalSignificators: commonHouses,
-      ));
+      comparisons.add(
+        KPTransitComparison(
+          planet: planet,
+          transitDivision: transitDiv,
+          natalDivision: natalDiv,
+          starLordMatches: starLordMatches,
+          subLordMatches: subLordMatches,
+          commonNatalSignificators: commonHouses,
+        ),
+      );
     }
 
     // Sort: strongest matches first
@@ -588,7 +603,7 @@ class KPService {
 
       final dashaPeriods = [7.0, 20.0, 6.0, 10.0, 7.0, 18.0, 16.0, 19.0, 17.0];
       const totalPeriods = 120.0;
-      final starSpan = 360.0 / 27;
+      const starSpan = 360.0 / 27;
 
       final starLord = KPPlanetOwnership.getStarLord(star);
       final planets = [
@@ -600,7 +615,7 @@ class KPService {
         Planet.meanNode,
         Planet.jupiter,
         Planet.saturn,
-        Planet.mercury
+        Planet.mercury,
       ];
       // Note: in _calculateSubLord we had meanNode. Make sure starLord logic uses meanNode for Rahu.
       final searchStarLord =
@@ -623,40 +638,46 @@ class KPService {
           final boundary = signEnd * 30.0;
 
           final div1 = _calculateKPDivision(currentSubStart, null);
-          table.add(KPDivisionEntry(
-            index: index++,
-            sign: div1.sign,
-            signLord: div1.signLord,
-            star: star,
-            starLord: starLord,
-            subLord: subLord,
-            startLongitude: currentSubStart,
-            endLongitude: boundary,
-          ));
+          table.add(
+            KPDivisionEntry(
+              index: index++,
+              sign: div1.sign,
+              signLord: div1.signLord,
+              star: star,
+              starLord: starLord,
+              subLord: subLord,
+              startLongitude: currentSubStart,
+              endLongitude: boundary,
+            ),
+          );
 
           final div2 = _calculateKPDivision(boundary + 0.000001, null);
-          table.add(KPDivisionEntry(
-            index: index++,
-            sign: div2.sign,
-            signLord: div2.signLord,
-            star: star,
-            starLord: starLord,
-            subLord: subLord,
-            startLongitude: boundary,
-            endLongitude: subEnd,
-          ));
+          table.add(
+            KPDivisionEntry(
+              index: index++,
+              sign: div2.sign,
+              signLord: div2.signLord,
+              star: star,
+              starLord: starLord,
+              subLord: subLord,
+              startLongitude: boundary,
+              endLongitude: subEnd,
+            ),
+          );
         } else {
           final div = _calculateKPDivision(currentSubStart + 0.000001, null);
-          table.add(KPDivisionEntry(
-            index: index++,
-            sign: div.sign,
-            signLord: div.signLord,
-            star: star,
-            starLord: starLord,
-            subLord: subLord,
-            startLongitude: currentSubStart,
-            endLongitude: subEnd,
-          ));
+          table.add(
+            KPDivisionEntry(
+              index: index++,
+              sign: div.sign,
+              signLord: div.signLord,
+              star: star,
+              starLord: starLord,
+              subLord: subLord,
+              startLongitude: currentSubStart,
+              endLongitude: subEnd,
+            ),
+          );
         }
 
         currentSubStart = subEnd;
@@ -682,9 +703,133 @@ class KPService {
         ? SiderealMode.krishnamurtiVP291
         : SiderealMode.krishnamurti;
 
-    return await _ephemerisService.getAyanamsa(
-      dateTime: dateTime,
-      mode: mode,
+    return await _ephemerisService.getAyanamsa(dateTime: dateTime, mode: mode);
+  }
+
+  /// Gets the Sub-Sub-Sub-Lord for a specific longitude.
+  Planet? getSubSubSubLord(double longitude) {
+    final division = _calculateKPDivision(longitude, null);
+    return division.subSubSubLord;
+  }
+
+  /// Calculates the boundaries of the Sub-Sub division.
+  (double, double) _calculateSubSubBoundaries(
+    double longitude,
+    Planet subLord,
+    double subStart,
+    double subEnd,
+  ) {
+    final dashaPeriods = [
+      (Planet.ketu, 7),
+      (Planet.venus, 20),
+      (Planet.sun, 6),
+      (Planet.moon, 10),
+      (Planet.mars, 7),
+      (Planet.meanNode, 18),
+      (Planet.jupiter, 16),
+      (Planet.saturn, 19),
+      (Planet.mercury, 17),
+    ];
+    const totalPeriods = 120;
+    final subSpan = subEnd - subStart;
+    final posInSub = longitude - subStart;
+
+    final subLordIndex = dashaPeriods.indexWhere(
+      (p) =>
+          (p.$1 == Planet.meanNode && subLord == Planet.meanNode) ||
+          (p.$1 == Planet.trueNode && subLord == Planet.trueNode) ||
+          p.$1 == subLord,
     );
+
+    if (subLordIndex < 0) return (subStart, subEnd);
+
+    var cumulative = 0.0;
+    var subSubStart = subStart;
+
+    for (var i = 0; i < dashaPeriods.length; i++) {
+      final index = (subLordIndex + i) % dashaPeriods.length;
+      final (_, period) = dashaPeriods[index];
+      final subSubSpan = subSpan * (period / totalPeriods);
+      if (posInSub <= cumulative + subSubSpan - 1e-11) {
+        return (subSubStart, subSubStart + subSubSpan);
+      }
+      cumulative += subSubSpan;
+      subSubStart += subSubSpan;
+    }
+
+    return (subStart, subEnd);
+  }
+
+  /// Calculates the Sub-Sub-Sub-Lord for a given longitude.
+  Planet? _calculateSubSubSubLord(
+    double longitude,
+    Planet? subSubLord,
+    double subSubStart,
+    double subSubEnd,
+  ) {
+    if (subSubLord == null) return null;
+
+    final dashaPeriods = [
+      (Planet.ketu, 7),
+      (Planet.venus, 20),
+      (Planet.sun, 6),
+      (Planet.moon, 10),
+      (Planet.mars, 7),
+      (Planet.meanNode, 18),
+      (Planet.jupiter, 16),
+      (Planet.saturn, 19),
+      (Planet.mercury, 17),
+    ];
+    const totalPeriods = 120;
+    final subSubSpan = subSubEnd - subSubStart;
+
+    // Guard rail to prevent division by zero or negative values
+    if (subSubSpan <= 0) return subSubLord;
+
+    final posInSubSub = (longitude - subSubStart) / subSubSpan;
+
+    final subSubLordIndex = dashaPeriods.indexWhere(
+      (p) =>
+          (p.$1 == Planet.meanNode && subSubLord == Planet.meanNode) ||
+          (p.$1 == Planet.trueNode && subSubLord == Planet.trueNode) ||
+          p.$1 == subSubLord,
+    );
+
+    if (subSubLordIndex < 0) return null;
+
+    var cumulative = 0.0;
+    for (var i = 0; i < dashaPeriods.length; i++) {
+      final index = (subSubLordIndex + i) % dashaPeriods.length;
+      final (_, period) = dashaPeriods[index];
+      cumulative += period / totalPeriods;
+      if (posInSubSub <= cumulative - 1e-11) {
+        return dashaPeriods[index].$1;
+      }
+    }
+
+    return dashaPeriods[subSubLordIndex].$1;
+  }
+
+  /// Snaps longitude to closest sign/star boundary to prevent float transitions errors.
+  double _snapKPLongitude(double longitude) {
+    var normalized = longitude % 360.0;
+    if (normalized < 0) normalized += 360.0;
+
+    // Check sign boundaries (every 30 degrees)
+    final closestSignIdx = (normalized / 30.0).round();
+    final closestSignBoundary = closestSignIdx * 30.0;
+    if ((normalized - closestSignBoundary).abs() < 1e-11) {
+      return closestSignBoundary % 360.0;
+    }
+
+    // Check star boundaries (every 13.333333333333334 degrees)
+    const starSpan = 360.0 / 27.0;
+    final closestStarIdx = (normalized / starSpan).round();
+    final closestStarBoundary = closestStarIdx * starSpan;
+    if ((normalized - closestStarBoundary).abs() < 1e-11) {
+      return closestStarBoundary % 360.0;
+    }
+
+    return normalized;
   }
 }

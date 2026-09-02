@@ -13,6 +13,10 @@ class ArgalaService {
     return result;
   }
 
+  /// Alias for [calculateAllArgalas] to support legacy tests.
+  Map<int, List<ArgalaInfo>> getAllArgalas(VedicChart chart) =>
+      calculateAllArgalas(chart);
+
   /// Calculates Argalas affecting a specific house.
   List<ArgalaInfo> calculateArgalaForHouse(VedicChart chart, int targetHouse) {
     final argalas = <ArgalaInfo>[];
@@ -61,6 +65,10 @@ class ArgalaService {
     return argalas;
   }
 
+  /// Alias for [calculateArgalaForHouse] to support legacy tests.
+  List<ArgalaInfo> getArgalaForHouse(VedicChart chart, int targetHouse) =>
+      calculateArgalaForHouse(chart, targetHouse);
+
   /// Calculates Argalas caused by a specific planet.
   List<ArgalaInfo> calculateArgalaForPlanet(VedicChart chart, Planet planet) {
     final planetInfo = chart.getPlanet(planet);
@@ -90,13 +98,16 @@ class ArgalaService {
       final offset = ((planetHouse - targetHouse + 12) % 12) + 1;
       final type = (offset == 5) ? ArgalaType.secondary : ArgalaType.primary;
 
-      argalas.add(ArgalaInfo(
-        sourceHouse: planetHouse,
-        targetHouse: targetHouse,
-        type: type,
-        causingPlanets: [planet],
-        isObstructed: false, // Simplified - full check would verify obstruction
-      ));
+      argalas.add(
+        ArgalaInfo(
+          sourceHouse: planetHouse,
+          targetHouse: targetHouse,
+          type: type,
+          causingPlanets: [planet],
+          isObstructed:
+              false, // Simplified - full check would verify obstruction
+        ),
+      );
     }
 
     return argalas;
@@ -134,14 +145,16 @@ class ArgalaService {
           (planetsInSource.length + planetsInObstruct.length);
     }
 
-    argalas.add(ArgalaInfo(
-      sourceHouse: sourceHouse,
-      targetHouse: targetHouse,
-      type: isObstructed ? ArgalaType.virodha : type,
-      causingPlanets: planetsInSource.map((p) => p.planet).toList(),
-      isObstructed: isObstructed,
-      obstructingPlanets: planetsInObstruct.map((p) => p.planet).toList(),
-      strength: strength,
-    ));
+    argalas.add(
+      ArgalaInfo(
+        sourceHouse: sourceHouse,
+        targetHouse: targetHouse,
+        type: isObstructed ? ArgalaType.virodha : type,
+        causingPlanets: planetsInSource.map((p) => p.planet).toList(),
+        isObstructed: isObstructed,
+        obstructingPlanets: planetsInObstruct.map((p) => p.planet).toList(),
+        strength: strength,
+      ),
+    );
   }
 }

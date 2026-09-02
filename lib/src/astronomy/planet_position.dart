@@ -50,8 +50,12 @@ class PlanetPosition {
       distanceSpeed: results[5],
       declination: results.length > 6 ? results[6] : 0.0,
       isCombust: sunLongitude != null
-          ? calculateCombustion(planet, results[0], sunLongitude,
-              longitudeSpeed: results.length > 3 ? results[3] : 1.0)
+          ? calculateCombustion(
+              planet,
+              results[0],
+              sunLongitude,
+              longitudeSpeed: results.length > 3 ? results[3] : 1.0,
+            )
           : false,
       isRetrograde: isRetrograde,
     );
@@ -95,8 +99,11 @@ class PlanetPosition {
   /// Calculates if a planet is combust (too close to the Sun).
   /// Uses traditional Vedic astrology combustion distances.
   static bool calculateCombustion(
-      Planet planet, double planetLongitude, double sunLongitude,
-      {double? longitudeSpeed}) {
+    Planet planet,
+    double planetLongitude,
+    double sunLongitude, {
+    double? longitudeSpeed,
+  }) {
     // Sun is never combust
     if (planet == Planet.sun) return false;
 
@@ -132,8 +139,12 @@ class PlanetPosition {
       longitudeSpeed: longitudeSpeed,
       latitudeSpeed: latitudeSpeed,
       distanceSpeed: distanceSpeed,
-      isCombust: calculateCombustion(planet, longitude, sunLongitude,
-          longitudeSpeed: longitudeSpeed),
+      isCombust: calculateCombustion(
+        planet,
+        longitude,
+        sunLongitude,
+        longitudeSpeed: longitudeSpeed,
+      ),
     );
   }
 
@@ -154,11 +165,7 @@ class PlanetPosition {
     final minutes = minutesDecimal.floor();
     final seconds = (minutesDecimal - minutes) * 60;
 
-    return {
-      'degrees': degrees,
-      'minutes': minutes,
-      'seconds': seconds,
-    };
+    return {'degrees': degrees, 'minutes': minutes, 'seconds': seconds};
   }
 
   /// Gets the nakshatra (lunar mansion) index (0-26).
@@ -167,6 +174,9 @@ class PlanetPosition {
 
   /// Gets the nakshatra name.
   String get nakshatra => _nakshatras[nakshatraIndex];
+
+  /// Sanskrit (IAST) name of the nakshatra.
+  String get nakshatraSanskrit => _nakshatrasSanskrit[nakshatraIndex];
 
   /// Gets the nakshatra pada (quarter, 1-4).
   int get nakshatraPada {
@@ -183,7 +193,7 @@ class PlanetPosition {
   /// Formats the position with full DMS notation.
   String get formattedPositionDMS {
     final dms = positionInSignDMS;
-    return '${dms['degrees']} ${dms['minutes']}\' ${dms['seconds'].toStringAsFixed(2)}" $zodiacSign';
+    return '${dms['degrees']} ${dms['minutes']}\' ${(dms['seconds'] as double).toStringAsFixed(2)}" $zodiacSign';
   }
 
   @override
@@ -214,9 +224,61 @@ class PlanetPosition {
       'zodiacSignIndex': zodiacSignIndex,
       'positionInSign': positionInSign,
       'nakshatra': nakshatra,
+      'nakshatraSanskrit': nakshatraSanskrit,
       'nakshatraIndex': nakshatraIndex,
       'nakshatraPada': nakshatraPada,
     };
+  }
+
+  /// Creates a position from a JSON map.
+  factory PlanetPosition.fromJson(Map<String, dynamic> json) {
+    final planetName = json['planet'] as String;
+    final planet = Planet.values.firstWhere(
+      (p) => p.displayName == planetName || p.name == planetName,
+      orElse: () => Planet.sun,
+    );
+    return PlanetPosition(
+      planet: planet,
+      dateTime: DateTime.parse(json['dateTime'] as String),
+      longitude: (json['longitude'] as num).toDouble(),
+      latitude: (json['latitude'] as num).toDouble(),
+      distance: (json['distance'] as num).toDouble(),
+      longitudeSpeed: (json['longitudeSpeed'] as num).toDouble(),
+      latitudeSpeed: (json['latitudeSpeed'] as num).toDouble(),
+      distanceSpeed: (json['distanceSpeed'] as num).toDouble(),
+      declination: (json['declination'] as num?)?.toDouble() ?? 0.0,
+      isCombust: json['isCombust'] as bool? ?? false,
+      isRetrograde: json['isRetrograde'] as bool?,
+    );
+  }
+
+  /// Creates a copy of this position with replaced fields.
+  PlanetPosition copyWith({
+    Planet? planet,
+    DateTime? dateTime,
+    double? longitude,
+    double? latitude,
+    double? distance,
+    double? longitudeSpeed,
+    double? latitudeSpeed,
+    double? distanceSpeed,
+    double? declination,
+    bool? isCombust,
+    bool? isRetrograde,
+  }) {
+    return PlanetPosition(
+      planet: planet ?? this.planet,
+      dateTime: dateTime ?? this.dateTime,
+      longitude: longitude ?? this.longitude,
+      latitude: latitude ?? this.latitude,
+      distance: distance ?? this.distance,
+      longitudeSpeed: longitudeSpeed ?? this.longitudeSpeed,
+      latitudeSpeed: latitudeSpeed ?? this.latitudeSpeed,
+      distanceSpeed: distanceSpeed ?? this.distanceSpeed,
+      declination: declination ?? this.declination,
+      isCombust: isCombust ?? this.isCombust,
+      isRetrograde: isRetrograde ?? this.isRetrograde,
+    );
   }
 
   @override
@@ -232,14 +294,8 @@ class PlanetPosition {
   }
 
   @override
-  int get hashCode => Object.hash(
-        planet,
-        dateTime,
-        longitude,
-        latitude,
-        distance,
-        isCombust,
-      );
+  int get hashCode =>
+      Object.hash(planet, dateTime, longitude, latitude, distance, isCombust);
 
   // Zodiac signs
   static const List<String> _zodiacSigns = [
@@ -286,5 +342,36 @@ class PlanetPosition {
     'Purva Bhadrapada',
     'Uttara Bhadrapada',
     'Revati',
+  ];
+
+  // Nakshatras (27 lunar mansions) in Sanskrit (IAST)
+  static const List<String> _nakshatrasSanskrit = [
+    'Ashvinī',
+    'Bharaṇī',
+    'Kṛttikā',
+    'Rohiṇī',
+    'Mṛgaśirā',
+    'Ārdrā',
+    'Punarvasu',
+    'Puṣya',
+    'Āśleṣā',
+    'Maghā',
+    'Pūrva Phālgunī',
+    'Uttara Phālgunī',
+    'Hasta',
+    'Citrā',
+    'Svātī',
+    'Viśākhā',
+    'Anurādhā',
+    'Jyeṣṭhā',
+    'Mūla',
+    'Pūrva Āṣāḍhā',
+    'Uttara Āṣāḍhā',
+    'Śravaṇa',
+    'Dhaniṣṭhā',
+    'Śatabhiṣā',
+    'Pūrva Bhādrapadā',
+    'Uttara Bhādrapadā',
+    'Revatī',
   ];
 }

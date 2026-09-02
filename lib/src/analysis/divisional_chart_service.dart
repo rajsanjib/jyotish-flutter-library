@@ -1,17 +1,54 @@
+import 'dart:collection';
 import '../exceptions/jyotish_exception.dart';
 import 'package:jyotish/src/models/divisional_chart_type.dart';
 import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/astronomy/planet_position.dart';
 import 'package:jyotish/src/strength/relationship.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
+import 'package:jyotish/src/models/varga_configuration.dart';
 
 /// Service for calculating Divisional Charts (Varga).
 class DivisionalChartService {
+  /// Cache for calculated divisional charts.
+  /// Key: composite of natal chart identity + divisional type.
+  final _cache = HashMap<String, VedicChart>();
+
   /// Calculates a specific divisional chart from a base Rashi chart.
   VedicChart calculateDivisionalChart(
     VedicChart rashiChart,
-    DivisionalChartType type,
-  ) {
+    DivisionalChartType type, {
+    VargaConfiguration? config,
+  }) {
+    if (type == DivisionalChartType.d1) {
+      return rashiChart;
+    }
+
+    // Cache key includes natal chart time, location, ayanamsa mode and a checksum of planet positions
+    // to avoid collisions in tests or when manually manipulating charts.
+    final planetsHash = rashiChart.planets.values.fold(
+      0,
+      (hash, p) => hash ^ p.longitude.hashCode,
+    );
+    final configKey = config != null
+        ? '_${config.horaMethod.name}_${config.drekkanaMethod.name}_${config.navamshaMethod.name}_${config.dashamshaMethod.name}'
+        : '';
+    final key = '${rashiChart.dateTime.millisecondsSinceEpoch}'
+        '_${rashiChart.latitude}_${rashiChart.longitudeCoord}'
+        '_${rashiChart.calculationFlags?.siderealMode.name ?? 'default'}'
+        '_${rashiChart.ascendant.hashCode}'
+        '_${planetsHash}_${type.name}$configKey';
+
+    return _cache.putIfAbsent(
+      key,
+      () => _computeDivisionalChart(rashiChart, type, config: config),
+    );
+  }
+
+  VedicChart _computeDivisionalChart(
+    VedicChart rashiChart,
+    DivisionalChartType type, {
+    VargaConfiguration? config,
+  }) {
     if (type.requiredAyanamsa != null) {
       final chartAyanamsa = rashiChart.calculationFlags?.siderealMode;
       if (chartAyanamsa != type.requiredAyanamsa) {
@@ -32,6 +69,7 @@ class DivisionalChartService {
     final newAscendantDegree = _calculateVargaLongitude(
       rashiChart.ascendant,
       type,
+      config: config,
     );
 
     // Create new House System (Whole Sign based on D-Ascendant)
@@ -48,6 +86,7 @@ class DivisionalChartService {
         type: type,
         dHouses: dHouses,
         planetHouseMap: null,
+        config: config,
       );
       tempInfos[planet] = newInfo;
       planetHouseMap[planet] = newInfo.house;
@@ -59,6 +98,7 @@ class DivisionalChartService {
       type: type,
       dHouses: dHouses,
       planetHouseMap: null,
+      config: config,
     );
     planetHouseMap[rahuInfoTemp.position.planet] = rahuInfoTemp.house;
 
@@ -116,6 +156,7 @@ class DivisionalChartService {
       location: rashiChart.location,
       latitude: rashiChart.latitude,
       longitudeCoord: rashiChart.longitudeCoord,
+      altitude: rashiChart.altitude,
       houses: dHouses,
       planets: finalPlanets,
       rahu: finalRahu,
@@ -129,21 +170,28 @@ class DivisionalChartService {
     required DivisionalChartType type,
     required HouseSystem dHouses,
     Map<Planet, int>? planetHouseMap,
+    VargaConfiguration? config,
   }) {
     double newLongitude;
     double? vPositionInSign;
     double? vSubSpan;
 
     if (type == DivisionalChartType.d249) {
-      final signIndex = (originalInfo.longitude / 30).floor();
-      final degreeInSign = originalInfo.longitude % 30;
+      // Snapping to 30-degree sign boundaries for D249
+      final normalizedLong = _adjustJunctionBoundary(originalInfo.longitude, 1);
+      final signIndex = (normalizedLong / 30).floor();
+      final degreeInSign = normalizedLong % 30;
       final isOdd = (signIndex + 1) % 2 != 0;
       final details = _calculateD249Details(signIndex, degreeInSign, isOdd);
       newLongitude = details.longitude;
       vPositionInSign = details.posInSub;
       vSubSpan = details.span;
     } else {
-      newLongitude = _calculateVargaLongitude(originalInfo.longitude, type);
+      newLongitude = _calculateVargaLongitude(
+        originalInfo.longitude,
+        type,
+        config: config,
+      );
       vPositionInSign = newLongitude % 30;
     }
 
@@ -217,7 +265,11 @@ class DivisionalChartService {
     final signLord = _getSignLord(signIndex);
     if (signLord != null) {
       return _calculateFriendshipDignity(
-          planet, signLord, planetHouseMap, planetHouse);
+        planet,
+        signLord,
+        planetHouseMap,
+        planetHouse,
+      );
     }
 
     return PlanetaryDignity.neutralSign;
@@ -239,8 +291,10 @@ class DivisionalChartService {
         ? RelationshipCalculator.calculateTemporary(planetHouse, signLordHouse)
         : RelationshipType.neutral;
 
-    final compound =
-        RelationshipCalculator.calculateCompound(natural, temporary);
+    final compound = RelationshipCalculator.calculateCompound(
+      natural,
+      temporary,
+    );
 
     return switch (compound) {
       RelationshipType.greatFriend => PlanetaryDignity.greatFriend,
@@ -344,24 +398,63 @@ class DivisionalChartService {
   }
 
   /// Calculates the absolute longitude (0-360) of a point in a divisional chart.
-  double _calculateVargaLongitude(double longitude, DivisionalChartType type) {
+  double _calculateVargaLongitude(
+    double longitude,
+    DivisionalChartType type, {
+    VargaConfiguration? config,
+  }) {
+    final parts = type.divisions;
+
+    // Apply double-precision junction guardrail to avoid floating-point boundary issues
+    final normalized = _adjustJunctionBoundary(longitude, parts);
+
     // 1. Get current sign and position in sign
-    final signIndex = (longitude / 30).floor(); // 0-11
-    final degreeInSign = longitude % 30;
+    final signIndex = (normalized / 30).floor(); // 0-11
+    final degreeInSign = normalized % 30;
 
     // 2. Determine the "Varga Sign Index" (0-11)
-    final vargaSignIndex = _getVargaSign(signIndex, degreeInSign, type);
+    final vargaSignIndex = _getVargaSign(
+      signIndex,
+      degreeInSign,
+      type,
+      config: config,
+    );
 
     // 3. Determine degrees in the new sign
     // Typically: (degreeInSign * N) % 30
-    final parts = type.divisions;
     final degreesInNewSign = (degreeInSign * parts) % 30;
 
-    return (vargaSignIndex * 30) + degreesInNewSign;
+    // Apply guardrail to degrees in new sign too
+    var finalDegrees = degreesInNewSign;
+    if (finalDegrees < 1e-11) finalDegrees = 0.0;
+    if ((finalDegrees - 30.0).abs() < 1e-11) finalDegrees = 0.0;
+
+    return ((vargaSignIndex * 30) + finalDegrees) % 360.0;
+  }
+
+  /// Adjusts longitude near division boundaries to prevent floating-point inaccuracies
+  /// from triggering incorrect division/sign floor transitions.
+  double _adjustJunctionBoundary(double longitude, int divisions) {
+    var normalized = longitude % 360.0;
+    if (normalized < 0) normalized += 360.0;
+
+    final divisionSpan = 30.0 / divisions;
+    final closestIndex = (normalized / divisionSpan).round();
+    final closestBoundary = closestIndex * divisionSpan;
+
+    if ((normalized - closestBoundary).abs() < 1e-11) {
+      return closestBoundary % 360.0;
+    }
+    return normalized;
   }
 
   int _getVargaSign(
-      int signIndex, double degreeInSign, DivisionalChartType type) {
+    int signIndex,
+    double degreeInSign,
+    DivisionalChartType type, {
+    VargaConfiguration? config,
+  }) {
+    final activeConfig = config ?? const VargaConfiguration();
     final sign = signIndex + 1; // 1-12
     final isOdd = sign % 2 != 0;
     final isMoveable = [1, 4, 7, 10].contains(sign);
@@ -375,21 +468,59 @@ class DivisionalChartService {
         return signIndex;
 
       case DivisionalChartType.d2: // Hora
-        // Parashara Hora
-        if (isOdd) {
-          // 0-15 Sun (Leo/5), 15-30 Moon (Cancer/4)
-          return (degreeInSign < 15) ? 4 : 3; // Index 4=Leo, 3=Can
-        } else {
-          // 0-15 Moon (Cancer/4), 15-30 Sun (Leo/5)
-          return (degreeInSign < 15) ? 3 : 4;
+        switch (activeConfig.horaMethod) {
+          case HoraMethod.parashara:
+            if (isOdd) {
+              return (degreeInSign < 15) ? 4 : 3; // Index 4=Leo, 3=Can
+            } else {
+              return (degreeInSign < 15) ? 3 : 4;
+            }
+          case HoraMethod.labhaMandooka:
+            if (isOdd) {
+              return (degreeInSign < 15) ? signIndex : (signIndex + 10) % 12;
+            } else {
+              return (degreeInSign < 15)
+                  ? (signIndex + 1) % 12
+                  : (signIndex + 11) % 12;
+            }
+          case HoraMethod.kura:
+            if (isOdd) {
+              return (degreeInSign < 15) ? 3 : 4; // opposite of parashara
+            } else {
+              return (degreeInSign < 15) ? 4 : 3;
+            }
+          case HoraMethod.kashinatha:
+            return (2 * signIndex + (degreeInSign < 15 ? 0 : 1)) % 12;
         }
 
       case DivisionalChartType.d3: // Drekkana
         final part = (degreeInSign / 10).floor(); // 0, 1, 2
-        // 1st part: same, 2nd: 5th, 3rd: 9th
-        if (part == 0) return signIndex;
-        if (part == 1) return (signIndex + 4) % 12;
-        return (signIndex + 8) % 12;
+        switch (activeConfig.drekkanaMethod) {
+          case DrekkanaMethod.parashara:
+            if (part == 0) return signIndex;
+            if (part == 1) return (signIndex + 4) % 12;
+            return (signIndex + 8) % 12;
+          case DrekkanaMethod.jagannatha:
+            final startMap = {
+              0: 0, // Fire -> Aries
+              1: 9, // Earth -> Capricorn
+              2: 6, // Air -> Libra
+              3: 3, // Water -> Cancer
+            };
+            return (startMap[element]! + part) % 12;
+          case DrekkanaMethod.somanatha:
+            if (isOdd) {
+              if (part == 0) return signIndex;
+              if (part == 1) return (signIndex + 4) % 12;
+              return (signIndex + 8) % 12;
+            } else {
+              if (part == 0) return (signIndex + 8) % 12;
+              if (part == 1) return (signIndex + 4) % 12;
+              return signIndex;
+            }
+          case DrekkanaMethod.parivritti:
+            return (3 * signIndex + part) % 12;
+        }
 
       case DivisionalChartType.d4: // Chaturthamsa
         final part = (degreeInSign / (30 / 4)).floor(); // 0-3
@@ -455,28 +586,52 @@ class DivisionalChartService {
 
       case DivisionalChartType.d9: // Navamsa
         final part = (degreeInSign / (30 / 9)).floor(); // 0-8
-
-        // Fire (1,5,9): Start Aries (0)
-        // Earth (2,6,10): Start Capricorn (9)
-        // Air (3,7,11): Start Libra (6)
-        // Water (4,8,12): Start Cancer (3)
-        final startMap = {
-          0: 0, // Fire -> Aries
-          1: 9, // Earth -> Cap
-          2: 6, // Air -> Libra
-          3: 3, // Water -> Can
-        };
-        final startSignIndex = startMap[element]!;
-        return (startSignIndex + part) % 12;
+        switch (activeConfig.navamshaMethod) {
+          case NavamshaMethod.parashara:
+            final startMap = {
+              0: 0, // Fire -> Aries
+              1: 9, // Earth -> Cap
+              2: 6, // Air -> Libra
+              3: 3, // Water -> Can
+            };
+            final startSignIndex = startMap[element]!;
+            return (startSignIndex + part) % 12;
+          case NavamshaMethod.krishnaMishra:
+            if (isOdd) {
+              return (signIndex + part) % 12;
+            } else {
+              return (signIndex + 9 - part) % 12;
+            }
+          case NavamshaMethod.somanatha:
+            if (isOdd) {
+              return (0 + part) % 12;
+            } else {
+              return (11 - part) % 12;
+            }
+          case NavamshaMethod.nadamsa:
+            final startSign = isMoveable
+                ? signIndex
+                : isFixed
+                    ? (signIndex + 8) % 12
+                    : (signIndex + 4) % 12;
+            return (startSign + part) % 12;
+        }
 
       case DivisionalChartType.d10: // Dasamsa
         final part = (degreeInSign / (30 / 10)).floor(); // 0-9
-        if (isOdd) {
-          // Start same
-          return (signIndex + part) % 12;
-        } else {
-          // Start 9th
-          return (signIndex + 8 + part) % 12;
+        switch (activeConfig.dashamshaMethod) {
+          case DashamshaMethod.parashara:
+            if (isOdd) {
+              return (signIndex + part) % 12;
+            } else {
+              return (signIndex + 8 + part) % 12;
+            }
+          case DashamshaMethod.behari:
+            if (isOdd) {
+              return (signIndex + 8 + part) % 12;
+            } else {
+              return (signIndex + part) % 12;
+            }
         }
 
       case DivisionalChartType.d11: // Rudramsa
@@ -626,7 +781,10 @@ class DivisionalChartService {
   }
 
   ({double longitude, double posInSub, double span}) _calculateD249Details(
-      int signIndex, double degreeInSign, bool isOdd) {
+    int signIndex,
+    double degreeInSign,
+    bool isOdd,
+  ) {
     final dashaData = [
       (planet: Planet.ketu, years: 7, degrees: 1.75),
       (planet: Planet.venus, years: 20, degrees: 5.0),
@@ -645,7 +803,8 @@ class DivisionalChartService {
     for (var cycle = 0; cycle < 27; cycle++) {
       for (var i = 0; i < 9; i++) {
         final span = dashaData[i].degrees;
-        if (degreeInSign < cumulativeDegrees + span) {
+        // Subtract epsilon 1e-11 to prevent boundary errors
+        if (degreeInSign < cumulativeDegrees + span - 1e-11) {
           final subIndex = cycle * 9 + i;
           final posPercent = (degreeInSign - cumulativeDegrees) / span;
           final vargaSignIndex = (startSign + subIndex) % 12;
@@ -662,7 +821,8 @@ class DivisionalChartService {
 
     for (var i = 0; i < 6; i++) {
       final span = dashaData[i].degrees;
-      if (degreeInSign < cumulativeDegrees + span) {
+      // Subtract epsilon 1e-11 to prevent boundary errors
+      if (degreeInSign < cumulativeDegrees + span - 1e-11) {
         final subIndex = 243 + i;
         final posPercent = (degreeInSign - cumulativeDegrees) / span;
         final vargaSignIndex = (startSign + subIndex) % 12;
@@ -697,24 +857,24 @@ class DivisionalChartService {
 
     if (isOdd) {
       // 0-5: Mars (Aries)
-      if (degree < 5) return 0;
+      if (degree < 5 - 1e-11) return 0;
       // 5-10: Saturn (Aquarius)
-      if (degree < 10) return 10;
+      if (degree < 10 - 1e-11) return 10;
       // 10-18: Jupiter (Sagittarius)
-      if (degree < 18) return 8;
+      if (degree < 18 - 1e-11) return 8;
       // 18-25: Mercury (Gemini)
-      if (degree < 25) return 2;
+      if (degree < 25 - 1e-11) return 2;
       // 25-30: Venus (Libra)
       return 6;
     } else {
       // 0-5: Venus (Taurus)
-      if (degree < 5) return 1;
+      if (degree < 5 - 1e-11) return 1;
       // 5-12: Mercury (Virgo)
-      if (degree < 12) return 5;
+      if (degree < 12 - 1e-11) return 5;
       // 12-20: Jupiter (Pisces)
-      if (degree < 20) return 11;
+      if (degree < 20 - 1e-11) return 11;
       // 20-25: Saturn (Capricorn)
-      if (degree < 25) return 9;
+      if (degree < 25 - 1e-11) return 9;
       // 25-30: Mars (Scorpio)
       return 7;
     }

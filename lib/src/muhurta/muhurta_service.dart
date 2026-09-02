@@ -14,11 +14,15 @@ class MuhurtaService {
   /// [sunrise] - Sunrise time
   /// [sunset] - Sunset time
   /// [location] - Geographic location
+  /// [tithiPeriods] - Optional list of Tithi numbers and their start/end times
+  /// [nakshatraPeriods] - Optional list of Nakshatra numbers and their start/end times
   Muhurta calculateMuhurta({
     required DateTime date,
     required DateTime sunrise,
     required DateTime sunset,
     required GeographicLocation location,
+    List<(int tithiNumber, DateTime start, DateTime end)>? tithiPeriods,
+    List<(int nakshatraNumber, DateTime start, DateTime end)>? nakshatraPeriods,
   }) {
     // Calculate Hora periods
     final horaPeriods = _calculateHoraPeriods(
@@ -41,10 +45,28 @@ class MuhurtaService {
       sunset: sunset,
     );
 
+    // Calculate special yogas if periods are provided
+    final specialYogas = <SpecialYoga>[];
+    if (tithiPeriods != null && nakshatraPeriods != null) {
+      specialYogas.addAll(
+        calculateSpecialYogas(
+          date: date,
+          sunrise: sunrise,
+          tithiPeriods: tithiPeriods,
+          nakshatraPeriods: nakshatraPeriods,
+        ),
+      );
+    }
+
     // Get current active periods
     final currentPeriods = <MuhurtaPeriod>[
       ...horaPeriods.where((h) => h.contains(DateTime.now())),
       ...choghadiya.allPeriods.where((c) => c.contains(DateTime.now())),
+      ...specialYogas.where(
+        (y) =>
+            DateTime.now().isAfter(y.startTime) &&
+            DateTime.now().isBefore(y.endTime),
+      ),
     ];
 
     return Muhurta(
@@ -54,7 +76,143 @@ class MuhurtaService {
       choghadiya: choghadiya,
       inauspiciousPeriods: inauspiciousPeriods,
       currentPeriods: currentPeriods,
+      specialYogas: specialYogas,
     );
+  }
+
+  /// Calculates special Muhurta Yogas (Sarvartha Siddhi, Guru Pushya, etc.)
+  /// based on weekday, tithi, and nakshatra combinations.
+  List<SpecialYoga> calculateSpecialYogas({
+    required DateTime date,
+    required DateTime sunrise,
+    required List<(int tithiNumber, DateTime start, DateTime end)> tithiPeriods,
+    required List<(int nakshatraNumber, DateTime start, DateTime end)>
+        nakshatraPeriods,
+  }) {
+    final yogas = <SpecialYoga>[];
+    final weekday = _getVedicWeekday(date, sunrise);
+    final nextSunrise = sunrise.add(const Duration(days: 1));
+
+    // 1. Sarvartha Siddhi & Amrit Siddhi (Weekday + Nakshatra)
+    final allowedNakshatras =
+        MuhurtaConstants.sarvarthaSiddhiWeekdayNakshatras[weekday] ?? [];
+    final amritNakshatra =
+        MuhurtaConstants.amritSiddhiWeekdayNakshatra[weekday];
+
+    for (final nak in nakshatraPeriods) {
+      // Find intersection with the Vedic day (sunrise to sunrise)
+      final start = nak.$2.isAfter(sunrise) ? nak.$2 : sunrise;
+      final end = nak.$3.isBefore(nextSunrise) ? nak.$3 : nextSunrise;
+
+      if (start.isBefore(end)) {
+        // Sarvartha Siddhi
+        if (allowedNakshatras.contains(nak.$1)) {
+          yogas.add(
+            SpecialYoga(
+              type: SpecialYogaType.sarvarthaSiddhi,
+              startTime: start,
+              endTime: end,
+            ),
+          );
+        }
+
+        // Amrit Siddhi
+        if (nak.$1 == amritNakshatra) {
+          yogas.add(
+            SpecialYoga(
+              type: SpecialYogaType.amritSiddhi,
+              startTime: start,
+              endTime: end,
+            ),
+          );
+
+          // Guru Pushya special case
+          if (weekday == 4 && nak.$1 == 8) {
+            yogas.add(
+              SpecialYoga(
+                type: SpecialYogaType.guruPushya,
+                startTime: start,
+                endTime: end,
+              ),
+            );
+          }
+          // Ravi Pushya special case
+          else if (weekday == 0 && nak.$1 == 8) {
+            yogas.add(
+              SpecialYoga(
+                type: SpecialYogaType.raviPushya,
+                startTime: start,
+                endTime: end,
+              ),
+            );
+          }
+        }
+      }
+    }
+
+    // 2. Dwi Pushkar & Tri Pushkar (Weekday + Tithi + Nakshatra)
+    // Only on Sunday, Tuesday, Saturday
+    if (weekday == 0 || weekday == 2 || weekday == 6) {
+      for (final tithi in tithiPeriods) {
+        // Bhadra Tithis: 2, 7, 12 of either Paksha
+        final tNum = tithi.$1;
+        final isBhadraTithi = (tNum == 2 ||
+            tNum == 7 ||
+            tNum == 12 ||
+            tNum == 17 ||
+            tNum == 22 ||
+            tNum == 27);
+
+        if (isBhadraTithi) {
+          for (final nak in nakshatraPeriods) {
+            // Find intersection of Weekday (sunrise-sunrise), Tithi, and Nakshatra
+            var start = tithi.$2.isAfter(nak.$2) ? tithi.$2 : nak.$2;
+            start = start.isAfter(sunrise) ? start : sunrise;
+
+            var end = tithi.$3.isBefore(nak.$3) ? tithi.$3 : nak.$3;
+            end = end.isBefore(nextSunrise) ? end : nextSunrise;
+
+            if (start.isBefore(end)) {
+              // Dwi Pushkar
+              if (MuhurtaConstants.dwiPushkarNakshatras.contains(nak.$1)) {
+                yogas.add(
+                  SpecialYoga(
+                    type: SpecialYogaType.dwiPushkar,
+                    startTime: start,
+                    endTime: end,
+                  ),
+                );
+              }
+
+              // Tri Pushkar
+              if (MuhurtaConstants.triPushkarNakshatras.contains(nak.$1)) {
+                yogas.add(
+                  SpecialYoga(
+                    type: SpecialYogaType.triPushkar,
+                    startTime: start,
+                    endTime: end,
+                  ),
+                );
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return yogas;
+  }
+
+  /// Helper to calculate the Vedic weekday (day begins at local sunrise).
+  int _getVedicWeekday(DateTime date, DateTime sunrise) {
+    final isDateOnly = date.hour == 0 &&
+        date.minute == 0 &&
+        date.second == 0 &&
+        date.millisecond == 0;
+    if (!isDateOnly && date.isBefore(sunrise)) {
+      return (date.subtract(const Duration(days: 1)).weekday) % 7;
+    }
+    return date.weekday % 7;
   }
 
   /// Calculates Hora (planetary hour) periods.
@@ -64,7 +222,7 @@ class MuhurtaService {
     required DateTime sunset,
   }) {
     final periods = <HoraPeriod>[];
-    final weekday = date.weekday % 7;
+    final weekday = _getVedicWeekday(date, sunrise);
 
     // Calculate daytime duration
     final dayDuration = sunset.difference(sunrise);
@@ -83,13 +241,15 @@ class MuhurtaService {
       final lord = horaSequence[(startIndex + i) % 7];
       final endTime = currentTime.add(dayHoraDuration);
 
-      periods.add(HoraPeriod(
-        startTime: currentTime,
-        endTime: endTime,
-        lord: lord,
-        hourNumber: i,
-        isDaytime: true,
-      ));
+      periods.add(
+        HoraPeriod(
+          startTime: currentTime,
+          endTime: endTime,
+          lord: lord,
+          hourNumber: i,
+          isDaytime: true,
+        ),
+      );
 
       currentTime = endTime;
     }
@@ -110,13 +270,15 @@ class MuhurtaService {
       final lord = horaSequence[(startIndex + i) % 7];
       final endTime = currentTime.add(nightHoraDuration);
 
-      periods.add(HoraPeriod(
-        startTime: currentTime,
-        endTime: endTime,
-        lord: lord,
-        hourNumber: i,
-        isDaytime: false,
-      ));
+      periods.add(
+        HoraPeriod(
+          startTime: currentTime,
+          endTime: endTime,
+          lord: lord,
+          hourNumber: i,
+          isDaytime: false,
+        ),
+      );
 
       currentTime = endTime;
     }
@@ -153,7 +315,7 @@ class MuhurtaService {
     required DateTime sunrise,
     required DateTime sunset,
   }) {
-    final weekday = date.weekday % 7;
+    final weekday = _getVedicWeekday(date, sunrise);
 
     // Calculate daytime Choghadiya
     final dayDuration = sunset.difference(sunrise);
@@ -167,13 +329,15 @@ class MuhurtaService {
     var currentTime = sunrise;
     for (var i = 0; i < 8; i++) {
       final endTime = currentTime.add(dayChoghadiyaDuration);
-      daytimePeriods.add(Choghadiya(
-        startTime: currentTime,
-        endTime: endTime,
-        type: daytimeTypes[i],
-        isDaytime: true,
-        periodNumber: i + 1,
-      ));
+      daytimePeriods.add(
+        Choghadiya(
+          startTime: currentTime,
+          endTime: endTime,
+          type: daytimeTypes[i],
+          isDaytime: true,
+          periodNumber: i + 1,
+        ),
+      );
       currentTime = endTime;
     }
 
@@ -192,13 +356,15 @@ class MuhurtaService {
     currentTime = nightStart;
     for (var i = 0; i < 8; i++) {
       final endTime = currentTime.add(nightChoghadiyaDuration);
-      nighttimePeriods.add(Choghadiya(
-        startTime: currentTime,
-        endTime: endTime,
-        type: nighttimeTypes[i],
-        isDaytime: false,
-        periodNumber: i + 1,
-      ));
+      nighttimePeriods.add(
+        Choghadiya(
+          startTime: currentTime,
+          endTime: endTime,
+          type: nighttimeTypes[i],
+          isDaytime: false,
+          periodNumber: i + 1,
+        ),
+      );
       currentTime = endTime;
     }
 
@@ -215,7 +381,7 @@ class MuhurtaService {
     required DateTime sunset,
     bool useSouthIndianMethodForDurMuhurta = false,
   }) {
-    final weekday = date.weekday % 7;
+    final weekday = _getVedicWeekday(date, sunrise);
 
     // Calculate Rahukalam
     final rahuKalam = _calculateTimePeriod(
@@ -267,18 +433,8 @@ class MuhurtaService {
     final startEighth = periods.$1 - 1;
     final endEighth = periods.$2 - 1;
 
-    DateTime startTime;
-    DateTime endTime;
-
-    if (startEighth < endEighth) {
-      // Normal case
-      startTime = sunrise.add(eighthDuration * startEighth);
-      endTime = sunrise.add(eighthDuration * endEighth);
-    } else {
-      // Wraps around (like Saturday Rahukalam)
-      startTime = sunrise.add(eighthDuration * startEighth);
-      endTime = sunrise.add(eighthDuration * (endEighth + 8));
-    }
+    final startTime = sunrise.add(eighthDuration * startEighth);
+    final endTime = sunrise.add(eighthDuration * endEighth);
 
     return TimePeriod(start: startTime, end: endTime);
   }
@@ -289,11 +445,7 @@ class MuhurtaService {
     required DateTime sunrise,
     required DateTime sunset,
   }) {
-    return _calculateHoraPeriods(
-      date: date,
-      sunrise: sunrise,
-      sunset: sunset,
-    );
+    return _calculateHoraPeriods(date: date, sunrise: sunrise, sunset: sunset);
   }
 
   /// Gets Choghadiya periods for a specific date.
@@ -302,11 +454,7 @@ class MuhurtaService {
     required DateTime sunrise,
     required DateTime sunset,
   }) {
-    return _calculateChoghadiya(
-      date: date,
-      sunrise: sunrise,
-      sunset: sunset,
-    );
+    return _calculateChoghadiya(date: date, sunrise: sunrise, sunset: sunset);
   }
 
   /// Gets inauspicious periods for a specific date.
@@ -356,7 +504,7 @@ class MuhurtaService {
 
   /// Gets the Hora lord for a specific hour of the day.
   Planet getHoraLordForHour(DateTime dateTime, DateTime sunrise) {
-    final weekday = dateTime.weekday % 7;
+    final weekday = _getVedicWeekday(dateTime, sunrise);
     final dayStartLord = _getDayStartLord(weekday);
     const horaSequence = MuhurtaConstants.horaLordsSequence;
     final startIndex = horaSequence.indexOf(dayStartLord);
@@ -378,7 +526,7 @@ class MuhurtaService {
     required DateTime sunset,
     bool useSouthIndianMethod = false,
   }) {
-    final weekday = date.weekday % 7;
+    final weekday = _getVedicWeekday(date, sunrise);
     final dayDurationMs = sunset.difference(sunrise).inMilliseconds;
     final periods = <TimePeriod>[];
 
@@ -452,11 +600,13 @@ class MuhurtaService {
     // A simplified standard mapping logic for Rahu Vasa
     final n = nakshatra.number;
     String location = 'Earth';
-    if (n >= 1 && n <= 9)
+    if (n >= 1 && n <= 9) {
       location = 'Sky';
-    else if (n >= 10 && n <= 18)
+    } else if (n >= 10 && n <= 18) {
       location = 'Earth';
-    else if (n >= 19 && n <= 27) location = 'Underworld';
+    } else if (n >= 19 && n <= 27) {
+      location = 'Underworld';
+    }
 
     return RahuVasaInfo(location: location);
   }
@@ -511,7 +661,7 @@ class MuhurtaService {
       18,
       16,
       24,
-      30
+      30,
     ];
 
     final index = nakshatra.number - 1;

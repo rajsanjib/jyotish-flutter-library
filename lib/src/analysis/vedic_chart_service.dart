@@ -1,3 +1,4 @@
+import 'package:logging/logging.dart';
 import '../exceptions/jyotish_exception.dart';
 import 'package:jyotish/src/models/calculation_flags.dart';
 import 'package:jyotish/src/models/geographic_location.dart';
@@ -11,6 +12,7 @@ import 'package:jyotish/src/astronomy/ephemeris_service.dart';
 class VedicChartService {
   VedicChartService(this._ephemerisService);
   final EphemerisService _ephemerisService;
+  static final Logger _log = Logger('jyotish.VedicChartService');
 
   /// Calculates a complete Vedic astrology chart.
   ///
@@ -27,11 +29,13 @@ class VedicChartService {
     CalculationFlags? flags,
   }) async {
     try {
+      _log.fine('Calculating chart for $dateTime at (${location.latitude}, ${location.longitude})');
       // Use provided flags or default Lahiri ayanamsa (sidereal is now default)
       flags ??= CalculationFlags.traditionalist();
 
       // Automate house system selection for KP (v2.5.0)
       if (flags.isKP) {
+        _log.fine('KP system active: enforcing Placidus house system');
         houseSystem = 'P'; // Placidus is mandatory for KP
       }
 
@@ -87,10 +91,17 @@ class VedicChartService {
 
         final house = houses.getHouseForLongitude(position.longitude);
         final dignity = _calculateDignity(
-            planet, position.longitude, planetHouseMap, house);
+          planet,
+          position.longitude,
+          planetHouseMap,
+          house,
+        );
         final isCombust = PlanetPosition.calculateCombustion(
-            planet, position.longitude, sunPosition.longitude,
-            longitudeSpeed: position.longitudeSpeed);
+          planet,
+          position.longitude,
+          sunPosition.longitude,
+          longitudeSpeed: position.longitudeSpeed,
+        );
 
         vedicPlanets[planet] = VedicPlanetInfo(
           position: position,
@@ -104,8 +115,12 @@ class VedicChartService {
 
       // Create Vedic info for Rahu
       final rahuHouse = houses.getHouseForLongitude(rahuPosition.longitude);
-      final rahuDignity = _calculateDignity(flags.nodeType.planet,
-          rahuPosition.longitude, planetHouseMap, rahuHouse);
+      final rahuDignity = _calculateDignity(
+        flags.nodeType.planet,
+        rahuPosition.longitude,
+        planetHouseMap,
+        rahuHouse,
+      );
       final rahuInfo = VedicPlanetInfo(
         position: rahuPosition,
         house: rahuHouse,
@@ -119,6 +134,7 @@ class VedicChartService {
             '${location.latitude.toStringAsFixed(4)}N, ${location.longitude.toStringAsFixed(4)}E',
         latitude: location.latitude,
         longitudeCoord: location.longitude,
+        altitude: location.altitude,
         houses: houses,
         planets: vedicPlanets,
         rahu: rahuInfo,
@@ -261,7 +277,11 @@ class VedicChartService {
     final signLord = _getSignLord(signIndex);
     if (signLord != null) {
       return _calculateFriendshipDignity(
-          planet, signLord, planetHouseMap, planetHouse);
+        planet,
+        signLord,
+        planetHouseMap,
+        planetHouse,
+      );
     }
 
     return PlanetaryDignity.neutralSign;
@@ -286,8 +306,10 @@ class VedicChartService {
         : RelationshipType.neutral;
 
     // 3. Panchadha Maitri (compound)
-    final compound =
-        RelationshipCalculator.calculateCompound(natural, temporary);
+    final compound = RelationshipCalculator.calculateCompound(
+      natural,
+      temporary,
+    );
 
     return switch (compound) {
       RelationshipType.greatFriend => PlanetaryDignity.greatFriend,

@@ -2,7 +2,10 @@ import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/models/rashi.dart';
 
 enum TajakaYogaType {
-  itthasala('Itthasala', 'Mutual applying aspect between faster and slower planets.'),
+  itthasala(
+    'Itthasala',
+    'Mutual applying aspect between faster and slower planets.',
+  ),
   ishrafa('Ishrafa', 'Separating aspect, indicating a past event.'),
   nakta('Nakta', 'Transfer of light by a swifter third planet.'),
   yamaya('Yamaya', 'Transfer of light by a slower third planet.'),

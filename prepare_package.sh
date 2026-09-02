@@ -49,7 +49,7 @@ echo -e "${GREEN}✅ Dependencies resolved${NC}\n"
 
 # Step 5: Check package structure
 echo -e "${YELLOW}� Checking package structure...${NC}"
-required_dirs=("lib" "test" "example")
+required_dirs=("lib" "test")
 for dir in "${required_dirs[@]}"; do
     if [ ! -d "$dir" ]; then
         echo -e "${RED}❌ Missing directory: $dir${NC}"

@@ -1,6 +1,10 @@
 import 'dart:ffi' as ffi;
 import 'dart:io';
 import 'package:ffi/ffi.dart';
+import 'package:logging/logging.dart';
+import 'package:path/path.dart' as p;
+import 'package:synchronized/synchronized.dart';
+import 'package:jyotish/src/constants/planet_constants.dart';
 
 /// FFI bindings for Swiss Ephemeris C library.
 ///
@@ -10,6 +14,10 @@ class SwissEphBindings {
     _lib = _loadLibrary();
   }
   late final ffi.DynamicLibrary _lib;
+  static final Logger _log = Logger('jyotish.SwissEphBindings');
+
+  /// Shared lock for process-global Swiss Ephemeris C state synchronization.
+  final Lock lock = Lock();
 
   // Function signatures
   late final _sweSetEphePath = _lib.lookupFunction<
@@ -51,20 +59,16 @@ class SwissEphBindings {
         ffi.Double,
         ffi.Int32,
       ),
-      double Function(
-        int,
-        int,
-        int,
-        double,
-        int,
-      )>('swe_julday');
+      double Function(int, int, int, double, int)>('swe_julday');
 
-  late final _sweVersion = _lib.lookupFunction<ffi.Pointer<ffi.Char> Function(),
-      ffi.Pointer<ffi.Char> Function()>('swe_version');
+  late final _sweVersion = _lib.lookupFunction<
+      ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>),
+      ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>)>('swe_version');
 
-  late final _sweGetAyanamsaUt = _lib.lookupFunction<
-      ffi.Double Function(ffi.Double),
-      double Function(double)>('swe_get_ayanamsa_ut');
+  late final _sweGetAyanamsaUt = _lib
+      .lookupFunction<ffi.Double Function(ffi.Double), double Function(double)>(
+    'swe_get_ayanamsa_ut',
+  );
 
   late final _sweHouses = _lib.lookupFunction<
       ffi.Int32 Function(
@@ -144,6 +148,24 @@ class SwissEphBindings {
         ffi.Pointer<ffi.Char>,
       )>('swe_lun_eclipse_when');
 
+  late final _sweSolEclipseWhenGlob = _lib.lookupFunction<
+      ffi.Int32 Function(
+        ffi.Double,
+        ffi.Int32,
+        ffi.Int32,
+        ffi.Pointer<ffi.Double>,
+        ffi.Int32,
+        ffi.Pointer<ffi.Char>,
+      ),
+      int Function(
+        double,
+        int,
+        int,
+        ffi.Pointer<ffi.Double>,
+        int,
+        ffi.Pointer<ffi.Char>,
+      )>('swe_sol_eclipse_when_glob');
+
   late final _sweSolEclipseHow = _lib.lookupFunction<
       ffi.Int32 Function(
         ffi.Double,
@@ -186,18 +208,19 @@ class SwissEphBindings {
     final customPath = Platform.environment['SWISSEPH_LIB_PATH'];
     if (customPath != null && customPath.isNotEmpty) {
       try {
-        return ffi.DynamicLibrary.open(customPath);
+        final normalizedPath = p.normalize(customPath);
+        return ffi.DynamicLibrary.open(normalizedPath);
       } catch (e) {
         // Silently fail if custom path is invalid, will try next option
-        print('Custom library path $customPath failed to load: $e');
+        _log.warning('Custom library path $customPath failed to load: $e');
       }
     }
 
-    // Try development/local paths
+    // Try development/local relative paths using path package
     if (Platform.isMacOS) {
       final devPaths = [
-        '/Users/sanjibacharya/Developer/jyotish/native/swisseph/swisseph-master/libswisseph.dylib',
-        '/usr/local/lib/libswisseph.dylib',
+        p.join(Directory.current.path, 'native', 'swisseph', 'libswisseph.dylib'),
+        p.join('/usr', 'local', 'lib', 'libswisseph.dylib'),
         'libswisseph.dylib',
       ];
 
@@ -206,7 +229,7 @@ class SwissEphBindings {
           return ffi.DynamicLibrary.open(path);
         } catch (e) {
           // Try next path
-          print('Local library path $path failed to load: $e');
+          _log.fine('Local library path $path failed to load: $e');
           continue;
         }
       }
@@ -218,7 +241,15 @@ class SwissEphBindings {
     } else if (Platform.isIOS || Platform.isMacOS) {
       return ffi.DynamicLibrary.open('libswisseph.dylib');
     } else if (Platform.isLinux) {
-      return ffi.DynamicLibrary.open('libswisseph.so');
+      try {
+        return ffi.DynamicLibrary.open('libswisseph.so');
+      } catch (_) {
+        try {
+          return ffi.DynamicLibrary.open('libswe.so');
+        } catch (_) {
+          return ffi.DynamicLibrary.open('libswe.so.0');
+        }
+      }
     } else if (Platform.isWindows) {
       return ffi.DynamicLibrary.open('swisseph.dll');
     } else {
@@ -228,7 +259,8 @@ class SwissEphBindings {
 
   /// Sets the path to Swiss Ephemeris data files.
   void setEphemerisPath(String path) {
-    final pathPtr = path.toNativeUtf8();
+    final normalizedPath = p.normalize(path);
+    final pathPtr = normalizedPath.toNativeUtf8();
     try {
       _sweSetEphePath(pathPtr.cast());
     } finally {
@@ -267,10 +299,16 @@ class SwissEphBindings {
       }
 
       // If it falls back to Moshier (4) instead of Swiss (2), or has warnings
-      if (returnCode != flags && returnCode != 2) {
+      if (returnCode != flags && (returnCode & SwissEphConstants.moshier) != 0) {
+        final msg = errorBuffer.cast<Utf8>().toDartString();
+        _log.warning(
+          'SwissEph precision fallback to Moshier for Planet $planetId: '
+          '${msg.isNotEmpty ? msg : "ephemeris files missing, using low-precision analytical model"}',
+        );
+      } else if (returnCode != flags && returnCode != 2) {
         final msg = errorBuffer.cast<Utf8>().toDartString();
         if (msg.isNotEmpty) {
-          print('SwissEph Warning (Planet $planetId): $msg');
+          _log.warning('SwissEph Warning (Planet $planetId): $msg');
         }
       }
 
@@ -309,8 +347,13 @@ class SwissEphBindings {
 
   /// Gets Swiss Ephemeris version string.
   String getVersion() {
-    final versionPtr = _sweVersion();
-    return versionPtr.cast<Utf8>().toDartString();
+    final buffer = malloc<ffi.Char>(256);
+    try {
+      _sweVersion(buffer);
+      return buffer.cast<Utf8>().toDartString();
+    } finally {
+      malloc.free(buffer);
+    }
   }
 
   /// Gets ayanamsa (sidereal offset) for a given Julian day.
@@ -367,10 +410,7 @@ class SwissEphBindings {
       // [4] = Equatorial ascendant, [5] = Co-ascendant (Koch), etc.
       final ascmc = List.generate(10, (i) => ascmcPtr[i]);
 
-      return {
-        'cusps': cusps,
-        'ascmc': ascmc,
-      };
+      return {'cusps': cusps, 'ascmc': ascmc};
     } finally {
       malloc.free(cuspsPtr);
       malloc.free(ascmcPtr);
@@ -442,7 +482,8 @@ class SwissEphBindings {
         julianDay,
         flags,
         ffi.Pointer.fromAddress(
-            0), // geopos not used for lunar eclipse (global)
+          0,
+        ), // geopos not used for lunar eclipse (global)
         attrPtr,
         errorBuffer,
       );
@@ -485,7 +526,40 @@ class SwissEphBindings {
       }
 
       final result = <double>[];
-      for (var i = 0; i < 20; i++) {
+      for (var i = 0; i < 10; i++) {
+        result.add(tretPtr[i]);
+      }
+      return result;
+    } finally {
+      malloc.free(tretPtr);
+    }
+  }
+
+  /// Finds the next or previous solar eclipse globally.
+  List<double>? findSolarEclipseWhenGlob({
+    required double julianDay,
+    required int flags,
+    required int eclipseTypeFlags,
+    required bool backward,
+    required ffi.Pointer<ffi.Char> errorBuffer,
+  }) {
+    final tretPtr = malloc<ffi.Double>(20);
+    try {
+      final returnCode = _sweSolEclipseWhenGlob(
+        julianDay,
+        flags,
+        eclipseTypeFlags,
+        tretPtr,
+        backward ? 1 : 0,
+        errorBuffer,
+      );
+
+      if (returnCode < 0) {
+        return null;
+      }
+
+      final result = <double>[];
+      for (var i = 0; i < 10; i++) {
         result.add(tretPtr[i]);
       }
       return result;
@@ -503,7 +577,7 @@ class SwissEphBindings {
     required int flags,
     required ffi.Pointer<ffi.Char> errorBuffer,
   }) {
-    final geoposPtr = malloc<ffi.Double>(3);
+    final geoposPtr = malloc<ffi.Double>(10);
     final attrPtr = malloc<ffi.Double>(20);
     try {
       geoposPtr[0] = longitude;
@@ -544,8 +618,8 @@ class SwissEphBindings {
     required ffi.Pointer<ffi.Char> errorBuffer,
   }) {
     final geoposPtr = calloc<ffi.Double>(10); // zero-initialized array
-    final tretPtr = calloc<ffi.Double>(30); // zero-initialized
-    final attrPtr = calloc<ffi.Double>(30); // zero-initialized
+    final tretPtr = calloc<ffi.Double>(20); // zero-initialized
+    final attrPtr = calloc<ffi.Double>(20); // zero-initialized
     try {
       geoposPtr[0] = longitude;
       geoposPtr[1] = latitude;

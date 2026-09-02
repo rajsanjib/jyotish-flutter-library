@@ -259,7 +259,7 @@ class PanchakStatus {
     'Shatabhisha',
     'Purva Bhadrapada',
     'Uttara Bhadrapada',
-    'Revati'
+    'Revati',
   ];
 }
 

@@ -48,10 +48,20 @@ This fork significantly extends the original library with high-level astrologica
 - **❓ Prashna (Horary)**: Arudha calculation (1-249), Sphutas, and Gulika.
 
 ### New Features (Latest)
+- **🌴 Tree-Shaking & Modular Imports**: Support for 9 micro-targeted barrel files (e.g. `core.dart`, `panchanga.dart`, `systems.dart`) allowing aggressive dead-code elimination and minimized bundle sizes in Flutter production builds.
 - **📐 House Strength (Vimsopaka Bala)**: Enhanced house strength with divisional chart integration.
 - **🔢 Nadi Astrology**: Nadi identification from planetary positions (150 Nadis per sign).
 - **👶 Progeny Analysis**: Child prediction based on 5th house, Jupiter, and D7 chart.
 - **💑 Marriage Compatibility**: Ashtakoota (36 Guna) matching with Manglik/Nadi/Bhakoot Dosha checks.
+- **🌑 Eclipse Prediction**: Forward prediction of solar and lunar eclipses, globally or locally visible, with contact timings and magnitude data.
+- **🧘 Natal & Raja Yogas (PyJHora Parity)**: Implementation of a comprehensive, high-precision yoga detection engine covering over 280+ standard solar, lunar, Nabhasa (Aasraya, Dala, Aakriti, Sankhya), and Raja/Vipareetha/Neecha-Bhanga yogas at par with PyJHora.
+- **⏰ Vedic Clocks**: Conversion of Gregorian time to Ghati, Vighati, Lipta, and Prana units since Sunrise, with interactive digital and CustomPainter-based analog Flutter clock widgets.
+- **⚡ FFI Caching**: Memory-bounded (max 5,000 items) in-memory caching for FFI calls (planetary positions, house systems, rise/set times) inside `EphemerisService` to prevent CPU bottlenecks. Exposes `clearCache()` facade API.
+- **🎨 Custom Chart Rendering**: Dynamic SVG vector generation (`toSVG()`) and CustomPainter canvas widgets for rendering North and South Indian style charts.
+- **🌐 Runtime Timezone Updates**: Allows dynamic loading of IANA timezone database files (.tzf) via `Jyotish.loadTimezoneDatabase(bytes)` at runtime.
+- **🌊 Lazy Dasha Streams**: Refactored Dasha calculations to support `streamVimshottariDasha` for memory-efficient streaming of micro-periods.
+- **📊 Ashtakavarga Reductions & Shodhya Pinda Corrections**: Fixed sign/planet multipliers (Rashi/Graha Gunakara) and occupant-only Graha Pinda calculations to conform with classical Parashari principles.
+- **⚖️ Vimshopaka Bala Corrections**: Updated dignity points in Vimshopaka strength calculation to align with the classical Parashari 20-point scale.
 
 ### Muhurta
 - **⏰ Hora**: Planetary hours calculations.
@@ -89,6 +99,9 @@ void main() async {
 }
 ```
 
+> [!TIP]
+> **Tree-Shaking Support**: For optimized production builds, you can import specific sub-modules instead of the entire library (e.g., `import 'package:jyotish/core.dart';` and `import 'package:jyotish/panchanga.dart';`). Learn more in the [API Reference](API_REFERENCE.md#new-in-v2100--tree-shaking--module-isolation).
+
 **Key Features:**
 
 - Sidereal zodiac with Lahiri ayanamsa
@@ -98,7 +111,7 @@ void main() async {
 - Divisional charts (D1-D60, D249)
 - Ashtakavarga, KP System, Jaimini astrology
 - Panchanga, Muhurta, Transit calculations
-- **NEW:** House Strength (Vimsopaka Bala), Nadi Astrology, Progeny Analysis, Marriage Compatibility
+- **NEW:** House Strength (Vimsopaka Bala), Nadi Astrology, Progeny Analysis, Marriage Compatibility, Eclipse Prediction, Vedic Clocks
 
 See [USAGE.md](USAGE.md) for comprehensive examples of all features.
 
@@ -432,12 +445,13 @@ final ayanamsa = await service.getAyanamsa(
 print('Lahiri Ayanamsa: ${ayanamsa.toStringAsFixed(6)}°');
 ```
 
-## Performance Considerations
+## Performance & Tree-Shaking Considerations
 
 1. **Initialization**: Call `initialize()` once at app startup
 2. **Batch Calculations**: Use `getMultiplePlanetPositions()` for multiple planets
 3. **Caching**: Consider caching results if querying the same time repeatedly
 4. **Resource Management**: Always call `dispose()` when done
+5. **Modular Imports**: Import micro-targeted barrel modules (e.g., `package:jyotish/core.dart`, `package:jyotish/transit.dart`) instead of the monolithic `package:jyotish/jyotish.dart` to enable aggressive compiler tree-shaking and reduce your Flutter app's compiled binary size.
 
 ## Contributing
 

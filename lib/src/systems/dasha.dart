@@ -221,6 +221,73 @@ class DashaPeriod {
         'levelName': levelName,
         'subPeriods': subPeriods.map((p) => p.toJson()).toList(),
       };
+
+  /// Creates a DashaPeriod instance from a JSON map.
+  factory DashaPeriod.fromJson(Map<String, dynamic> json) {
+    final lordStr = json['lord'] as String?;
+    final planet = lordStr != null
+        ? Planet.values.firstWhere(
+            (p) => p.displayName == lordStr || p.name == lordStr,
+            orElse: () => Planet.sun,
+          )
+        : null;
+
+    final rashiStr = json['rashi'] as String?;
+    final rashi = rashiStr != null
+        ? Rashi.values.firstWhere(
+            (r) => r.name == rashiStr || r.sanskritName == rashiStr,
+            orElse: () => Rashi.aries,
+          )
+        : null;
+
+    final startDate = DateTime.parse(json['startDate'] as String);
+    final endDate = DateTime.parse(json['endDate'] as String);
+    final durationDays = (json['durationDays'] as num?)?.toDouble() ??
+        endDate.difference(startDate).inDays.toDouble();
+
+    final subList = json['subPeriods'] as List?;
+    final subPeriods = subList != null
+        ? subList
+            .map((e) => DashaPeriod.fromJson(e as Map<String, dynamic>))
+            .toList()
+        : <DashaPeriod>[];
+
+    return DashaPeriod(
+      lord: planet,
+      rashi: rashi,
+      lordName: json['lordDisplayName'] as String?,
+      startDate: startDate,
+      endDate: endDate,
+      duration: Duration(milliseconds: (durationDays * 86400000).round()),
+      level: json['level'] as int? ?? 0,
+      subPeriods: subPeriods,
+    );
+  }
+
+  /// Creates a copy of this DashaPeriod with replaced fields.
+  DashaPeriod copyWith({
+    Planet? lord,
+    Rashi? rashi,
+    String? lordName,
+    DateTime? startDate,
+    DateTime? endDate,
+    Duration? duration,
+    int? level,
+    List<DashaPeriod>? subPeriods,
+    DashaPeriod? parent,
+  }) {
+    return DashaPeriod(
+      lord: lord ?? this.lord,
+      rashi: rashi ?? this.rashi,
+      lordName: lordName ?? this.lordName,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      duration: duration ?? this.duration,
+      level: level ?? this.level,
+      subPeriods: subPeriods ?? this.subPeriods,
+      parent: parent ?? this.parent,
+    );
+  }
 }
 
 /// Complete dasha calculation result.
@@ -240,13 +307,13 @@ class DashaResult {
     this.precisionWarning,
   });
 
-  /// Type of dasha system used
+  /// The dasha system type used
   final DashaType type;
 
   /// Birth date and time
   final DateTime birthDateTime;
 
-  /// Moon's longitude at birth (used for Vimshottari)
+  /// Moon's longitude at birth
   final double moonLongitude;
 
   /// Birth nakshatra name
@@ -255,14 +322,73 @@ class DashaResult {
   /// Birth nakshatra pada (1-4)
   final int birthPada;
 
-  /// Balance of first dasha at birth (in days)
+  /// Balance of first dasha remaining at birth in years
   final double balanceOfFirstDasha;
 
-  /// All mahadasha periods from birth
+  /// All major periods (Mahadashas) in sequence
   final List<DashaPeriod> allMahadashas;
 
-  /// Calculation precision warning (if birth time uncertain)
+  /// Warning message if calculation precision could be improved
   final String? precisionWarning;
+
+  /// Converts to JSON map
+  Map<String, dynamic> toJson() => {
+        'type': type.displayName,
+        'birthDateTime': birthDateTime.toIso8601String(),
+        'moonLongitude': moonLongitude,
+        'birthNakshatra': birthNakshatra,
+        'birthPada': birthPada,
+        'balanceOfFirstDasha': balanceOfFirstDasha,
+        'allMahadashas': allMahadashas.map((d) => d.toJson()).toList(),
+        'precisionWarning': precisionWarning,
+      };
+
+  /// Creates a DashaResult instance from a JSON map.
+  factory DashaResult.fromJson(Map<String, dynamic> json) {
+    final typeName = json['type'] as String? ?? 'Vimshottari';
+    final type = DashaType.values.firstWhere(
+      (t) => t.displayName == typeName || t.name == typeName,
+      orElse: () => DashaType.vimshottari,
+    );
+    final mahaList = json['allMahadashas'] as List;
+    final allMahadashas = mahaList
+        .map((e) => DashaPeriod.fromJson(e as Map<String, dynamic>))
+        .toList();
+
+    return DashaResult(
+      type: type,
+      birthDateTime: DateTime.parse(json['birthDateTime'] as String),
+      moonLongitude: (json['moonLongitude'] as num).toDouble(),
+      birthNakshatra: json['birthNakshatra'] as String,
+      birthPada: json['birthPada'] as int,
+      balanceOfFirstDasha: (json['balanceOfFirstDasha'] as num).toDouble(),
+      allMahadashas: allMahadashas,
+      precisionWarning: json['precisionWarning'] as String?,
+    );
+  }
+
+  /// Creates a copy of this DashaResult with replaced fields.
+  DashaResult copyWith({
+    DashaType? type,
+    DateTime? birthDateTime,
+    double? moonLongitude,
+    String? birthNakshatra,
+    int? birthPada,
+    double? balanceOfFirstDasha,
+    List<DashaPeriod>? allMahadashas,
+    String? precisionWarning,
+  }) {
+    return DashaResult(
+      type: type ?? this.type,
+      birthDateTime: birthDateTime ?? this.birthDateTime,
+      moonLongitude: moonLongitude ?? this.moonLongitude,
+      birthNakshatra: birthNakshatra ?? this.birthNakshatra,
+      birthPada: birthPada ?? this.birthPada,
+      balanceOfFirstDasha: balanceOfFirstDasha ?? this.balanceOfFirstDasha,
+      allMahadashas: allMahadashas ?? this.allMahadashas,
+      precisionWarning: precisionWarning ?? this.precisionWarning,
+    );
+  }
 
   /// Gets the current mahadasha at a given date
   DashaPeriod? getMahadashaAt(DateTime date) {
@@ -328,18 +454,6 @@ class DashaResult {
   @override
   String toString() =>
       '${type.displayName} Dasha: ${getCurrentPeriodString(DateTime.now())}';
-
-  /// Converts to JSON map
-  Map<String, dynamic> toJson() => {
-        'type': type.displayName,
-        'birthDateTime': birthDateTime.toIso8601String(),
-        'moonLongitude': moonLongitude,
-        'birthNakshatra': birthNakshatra,
-        'birthPada': birthPada,
-        'balanceOfFirstDasha': balanceOfFirstDasha,
-        'precisionWarning': precisionWarning,
-        'mahadashas': allMahadashas.map((d) => d.toJson()).toList(),
-      };
 }
 
 /// Yogini dasha specific information.
@@ -369,4 +483,32 @@ enum Yogini {
 
   @override
   String toString() => name;
+}
+
+/// Specialized result for Chara Dasha (Jaimini system).
+class CharaDashaResult extends DashaResult {
+  const CharaDashaResult({
+    required super.type,
+    required super.birthDateTime,
+    required super.moonLongitude,
+    required super.birthNakshatra,
+    required super.birthPada,
+    required super.balanceOfFirstDasha,
+    required super.allMahadashas,
+    super.precisionWarning,
+  });
+}
+
+/// Specialized result for Narayana Dasha (Jaimini system).
+class NarayanaDashaResult extends DashaResult {
+  const NarayanaDashaResult({
+    required super.type,
+    required super.birthDateTime,
+    required super.moonLongitude,
+    required super.birthNakshatra,
+    required super.birthPada,
+    required super.balanceOfFirstDasha,
+    required super.allMahadashas,
+    super.precisionWarning,
+  });
 }

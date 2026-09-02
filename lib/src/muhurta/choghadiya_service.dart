@@ -20,49 +20,49 @@ class ChoghadiyaService {
       ChoghadiyaType.udveg, ChoghadiyaType.char, ChoghadiyaType.labh,
       ChoghadiyaType.amrit,
       ChoghadiyaType.kaal, ChoghadiyaType.shubh, ChoghadiyaType.rog,
-      ChoghadiyaType.udveg
+      ChoghadiyaType.udveg,
     ],
     1: [
       // Monday
       ChoghadiyaType.amrit, ChoghadiyaType.kaal, ChoghadiyaType.shubh,
       ChoghadiyaType.rog,
       ChoghadiyaType.udveg, ChoghadiyaType.char, ChoghadiyaType.labh,
-      ChoghadiyaType.amrit
+      ChoghadiyaType.amrit,
     ],
     2: [
       // Tuesday
       ChoghadiyaType.rog, ChoghadiyaType.udveg, ChoghadiyaType.char,
       ChoghadiyaType.labh,
       ChoghadiyaType.amrit, ChoghadiyaType.kaal, ChoghadiyaType.shubh,
-      ChoghadiyaType.rog
+      ChoghadiyaType.rog,
     ],
     3: [
       // Wednesday
       ChoghadiyaType.labh, ChoghadiyaType.amrit, ChoghadiyaType.kaal,
       ChoghadiyaType.shubh,
       ChoghadiyaType.rog, ChoghadiyaType.udveg, ChoghadiyaType.char,
-      ChoghadiyaType.labh
+      ChoghadiyaType.labh,
     ],
     4: [
       // Thursday
       ChoghadiyaType.shubh, ChoghadiyaType.rog, ChoghadiyaType.udveg,
       ChoghadiyaType.char,
       ChoghadiyaType.labh, ChoghadiyaType.amrit, ChoghadiyaType.kaal,
-      ChoghadiyaType.shubh
+      ChoghadiyaType.shubh,
     ],
     5: [
       // Friday
       ChoghadiyaType.char, ChoghadiyaType.labh, ChoghadiyaType.amrit,
       ChoghadiyaType.kaal,
       ChoghadiyaType.shubh, ChoghadiyaType.rog, ChoghadiyaType.udveg,
-      ChoghadiyaType.char
+      ChoghadiyaType.char,
     ],
     6: [
       // Saturday
       ChoghadiyaType.kaal, ChoghadiyaType.shubh, ChoghadiyaType.rog,
       ChoghadiyaType.udveg,
       ChoghadiyaType.char, ChoghadiyaType.labh, ChoghadiyaType.amrit,
-      ChoghadiyaType.kaal
+      ChoghadiyaType.kaal,
     ],
   };
 
@@ -73,7 +73,7 @@ class ChoghadiyaService {
       ChoghadiyaType.shubh, ChoghadiyaType.amrit, ChoghadiyaType.char,
       ChoghadiyaType.rog,
       ChoghadiyaType.kaal, ChoghadiyaType.labh, ChoghadiyaType.udveg,
-      ChoghadiyaType.shubh
+      ChoghadiyaType.shubh,
     ],
     1: [
       // Monday
@@ -96,46 +96,45 @@ class ChoghadiyaService {
       // Thu: Amrit, Char, Rog, Kaal, Labh, Udveg, Shubh, Amrit
       // Fri: Rog, Kaal, Labh, Udveg, Shubh, Amrit, Char, Rog
       // Sat: Labh, Udveg, Shubh, Amrit, Char, Rog, Kaal, Labh
-
       ChoghadiyaType.char, ChoghadiyaType.rog, ChoghadiyaType.kaal,
       ChoghadiyaType.labh,
       ChoghadiyaType.udveg, ChoghadiyaType.shubh, ChoghadiyaType.amrit,
-      ChoghadiyaType.char
+      ChoghadiyaType.char,
     ],
     2: [
       // Tuesday
       ChoghadiyaType.kaal, ChoghadiyaType.labh, ChoghadiyaType.udveg,
       ChoghadiyaType.shubh,
       ChoghadiyaType.amrit, ChoghadiyaType.char, ChoghadiyaType.rog,
-      ChoghadiyaType.kaal
+      ChoghadiyaType.kaal,
     ],
     3: [
       // Wednesday
       ChoghadiyaType.udveg, ChoghadiyaType.shubh, ChoghadiyaType.amrit,
       ChoghadiyaType.char,
       ChoghadiyaType.rog, ChoghadiyaType.kaal, ChoghadiyaType.labh,
-      ChoghadiyaType.udveg
+      ChoghadiyaType.udveg,
     ],
     4: [
       // Thursday
       ChoghadiyaType.amrit, ChoghadiyaType.char, ChoghadiyaType.rog,
       ChoghadiyaType.kaal,
       ChoghadiyaType.labh, ChoghadiyaType.udveg, ChoghadiyaType.shubh,
-      ChoghadiyaType.amrit
+      ChoghadiyaType.amrit,
     ],
     5: [
       // Friday
       ChoghadiyaType.rog, ChoghadiyaType.kaal, ChoghadiyaType.labh,
       ChoghadiyaType.udveg,
       ChoghadiyaType.shubh, ChoghadiyaType.amrit, ChoghadiyaType.char,
-      ChoghadiyaType.rog
+      ChoghadiyaType.rog,
     ],
     6: [
       // Saturday
       ChoghadiyaType.labh, ChoghadiyaType.udveg, ChoghadiyaType.shubh,
       ChoghadiyaType.amrit,
       ChoghadiyaType.char, ChoghadiyaType.rog, ChoghadiyaType.kaal,
-      ChoghadiyaType.labh
+      ChoghadiyaType.labh,
     ],
   };
 
@@ -149,8 +148,8 @@ class ChoghadiyaService {
       location: location,
     );
     // Logic similar to HoraService for "previous day" night handling
-    var sunrise = sunriseSunset.$1;
-    var sunset = sunriseSunset.$2;
+    final sunrise = sunriseSunset.$1;
+    final sunset = sunriseSunset.$2;
 
     if (sunrise == null || sunset == null) throw Exception('No sunrise data');
 
@@ -160,7 +159,9 @@ class ChoghadiyaService {
     if (dateTime.isBefore(sunrise)) {
       final prevDate = dateTime.subtract(const Duration(days: 1));
       final prevInfo = await _ephemerisService.getSunriseSunset(
-          date: prevDate, location: location);
+        date: prevDate,
+        location: location,
+      );
       if (prevInfo.$1 != null) {
         effectiveSunrise = prevInfo.$1!;
         effectiveSunset = prevInfo.$2!;
@@ -177,7 +178,9 @@ class ChoghadiyaService {
       // Nighttime
       final nextDate = effectiveSunrise.add(const Duration(days: 1));
       final nextInfo = await _ephemerisService.getSunriseSunset(
-          date: nextDate, location: location);
+        date: nextDate,
+        location: location,
+      );
       nextSunrise =
           nextInfo.$1 ?? effectiveSunrise.add(const Duration(hours: 24));
 
@@ -194,10 +197,12 @@ class ChoghadiyaService {
           effectiveSunrise.weekday; // Weekday of the sunrise starting the day
       final type = _nightSequences[weekday]![adjustedIndex];
 
-      final startTime = effectiveSunset
-          .add(Duration(microseconds: (segmentLength * adjustedIndex).round()));
-      final endTime = effectiveSunset.add(Duration(
-          microseconds: (segmentLength * (adjustedIndex + 1)).round()));
+      final startTime = effectiveSunset.add(
+        Duration(microseconds: (segmentLength * adjustedIndex).round()),
+      );
+      final endTime = effectiveSunset.add(
+        Duration(microseconds: (segmentLength * (adjustedIndex + 1)).round()),
+      );
 
       return Choghadiya(
         type: type,
@@ -219,10 +224,12 @@ class ChoghadiyaService {
       final weekday = effectiveSunrise.weekday;
       final type = _daySequences[weekday]![adjustedIndex];
 
-      final startTime = effectiveSunrise
-          .add(Duration(microseconds: (segmentLength * adjustedIndex).round()));
-      final endTime = effectiveSunrise.add(Duration(
-          microseconds: (segmentLength * (adjustedIndex + 1)).round()));
+      final startTime = effectiveSunrise.add(
+        Duration(microseconds: (segmentLength * adjustedIndex).round()),
+      );
+      final endTime = effectiveSunrise.add(
+        Duration(microseconds: (segmentLength * (adjustedIndex + 1)).round()),
+      );
 
       return Choghadiya(
         type: type,

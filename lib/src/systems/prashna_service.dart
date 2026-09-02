@@ -55,7 +55,7 @@ class PrashnaService {
     final location = GeographicLocation(
       latitude: chart.latitude,
       longitude: chart.longitudeCoord,
-      altitude: 0,
+      altitude: chart.altitude,
     );
 
     final sunriseSunset = await _ephemerisService.getSunriseSunset(
@@ -80,14 +80,16 @@ class PrashnaService {
       // Daytime Gulika parts (1-indexed start point for Saturn)
       // Sun: 7, Mon: 6, Tue: 5, Wed: 4, Thu: 3, Fri: 2, Sat: 1
       saturnPart = (7 - weekday + 7) % 7;
-      if (saturnPart == 0)
+      if (saturnPart == 0) {
         saturnPart = 7; // Saturday is 1st part, Sunday is 7th
+      }
       if (weekday == 6) saturnPart = 1; // Explicit Saturday correction
 
       final dayDuration = sunset.difference(sunrise).inSeconds;
       partDurationSec = dayDuration / 8.0;
-      startTime = sunrise
-          .add(Duration(seconds: (partDurationSec * (saturnPart - 1)).round()));
+      startTime = sunrise.add(
+        Duration(seconds: (partDurationSec * (saturnPart - 1)).round()),
+      );
     } else {
       // Nighttime Gulika starts from 5th day lord
       // Sun night starts from Thu lord sequence
@@ -99,13 +101,14 @@ class PrashnaService {
       final nextSunrise = sunrise.add(const Duration(days: 1));
       final nightDuration = nextSunrise.difference(sunset).inSeconds;
       partDurationSec = nightDuration / 8.0;
-      startTime = sunset
-          .add(Duration(seconds: (partDurationSec * (saturnPart - 1)).round()));
+      startTime = sunset.add(
+        Duration(seconds: (partDurationSec * (saturnPart - 1)).round()),
+      );
     }
 
     // Calculate Ascendant at the Gulika start time
     final gulikaChart = await _chartService.calculateChart(
-      dateTime: startTime.toLocal(),
+      dateTime: startTime,
       location: location,
     );
 

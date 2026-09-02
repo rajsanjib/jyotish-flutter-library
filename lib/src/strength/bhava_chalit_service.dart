@@ -59,13 +59,15 @@ class BhavaChalitService {
         }
       }
 
-      bhavas.add(BhavaInfo(
-        houseNumber: houseNumber,
-        midCuspStart: midStart,
-        midCuspEnd: midEnd,
-        cusp: cusps[i],
-        planets: planetsInBhava,
-      ));
+      bhavas.add(
+        BhavaInfo(
+          houseNumber: houseNumber,
+          midCuspStart: midStart,
+          midCuspEnd: midEnd,
+          cusp: cusps[i],
+          planets: planetsInBhava,
+        ),
+      );
     }
 
     return BhavaChalit(bhavas: bhavas, chart: chart);
@@ -87,7 +89,7 @@ class BhavaChalitService {
   /// Handles the wrap-around correctly: midpoint of 350 and 10 is 0,
   /// not 180.
   double _angularMidpoint(double a, double b) {
-    var diff = (b - a + 360) % 360;
+    final diff = (b - a + 360) % 360;
     return (a + diff / 2) % 360;
   }
 }

@@ -95,15 +95,18 @@ class MasaService {
   }
 
   LunarMonth _calculatePurnimantaMonth(double sunLongitude, TithiInfo tithi) {
-    final baseMonth = MasaInfo.getMonthFromSunLongitude(sunLongitude);
+    final amantaMonth = _calculateAmantaMonth(sunLongitude, tithi);
 
+    // In Purnimanta system, the month changes after Purnima (Full Moon).
+    // Therefore, during Krishna Paksha (Tithi 16-30), the Purnimanta month
+    // is the one following the Amanta month.
     if (tithi.number >= 16 && tithi.number <= 30) {
-      final currentIndex = MasaInfo.purnimantaMonthOrder.indexOf(baseMonth);
+      final currentIndex = MasaInfo.amantaMonthOrder.indexOf(amantaMonth);
       final nextIndex = (currentIndex + 1) % 12;
-      return MasaInfo.purnimantaMonthOrder[nextIndex];
+      return MasaInfo.amantaMonthOrder[nextIndex];
     }
 
-    return baseMonth;
+    return amantaMonth;
   }
 
   int _getAmantaMonthNumber(LunarMonth month) {
@@ -298,10 +301,7 @@ class MasaService {
     required DateTime dateTime,
     required GeographicLocation location,
   }) async {
-    final masa = await calculateMasa(
-      dateTime: dateTime,
-      location: location,
-    );
+    final masa = await calculateMasa(dateTime: dateTime, location: location);
 
     final ritu = getRitu(masa);
 
@@ -320,7 +320,7 @@ class MasaService {
   }) async {
     final masa = await calculateMasa(dateTime: dateTime, location: location);
 
-    int gregorianYear = dateTime.year;
+    final int gregorianYear = dateTime.year;
     bool beforeChaitra = false;
 
     if (dateTime.month < 3) {
@@ -338,8 +338,8 @@ class MasaService {
       }
     }
 
-    int vikramSamvat = gregorianYear + (beforeChaitra ? 56 : 57);
-    int shakaSamvat = gregorianYear - (beforeChaitra ? 79 : 78);
+    final int vikramSamvat = gregorianYear + (beforeChaitra ? 56 : 57);
+    final int shakaSamvat = gregorianYear - (beforeChaitra ? 79 : 78);
     int gujaratiSamvat = vikramSamvat;
 
     bool beforeKartika = false;
@@ -360,8 +360,10 @@ class MasaService {
       gujaratiSamvat = vikramSamvat - 1;
     }
 
-    final samvatsaraName =
-        await getSamvatsara(dateTime: dateTime, location: location);
+    final samvatsaraName = await getSamvatsara(
+      dateTime: dateTime,
+      location: location,
+    );
     const yugaStartYear = 1986;
     final yearDifference = dateTime.year - yugaStartYear;
     final samvatsaraNumber = (yearDifference + 48) % 60;
@@ -428,16 +430,13 @@ class MasaService {
       'Dhanu',
       'Makara',
       'Kumbha',
-      'Meena'
+      'Meena',
     ];
 
     final monthName = rashiNames[rashiIndex];
     final degreesInSign = sunLongitude % 30;
     final dayNumber = (degreesInSign / 0.9856).floor() + 1;
 
-    return PravishteInfo(
-      day: dayNumber,
-      monthName: monthName,
-    );
+    return PravishteInfo(day: dayNumber, monthName: monthName);
   }
 }

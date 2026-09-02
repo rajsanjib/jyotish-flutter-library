@@ -8,11 +8,7 @@ class JyotishException implements Exception {
   /// [message] - A description of the error.
   /// [originalError] - The original error that caused this exception.
   /// [stackTrace] - The stack trace of the original error.
-  JyotishException(
-    this.message, {
-    this.originalError,
-    this.stackTrace,
-  });
+  JyotishException(this.message, {this.originalError, this.stackTrace});
 
   /// The error message.
   final String message;
@@ -38,11 +34,7 @@ class JyotishException implements Exception {
 
 /// Exception thrown when Swiss Ephemeris calculation fails.
 class CalculationException extends JyotishException {
-  CalculationException(
-    super.message, {
-    super.originalError,
-    super.stackTrace,
-  });
+  CalculationException(super.message, {super.originalError, super.stackTrace});
 }
 
 /// Exception thrown when initialization fails.
@@ -56,11 +48,7 @@ class InitializationException extends JyotishException {
 
 /// Exception thrown when invalid input is provided.
 class ValidationException extends JyotishException {
-  ValidationException(
-    super.message, {
-    super.originalError,
-    super.stackTrace,
-  });
+  ValidationException(super.message, {super.originalError, super.stackTrace});
 }
 
 /// Exception thrown when a divisional chart is requested with an incorrect ayanamsa.

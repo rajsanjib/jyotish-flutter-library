@@ -1,4 +1,4 @@
-import 'dart:math' as Math;
+import 'dart:math' as math;
 import 'package:jyotish/src/models/calculation_flags.dart';
 import 'package:jyotish/src/models/divisional_chart_type.dart';
 import 'package:jyotish/src/models/geographic_location.dart';
@@ -24,16 +24,14 @@ class ShadbalaService {
 
   /// Calculates complete Shadbala for all planets in a chart.
   Future<Map<Planet, ShadbalaResult>> calculateShadbala(
-      VedicChart chart) async {
+    VedicChart chart,
+  ) async {
     final results = <Planet, ShadbalaResult>{};
 
-    for (final entry in chart.planets.entries) {
-      final planet = entry.key;
-      final planetInfo = entry.value;
-
+    for (final planet in chart.planets.keys) {
       results[planet] = await _calculatePlanetShadbala(
         planet: planet,
-        planetInfo: planetInfo,
+        planetInfo: chart.planets[planet]!,
         chart: chart,
       );
     }
@@ -51,13 +49,25 @@ class ShadbalaService {
     final sthanaBala = _calculateSthanaBala(planet, planetInfo, chart);
 
     // 2. Dig Bala (Directional Strength)
-    final digBala = _calculateDigBala(planet, planetInfo);
+    final digBala = _calculateDigBala(planet, planetInfo, chart);
 
     // 3. Kala Bala (Temporal Strength)
     final kalaBala = await _calculateKalaBala(planet, planetInfo, chart);
 
-    // 4. Chesta Bala (Motional Strength)
-    final chestaBala = _calculateChestaBala(planet, planetInfo);
+    // 4. Chesta Bala (Motional Strength - per BPHS 27:42-43: Sun = Ayana Bala, Moon = Paksha Bala)
+    final double chestaBala;
+    if (planet == Planet.sun) {
+      chestaBala = await _calculateAyanaBala(
+        planet,
+        planetInfo.position.longitude,
+        planetInfo.position.declination,
+        chart.dateTime,
+      );
+    } else if (planet == Planet.moon) {
+      chestaBala = _calculatePakshaBala(planet, planetInfo, chart);
+    } else {
+      chestaBala = _calculateChestaBala(planet, planetInfo);
+    }
 
     // 5. Naisargika Bala (Natural Strength)
     final naisargikaBala = _calculateNaisargikaBala(planet);
@@ -77,12 +87,14 @@ class ShadbalaService {
     final strengthCategory = _getStrengthCategory(totalBala);
 
     // 7. Uchcha Bala (Exaltation Strength - needed for Phala calculation)
-    final uchchaBala =
-        _calculateUchchaBala(planet, planetInfo.position.longitude);
+    final uchchaBala = _calculateUchchaBala(
+      planet,
+      planetInfo.position.longitude,
+    );
 
     // 8. Ishta & Kashta Phala (BPHS exact formula uses square root)
-    final ishtaPhala = Math.sqrt(uchchaBala * chestaBala);
-    final kashtaPhala = Math.sqrt((60.0 - uchchaBala) * (60.0 - chestaBala));
+    final ishtaPhala = math.sqrt(uchchaBala * chestaBala);
+    final kashtaPhala = math.sqrt((60.0 - uchchaBala) * (60.0 - chestaBala));
     final netPhala = ishtaPhala - kashtaPhala;
 
     return ShadbalaResult(
@@ -115,8 +127,9 @@ class ShadbalaService {
     // Total Weights = 20.
 
     // Check if Nodes (often excluded or treated differently, but usually calculated)
-    if (Planet.lunarNodes.contains(planet))
+    if (Planet.lunarNodes.contains(planet)) {
       return 0.0; // Or standard default mid-range
+    }
 
     double totalWeightedScore = 0.0;
     // The weights themselves sum to 20.
@@ -130,8 +143,10 @@ class ShadbalaService {
       final weight = _getVimshopakaWeight(vargaType);
 
       // Calculate/Get the D-Chart
-      final divChart =
-          _divisionalChartService.calculateDivisionalChart(chart, vargaType);
+      final divChart = _divisionalChartService.calculateDivisionalChart(
+        chart,
+        vargaType,
+      );
       final planetInfo = divChart.getPlanet(planet);
 
       if (planetInfo != null) {
@@ -169,19 +184,22 @@ class ShadbalaService {
   double _getVimshopakaPoints(PlanetaryDignity dignity) {
     return switch (dignity) {
       PlanetaryDignity.exalted => 20.0,
-      PlanetaryDignity.ownSign => 18.0,
-      PlanetaryDignity.greatFriend => 15.0,
-      PlanetaryDignity.friendSign => 10.0,
-      PlanetaryDignity.neutralSign => 7.0,
-      PlanetaryDignity.enemySign => 5.0,
+      PlanetaryDignity.moolaTrikona => 18.0,
+      PlanetaryDignity.ownSign => 15.0,
+      PlanetaryDignity.greatFriend => 10.0,
+      PlanetaryDignity.friendSign => 7.0,
+      PlanetaryDignity.neutralSign => 5.0,
+      PlanetaryDignity.enemySign => 4.0,
       PlanetaryDignity.greatEnemy => 2.0,
       PlanetaryDignity.debilitated => 0.0,
-      PlanetaryDignity.moolaTrikona => 18.0,
     };
   }
 
   double _calculateSthanaBala(
-      Planet planet, VedicPlanetInfo planetInfo, VedicChart chart) {
+    Planet planet,
+    VedicPlanetInfo planetInfo,
+    VedicChart chart,
+  ) {
     var strength = 0.0;
 
     // 1. Precise Uchcha Bala (Exaltation Strength)
@@ -192,7 +210,10 @@ class ShadbalaService {
 
     // 3. Ojayugmarasyamsa Bala (Odd/Even sign and Navamsa)
     strength += _calculateOjayugmarasyamsaBala(
-        planet, planetInfo.position.longitude, chart);
+      planet,
+      planetInfo.position.longitude,
+      chart,
+    );
 
     // 4. Drekkana Bala
     strength += _calculateDrekkanaBala(planet, planetInfo.position.longitude);
@@ -229,8 +250,10 @@ class ShadbalaService {
 
     var totalStrength = 0.0;
     for (final type in charts) {
-      final vargaChart =
-          _divisionalChartService.calculateDivisionalChart(rashiChart, type);
+      final vargaChart = _divisionalChartService.calculateDivisionalChart(
+        rashiChart,
+        type,
+      );
       final info = vargaChart.getPlanet(planet);
       if (info == null) continue;
 
@@ -255,12 +278,17 @@ class ShadbalaService {
   }
 
   double _calculateOjayugmarasyamsaBala(
-      Planet planet, double rashiLong, VedicChart rashiChart) {
+    Planet planet,
+    double rashiLong,
+    VedicChart rashiChart,
+  ) {
     final rashiSignIndex = (rashiLong / 30).floor() % 12;
     final rashiIsOdd = (rashiSignIndex + 1) % 2 != 0;
 
     final navamsaChart = _divisionalChartService.calculateDivisionalChart(
-        rashiChart, DivisionalChartType.d9);
+      rashiChart,
+      DivisionalChartType.d9,
+    );
     final navamsaInfo = navamsaChart.getPlanet(planet);
     if (navamsaInfo == null) return 0.0;
 
@@ -269,6 +297,7 @@ class ShadbalaService {
 
     final isFemale = [Planet.moon, Planet.venus].contains(planet);
     final isMale = [Planet.sun, Planet.mars, Planet.jupiter].contains(planet);
+    final isNeuter = [Planet.mercury, Planet.saturn].contains(planet);
 
     var strength = 0.0;
     if (isMale) {
@@ -277,6 +306,9 @@ class ShadbalaService {
     } else if (isFemale) {
       if (!rashiIsOdd) strength += 15.0;
       if (!navamsaIsOdd) strength += 15.0;
+    } else if (isNeuter) {
+      if (!rashiIsOdd) strength += 15.0;
+      if (navamsaIsOdd) strength += 15.0;
     }
 
     return strength;
@@ -303,31 +335,43 @@ class ShadbalaService {
     return 15.0;
   }
 
-  double _calculateDigBala(Planet planet, VedicPlanetInfo planetInfo) {
-    final house = planetInfo.house;
-    final optimalHouse = switch (planet) {
-      Planet.sun || Planet.mars => 10,
-      Planet.saturn => 7,
-      Planet.moon || Planet.venus => 4,
-      Planet.mercury || Planet.jupiter => 1,
-      _ => 1,
+  double _calculateDigBala(
+    Planet planet,
+    VedicPlanetInfo planetInfo,
+    VedicChart chart,
+  ) {
+    final ascendant = chart.ascendant;
+    final optimalLongitude = switch (planet) {
+      Planet.mercury || Planet.jupiter => ascendant,
+      Planet.moon || Planet.venus => (ascendant + 90.0) % 360.0,
+      Planet.saturn => (ascendant + 180.0) % 360.0,
+      Planet.sun || Planet.mars => (ascendant + 270.0) % 360.0,
+      _ => ascendant,
     };
 
-    var distance = (house - optimalHouse).abs();
-    if (distance > 6) distance = 12 - distance;
-    final strength = 60.0 * (1.0 - (distance / 6.0));
+    var distance =
+        (planetInfo.position.longitude - optimalLongitude).abs() % 360.0;
+    if (distance > 180.0) distance = 360.0 - distance;
+    final strength = (180.0 - distance) / 180.0 * 60.0;
     return strength.clamp(0.0, 60.0);
   }
 
   Future<double> _calculateKalaBala(
-      Planet planet, VedicPlanetInfo planetInfo, VedicChart chart) async {
+    Planet planet,
+    VedicPlanetInfo planetInfo,
+    VedicChart chart,
+  ) async {
     const strength = 0.0;
     final natonnata = await _calculateNatonnataBala(planet, chart);
     final paksha = _calculatePakshaBala(planet, planetInfo, chart);
     final tribhaga = await _calculateTribhagaBala(planet, chart);
     final vmdh = await _calculateVMDHBala(planet, chart);
-    final ayana = _calculateAyanaBala(
-        planet, planetInfo.position.longitude, planetInfo.position.declination);
+    final ayana = await _calculateAyanaBala(
+      planet,
+      planetInfo.position.longitude,
+      planetInfo.position.declination,
+      chart.dateTime,
+    );
     return strength + natonnata + paksha + tribhaga + vmdh + ayana;
   }
 
@@ -347,7 +391,9 @@ class ShadbalaService {
   ///
   /// Mercury: Always gets 60 virupas (neutral)
   Future<double> _calculateNatonnataBala(
-      Planet planet, VedicChart chart) async {
+    Planet planet,
+    VedicChart chart,
+  ) async {
     // Mercury is always strong regardless of day/night
     if (planet == Planet.mercury) return 60.0;
 
@@ -355,7 +401,7 @@ class ShadbalaService {
     final location = GeographicLocation(
       latitude: chart.latitude,
       longitude: chart.longitudeCoord,
-      altitude: 0,
+      altitude: chart.altitude,
     );
 
     final sunriseSunset = await _ephemerisService.getSunriseSunset(
@@ -375,17 +421,24 @@ class ShadbalaService {
     final birthTime = chart.dateTime.toUtc();
 
     final noon = sunrise.add(
-        Duration(seconds: (sunset.difference(sunrise).inSeconds / 2).round()));
+      Duration(seconds: (sunset.difference(sunrise).inSeconds / 2).round()),
+    );
 
     var distFromNoon = birthTime.difference(noon).inSeconds.abs().toDouble();
     if (distFromNoon > 43200.0) {
       distFromNoon = 86400.0 - distFromNoon; // Wrap around 24 hours
     }
 
-    final isDayPowerful =
-        [Planet.sun, Planet.jupiter, Planet.saturn].contains(planet);
-    final isNightPowerful =
-        [Planet.moon, Planet.mars, Planet.venus].contains(planet);
+    final isDayPowerful = [
+      Planet.sun,
+      Planet.jupiter,
+      Planet.saturn,
+    ].contains(planet);
+    final isNightPowerful = [
+      Planet.moon,
+      Planet.mars,
+      Planet.venus,
+    ].contains(planet);
 
     if (isDayPowerful) {
       return 60.0 * (1.0 - (distFromNoon / 43200.0));
@@ -403,10 +456,16 @@ class ShadbalaService {
 
     if (planet == Planet.mercury) return 60.0;
 
-    final isDayPowerful =
-        [Planet.sun, Planet.jupiter, Planet.saturn].contains(planet);
-    final isNightPowerful =
-        [Planet.moon, Planet.mars, Planet.venus].contains(planet);
+    final isDayPowerful = [
+      Planet.sun,
+      Planet.jupiter,
+      Planet.saturn,
+    ].contains(planet);
+    final isNightPowerful = [
+      Planet.moon,
+      Planet.mars,
+      Planet.venus,
+    ].contains(planet);
 
     // Sun in 10th house = Noon (0 distance from noon).
     // Sun in 4th house = Midnight (6 houses away from noon).
@@ -422,7 +481,10 @@ class ShadbalaService {
   }
 
   double _calculatePakshaBala(
-      Planet planet, VedicPlanetInfo planetInfo, VedicChart chart) {
+    Planet planet,
+    VedicPlanetInfo planetInfo,
+    VedicChart chart,
+  ) {
     final sunInfo = chart.getPlanet(Planet.sun);
     final moonInfo = chart.getPlanet(Planet.moon);
     if (sunInfo == null || moonInfo == null) return 0.0;
@@ -461,22 +523,24 @@ class ShadbalaService {
   }
 
   Future<double> _calculateTribhagaBala(Planet planet, VedicChart chart) async {
-    // Mercury always gets 60 points
-    if (planet == Planet.mercury) return 60.0;
+    // Per BPHS: Jupiter is all-time powerful and always gets 60 virupas
+    if (planet == Planet.jupiter) return 60.0;
 
     // Assignment:
-    // Day (Sunrise-Sunset): 1st 1/3 Jupiter, 2nd 1/3 Sun, 3rd 1/3 Saturn
+    // Day (Sunrise-Sunset): 1st 1/3 Mercury, 2nd 1/3 Sun, 3rd 1/3 Saturn
     // Night (Sunset-Sunrise): 1st 1/3 Moon, 2nd 1/3 Venus, 3rd 1/3 Mars
 
     final date = chart.dateTime;
     final location = GeographicLocation(
       latitude: chart.latitude,
       longitude: chart.longitudeCoord,
-      altitude: 0,
+      altitude: chart.altitude,
     );
 
     final sunriseSunset = await _ephemerisService.getSunriseSunset(
-        date: date, location: location);
+      date: date,
+      location: location,
+    );
     final sunrise = sunriseSunset.$1;
     final sunset = sunriseSunset.$2;
 
@@ -489,21 +553,27 @@ class ShadbalaService {
       final dayDuration = sunset.difference(sunrise).inSeconds;
       final partDuration = dayDuration / 3;
       final secondsSinceSunrise = birthTime.difference(sunrise).inSeconds;
-      final partIndex =
-          (secondsSinceSunrise / partDuration).floor().clamp(0, 2);
+      final partIndex = (secondsSinceSunrise / partDuration).floor().clamp(
+            0,
+            2,
+          );
 
-      final lords = [Planet.jupiter, Planet.sun, Planet.saturn];
+      final lords = [Planet.mercury, Planet.sun, Planet.saturn];
       return planet == lords[partIndex] ? 60.0 : 0.0;
     } else {
       // Find previous sunset and next sunrise for accurate night division
       final prevDate = date.subtract(const Duration(days: 1));
       final prevSunriseSunset = await _ephemerisService.getSunriseSunset(
-          date: prevDate, location: location);
+        date: prevDate,
+        location: location,
+      );
       final prevSunset = prevSunriseSunset.$2;
 
       final nextDate = date.add(const Duration(days: 1));
       final nextSunriseSunset = await _ephemerisService.getSunriseSunset(
-          date: nextDate, location: location);
+        date: nextDate,
+        location: location,
+      );
       final nextSunrise = nextSunriseSunset.$1;
 
       // Determine which night segment we are in
@@ -521,25 +591,39 @@ class ShadbalaService {
       final nightDuration = nightEnd.difference(nightStart).inSeconds;
       final partDuration = nightDuration / 3;
       final secondsSinceNightStart = birthTime.difference(nightStart).inSeconds;
-      final partIndex =
-          (secondsSinceNightStart / partDuration).floor().clamp(0, 2);
+      final partIndex = (secondsSinceNightStart / partDuration).floor().clamp(
+            0,
+            2,
+          );
 
       final lords = [Planet.moon, Planet.venus, Planet.mars];
       return planet == lords[partIndex] ? 60.0 : 0.0;
     }
   }
 
-  double _calculateAyanaBala(Planet planet, double longitude, double decl) {
+  Future<double> _calculateAyanaBala(
+    Planet planet,
+    double longitude,
+    double decl,
+    DateTime dateTime,
+  ) async {
     // Ayana Bala = 60 * (2327'  Kranti) / 4654'
     // Where Kranti = declination of the planet
     // Correct formula from Parashara Hora Shastra:
     // ayanabala = 60 * (2327'  kranti) / 4654' = (2327'  kranti) * 1.2793
 
-    const obliquityOfEcliptic = 23.45;
-    const denominator = 46.90; // 4654' = 46.90 degrees
+    final julianDay = _ephemerisService.dateTimeToJulianDay(dateTime);
+    final (trueObliquity, _) = await _ephemerisService.getObliquity(julianDay);
 
-    if ([Planet.sun, Planet.mars, Planet.jupiter, Planet.venus]
-        .contains(planet)) {
+    final obliquityOfEcliptic = trueObliquity;
+    final denominator = 2 * trueObliquity;
+
+    if ([
+      Planet.sun,
+      Planet.mars,
+      Planet.jupiter,
+      Planet.venus,
+    ].contains(planet)) {
       // Sun, Mars, Jupiter, Venus: + for Northern declination, - for Southern
       return (obliquityOfEcliptic + decl) / denominator * 60;
     } else if ([Planet.moon, Planet.saturn].contains(planet)) {
@@ -579,7 +663,7 @@ class ShadbalaService {
     final location = GeographicLocation(
       latitude: chart.latitude,
       longitude: chart.longitudeCoord,
-      altitude: 0,
+      altitude: chart.altitude,
     );
 
     final sunriseSunset = await _ephemerisService.getSunriseSunset(
@@ -629,7 +713,7 @@ class ShadbalaService {
     final location = GeographicLocation(
       latitude: chart.latitude,
       longitude: chart.longitudeCoord,
-      altitude: 0,
+      altitude: chart.altitude,
     );
 
     // Calculate the month lord dynamically
@@ -665,8 +749,9 @@ class ShadbalaService {
     final approxDaysSinceIngress = travelledDegrees / 0.9856;
 
     // Set a search window for the exact ingress time
-    var searchTime = currentDateTime
-        .subtract(Duration(hours: (approxDaysSinceIngress * 24).toInt()));
+    final searchTime = currentDateTime.subtract(
+      Duration(hours: (approxDaysSinceIngress * 24).toInt()),
+    );
 
     // Binary search to find the exact moment the Sun crossed the sign boundary
     var start = searchTime.subtract(const Duration(days: 3));
@@ -690,7 +775,7 @@ class ShadbalaService {
 
       // We must handle the 360 wrap-around if checking Aries (0)
       var midLong = midSunPos.longitude;
-      var targetLong = signStartLongitude;
+      final targetLong = signStartLongitude;
 
       if (targetLong == 0 && midLong > 340) {
         midLong -= 360;
@@ -867,12 +952,14 @@ class ShadbalaService {
     final location = GeographicLocation(
       latitude: chart.latitude,
       longitude: chart.longitudeCoord,
-      altitude: 0,
+      altitude: chart.altitude,
     );
 
     // Get sunrise and sunset for accurate Hora calculation
     final sunriseSunset = await _ephemerisService.getSunriseSunset(
-        date: chart.dateTime, location: location);
+      date: chart.dateTime,
+      location: location,
+    );
 
     if (sunriseSunset.$1 == null || sunriseSunset.$2 == null) {
       // If sunrise/sunset unavailable, return 0
@@ -1218,49 +1305,85 @@ class ShadbalaService {
   /// Benefic aspects add strength, malefic aspects subtract strength.
   /// Total virupas range from -60 to +60.
   double _calculateDrikBala(
-      Planet planet, VedicPlanetInfo planetInfo, VedicChart chart) {
-    var netVirupas = 0.0;
-
-    for (final otherPlanet in Planet.traditionalPlanets) {
-      if (otherPlanet == planet) continue;
+    Planet planet,
+    VedicPlanetInfo planetInfo,
+    VedicChart chart,
+  ) {
+    final netVirupas = Planet.traditionalPlanets
+        .where((otherPlanet) => otherPlanet != planet)
+        .map((otherPlanet) {
       final otherInfo = chart.getPlanet(otherPlanet);
-      if (otherInfo == null) continue;
+      if (otherInfo == null) return 0.0;
 
-      // Calculate full professional aspect strength (0-60 virupas)
       final aspectStrength = _calculateProfessionalAspectStrength(
         aspecting: otherPlanet,
         aspectingLong: otherInfo.longitude,
         aspectedLong: planetInfo.longitude,
       );
 
-      // Apply aspect based on benefic/malefic nature
-      final aspectValue = _applyAspectNature(otherPlanet, aspectStrength);
-      netVirupas += aspectValue;
-    }
+      return _applyAspectNature(otherPlanet, aspectStrength, chart: chart);
+    }).fold<double>(0.0, (sum, v) => sum + v);
 
-    // Clamp to valid range (-60 to +60 virupas)
     return netVirupas.clamp(-60.0, 60.0);
   }
 
   /// Applies aspect nature (benefic adds, malefic subtracts).
   ///
-  /// Benefic planets: Jupiter, Venus, Mercury, Moon
-  /// Malefic planets: Sun, Mars, Saturn
+  /// Benefic planets: Jupiter, Venus, Waxing Moon, Unafflicted Mercury
+  /// Malefic planets: Sun, Mars, Saturn, Waning Moon, Afflicted Mercury
   /// Aspect strength is divided by 4 as per Parashara
-  double _applyAspectNature(Planet aspectingPlanet, double aspectStrength) {
-    // Determine planet nature
-    final isBenefic = [
-      Planet.jupiter,
-      Planet.venus,
-      Planet.mercury,
-      Planet.moon,
-    ].contains(aspectingPlanet);
+  double _applyAspectNature(
+    Planet aspectingPlanet,
+    double aspectStrength, {
+    VedicChart? chart,
+  }) {
+    bool isBenefic = false;
+    bool isMalefic = false;
 
-    final isMalefic = [
-      Planet.sun,
-      Planet.mars,
-      Planet.saturn,
-    ].contains(aspectingPlanet);
+    if (aspectingPlanet == Planet.jupiter || aspectingPlanet == Planet.venus) {
+      isBenefic = true;
+    } else if (aspectingPlanet == Planet.sun ||
+        aspectingPlanet == Planet.mars ||
+        aspectingPlanet == Planet.saturn) {
+      isMalefic = true;
+    } else if (aspectingPlanet == Planet.moon) {
+      if (chart != null) {
+        final moonInfo = chart.getPlanet(Planet.moon);
+        if (moonInfo != null) {
+          final pakshaBala = _calculatePakshaBala(Planet.moon, moonInfo, chart);
+          isBenefic = pakshaBala >= 30.0;
+          isMalefic = pakshaBala < 30.0;
+        } else {
+          isBenefic = true;
+        }
+      } else {
+        isBenefic = true;
+      }
+    } else if (aspectingPlanet == Planet.mercury) {
+      if (chart != null) {
+        final mercInfo = chart.getPlanet(Planet.mercury);
+        if (mercInfo != null) {
+          // Check if Mercury is conjunct a natural malefic (within 10 degrees)
+          final hasMaleficConjunct = [
+            Planet.sun,
+            Planet.mars,
+            Planet.saturn,
+          ].any((m) {
+            final mInfo = chart.getPlanet(m);
+            if (mInfo == null) return false;
+            var dist = (mInfo.longitude - mercInfo.longitude).abs() % 360.0;
+            if (dist > 180.0) dist = 360.0 - dist;
+            return dist <= 10.0;
+          });
+          isBenefic = !hasMaleficConjunct;
+          isMalefic = hasMaleficConjunct;
+        } else {
+          isBenefic = true;
+        }
+      } else {
+        isBenefic = true;
+      }
+    }
 
     // Apply Parashara's rule: divide by 4
     final virupas = aspectStrength / 4.0;
@@ -1361,10 +1484,11 @@ class ShadbalaService {
   /// Full aspects (180) get full 60 virupas, partial aspects get reduced.
   double _getAspectStrengthMultiplier(double aspectAngle) {
     // Full 7th aspect
-    if (aspectAngle == 180.0) return 1.0;
+    if ((aspectAngle - 180.0).abs() < 1e-4) return 1.0;
 
     // Special aspects (Mars 4th/8th, Jupiter 5th/9th, Saturn 3rd/10th)
-    if ([90.0, 120.0, 210.0, 240.0, 60.0, 270.0].contains(aspectAngle)) {
+    const specialAngles = [90.0, 120.0, 210.0, 240.0, 60.0, 270.0];
+    if (specialAngles.any((a) => (a - aspectAngle).abs() < 1e-4)) {
       return 1.0; // Full strength for special aspects
     }
 
@@ -1384,7 +1508,10 @@ class ShadbalaService {
   ///
   /// Uses LINEAR interpolation as per traditional Vedic calculations.
   double _calculateVirupaFromOrb(
-      double orb, Planet planet, double aspectAngle) {
+    double orb,
+    Planet planet,
+    double aspectAngle,
+  ) {
     // Normalize orb to 0-180 range
     final normalizedOrb = orb.abs();
 
@@ -1406,12 +1533,13 @@ class ShadbalaService {
   /// Gets maximum orb allowance for different aspect types.
   double _getMaxOrbForAspect(Planet planet, double aspectAngle) {
     // Full aspects (7th house) get 30 orb for all planets
-    if (aspectAngle == 180.0) {
+    if ((aspectAngle - 180.0).abs() < 1e-4) {
       return 30.0;
     }
 
     // Special aspects get 15 orb
-    if ([90.0, 210.0, 120.0, 240.0, 60.0, 270.0].contains(aspectAngle)) {
+    const specialAngles = [90.0, 210.0, 120.0, 240.0, 60.0, 270.0];
+    if (specialAngles.any((a) => (a - aspectAngle).abs() < 1e-4)) {
       return 15.0;
     }
 

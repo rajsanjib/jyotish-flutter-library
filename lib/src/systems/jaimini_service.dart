@@ -5,56 +5,63 @@ import 'package:jyotish/src/models/vedic_chart.dart';
 
 /// Service for Jaimini astrology calculations (Karakamsa, Rashi Drishti).
 class JaiminiService {
-  /// Gets the Atmakaraka (planet with highest degree in its sign).
+  /// Returns all Chara Karakas ranked from highest to lowest degree.
   ///
-  /// Per Jaimini, Atmakaraka is the planet with the highest degree
-  /// in its sign (excluding the Sun). Traditionally includes 7 planets + Rahu.
-  ///
-  /// Special rule for Rahu: Since Rahu moves in reverse direction,
-  /// its degrees are measured as 30 minus its longitude within the sign.
-  /// This gives Rahu a chance to be Atmakaraka.
-  Planet getAtmakaraka(VedicChart chart) {
-    Planet? atmakaraka;
-    double highestDegree = -1;
+  /// [useEightKarakaScheme] - if true (default), uses 8 candidates including Rahu.
+  /// If false, uses 7 classical planets (Sun through Saturn) without Rahu.
+  CharaKarakaResult getCharaKarakas(
+    VedicChart chart, {
+    bool useEightKarakaScheme = true, // Default to 8-karaka per user decision
+  }) {
+    final rahuPlanet = chart.getPlanet(Planet.meanNode) != null
+        ? Planet.meanNode
+        : (chart.getPlanet(Planet.trueNode) != null
+            ? Planet.trueNode
+            : Planet.meanNode);
 
-    // Consider 8 planets per Jaimini tradition (Sun to Saturn + Rahu)
-    // Ketu is not typically considered as it co-locates with Rahu
-    const planets = [
-      Planet.sun,
-      Planet.moon,
-      Planet.mars,
-      Planet.mercury,
-      Planet.jupiter,
-      Planet.venus,
-      Planet.saturn,
-      Planet.meanNode, // Rahu
-    ];
+    final candidates = useEightKarakaScheme
+        ? [
+            Planet.sun,
+            Planet.moon,
+            Planet.mars,
+            Planet.mercury,
+            Planet.jupiter,
+            Planet.venus,
+            Planet.saturn,
+            rahuPlanet,
+          ]
+        : [
+            Planet.sun,
+            Planet.moon,
+            Planet.mars,
+            Planet.mercury,
+            Planet.jupiter,
+            Planet.venus,
+            Planet.saturn,
+          ];
 
-    for (final planet in planets) {
-      final info = chart.getPlanet(planet);
-      if (info == null) continue;
+    final ranked = candidates.where((p) => chart.getPlanet(p) != null).toList()
+      ..sort((a, b) {
+        double degA = chart.getPlanet(a)!.longitude % 30;
+        double degB = chart.getPlanet(b)!.longitude % 30;
+        // Rahu's degree is measured in reverse
+        if (a == Planet.meanNode || a == Planet.trueNode) degA = 30.0 - degA;
+        if (b == Planet.meanNode || b == Planet.trueNode) degB = 30.0 - degB;
+        return degB.compareTo(degA); // descending
+      });
 
-      // Degree within sign (0-30)
-      var degreeInSign = info.longitude % 30;
-
-      // Special handling for Rahu (and Ketu): 
-      // Since they move backwards, their effective degree is reversed
-      // This gives them a chance to be Atmakaraka
-      if (planet == Planet.meanNode || planet == Planet.ketu) {
-        degreeInSign = 30.0 - degreeInSign;
-      }
-
-      // Skip Sun per traditional Jaimini rules
-      if (planet == Planet.sun) continue;
-
-      if (degreeInSign > highestDegree) {
-        highestDegree = degreeInSign;
-        atmakaraka = planet;
-      }
-    }
-
-    return atmakaraka ?? Planet.moon; // Fallback to Moon
+    return CharaKarakaResult(
+      karakas: ranked.take(useEightKarakaScheme ? 8 : 7).toList(),
+      scheme: useEightKarakaScheme,
+    );
   }
+
+  /// Convenience - returns only the Atmakaraka.
+  Planet getAtmakaraka(VedicChart chart, {bool useEightKarakaScheme = true}) =>
+      getCharaKarakas(
+        chart,
+        useEightKarakaScheme: useEightKarakaScheme,
+      ).atmakaraka;
 
   /// Gets Karakamsa information.
   /// Requires both Rashi (D1) and Navamsa (D9) charts.
@@ -96,16 +103,31 @@ class JaiminiService {
         final planetsInAspecting = _getPlanetsInSign(chart, aspectingRashi);
         final planetsInAspected = _getPlanetsInSign(chart, aspectedRashi);
 
-        drishtiList.add(RashiDrishtiInfo(
-          aspectingSign: aspectingRashi,
-          aspectedSign: aspectedRashi,
-          planetsInAspectingSign: planetsInAspecting,
-          planetsInAspectedSign: planetsInAspected,
-        ));
+        drishtiList.add(
+          RashiDrishtiInfo(
+            aspectingSign: aspectingRashi,
+            aspectedSign: aspectedRashi,
+            planetsInAspectingSign: planetsInAspecting,
+            planetsInAspectedSign: planetsInAspected,
+          ),
+        );
       }
     }
 
     return drishtiList;
+  }
+
+  /// Alias for [calculateRashiDrishti] to support legacy tests.
+  List<RashiDrishtiInfo> getRashiDrishtiList(VedicChart chart) =>
+      calculateRashiDrishti(chart);
+
+  /// Returns signs aspected by a specific sign OR all sign aspects.
+  /// Modified to support both legacy test signatures.
+  dynamic getRashiDrishti(VedicChart chart, [Rashi? rashi]) {
+    if (rashi != null) {
+      return _getAspectedSigns(rashi);
+    }
+    return calculateRashiDrishti(chart);
   }
 
   /// Gets Rashi Drishti specifically for houses containing planets.
@@ -121,57 +143,45 @@ class JaiminiService {
       for (final aspectedRashi in aspectedSigns) {
         final planetsInAspected = _getPlanetsInSign(chart, aspectedRashi);
 
-        drishtiList.add(RashiDrishtiInfo(
-          aspectingSign: aspectingRashi,
-          aspectedSign: aspectedRashi,
-          planetsInAspectingSign: planetsInAspecting,
-          planetsInAspectedSign: planetsInAspected,
-        ));
+        drishtiList.add(
+          RashiDrishtiInfo(
+            aspectingSign: aspectingRashi,
+            aspectedSign: aspectedRashi,
+            planetsInAspectingSign: planetsInAspecting,
+            planetsInAspectedSign: planetsInAspected,
+          ),
+        );
       }
     }
 
     return drishtiList;
   }
 
+  /// Alias for [calculateActiveRashiDrishti] to support legacy tests.
+  List<RashiDrishtiInfo> getActiveRashiDrishti(VedicChart chart) =>
+      calculateActiveRashiDrishti(chart);
+
   List<Rashi> _getAspectedSigns(Rashi rashi) {
     final quality = _getSignQuality(rashi);
-    final result = <Rashi>[];
 
     switch (quality) {
       case _SignQuality.movable:
-        // Aspects all Fixed signs except the one adjacent (next sign)
-        for (final r in Rashi.values) {
-          if (_getSignQuality(r) == _SignQuality.fixed) {
-            // Check if adjacent (difference of 1 sign)
-            final diff = ((r.index - rashi.index).abs());
-            if (diff != 1 && diff != 11) {
-              result.add(r);
-            }
-          }
-        }
-        break;
+        return Rashi.values.where((r) {
+          if (_getSignQuality(r) != _SignQuality.fixed) return false;
+          final diff = (r.index - rashi.index).abs();
+          return diff != 1 && diff != 11;
+        }).toList();
       case _SignQuality.fixed:
-        // Aspects all Movable signs except the one adjacent (previous sign)
-        for (final r in Rashi.values) {
-          if (_getSignQuality(r) == _SignQuality.movable) {
-            final diff = ((r.index - rashi.index).abs());
-            if (diff != 1 && diff != 11) {
-              result.add(r);
-            }
-          }
-        }
-        break;
+        return Rashi.values.where((r) {
+          if (_getSignQuality(r) != _SignQuality.movable) return false;
+          final diff = (r.index - rashi.index).abs();
+          return diff != 1 && diff != 11;
+        }).toList();
       case _SignQuality.dual:
-        // Aspects all other Dual signs
-        for (final r in Rashi.values) {
-          if (_getSignQuality(r) == _SignQuality.dual && r != rashi) {
-            result.add(r);
-          }
-        }
-        break;
+        return Rashi.values
+            .where((r) => _getSignQuality(r) == _SignQuality.dual && r != rashi)
+            .toList();
     }
-
-    return result;
   }
 
   _SignQuality _getSignQuality(Rashi rashi) {
@@ -185,14 +195,10 @@ class JaiminiService {
   }
 
   List<Planet> _getPlanetsInSign(VedicChart chart, Rashi sign) {
-    final result = <Planet>[];
-    for (final entry in chart.planets.entries) {
-      final planetSign = Rashi.fromLongitude(entry.value.longitude);
-      if (planetSign == sign) {
-        result.add(entry.key);
-      }
-    }
-    return result;
+    return chart.planets.entries
+        .where((e) => Rashi.fromLongitude(e.value.longitude) == sign)
+        .map((e) => e.key)
+        .toList();
   }
 }
 

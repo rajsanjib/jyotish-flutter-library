@@ -64,10 +64,7 @@ class BhavaInfo {
 /// so mid-cusp boundaries align exactly with sign boundaries. In that case,
 /// the Bhava Chalit placement equals the Rashi placement for most planets.
 class BhavaChalit {
-  const BhavaChalit({
-    required this.bhavas,
-    required this.chart,
-  });
+  const BhavaChalit({required this.bhavas, required this.chart});
 
   /// All 12 bhavas with their mid-cusp boundaries and planet lists
   final List<BhavaInfo> bhavas;

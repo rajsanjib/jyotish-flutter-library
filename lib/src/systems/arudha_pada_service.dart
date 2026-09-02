@@ -21,15 +21,26 @@ class ArudhaPadaService {
     );
   }
 
+  /// Alias for [calculateArudhaPadas] to support legacy tests.
+  ArudhaPadaResult getArudhaPadas(VedicChart chart) =>
+      calculateArudhaPadas(chart);
+
   /// Calculates Arudha Lagna (AL).
   ArudhaPadaInfo calculateArudhaLagna(VedicChart chart) {
     return _calculateArudhaForHouse(chart, 1);
   }
 
+  /// Alias for [calculateArudhaLagna] to support legacy tests.
+  ArudhaPadaInfo getArudhaLagna(VedicChart chart) =>
+      calculateArudhaLagna(chart);
+
   /// Calculates Upapada (UL).
   ArudhaPadaInfo calculateUpapada(VedicChart chart) {
     return _calculateArudhaForHouse(chart, 12);
   }
+
+  /// Alias for [calculateUpapada] to support legacy tests.
+  ArudhaPadaInfo getUpapada(VedicChart chart) => calculateUpapada(chart);
 
   ArudhaPadaInfo _calculateArudhaForHouse(VedicChart chart, int houseNumber) {
     // 1. Identify Sign of the House
@@ -97,7 +108,7 @@ class ArudhaPadaService {
 
     // Check distance between Original House and Calculated Arudha
     // (Arudha - House + 12) % 12 + 1
-    int distFromHouse = (arudhaIndex - houseSignIdx + 12) % 12 + 1;
+    final int distFromHouse = (arudhaIndex - houseSignIdx + 12) % 12 + 1;
 
     // Exception 1: Arudha falls in the House itself (Dist 1)
     if (distFromHouse == 1) {
@@ -122,12 +133,13 @@ class ArudhaPadaService {
 
     // Name
     String name;
-    if (houseNumber == 1)
+    if (houseNumber == 1) {
       name = 'AL';
-    else if (houseNumber == 12)
+    } else if (houseNumber == 12) {
       name = 'UL';
-    else
+    } else {
       name = 'A$houseNumber';
+    }
 
     return ArudhaPadaInfo(
       houseNumber: houseNumber,
@@ -143,13 +155,23 @@ class ArudhaPadaService {
     if (rashi == Rashi.scorpio) {
       return _getStrongerLord(chart, Planet.mars, Planet.ketu, rashi);
     } else if (rashi == Rashi.aquarius) {
+      final rahuPlanet = chart.getPlanet(Planet.meanNode) != null
+          ? Planet.meanNode
+          : (chart.getPlanet(Planet.trueNode) != null
+              ? Planet.trueNode
+              : Planet.meanNode);
       return _getStrongerLord(
-          chart, Planet.saturn, Planet.meanNode, rashi); // Rahu
+        chart,
+        Planet.saturn,
+        rahuPlanet,
+        rashi,
+      ); // Rahu
     } else {
       final lord = _getSignLord(rashi);
       final lordInfo = chart.getPlanet(lord);
-      if (lordInfo == null)
+      if (lordInfo == null) {
         throw Exception('Lord position not found for $lord');
+      }
       return Rashi.fromLongitude(lordInfo.longitude);
     }
   }
@@ -159,10 +181,18 @@ class ArudhaPadaService {
   /// 2. If one is in the sign itself and other is not, the one NOT in sign is stronger (for Arudha).
   /// 3. If still equal, the one with more degrees is stronger.
   Rashi _getStrongerLord(
-      VedicChart chart, Planet p1, Planet p2, Rashi ownSign) {
+    VedicChart chart,
+    Planet p1,
+    Planet p2,
+    Rashi ownSign,
+  ) {
     final info1 = chart.getPlanet(p1);
-    final info2 = chart.getPlanet(p2);
+    var info2 = chart.getPlanet(p2);
 
+    if (info1 == null && info2 == null) {
+      if (p2 == Planet.meanNode) info2 = chart.getPlanet(Planet.trueNode);
+      if (p2 == Planet.trueNode) info2 = chart.getPlanet(Planet.meanNode);
+    }
     if (info1 == null && info2 == null) throw Exception('Lords not found');
     if (info1 == null) return Rashi.fromLongitude(info2!.longitude);
     if (info2 == null) return Rashi.fromLongitude(info1.longitude);

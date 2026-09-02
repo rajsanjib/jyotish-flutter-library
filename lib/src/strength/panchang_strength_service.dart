@@ -28,17 +28,12 @@ class PanchangStrengthService {
         level = ChandrabalamLevel.weak;
       }
 
-      entries.add(ChandrabalamEntry(
-        rashiIndex: i,
-        level: level,
-        position: position,
-      ));
+      entries.add(
+        ChandrabalamEntry(rashiIndex: i, level: level, position: position),
+      );
     }
 
-    return ChandrabalamInfo(
-      moonRashiIndex: rashiIndex,
-      entries: entries,
-    );
+    return ChandrabalamInfo(moonRashiIndex: rashiIndex, entries: entries);
   }
 
   /// Calculates Tarabalam (Star strength) for a specific birth Nakshatra.

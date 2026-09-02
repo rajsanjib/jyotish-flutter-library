@@ -20,7 +20,8 @@ class SwissEphConstants {
   static const int trueNode = 11;
 
   // Ketu (South Node) - computed as 180 from Rahu, uses custom ID
-  static const int ketu = 100; // Custom ID for Ketu (not a Swiss Ephemeris constant)
+  static const int ketu =
+      100; // Custom ID for Ketu (not a Swiss Ephemeris constant)
   static const int meanApog = 12; // Mean Lunar Apogee (Black Moon Lilith)
   static const int oscuApog = 13; // Osculating Lunar Apogee
 
@@ -35,6 +36,7 @@ class SwissEphConstants {
 
   // Calculation flags
   static const int swissEph = 2; // Use Swiss Ephemeris
+  static const int moshier = 4; // Moshier analytical ephemeris fallback
   static const int speed = 256; // Calculate speed
   static const int sidereal = 64; // Sidereal calculation
   static const int tropical = 0; // Tropical calculation (default)

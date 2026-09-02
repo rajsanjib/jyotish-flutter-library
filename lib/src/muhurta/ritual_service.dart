@@ -4,12 +4,10 @@ import 'package:jyotish/src/muhurta/ritual_elements.dart';
 /// Service for calculating ceremonial and astrological ritual elements.
 class RitualService {
   /// Calculates the general ritual elements for a day.
-  RitualElements calculateRitualElements({
-    required Panchanga panchanga,
-  }) {
+  RitualElements calculateRitualElements({required Panchanga panchanga}) {
     // Use 1-30 numbering for rituals (Shukla 1-15, Krishna 16-30)
     // tithiNumber in Panchanga is already 1-30.
-    int tithiNumber = panchanga.tithi.number;
+    final int tithiNumber = panchanga.tithi.number;
 
     final nakshatraNumber = panchanga.nakshatra.number; // 1-27
     final weekday = panchanga.vara.weekday; // 0-6
@@ -48,7 +46,7 @@ class RitualService {
       'In Assembly (Neutral)',
       'Eating (Inauspicious)',
       'Playing (Inauspicious)',
-      'Cremation Ground (Inauspicious)'
+      'Cremation Ground (Inauspicious)',
     ];
     // Formula: (Tithi - 1) % 7 maps 1, 8, 15, 22, 29 to Kailash; 2, 9, 16, ... to Gauri
     final shivavasa = shivaGroups[(tithiNumber - 1) % 7];

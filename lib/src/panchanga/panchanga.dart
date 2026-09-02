@@ -221,7 +221,7 @@ class YogaInfo {
       10,
       13,
       17,
-      27
+      27,
     ]; // Atiganda, Shula, Ganda, Vyaghata, Vyatipata, Vaidhriti
     return maleficYogas.contains(number)
         ? YogaNature.malefic
@@ -301,7 +301,7 @@ class YogaDetails {
         'Construction',
         'Business start',
         'Planting',
-        'Marriage'
+        'Marriage',
       ],
     ),
     // 2. Priti
@@ -328,7 +328,7 @@ class YogaDetails {
         'Health treatments',
         'Exercise',
         'Construction',
-        'Investment'
+        'Investment',
       ],
     ),
     // 4. Saubhagya
@@ -356,7 +356,7 @@ class YogaDetails {
         'Ceremonies',
         'Business',
         'Education',
-        'Travel'
+        'Travel',
       ],
     ),
     // 6. Atiganda
@@ -371,7 +371,7 @@ class YogaDetails {
         'Rest',
         'Spiritual practice',
         'Avoid: new ventures',
-        'Avoid: conflicts'
+        'Avoid: conflicts',
       ],
     ),
     // 7. Sukarma
@@ -408,7 +408,7 @@ class YogaDetails {
         'Caution',
         'Spiritual practice',
         'Avoid: conflicts',
-        'Avoid: travel'
+        'Avoid: travel',
       ],
     ),
     // 10. Ganda
@@ -423,7 +423,7 @@ class YogaDetails {
         'Patience',
         'Meditation',
         'Avoid: new ventures',
-        'Avoid: disputes'
+        'Avoid: disputes',
       ],
     ),
     // 11. Vriddhi
@@ -438,7 +438,7 @@ class YogaDetails {
         'Investment',
         'Education',
         'Business expansion',
-        'Learning'
+        'Learning',
       ],
     ),
     // 12. Dhruva
@@ -454,7 +454,7 @@ class YogaDetails {
         'Marriage',
         'Property purchase',
         'Permanent settlement',
-        'Oaths'
+        'Oaths',
       ],
     ),
     // 13. Vyaghata
@@ -470,7 +470,7 @@ class YogaDetails {
         'Caution',
         'Patience',
         'Avoid: new ventures',
-        'Avoid: risks'
+        'Avoid: risks',
       ],
     ),
     // 14. Harshana
@@ -486,7 +486,7 @@ class YogaDetails {
         'Celebrations',
         'Social events',
         'Marriage',
-        'Entertainment'
+        'Entertainment',
       ],
     ),
     // 15. Vajra
@@ -502,7 +502,7 @@ class YogaDetails {
         'Overcoming obstacles',
         'Legal matters',
         'Disputes',
-        'Competition'
+        'Competition',
       ],
     ),
     // 16. Siddhi
@@ -517,7 +517,7 @@ class YogaDetails {
         'Completing projects',
         'Exams',
         'Competitions',
-        'Business'
+        'Business',
       ],
     ),
     // 17. Vyatipata
@@ -532,7 +532,7 @@ class YogaDetails {
         'Spiritual practice',
         'Rest',
         'Avoid: all major activities',
-        'Caution'
+        'Caution',
       ],
     ),
     // 18. Variyana
@@ -547,7 +547,7 @@ class YogaDetails {
         'Comfortable activities',
         'Art',
         'Entertainment',
-        'Social gatherings'
+        'Social gatherings',
       ],
     ),
     // 19. Parigha
@@ -563,7 +563,7 @@ class YogaDetails {
         'Patience',
         'Persistence',
         'Avoid: new ventures',
-        'Planning'
+        'Planning',
       ],
     ),
     // 20. Shiva
@@ -579,7 +579,7 @@ class YogaDetails {
         'All auspicious activities',
         'Marriage',
         'Ceremonies',
-        'Spiritual practice'
+        'Spiritual practice',
       ],
     ),
     // 21. Siddha
@@ -594,7 +594,7 @@ class YogaDetails {
         'Perfection in work',
         'Mastery',
         'Learning',
-        'Teaching'
+        'Teaching',
       ],
     ),
     // 22. Sadhya
@@ -609,7 +609,7 @@ class YogaDetails {
         'Goal setting',
         'Pursuing ambitions',
         'Competition',
-        'Effort'
+        'Effort',
       ],
     ),
     // 23. Shubha
@@ -624,7 +624,7 @@ class YogaDetails {
         'Beauty treatments',
         'Art',
         'Marriage',
-        'Social events'
+        'Social events',
       ],
     ),
     // 24. Shukla
@@ -639,7 +639,7 @@ class YogaDetails {
         'Spiritual practice',
         'Purification',
         'Study',
-        'Teaching'
+        'Teaching',
       ],
     ),
     // 25. Brahma
@@ -655,7 +655,7 @@ class YogaDetails {
         'Spiritual practice',
         'Study',
         'Teaching',
-        'Creative work'
+        'Creative work',
       ],
     ),
     // 26. Indra
@@ -670,7 +670,7 @@ class YogaDetails {
         'Leadership',
         'Authority matters',
         'Public activities',
-        'Government'
+        'Government',
       ],
     ),
     // 27. Vaidhriti
@@ -685,7 +685,7 @@ class YogaDetails {
         'Rest',
         'Spiritual practice',
         'Avoid: new ventures',
-        'Patience'
+        'Patience',
       ],
     ),
   ];

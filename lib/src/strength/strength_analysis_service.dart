@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:jyotish/src/models/divisional_chart_type.dart';
 import 'package:jyotish/src/models/planet.dart';
 import 'package:jyotish/src/models/vedic_chart.dart';
 import 'package:jyotish/src/analysis/divisional_chart_service.dart';
+
 
 /// Service for advanced strength and analysis calculations.
 ///
@@ -51,8 +53,11 @@ class StrengthAnalysisService {
     // 4. Relationship with lagna lord (0-10%)
     final lagnaLord = _getLagnaLord(chart.houses.ascendant);
     if (lagnaLord != null) {
-      final relationshipScore =
-          _getPlanetaryRelationship(planet, lagnaLord, chart);
+      final relationshipScore = _getPlanetaryRelationship(
+        planet,
+        lagnaLord,
+        chart,
+      );
       ishtaphala += relationshipScore * 0.1;
     }
 
@@ -90,20 +95,35 @@ class StrengthAnalysisService {
     } else {
       // Check proximity to Sun using dynamic planet-specific orb
       final sunInfo = chart.planets[Planet.sun];
-      if (sunInfo != null && planet != Planet.sun && !Planet.lunarNodes.contains(planet)) {
+      if (sunInfo != null &&
+          planet != Planet.sun &&
+          !Planet.lunarNodes.contains(planet)) {
         var distance = (planetInfo.longitude - sunInfo.longitude).abs() % 360;
         if (distance > 180) distance = 360 - distance;
 
         final isRetrograde = planetInfo.position.longitudeSpeed < 0;
         var orb = 10.0;
         switch (planet) {
-          case Planet.moon: orb = 12.0; break;
-          case Planet.mars: orb = 17.0; break;
-          case Planet.mercury: orb = isRetrograde ? 12.0 : 14.0; break;
-          case Planet.jupiter: orb = 11.0; break;
-          case Planet.venus: orb = isRetrograde ? 8.0 : 10.0; break;
-          case Planet.saturn: orb = 15.0; break;
-          default: orb = 10.0;
+          case Planet.moon:
+            orb = 12.0;
+            break;
+          case Planet.mars:
+            orb = 17.0;
+            break;
+          case Planet.mercury:
+            orb = isRetrograde ? 12.0 : 14.0;
+            break;
+          case Planet.jupiter:
+            orb = 11.0;
+            break;
+          case Planet.venus:
+            orb = isRetrograde ? 8.0 : 10.0;
+            break;
+          case Planet.saturn:
+            orb = 15.0;
+            break;
+          default:
+            orb = 10.0;
         }
 
         if (distance < orb + 5.0) {
@@ -143,63 +163,66 @@ class StrengthAnalysisService {
     required VedicChart chart,
     required Map<Planet, double> shadbalaResults,
   }) {
-    final bhavaBala = <int, double>{};
+    return <int, double>{
+      for (var houseNum = 1; houseNum <= 12; houseNum++)
+        houseNum: () {
+          var strength = 0.0;
 
-    for (var houseNum = 1; houseNum <= 12; houseNum++) {
-      var strength = 0.0;
-
-      // 1. House lord strength (40%)
-      final houseLord = _getHouseLord(houseNum, chart.houses.ascendant);
-      if (houseLord != null) {
-        final lordStrength = shadbalaResults[houseLord] ?? 0.0;
-        strength += (lordStrength / 600.0) * 40.0;
-      }
-
-      // 2. Planets in house strength (35%)
-      final planetsInHouse = chart.getPlanetsInHouse(houseNum);
-      var planetsStrength = 0.0;
-      for (final planet in planetsInHouse) {
-        final planetStrength = shadbalaResults[planet.planet] ?? 0.0;
-        planetsStrength += planetStrength / 600.0;
-      }
-      // Average if multiple planets
-      if (planetsInHouse.isNotEmpty) {
-        planetsStrength /= planetsInHouse.length;
-      }
-      strength += planetsStrength * 35.0;
-
-      // 3. House nature factor (15%)
-      // Kendra (1,4,7,10) = Strongest
-      // Panapara (2,5,8,11) = Medium
-      // Apoklima (3,6,9,12) = Weakest
-      if ([1, 4, 7, 10].contains(houseNum)) {
-        strength += 15.0;
-      } else if ([2, 5, 8, 11].contains(houseNum)) {
-        strength += 10.0;
-      } else {
-        strength += 5.0;
-      }
-
-      // 4. Aspect strength (10%)
-      // Benefic aspects add strength
-      var aspectStrength = 0.0;
-      final beneficPlanets = [Planet.jupiter, Planet.venus, Planet.mercury];
-      for (final benefic in beneficPlanets) {
-        final beneficInfo = chart.planets[benefic];
-        if (beneficInfo != null) {
-          // Check if benefic aspects this house
-          if (_isPlanetAspectingHouse(
-              beneficInfo.longitude, houseNum, chart, benefic)) {
-            aspectStrength += 3.33; // Max 10 for 3 benefics
+          // 1. House lord strength (40%)
+          final houseLord = _getHouseLord(houseNum, chart.houses.ascendant);
+          if (houseLord != null) {
+            final lordStrength = shadbalaResults[houseLord] ?? 0.0;
+            strength += (lordStrength / 600.0) * 40.0;
           }
-        }
-      }
-      strength += aspectStrength.clamp(0.0, 10.0);
 
-      bhavaBala[houseNum] = strength.clamp(0.0, 100.0);
-    }
+          // 2. Planets in house strength (35%)
+          final planetsInHouse = chart.getPlanetsInHouse(houseNum);
+          var planetsStrength = 0.0;
+          for (final planet in planetsInHouse) {
+            final planetStrength = shadbalaResults[planet.planet] ?? 0.0;
+            planetsStrength += planetStrength / 600.0;
+          }
+          // Average if multiple planets
+          if (planetsInHouse.isNotEmpty) {
+            planetsStrength /= planetsInHouse.length;
+          }
+          strength += planetsStrength * 35.0;
 
-    return bhavaBala;
+          // 3. House nature factor (15%)
+          // Kendra (1,4,7,10) = Strongest
+          // Panapara (2,5,8,11) = Medium
+          // Apoklima (3,6,9,12) = Weakest
+          if ([1, 4, 7, 10].contains(houseNum)) {
+            strength += 15.0;
+          } else if ([2, 5, 8, 11].contains(houseNum)) {
+            strength += 10.0;
+          } else {
+            strength += 5.0;
+          }
+
+          // 4. Aspect strength (10%)
+          // Benefic aspects add strength
+          var aspectStrength = 0.0;
+          final beneficPlanets = [Planet.jupiter, Planet.venus, Planet.mercury];
+          for (final benefic in beneficPlanets) {
+            final beneficInfo = chart.planets[benefic];
+            if (beneficInfo != null) {
+              // Check if benefic aspects this house
+              if (_isPlanetAspectingHouse(
+                beneficInfo.longitude,
+                houseNum,
+                chart,
+                benefic,
+              )) {
+                aspectStrength += 3.33; // Max 10 for 3 benefics
+              }
+            }
+          }
+          strength += aspectStrength.clamp(0.0, 10.0);
+
+          return strength.clamp(0.0, 100.0);
+        }(),
+    };
   }
 
   /// Calculates Vimshopak Bala (20-fold strength).
@@ -235,7 +258,7 @@ class StrengthAnalysisService {
       DivisionalChartType.d9: 3.0, // Navamsa
       DivisionalChartType.d10: 0.5, // Dasamsa
       DivisionalChartType.d12: 0.5, // Dwadasamsa
-      DivisionalChartType.d16: 0.5, // Shodasamsa
+      DivisionalChartType.d16: 2.0, // Shodasamsa
       DivisionalChartType.d20: 0.5, // Vimsamsa
       DivisionalChartType.d24: 0.5, // Chaturvimshamsha
       DivisionalChartType.d27: 0.5, // Saptavimsamsa
@@ -281,13 +304,24 @@ class StrengthAnalysisService {
   ///
   /// Returns a map of all traditional planets to their Vimshopak Bala
   Map<Planet, VimshopakBala> getAllPlanetsVimshopakBala(VedicChart chart) {
-    final results = <Planet, VimshopakBala>{};
+    return <Planet, VimshopakBala>{
+      for (final planet in Planet.traditionalPlanets)
+        planet: getVimshopakBala(chart: chart, planet: planet),
+    };
+  }
 
-    for (final planet in Planet.traditionalPlanets) {
-      results[planet] = getVimshopakBala(chart: chart, planet: planet);
-    }
+  /// Calculates Vimshopak Bala for all planets asynchronously.
+  Future<Map<Planet, VimshopakBala>> getAllPlanetsVimshopakBalaAsync(
+    VedicChart chart,
+  ) async {
+    return compute(_calculateVimshopakBalaStatic, chart);
+  }
 
-    return results;
+  static Map<Planet, VimshopakBala> _calculateVimshopakBalaStatic(
+    VedicChart chart,
+  ) {
+    final service = StrengthAnalysisService();
+    return service.getAllPlanetsVimshopakBala(chart);
   }
 
   // Helper methods
@@ -361,7 +395,10 @@ class StrengthAnalysisService {
   }
 
   double _getPlanetaryRelationship(
-      Planet planet1, Planet planet2, VedicChart chart) {
+    Planet planet1,
+    Planet planet2,
+    VedicChart chart,
+  ) {
     if (planet1 == planet2) return 1.0;
 
     // 1. Natural Relationship (Naisargika Maitri)
@@ -431,7 +468,11 @@ class StrengthAnalysisService {
   }
 
   bool _isPlanetAspectingHouse(
-      double planetLongitude, int houseNum, VedicChart chart, Planet planet) {
+    double planetLongitude,
+    int houseNum,
+    VedicChart chart,
+    Planet planet,
+  ) {
     // Calculate Ascendant Sign
     final ascSignIndex = (chart.houses.ascendant / 30).floor();
 
@@ -460,7 +501,9 @@ class StrengthAnalysisService {
 
     // Rahu/Ketu: 5th, 9th
     if ((planet == Planet.meanNode || planet == Planet.ketu) &&
-        (diff == 4 || diff == 8)) return true;
+        (diff == 4 || diff == 8)) {
+      return true;
+    }
 
     return false;
   }

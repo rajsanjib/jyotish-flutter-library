@@ -50,6 +50,7 @@ class KPDivision {
     required this.starLord,
     required this.subLord,
     this.subSubLord,
+    this.subSubSubLord,
     required this.subStartLongitude,
     required this.subEndLongitude,
   });
@@ -71,6 +72,9 @@ class KPDivision {
 
   /// Sub-Sub-Lord (owner of the sub-subdivision)
   final Planet? subSubLord;
+
+  /// Sub-Sub-Sub-Lord (owner of the sub-sub-subdivision)
+  final Planet? subSubSubLord;
 
   /// Starting longitude of the sub-division
   final double subStartLongitude;
@@ -157,7 +161,7 @@ class KPDivisionEntry {
   final Planet? subSubLord;
   final double startLongitude;
   final double endLongitude;
-  
+
   /// Formats longitude to DMS string
   String get startDms {
     final d = startLongitude.floor();
@@ -525,7 +529,7 @@ class KPRulingPlanets {
 
   /// All seven Ruling Planets in priority order, deduplicated.
   ///
-  /// Priority: Day Lord  Asc Sign Lord  Asc Star Lord  Asc Sub Lord 
+  /// Priority: Day Lord  Asc Sign Lord  Asc Star Lord  Asc Sub Lord
   ///           Moon Sign Lord  Moon Star Lord  Moon Sub Lord.
   List<Planet> get rulingPlanets {
     final seen = <Planet>{};

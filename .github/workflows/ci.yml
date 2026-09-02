@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies (Swiss Ephemeris on Linux)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libswe-dev || true
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze code
+        run: flutter analyze
+
+      - name: Provision Ephemeris test fixtures
+        run: |
+          mkdir -p ephe
+          curl -s -L -o ephe/seas_18.se1 https://www.astro.com/ftp/swisseph/ephe/seas_18.se1 || true
+          curl -s -L -o ephe/semo_18.se1 https://www.astro.com/ftp/swisseph/ephe/semo_18.se1 || true
+          curl -s -L -o ephe/sepl_18.se1 https://www.astro.com/ftp/swisseph/ephe/sepl_18.se1 || true
+
+      - name: Run unit tests
+        run: flutter test --no-pub

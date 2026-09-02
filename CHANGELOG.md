@@ -5,10 +5,246 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [2.19.0] - 2026-08-25
+
+### Added
+- **Public API & Facade Expansion**:
+  - Added `getSamvatInfo({required dateTime, required location})` on `Jyotish` facade for Vikram, Shaka, Gujarati Samvat and 60-year Jovian Samvatsara calculations.
+  - Added `getAyana({required dateTime, required location})` on `Jyotish` facade for Uttarayana and Dakshinayana solar course determinations.
+  - Added `getPravishte({required dateTime, required location})` on `Jyotish` facade for solar day (1–31) and solar sign month calculations.
+  - Added `calculateYoni(boyNakshatra, girlNakshatra)` on `Jyotish` facade for classical 14x14 animal matrix compatibility scoring.
+  - Added `calculateDashaCompatibility(boyChart, girlChart)` and `checkDoshas(boyChart, girlChart)` forwarding methods to the `Jyotish` facade.
+  - Added `VedicChartView` Flutter widget in `chart_renderer.dart` wrapping `NorthIndianChartPainter` and `SouthIndianChartPainter` for declarative UI chart rendering.
+- **macOS Platform Support**:
+  - Added `macos/jyotish.podspec` and macOS FFI plugin headers/stubs to support macOS desktop builds out of the box.
+- **Continuous Integration**:
+  - Added GitHub Actions CI workflow (`.github/workflows/ci.yml`) covering code formatting, static analysis (`flutter analyze`), and unit test suite execution (`flutter test`).
+
+### Refactored & Optimized
+- **Dependency Streamlining**:
+  - Removed `dartx` from `dependencies` and migrated all 9 import sites across `lib/` to standard, idiomatic Dart collections, Map comprehensions, and `DateTime` methods.
+  - Dropped 32 transitive dependencies (`analyzer`, `args`, `shelf`, `yaml`, `crypto`, etc.) from downstream consumer application bundles.
+  - Removed `test` from `dev_dependencies` and migrated all test suites to `package:flutter_test`.
+- **Documentation & AI Agent Skills Alignment**:
+  - Fully repaired `API_REFERENCE.md`: corrected signature drifts, documented 16 previously omitted facade methods, removed phantom duplicate model blocks, and added model documentation for `SamvatInfo`, `Ayana`, `PravishteInfo`, `MasaInfo`, and `SpecialYoga`.
+  - Synchronized `SKILL.md` with active codebase method signatures, record syntax (`.tithiNumber`, `.start`, `.end`), and calculation gotchas (Brahma Muhurta, Abhijit Muhurta).
+
+### Changed & Breaking Changes
+- **Facade Exception Contract**:
+  - The `Jyotish` facade now rethrows specific `JyotishException` subclasses (`CalculationException`, `PolarRegionException`, `InitializationException`, `ValidationException`, `AyanamsaMismatchException`) directly, ensuring `on CalculationException` and `on PolarRegionException` catch blocks work as documented.
+- **Obliquity & Rise/Set Exception Propagation**:
+  - `EphemerisService.getObliquity()` now throws `CalculationException` when Swiss Ephemeris C fails instead of returning a hardcoded `23.44°`. Callers in extreme conditions should handle `on CalculationException`.
+  - `EphemerisService.getRiseSet()` now only returns `null` for legitimate circumpolar / polar region events and throws `CalculationException` on calculation failures.
+- **Cache Key Timezone Awareness & LRU Eviction**:
+  - Added `location.timezone` to cache keys in `EphemerisService` (`_planetPositionCache`, `_housesCache`, `_sunriseSunsetCache`) to prevent incorrect cache hits when calculating for identical timestamps in different timezones. Cache eviction updated to true LRU.
+- **Process-Global C Concurrency Lock & Ephemeris Singleton**:
+  - Unified Swiss Ephemeris synchronization under `SwissEphBindings.lock` across `EphemerisService` and `EclipseService` to prevent native C state corruption.
+  - `EphemerisService()` now returns a shared singleton instance by default, with `EphemerisService.standalone()` available for isolated lifecycles.
+  - Added event loop yields (`await Future.delayed(Duration.zero)`) inside `EclipseService` batch prediction loops to prevent UI frame starvation.
+- **Shadbala Aspect Precision**:
+  - Replaced strict floating-point equality (`== 180.0`) with epsilon tolerance (`< 1e-4`) in `_getAspectStrengthMultiplier()` and `_getMaxOrbForAspect()`.
+- **SDK Floor Bump**:
+  - Bumped minimum Dart SDK constraint in `pubspec.yaml` to `sdk: ">=3.8.0 <4.0.0"` for compatibility with `flutter_lints: ^6.0.0`.
+- **Packaging & Repository Hygiene**:
+  - Excluded `ephe/` data files, compiled binaries (`.dll`, `.so`, `.dylib`), and `doc/api/` from pub packaging via `.pubignore`.
+  - Untracked committed Gradle cache files in `android/.gradle/`.
+  - Harmonized `.github/CONTRIBUTING.md` with `CONTRIBUTING.md`.
+
+---
+
+## [2.18.0] - 2026-07-22
+
+### Added
+- **Data Model Serialization & Immutability (`toJson`, `fromJson`, `copyWith`)**:
+  - Implemented 2-way JSON serialization (`toJson()` / `fromJson()`) and `copyWith()` state manipulation across core models (`VedicChart`, `PlanetPosition`, `VedicPlanetInfo`, `HouseSystem`, `DashaPeriod`, `DashaResult`).
+- **Dependency Optimization & Cleanup**:
+  - Moved `intl` to `dev_dependencies` (used strictly in test verification).
+  - Explicitly pinned `test: ^1.24.0` in `dev_dependencies` for `package:test` test suites.
+  - Enhanced `swisseph_bindings` and `ephemeris_service` with `package:path` for robust cross-platform path building and normalization.
+- **Structured Service Logging**:
+  - Integrated `Logger` from `package:logging` across core services (`VedicChartService`, `PanchangaService`, `DashaService`, `ShadbalaService`) for calculation diagnostics and warning reporting.
+- **Documentation & Unit Tests**:
+  - Added `test/serialization_test.dart` covering JSON serialization and `copyWith` state manipulation.
+  - Updated `USAGE.md` and `API_REFERENCE.md` with new model API signatures and serialization usage guides.
+
+## [2.17.0] - 2026-07-04
+
+### Added
+- **Calculation Caching & Memoization**:
+  - Implemented memory-bounded in-memory caching (max 5,000 items) inside `EphemerisService` for high-precision Swiss Ephemeris FFI calls, covering planetary positions, house systems, and sunrise/sunset timings.
+  - Exposed `clearCache()` on the `Jyotish` core facade.
+- **Astro-Chart Rendering Engine**:
+  - Added a new `chart_renderer.dart` module providing high-fidelity SVG exports (`VedicChart.toSVG()`) for both South Indian (grid-based) and North Indian (diamond-based) chart styles.
+  - Exposed Flutter `CustomPainter` canvas painter classes (`SouthIndianChartPainter` and `NorthIndianChartPainter`) to natively draw astrological charts in Flutter widgets.
+- **Dynamic Timezone Database Loading**:
+  - Added `loadTimezoneDatabase(List<int> bytes)` to allow developers to dynamically load newer IANA `.tzf` timezone databases at runtime without needing library updates.
+- **Lazy Dasha Streams**:
+  - Implemented `streamVimshottariDasha()` yielding nested Dasha periods lazily as a Dart stream to prevent memory bloat when scanning micro-periods.
+- **Ashtakavarga Reductions (Shodhana) & Shodhya Pinda Corrections**:
+  - Corrected sign multipliers (Rashi Gunakara) and planetary multipliers (Graha Gunakara) in `AshtakavargaService` to match classical Parashari values.
+  - Corrected Graha Pinda calculation to evaluate only occupied signs in the birth chart using the occupying planet's multiplier.
+- **Vimshopaka Bala Point Scale Corrections**:
+  - Updated dignity points in `_getVimshopakaPoints` to align with the classical Parashari 20-point scale.
+
+## [2.16.0] - 2026-06-20
+
+### Added
+- **Auspicious Muhurtas Comprehensive Scoring Engine**:
+  - Implemented `MuhurtaScoringService` to evaluate time suitability on a 0-100% scale using weighted scores for Tithis, Nakshatras, Weekdays (Varas), Yogas, and Karanas, along with optional native Tarabalam/Chandrabalam factors.
+  - Added `scanMuhurtaSuitability` to scan and identify the most auspicious Muhurtas over a specified window.
+- **Specialized Jaimini & Nakshatra Dasha Systems**:
+  - Exposed and fully tested Jaimini Chara Dasha, Narayana Dasha, and Kalachakra Dasha engines via `Jyotish` core and facade APIs, supporting sub-period sequences and balance calculations.
+- **Double-Precision Junction Guardrails**:
+  - Added coordinate snapping (`_adjustJunctionBoundary` and `_snapKPLongitude`) with a `1e-11` precision margin in `DivisionalChartService` and `KPService` to protect division and sign boundaries from floating-point representation errors.
+  - Applied epsilon subtraction guardrails to Vimshottari dasha sub-lord division boundaries to eliminate edge-case errors.
+- **Polar Region Sunrise/Sunset Fallbacks**:
+  - Implemented a robust polar region fallback in `PanchangaService`. When Swiss Ephemeris returns `null` for sunrise/sunset (during polar day/night), it calculates apparent solar noon (meridian transit) and splits the day/night into equal 12-hour segments to prevent downstream service crashes.
+- **Rahu/Ketu Node Type Consistency**:
+  - Updated Ketu calculation logic in `EphemerisService` to check `CalculationFlags.nodeType` and resolve dynamically from either `Planet.trueNode` or `Planet.meanNode` matching Rahu, preventing node alignment mismatch.
+- **Altitude Propagation**:
+  - Propagated observer elevation/altitude to `VedicChart` and all local astronomical sub-services (Shadbala, Prashna, Muhurtas, etc.) to replace sea-level defaults and improve precision.
+
+## [2.15.0] - 2026-06-19
+
+### Added
+- **High-Precision End-Times & Junctions for Nakshatras and Yogas**:
+  - Implemented `getNakshatraEndTime`, `getYogaEndTime`, `getNakshatraJunction`, and `getYogaJunction` in [PanchangaService](file:///E:/jyotish-flutter-library-fork/lib/src/panchanga/panchanga_service.dart) using high-precision binary search.
+  - Refactored `getTithiEndTime` and `getTithiJunction` wrap-around boundary logic using signed angular differences to prevent search direction bugs near 360°/0° crossings.
+- **KP Sub-Sub-Sub-Lord (SSSL) Support**:
+  - Added the `subSubSubLord` field to the `KPDivision` class and implemented `_calculateSubSubBoundaries` and `_calculateSubSubSubLord` in [KPService](file:///E:/jyotish-flutter-library-fork/lib/src/systems/kp_service.dart) to support micro-level astrological event timing.
+- **Dynamic Obliquity of the Ecliptic in Shadbala**:
+  - Implemented dynamic obliquity calculations using Swiss Ephemeris (`SE_ECL_NUT` / planet ID `-1`) in `EphemerisService.getObliquity`.
+  - Integrated dynamic obliquity into Shadbala's `_calculateAyanaBala` to replace the static `23.45°` hardcoded constant.
+- **Time-Varying & Ayanamsa-Specific Precession Corrections**:
+  - Refactored planetary velocity corrections in `calculatePlanetPosition` to calculate the precession rate dynamically by taking the difference between tomorrow's and today's ayanamsa. This automatically accounts for both time-varying precession drift and ayanamsa-specific reference frames.
+- **Exposed Atmospheric Refraction Parameters**:
+  - Exposed `atmosphericPressure` and `atmosphericTemperature` parameters in `calculatePanchanga` to allow precise Sunrise/Sunset calculations under variable local atmospheric conditions.
+
+## [2.14.0] - 2026-05-31
+
+### Added
+- **Natal & Conjunction Dosha Detection Engine**:
+  - Implemented a comprehensive, high-precision dosha detection module at par with PyJHora, capable of identifying 8 key Vedic astrological flaws (Doshas) in natal charts.
+  - **Kala Sarpa Dosha**: Detects if all traditional planets are hemmed between Rahu and Ketu. Resolves 12 specific types (Anant, Kulik, Vasuki, Shankhapal, Padma, Mahapadma, Takshak, Karkotak, Shankhachur, Ghatak, Vishdhar, Sheshnag) based on Rahu's house placement.
+  - **Manglik Dosha**: Evaluates Mars placement relative to Lagna, Moon, and Venus. Integrates 17 BV Raman exceptions (such as Leo/Aquarius sign, Yoga Karaka Lagna, combustion, conjunctions with Jupiter/Moon, aspect from Saturn, and retrograde status) to calculate accurate Manglik cancellation status.
+  - **Pitru Dosha**: Scans ancestral karmic afflictions using 5 classical rules (such as Sun/Moon/Rahu in the 9th house, Ketu in the 4th house, and Saturn/Mars afflictions to Sun/Moon/Nodes). Includes detailed remedies and factors matched.
+  - **Guru Chandala Dosha**: Identifies Jupiter-Rahu/Ketu conjunctions, including planet strength evaluation to determine if Jupiter is stronger, which mitigates/cancels the dosha.
+  - **Ganda Moola Dosha**: Scans if the Moon at birth is in one of the 6 Ketu/Mercury junction Nakshatras (Ashlesha, Magha, Jyeshtha, Mula, Revati, Ashwini).
+  - **Kalathra Dosha**: Checks for natural malefic placements in spouse/partner houses (1st, 2nd, 4th, 7th, 8th, and 12th) from Lagna and Moon.
+  - **Ghata & Shrapit Conjunction Doshas**: Scans for Mars-Saturn (Ghata) and Saturn-Rahu (Shrapit) conjunctions in the same house.
+  - Exposed `checkNatalDoshas(chart)` through the main `Jyotish` facade, and `DoshaService().calculateFullDoshaReport(chart)` for direct usage.
+  - Added unit test suite `test/dosha_test.dart` to verify logic accuracy.
+
+## [2.13.0] - 2026-05-31
+
+### Added
+- **Natal & Raja Yoga Detection Engine**:
+  - Implemented a comprehensive, high-precision yoga detection module at par with PyJHora, capable of identifying 287 different standard and Raja yogas in natal charts.
+  - Added support for Sun/Moon flanking configurations (Vesi, Vosi, Sunapha, Anapha, Duradhara, Kemadruma Yogas).
+  - Added full evaluation for Pancha Mahapurusha Yogas (Ruchaka, Bhadra, Hamsa, Malavya, Sasa).
+  - Added complete Nabhasa Yogas suite (3 Aasraya Yogas, 2 Dala Yogas, 8 Aakriti Yogas, 7 Sankhya Yogas).
+  - Added core Raja Yogas (Dharma-Karmadhipati, Vipareetha, and Neecha-Bhanga) with automatic debilitation cancellation rules.
+  - Added `NatalYoga` model representing a detected yoga, its criteria, benefits, presence status, and dynamic explanation.
+  - Added a high-level delegate method `detectNatalYogas(VedicChart chart)` in `Jyotish` core.
+  - Added unit test suite `test/natal_yoga_test.dart` to verify logic correctness using mock longitudinal configurations.
+- **Vedic Clock & Vedic Time Enhancements**:
+  - Added round-trip conversion method `toDateTime()` in `VedicTime` to calculate Gregorian `DateTime` from traditional Vedic time (Ghati, Vighati, Lipta).
+  - Refactored `VedicDigitalClock` and `VedicAnalogClock` widgets to use modern Flutter `super.key` and non-deprecated `.withValues(alpha: ...)` for color opacities.
+  - Cleaned up all compile warnings and static analysis lints across newly introduced modules (such as unused variables, comment references, and curly brace block control flow).
+
+## [2.12.0] - 2026-05-30
+
+### Added
+- **Tajika Varshapal (Solar Return) Engine Enhancements**:
+  - **True Solar Return Moment**: High-precision binary search on UTC time to find the exact millisecond the transiting Sun returns to its natal longitude, with clean local timezone conversion.
+  - **Panchavargiya Bala**: Standard 5-fold planetary strength calculation (Kshetra, Hadda, Drekkana, Navamsa, and Uccha Bala).
+  - **Varshesh Determination**: Precise Year Lord selection utilizing the five candidate planets (Panchadhikaris) with aspect checks to Lagna and priority tie-breaking.
+  - **Mudda Dasha**: Scaled annual Vimshottari periods based on the annual Moon's Nakshatra, adjusting start balance and cycling through all planetary periods.
+
+---
+
+## [2.11.0] - 2026-05-25
+
+### Added
+- **Calculation Stability & Concurrency**:
+  - Enhanced thread-safety and shared locking across background astronomical calculations.
+  - Improved Julian Day translation accuracy for boundary dates.
+
+---
+
+## [2.10.0] - 2026-05-18
+
+### Added
+- **Tree-Shaking & Modular Barrel Files**: Added 9 independent barrel files representing logically isolated sub-modules. Consumers can now import micro-targeted modules directly instead of the heavy all-in-one barrel to optimize compiled bundle sizes and avoid cross-module export leaks:
+  - `package:jyotish/core.dart` — Common models, enums, calculation flags, and base exceptions (`Jyotish`, `GeographicLocation`, `CalculationFlags`, `Planet`, `Rashi`, etc.)
+  - `package:jyotish/analysis.dart` — Chart structures, divisional charts, compatibility Guna Milan, aspects, progeny, event timing, and Sudarshan Chakra
+  - `package:jyotish/astronomy.dart` — Precision coordinate translations, astronomy time service, Udaya Lagna, and ephemeris structures
+  - `package:jyotish/muhurta.dart` — Auspicious timings, Hora/Choghadiya services, Gowri Panchangam, Tarabalam/Chandrabalam, and ritual selectors
+  - `package:jyotish/nadi.dart` — Nadi leaf prediction engines and services
+  - `package:jyotish/panchanga.dart` — Core 5 limbs of time (Tithi, Vara, Nakshatra, Yoga, Karana) and Masa services
+  - `package:jyotish/strength.dart` — Shadbala, Bhava Bala, Vimshopak Bala, Graha Avasthas, and Planetary friendship relations
+  - `package:jyotish/systems.dart` — Astrological engine systems (Dasha, Ashtakavarga, KP System, Varshapal, Jaimini, Prashna, Argala, Arudha Pada)
+  - `package:jyotish/transit.dart` — Planetary movements, Sade Sati, transit events, Gochara Vedha, and Sarvatobhadra Chakra
+- **Module Isolation & Safety**: Internal types like `VedhaSeverity` in `sarvatobhadra.dart` are hidden from external exports in `transit.dart` to prevent implementation detail leakage.
+- **Tree Shaking Verification Test Suite**: Added a robust test suite (`test/tree_shaking_test.dart`) with 119 unit tests to guarantee clean compilation boundaries, verify correct export counts per module, validate selective import usage, and ensure module isolation.
+
+---
+
+## [2.9.1] - 2026-05-17
+
+### Added
+- **Julian Day Helper**: Added `dateTimeToJulianDay` as a public method in `EphemerisService` to allow external consumers to convert timezone-aware Dart `DateTime` objects to high-precision Julian Day floats.
+
+---
+
+## [2.9.0] - 2026-05-16
+
+### Added
+- **JSON Serialization**: Full serialization support via `toJson()` across core models (`VedicChart`, `HouseSystem`, `VedicPlanetInfo`, `KetuPosition`, `PlanetPosition`). Deeply nested objects are natively supported for easier cross-isolate processing and caching.
+- **Sanskrit Localization (IAST)**:
+  - `Planet` enum now includes `sanskritName` (e.g., `Sūrya`, `Candra`).
+  - Added `ascendantSignSanskrit` to `HouseSystem`.
+  - Added `nakshatraSanskrit` to `PlanetPosition` using proper IAST (e.g., `Āśleṣā`).
+
+### Fixed
+- **Jaimini Chara Karakas**: Fixed calculation to include the full 7 or 8 Karaka ranking system (AK, AmK, BK, etc.). Default behavior respects the 8-Karaka scheme. Exposed via `getCharaKarakas()`.
+- **Chara Dasha Sub-periods**: Resolved a bug where `levels` parameter was ignored. Chara Dasha now recursively calculates sub-periods (Antardashas) to the requested depth. Mahadasha levels correctly reflect depth `0`.
+- **Cleanup**: Removed circular `KPService` imports in configuration flags.
+
+---
+
+## [2.8.0] - 2026-05-02
+
+### Added — Special Muhurta Yogas
+Implemented high-precision calculation of specialized Vedic auspicious and repetitive Yogas. These are automatically identified based on the overlap of Weekday, Tithi, and Nakshatra periods.
+
+- **Sarvartha Siddhi Yog**: Weekday + Nakshatra combinations for general success in all activities.
+- **Amrit Siddhi Yog**: Highly powerful Weekday + Nakshatra pairings for significant tasks.
+- **Guru Pushya Yog**: The "King of Yogas" occurring when Thursday coincides with Pushya Nakshatra.
+- **Ravi Pushya Yog**: Highly auspicious timing when Sunday coincides with Pushya Nakshatra.
+- **Dwi Pushkar Yog**: Repetitive Yoga (Sun/Tue/Sat + Bhadra Tithi + Dwi-pada Nakshatra) that doubles the result of an event (good or bad).
+- **Tri Pushkar Yog**: Repetitive Yoga (Sun/Tue/Sat + Bhadra Tithi + Tri-pada Nakshatra) that triples the result of an event.
+
+#### Updated API
+- **`Muhurta` model**: Added `specialYogas` field containing a list of `SpecialYoga` objects active for the day.
+- **`MuhurtaService`**: Updated `calculateMuhurta` to optionally accept `tithiPeriods` and `nakshatraPeriods` to enable these calculations.
+- **`SpecialYoga`**: New model representing a yoga period with `type`, `startTime`, `endTime`, and `isAuspicious` flag.
+
+---
+
+## [2.7.0] - 2026-04-10
+
+### Added
+- **Astronomical Precision Updates**:
+  - Fine-tuned topocentric parallax corrections for lunar and planetary rise/set times.
+  - Enhanced twilight and diurnal circle approximations for non-polar regions.
+
+---
+
 ## [2.6.0] - 2026-02-25
 
-### [2.6.0] - High-Precision Eclipse & API Completeness
-### **Major Eclipse Enhancements (Solar & Lunar)**
+### Added — High-Precision Eclipse & API Completeness
 We have vastly improved the calculation of solar and lunar eclipses by exposing and integrating explicit local visibility functions from the underlying Swiss Ephemeris C-library (`swe_sol_eclipse_when_loc`, `swe_lun_eclipse_when`, etc.). 
 
 - **Local Solar Eclipse Precision**: `EphemerisService.getEclipseData()` now accurately determines if a solar eclipse is visible at the provided `GeographicLocation`. It no longer defaults to global visibility, but instead accurately computes local obscuration magnitudes, contact times, and duration.
@@ -507,6 +743,21 @@ All eight Kootas are now calculated per standard Vedic texts:
 - JSON serialization support
 - Proper resource management
 
+[2.19.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.19.0
+[2.18.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.18.0
+[2.17.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.17.0
+[2.16.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.16.0
+[2.15.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.15.0
+[2.14.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.14.0
+[2.13.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.13.0
+[2.12.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.12.0
+[2.11.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.11.0
+[2.10.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.10.0
+[2.9.1]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.9.1
+[2.9.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.9.0
+[2.8.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.8.0
+[2.7.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.7.0
+[2.6.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v2.6.0
 [1.1.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v1.1.0
 [1.0.1]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v1.0.1
 [1.0.0]: https://github.com/rajsanjib/jyotish-flutter-library/releases/tag/v1.0.0

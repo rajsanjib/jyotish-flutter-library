@@ -1,9 +1,17 @@
-include: package:flutter_lints/recommended.yaml
+include: package:flutter_lints/flutter.yaml
 
 analyzer:
   errors:
     unused_import: warning
     empty_catches: warning
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
 
 linter:
   rules:
@@ -11,3 +19,18 @@ linter:
     - avoid_print
     - prefer_relative_imports: false
     - always_use_package_imports: true
+    - prefer_const_constructors
+    - prefer_final_locals
+    - avoid_dynamic_calls
+    - prefer_single_quotes: false
+    - unawaited_futures
+    - always_declare_return_types
+    - cancel_subscriptions
+    - close_sinks
+    - comment_references
+    - control_flow_in_finally
+    - empty_statements
+    - implementation_imports
+    - test_types_in_equals
+    - throw_in_finally
+    - valid_regexps

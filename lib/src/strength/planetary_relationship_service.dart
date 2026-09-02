@@ -28,7 +28,7 @@ class PlanetaryRelationshipService {
   /// Returns the full 77 relationship matrix for the seven traditional
   /// planets in the given [chart].
   ///
-  /// The return value is a map keyed by `planet`  `otherPlanet` 
+  /// The return value is a map keyed by `planet`  `otherPlanet`
   /// [PlanetaryRelationship].
   ///
   /// Example:
@@ -50,7 +50,6 @@ class PlanetaryRelationshipService {
     for (final a in planets) {
       result[a] = {};
       for (final b in planets) {
-        if (a == b) continue;
         result[a]![b] = getRelationship(a, b, chart);
       }
     }
@@ -72,8 +71,13 @@ class PlanetaryRelationshipService {
     VedicChart chart,
   ) {
     if (planet == otherPlanet) {
-      throw ArgumentError(
-          'Cannot compute relationship of a planet with itself.');
+      return PlanetaryRelationship(
+        planet: planet,
+        otherPlanet: otherPlanet,
+        natural: RelationshipType.friend,
+        temporary: RelationshipType.friend,
+        compound: RelationshipType.greatFriend,
+      );
     }
 
     // 1. Natural friendship
@@ -95,8 +99,10 @@ class PlanetaryRelationshipService {
     }
 
     // 3. Compound (Panchadha Maitri)
-    final compound =
-        RelationshipCalculator.calculateCompound(natural, temporary);
+    final compound = RelationshipCalculator.calculateCompound(
+      natural,
+      temporary,
+    );
 
     return PlanetaryRelationship(
       planet: planet,

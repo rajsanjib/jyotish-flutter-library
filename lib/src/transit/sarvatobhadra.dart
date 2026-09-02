@@ -51,6 +51,9 @@ class SarvatobhadraAnalysis {
     required this.transitVedhas,
     required this.favorableTransits,
     required this.unfavorableTransits,
+    this.panchangaAnalysis,
+    this.vyayaAnalysis,
+    this.signTransits,
   });
 
   /// The original birth chart
@@ -64,4 +67,13 @@ class SarvatobhadraAnalysis {
 
   /// Malefic planets casting obstructive Vedhas
   final List<Planet> unfavorableTransits;
+
+  /// Legacy property for Panchanga-based transit analysis
+  final dynamic panchangaAnalysis;
+
+  /// Legacy property for Vyaya (loss) analysis
+  final dynamic vyayaAnalysis;
+
+  /// Legacy property for sign-based transits
+  final Map<dynamic, dynamic>? signTransits;
 }

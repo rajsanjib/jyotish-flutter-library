@@ -40,6 +40,8 @@ app.*.symbols
 app.*.map.json
 
 # Android Studio will place build artifacts here
+.gradle/
+**/android/.gradle/
 /android/app/debug
 /android/app/profile
 /android/app/release
@@ -80,3 +82,4 @@ coverage/
 .desloppy/
 subjective_import.json
 test.json
+.antigravitycli/

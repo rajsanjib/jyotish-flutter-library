@@ -1,9 +1,6 @@
 /// Represents Chandrabalam (Moon strength) for each of the 12 Rashis.
 class ChandrabalamInfo {
-  const ChandrabalamInfo({
-    required this.moonRashiIndex,
-    required this.entries,
-  });
+  const ChandrabalamInfo({required this.moonRashiIndex, required this.entries});
 
   /// Moon's current Rashi index (0-11)
   final int moonRashiIndex;
